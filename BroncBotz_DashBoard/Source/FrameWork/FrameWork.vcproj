@@ -157,6 +157,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Preview.cpp"
 				>
 			</File>

@@ -45,3 +45,5 @@ class Outstream_Interface
 	public:
 		virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer)=0;
 };
+
+void DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber );
