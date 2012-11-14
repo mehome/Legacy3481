@@ -81,6 +81,7 @@ private:
 
 const size_t Preview_NoVideoBuffers=4; //To be safe we need about 3 fields for best results this should be either 2, 4 or 6
 
+
 /// The DDraw specifics of this class were written by Mike as device, but in this version it has been transformed into a pull kind of model that is 
 /// very similar to how HDOut works (Note: HDOut is a push model though).  It is stripped of FC3 management, and using a memcopy within process_frame 
 /// makes it possible to release the frames sent to it immediately (thus making it not necessary for anything more complex than a framework bitmap).  
@@ -89,7 +90,7 @@ const size_t Preview_NoVideoBuffers=4; //To be safe we need about 3 fields for b
 /// Since this is a pull model it is designed for the input to manage the clock and it will monitor the framerate and ensure that it can evenly
 /// distribute the render times... even if they are not passed as such (e.g. interleaved frames can send both fields simultaneously).
 ///  [11/11/2012 James]
-class Preview
+class Preview : public FrameWork::Outstream_Interface
 {		
 public:
 	
@@ -100,7 +101,7 @@ public:
 	virtual ~Preview( void );
 
 	bool Get_IsError() const {return m_IsError;} //make sure everything is happy before pumping frames to it
-	void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer);
+	virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer);
 
 	//override these to do things like start / stop the fc3 server
 	virtual void StartStreaming( void );

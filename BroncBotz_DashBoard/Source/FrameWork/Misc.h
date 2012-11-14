@@ -38,3 +38,10 @@ struct mem
 		_aligned_free( (void*)p_ptr );
 	}
 };
+
+
+class Outstream_Interface
+{
+	public:
+		virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer)=0;
+};

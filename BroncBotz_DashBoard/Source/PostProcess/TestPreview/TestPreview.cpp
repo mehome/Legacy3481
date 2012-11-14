@@ -5,6 +5,7 @@
 #include "../../FrameWork/Window.h"
 #include "../../FrameWork/Preview.h"
 
+
 class DDraw_Preview 
 {
 	public:
@@ -13,6 +14,7 @@ class DDraw_Preview
 		virtual ~DDraw_Preview();
 		//returns true to quit
 		bool CommandLineInterface();
+		Preview *GetPreview() {return m_DD_StreamOut;}
 	private:
 		void DisplayHelp();
 		void CloseResources();
@@ -67,8 +69,6 @@ void DDraw_Preview::DisplayHelp()
 	printf(
 		"reset [<this apps name=Switcher> [use 16:9=1] [xpos %%0-1] [ypos %%]\n"
 		"cls\n"
-		"select [<senders name>] no parm=default any\n"
-		"Add8 [use 16:9=1]\n"
 		"\n"
 		"Help  (displays this)\n"
 		"Type \"Exit\" at anytime to exit to main\n"
@@ -235,6 +235,8 @@ bool DDraw_Preview::CommandLineInterface()
 			//Use this to flush resources
 			else if (!_strnicmp( input_line, "reset", 5))
 			{
+				printf("TODO... not sure if this stress is needed\n");
+				#if 0
 				CloseResources();
 				if (str_1[0])
 				{
@@ -260,6 +262,7 @@ bool DDraw_Preview::CommandLineInterface()
 				{
 					OpenResources(m_PreviewName.c_str());
 				}
+				#endif
 			}
 			else if (!_strnicmp( input_line, "Select", 6))
 			{
@@ -283,8 +286,192 @@ bool DDraw_Preview::CommandLineInterface()
 	return false;  //just exit
 }
 
+  /*******************************************************************************************************/
+ /*										FrameGrabber_TestPattern										*/
+/*******************************************************************************************************/
+
+//Throw together the infamous test pattern that streams the frames out
+class FrameGrabber_TestPattern
+{
+	public:
+		FrameGrabber_TestPattern(FrameWork::Outstream_Interface *Preview) : m_pThread(NULL),m_TestMap(720,480),m_Outstream(Preview)
+		{
+		}
+
+		void StartStreaming()
+		{
+			m_Counter=0;
+			m_pThread = new FrameWork::thread<FrameGrabber_TestPattern>(this);
+		}
+
+		void StopStreaming()
+		{
+			delete m_pThread;
+			m_pThread=NULL;
+		}
+
+		virtual ~FrameGrabber_TestPattern()
+		{
+			StopStreaming();
+		}
+	private:
+		friend FrameWork::thread<FrameGrabber_TestPattern>;
+
+		void DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber )
+		{
+			{ // aka Black Field section
+				const int FrameSize = FrameWidth * FieldHeight * sizeof(USHORT);
+				PWORD pField_ = (PWORD) pField, pEnd_ = pField_ + (FrameSize/sizeof(WORD));
+
+				int FieldHeight_ = FrameSize / (FrameWidth * sizeof(USHORT));
+				int OneThird_ = ( FieldHeight_ * 1 ) / 3;
+				int TwoThird_ = ( FieldHeight_ * 2 ) / 3;
+
+				while(pField_ != pEnd_)
+				{	*pField_++ = 0x1080;
+				}
+				// Draw gradient
+				for (int Idx_ = 0; Idx_ < OneThird_; Idx_++)
+				{	PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
+
+				for (int X_ = 0; X_ < FrameWidth; X_++)
+				{	WORD w_ = ((X_&0xFF)<<8)+ 0x80;
+				*pw_++ = w_;
+				}
+				}
+				// Draw bars
+				for (int Idx_ = TwoThird_; Idx_ < FieldHeight_; Idx_++)
+				{	PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
+
+				for (int X_ = 0; X_ < FrameWidth; X_++)
+				{	WORD w_ = 0xC000 | ((X_*256)/FrameWidth);
+				*pw_++ = w_;
+				}
+				}
+
+			}
+			int ThreeNine_ = ( FieldHeight * 3 ) / 9;
+			int FourNine_  = ( FieldHeight * 4 ) / 9;
+			int FiveNine_  = ( FieldHeight * 5 ) / 9;
+			int SixNine_   = ( FieldHeight * 6 ) / 9;
+
+			// Draw stationary vertical lines
+			for (int Idx_ = ThreeNine_; Idx_ < FourNine_; Idx_++)
+			{	
+				PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
+
+				for (int X_ = 0; X_ < FrameWidth; X_++)
+				{	
+					int Of16_ = (X_ % 16);
+					if (Of16_ == 0 || Of16_ == 1)
+					{	
+						*pw_++ = 0xE080;
+					}
+					else
+					{	
+						*pw_++ = 0x1080;
+					}
+				}
+			}
+
+			// Draw moving horizontal lines
+			for (int Idx_ = FourNine_; Idx_ < FiveNine_; Idx_++)
+			{	PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
+
+			int Of16_ = ((Idx_ + FieldNumber) % 16);
+			//int Of16_ = (Idx_  % 16);
+
+			if (Of16_ == 0)
+			{	
+				for (int X_ = 0; X_ < FrameWidth; X_++)
+					*pw_++ = 0xE080;
+			}
+			else
+			{	
+				for (int X_ = 0; X_ < FrameWidth; X_++)
+					*pw_++ = 0x1080;
+			}
+			}
+			//Draw moving diagonal lines
+			for (int Idx_ = FiveNine_; Idx_ < SixNine_; Idx_++)
+			{	
+				PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
+
+				for (int X_ = 0; X_ < FrameWidth; X_++)
+				{	int Of16_ = ((X_ + Idx_ + FieldNumber) % 16);
+				if (Of16_ == 0 || Of16_ == 1)
+				{	*pw_++ = 0xE080;
+				}
+				else
+				{	*pw_++ = 0x1080;
+				}
+				}
+			}
+			//--------------------------------------------------------------------------------Field alignment test
+			// Draw black on field line 480, F0 Left, F1 Right.
+			// These would be frame lines 960 and 961.
+			// Effect should be Left Line above Right Line.
+			{
+				int Line480_ = ( FieldHeight * 8 ) / 9;
+				PWORD pwLine_ = ((PWORD) pField + (Line480_ * FrameWidth));
+
+				// If F1, advance to right half.
+				if (FieldNumber & 1)
+				{
+					pwLine_ += (FrameWidth/2);
+				}
+				// Draw half a line.
+				for (int X_ = 0; X_ < (FrameWidth/2); X_++)
+				{	*pwLine_++ = 0x1080;
+				}
+			}
+			// Line 0: F0 Black / White, F1 White Black.
+			// These would be frame lines 0 and 1.
+			// Effect should be Frame Line 0 Black / White,
+			// and Frame Line 1 White Black, ie Left is
+			// Black ontop of White, and Right is White
+			// ontop of Black. These are so we can verify
+			// output with a digital scope.
+			{
+				PWORD pwLine_ = (PWORD) pField;
+				WORD wLeft_, wRight_;
+
+				if (FieldNumber & 1)
+					wLeft_ = 0xF080, wRight_ = 0x1080;
+				else
+					wLeft_ = 0x1080, wRight_ = 0xF080;
+
+				for (int X_ = 0; X_ < FrameWidth; X_++)
+				{
+					if (X_ < (FrameWidth/2))
+						*pwLine_++ = wLeft_;
+					else
+						*pwLine_++ = wRight_;
+				}
+			}
+		}
+
+		void operator() ( const void* )
+		{
+			Sleep(16);
+			//Sleep(33);
+			//Sleep(1000);
+			DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
+			m_Outstream->process_frame(&m_TestMap);
+			//printf("%d\n",m_Counter++);
+		}
+		FrameWork::thread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
+
+	private:
+		FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
+		FrameWork::Outstream_Interface * const m_Outstream;
+		size_t m_Counter;
+};
+
 void main()
 {
 	DDraw_Preview test;
+	FrameGrabber_TestPattern grabber(test.GetPreview());
+	grabber.StartStreaming();
 	test.CommandLineInterface();
 }
