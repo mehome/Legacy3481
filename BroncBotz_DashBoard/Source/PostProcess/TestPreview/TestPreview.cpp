@@ -1,14 +1,43 @@
 #include "stdafx.h"
 #include <ddraw.h>
 #include <atlbase.h>
+#include <shellapi.h>
 #include "../../FrameWork/FrameWork.h"
 #include "../../FrameWork/Window.h"
 #include "../../FrameWork/Preview.h"
 
+#pragma comment (lib,"shell32")
 
+// Converts a GUID to a string
+inline void GUIDtow(GUID id,wchar_t *string) {
+	wsprintfW(string,L"%x-%x-%x-%x%x-%x%x%x%x%x%x",id.Data1,id.Data2,id.Data3,
+		id.Data4[0],id.Data4[1],id.Data4[2],id.Data4[3],id.Data4[4],id.Data4[5],id.Data4[6],id.Data4[7]);
+}
 
-/*******************************************************************************************************/
-/*										FrameGrabber_TestPattern										*/
+HWND FindConsoleHandle()
+{
+	static HWND wnd=NULL;
+	if (!wnd)
+	{
+		GUID ID;
+		TCHAR title[512];
+		TCHAR tempGUIDtitle[512];
+		LPCTSTR temptitle;
+		if (FAILED(CoCreateGuid(&ID)))
+			return NULL;
+		GUIDtow(ID,tempGUIDtitle);
+		temptitle=tempGUIDtitle;
+		if (GetConsoleTitle(title,sizeof(title)/sizeof(TCHAR))==0)
+			return NULL; //doh
+		SetConsoleTitle(temptitle);
+		wnd=FindWindow(NULL,temptitle);
+		SetConsoleTitle(title);
+	}
+	return wnd;
+}
+
+  /*******************************************************************************************************/
+ /*										FrameGrabber_TestPattern										*/
 /*******************************************************************************************************/
 
 //Throw together the infamous test pattern that streams the frames out
@@ -166,7 +195,29 @@ void DDraw_Preview::OpenResources()
 
 
 	HWND hWnd_ForDDraw=NULL;
-	if (m_WindowType==eStandAlone)
+	HWND ParentHwnd=NULL;
+	bool IsPopup=true;
+	if (m_WindowType==eSmartDashboard)
+	{
+		IsPopup=true;
+		XPos=10;
+		YPos=30;
+		LPTSTR szCmdline = _tcsdup(TEXT("C:\\WindRiver\\WPILib\\SmartDashboard.jar"));
+		//Note:
+		//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
+		//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
+		//of the error codes below.
+		HINSTANCE test=ShellExecute(FindConsoleHandle(),L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
+		//Give this some time to open
+		size_t TimeOut=0;
+		do 
+		{
+			Sleep(100);
+			ParentHwnd=FindWindow(L"SunAwtFrame",L"SmartDashboard - ");
+		} while ((ParentHwnd==NULL)&&(TimeOut++<50)); //This may take a while on cold start
+
+	}
+
 	{
 		{
 			assert (!m_Window);
@@ -175,7 +226,7 @@ void DDraw_Preview::OpenResources()
 			LONG X=XPos;
 			LONG Y=YPos;
 			RECT lWindowPosition = {  X,Y,X+XRes,Y+YRes};
-			m_Window=new Window(NULL,true,source_name,&lWindowPosition);
+			m_Window=new Window(ParentHwnd,IsPopup,source_name,&lWindowPosition);
 			while ((!(HWND)*m_Window)&&(TimeOut++<100))
 				Sleep(10);
 			assert((HWND)*m_Window);
@@ -369,10 +420,47 @@ bool DDraw_Preview::CommandLineInterface()
 				}
 				#endif
 			}
-			else if (!_strnicmp( input_line, "Select", 6))
+			else if (!_strnicmp( input_line, "Test", 4))
 			{
-				char2wchar(str_1);
-				//m_Switcher->SelectSenderToProcess(char2wchar_pwchar);
+				#if 0
+				bool wait = true;
+				// Launch the command
+				STARTUPINFO startup_info = { sizeof(STARTUPINFO), 0 };
+				startup_info.dwFlags = STARTF_USESHOWWINDOW;
+				startup_info.wShowWindow = SW_SHOWMINIMIZED;
+
+				PROCESS_INFORMATION		process_info = { 0 };
+
+				// Just in case someone changed it.
+				LPTSTR szCmdline = _tcsdup(TEXT("C:\\WindRiver\\WPILib\\SmartDashboard.jar"));
+				LPTSTR CurrentDirectory = _tcsdup(TEXT("C:\\WindRiver\\WPILib\\"));
+
+				if ( ::CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, CurrentDirectory, &startup_info, &process_info ) )
+				{	// We wait for this process to exit
+					if ( wait )
+						::WaitForSingleObject( process_info.hProcess, INFINITE );
+
+					// Close the handle
+					::CloseHandle( process_info.hProcess );
+					::CloseHandle( process_info.hThread );
+				}
+				#else
+				LPTSTR szCmdline = _tcsdup(TEXT("C:\\WindRiver\\WPILib\\SmartDashboard.jar"));
+				//Note:
+				//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
+				//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
+				//of the error codes below.
+				HINSTANCE test=ShellExecute(FindConsoleHandle(),L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
+				//Give this some time to open
+				HWND TestHwnd;
+				size_t TimeOut=0;
+				do 
+				{
+					Sleep(100);
+					TestHwnd=FindWindow(L"SunAwtFrame",L"SmartDashboard - ");
+				} while ((TestHwnd==NULL)&&(TimeOut++<50)); //This may take a while on cold start
+				printf("test=%p\n",TestHwnd);
+				#endif
 			}
 			else if (!_strnicmp( input_line, "Help", 4))
 				DisplayHelp();
@@ -393,7 +481,7 @@ bool DDraw_Preview::CommandLineInterface()
 
 void main()
 {
-	//DDraw_Preview test(DDraw_Preview::eSmartDashboard);
-	DDraw_Preview test(DDraw_Preview::eStandAlone);
+	DDraw_Preview test(DDraw_Preview::eSmartDashboard);
+	//DDraw_Preview test(DDraw_Preview::eStandAlone);
 	test.CommandLineInterface();
 }
