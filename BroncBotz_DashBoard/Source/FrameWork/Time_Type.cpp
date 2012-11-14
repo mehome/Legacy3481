@@ -1,5 +1,7 @@
 #include "StdAfx.h"
-#include "Time_Type.h"
+#include "FrameWork.h"
+
+using namespace FrameWork;
 
   /*******************************************************************************************************/
  /*												time_type												*/
