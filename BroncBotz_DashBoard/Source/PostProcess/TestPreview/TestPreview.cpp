@@ -6,27 +6,92 @@
 #include "../../FrameWork/Preview.h"
 
 
+
+/*******************************************************************************************************/
+/*										FrameGrabber_TestPattern										*/
+/*******************************************************************************************************/
+
+//Throw together the infamous test pattern that streams the frames out
+class FrameGrabber_TestPattern
+{
+public:
+	FrameGrabber_TestPattern(FrameWork::Outstream_Interface *Preview=NULL) : m_pThread(NULL),m_TestMap(720,480),m_Outstream(Preview)
+	{
+	}
+	//allow late binding of the output (hence start streaming exists for this delay)
+	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_Outstream=Preview;}
+	void StartStreaming()
+	{
+		m_Counter=0;
+		m_pThread = new FrameWork::thread<FrameGrabber_TestPattern>(this);
+	}
+
+	void StopStreaming()
+	{
+		delete m_pThread;
+		m_pThread=NULL;
+	}
+
+	virtual ~FrameGrabber_TestPattern()
+	{
+		StopStreaming();
+	}
+private:
+	friend FrameWork::thread<FrameGrabber_TestPattern>;
+
+	void operator() ( const void* )
+	{
+		using namespace FrameWork;
+		Sleep(16);
+		//Sleep(33);
+		//Sleep(1000);
+		DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
+		m_Outstream->process_frame(&m_TestMap);
+		//printf("%d\n",m_Counter++);
+	}
+	FrameWork::thread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
+
+private:
+	FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
+	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
+	size_t m_Counter;
+};
+
+
 class DDraw_Preview 
 {
 	public:
-		DDraw_Preview(const wchar_t source_name[] = L"Preview",LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
-		DDraw_Preview(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos);
+		enum WindowType
+		{
+			eStandAlone,
+			eSmartDashboard
+		};
+
+		void Init(WindowType type);
+		DDraw_Preview(WindowType type=eStandAlone, const wchar_t source_name[] = L"Preview",LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
+		DDraw_Preview(WindowType type, const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos);
 		virtual ~DDraw_Preview();
 		//returns true to quit
 		bool CommandLineInterface();
 		Preview *GetPreview() {return m_DD_StreamOut;}
+	protected:
+		virtual void CloseResources();
+		virtual void OpenResources();
 	private:
 		void DisplayHelp();
-		void CloseResources();
 		// -1 for x and y res will revert to hard coded defaults (this keeps tweaking inside the cpp file)
-		void OpenResources(const wchar_t source_name[] = L"Preview",LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
-		void OpenResources(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos);
+		void SetDefaults(const wchar_t source_name[] = L"Preview",LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
+		void SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos);
 
 		Window *m_Window;
 		Preview *m_DD_StreamOut;
 
-		//Audio stuff TODO
 		std::wstring m_PreviewName;
+		RECT m_DefaultWindow;  //left=xRes top=yRes right=xPos bottom=YPos
+
+		FrameGrabber_TestPattern m_FrameGrabber;
+
+		WindowType m_WindowType;
 };
 
 using namespace std;
@@ -35,32 +100,42 @@ using namespace std;
  /*											DDraw_Preview												*/
 /*******************************************************************************************************/
 
-DDraw_Preview::DDraw_Preview(const wchar_t source_name[],LONG XRes,LONG YRes,float XPos,float YPos) : m_Window(NULL),m_DD_StreamOut(NULL)
+void DDraw_Preview::Init(WindowType type)
 {
-	OpenResources(source_name,XRes,YRes,XPos,YPos);
+	m_WindowType=type;
+
+	m_Window=NULL;
+	m_DD_StreamOut=NULL;
+	m_FrameGrabber=NULL;
 }
 
-DDraw_Preview::DDraw_Preview(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos): m_Window(NULL),m_DD_StreamOut(NULL)
+DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],LONG XRes,LONG YRes,float XPos,float YPos)
 {
-	OpenResources(source_name,XRes,YRes,XPos,YPos);
+	SetDefaults(source_name,XRes,YRes,XPos,YPos);
+	Init(type);
+}
+
+DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos)
+{
+	SetDefaults(source_name,XRes,YRes,XPos,YPos);
+	Init(type);
 }
 
 void DDraw_Preview::CloseResources()
 {
+	m_FrameGrabber.StopStreaming();
 	delete m_DD_StreamOut;
 	m_DD_StreamOut=NULL;
-
-	//Audio
-}
-
-DDraw_Preview::~DDraw_Preview()
-{
-	CloseResources();
 	if (m_Window)
 	{
 		delete m_Window;
 		m_Window=NULL;
 	}
+}
+
+DDraw_Preview::~DDraw_Preview()
+{
+	CloseResources();
 }
 
 
@@ -76,19 +151,25 @@ void DDraw_Preview::DisplayHelp()
 		);
 }
 
-void DDraw_Preview::OpenResources(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos)
+void DDraw_Preview::OpenResources()
 {
-	if (!m_DD_StreamOut)
-	{
-		m_PreviewName=source_name;
-		{
-			//Doh have to reopen the window to reposition it... (should have methods to manipulate but oh well
-			if (m_Window)
-			{
-				delete m_Window;
-				m_Window=NULL;
-			}
+	CloseResources(); //just ensure all resources are closed
 
+	LONG XRes=m_DefaultWindow.left, YRes=m_DefaultWindow.top, XPos=m_DefaultWindow.right, YPos=m_DefaultWindow.bottom;
+	const wchar_t *source_name=m_PreviewName.c_str();
+
+	enum WindowType
+	{
+		eStandAlone,
+		eSmartDashboard
+	};
+
+
+	HWND hWnd_ForDDraw=NULL;
+	if (m_WindowType==eStandAlone)
+	{
+		{
+			assert (!m_Window);
 			//apparently there is a racing condition where the window needs a thread to set its handle
 			size_t TimeOut=0;
 			LONG X=XPos;
@@ -98,19 +179,40 @@ void DDraw_Preview::OpenResources(const wchar_t source_name[],LONG XRes,LONG YRe
 			while ((!(HWND)*m_Window)&&(TimeOut++<100))
 				Sleep(10);
 			assert((HWND)*m_Window);
-
-			m_DD_StreamOut=new Preview((HWND)*m_Window);
-			if (!m_DD_StreamOut->Get_IsError())
-			{
-				m_DD_StreamOut->StartStreaming();
-			}
-			else
-				printf("DDraw_Preview::OpenResources Error detected in setting up DDraw environment \n");
+			hWnd_ForDDraw=(HWND)*m_Window;
 		}
+	}
+	if (hWnd_ForDDraw)
+	{
+		assert (!m_DD_StreamOut);
+		m_DD_StreamOut=new Preview(hWnd_ForDDraw);
+		if (!m_DD_StreamOut->Get_IsError())
+		{
+			m_DD_StreamOut->StartStreaming();
+		}
+		else
+			printf("DDraw_Preview::OpenResources Error detected in setting up DDraw environment \n");
+	}
+	else
+		printf("No HWnd for DDraw\n");
+	if (m_DD_StreamOut)
+	{
+		m_FrameGrabber.SetOutstream_Interface(m_DD_StreamOut);
+		//Now to start the frame grabber
+		m_FrameGrabber.StartStreaming();
 	}
 }
 
-void DDraw_Preview::OpenResources(const wchar_t source_name[],LONG XRes,LONG YRes,float XPos,float YPos)
+void DDraw_Preview::SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos)
+{
+	m_PreviewName=source_name;
+	m_DefaultWindow.left =XRes,
+	m_DefaultWindow.top=YRes,
+	m_DefaultWindow.right=XPos,
+	m_DefaultWindow.bottom=YPos;
+}
+
+void DDraw_Preview::SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,float XPos,float YPos)
 {
 	if (XRes==-1)
 		XRes=480;
@@ -119,7 +221,7 @@ void DDraw_Preview::OpenResources(const wchar_t source_name[],LONG XRes,LONG YRe
 
 	LONG X=(LONG)(((float)(::GetSystemMetrics(SM_CXSCREEN)-XRes))*XPos);
 	LONG Y=(LONG)(((float)(::GetSystemMetrics(SM_CYSCREEN)-YRes))*YPos);
-	OpenResources(source_name,XRes,YRes,X,Y);
+	SetDefaults(source_name,XRes,YRes,X,Y);
 }
 
 void cls(HANDLE hConsole=NULL) 
@@ -203,6 +305,7 @@ size_t FillArguments(const char *input_line,char *command,char *str_1,char *str_
 
 bool DDraw_Preview::CommandLineInterface()
 {
+	OpenResources();
 	DisplayHelp();
  	cout << "Ready." << endl;
 
@@ -256,11 +359,13 @@ bool DDraw_Preview::CommandLineInterface()
 					else
 						YPos=XPos;
 					char2wchar(str_1);
-					OpenResources(char2wchar_pwchar,XRes,YRes,XPos,YPos);
+					SetDefaults(char2wchar_pwchar,XRes,YRes,XPos,YPos);
+					OpenResources();
 				}
 				else
 				{
-					OpenResources(m_PreviewName.c_str());
+					SetDefaults(m_PreviewName.c_str());
+					OpenResources();
 				}
 				#endif
 			}
@@ -286,192 +391,9 @@ bool DDraw_Preview::CommandLineInterface()
 	return false;  //just exit
 }
 
-  /*******************************************************************************************************/
- /*										FrameGrabber_TestPattern										*/
-/*******************************************************************************************************/
-
-//Throw together the infamous test pattern that streams the frames out
-class FrameGrabber_TestPattern
-{
-	public:
-		FrameGrabber_TestPattern(FrameWork::Outstream_Interface *Preview) : m_pThread(NULL),m_TestMap(720,480),m_Outstream(Preview)
-		{
-		}
-
-		void StartStreaming()
-		{
-			m_Counter=0;
-			m_pThread = new FrameWork::thread<FrameGrabber_TestPattern>(this);
-		}
-
-		void StopStreaming()
-		{
-			delete m_pThread;
-			m_pThread=NULL;
-		}
-
-		virtual ~FrameGrabber_TestPattern()
-		{
-			StopStreaming();
-		}
-	private:
-		friend FrameWork::thread<FrameGrabber_TestPattern>;
-
-		void DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber )
-		{
-			{ // aka Black Field section
-				const int FrameSize = FrameWidth * FieldHeight * sizeof(USHORT);
-				PWORD pField_ = (PWORD) pField, pEnd_ = pField_ + (FrameSize/sizeof(WORD));
-
-				int FieldHeight_ = FrameSize / (FrameWidth * sizeof(USHORT));
-				int OneThird_ = ( FieldHeight_ * 1 ) / 3;
-				int TwoThird_ = ( FieldHeight_ * 2 ) / 3;
-
-				while(pField_ != pEnd_)
-				{	*pField_++ = 0x1080;
-				}
-				// Draw gradient
-				for (int Idx_ = 0; Idx_ < OneThird_; Idx_++)
-				{	PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
-
-				for (int X_ = 0; X_ < FrameWidth; X_++)
-				{	WORD w_ = ((X_&0xFF)<<8)+ 0x80;
-				*pw_++ = w_;
-				}
-				}
-				// Draw bars
-				for (int Idx_ = TwoThird_; Idx_ < FieldHeight_; Idx_++)
-				{	PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
-
-				for (int X_ = 0; X_ < FrameWidth; X_++)
-				{	WORD w_ = 0xC000 | ((X_*256)/FrameWidth);
-				*pw_++ = w_;
-				}
-				}
-
-			}
-			int ThreeNine_ = ( FieldHeight * 3 ) / 9;
-			int FourNine_  = ( FieldHeight * 4 ) / 9;
-			int FiveNine_  = ( FieldHeight * 5 ) / 9;
-			int SixNine_   = ( FieldHeight * 6 ) / 9;
-
-			// Draw stationary vertical lines
-			for (int Idx_ = ThreeNine_; Idx_ < FourNine_; Idx_++)
-			{	
-				PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
-
-				for (int X_ = 0; X_ < FrameWidth; X_++)
-				{	
-					int Of16_ = (X_ % 16);
-					if (Of16_ == 0 || Of16_ == 1)
-					{	
-						*pw_++ = 0xE080;
-					}
-					else
-					{	
-						*pw_++ = 0x1080;
-					}
-				}
-			}
-
-			// Draw moving horizontal lines
-			for (int Idx_ = FourNine_; Idx_ < FiveNine_; Idx_++)
-			{	PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
-
-			int Of16_ = ((Idx_ + FieldNumber) % 16);
-			//int Of16_ = (Idx_  % 16);
-
-			if (Of16_ == 0)
-			{	
-				for (int X_ = 0; X_ < FrameWidth; X_++)
-					*pw_++ = 0xE080;
-			}
-			else
-			{	
-				for (int X_ = 0; X_ < FrameWidth; X_++)
-					*pw_++ = 0x1080;
-			}
-			}
-			//Draw moving diagonal lines
-			for (int Idx_ = FiveNine_; Idx_ < SixNine_; Idx_++)
-			{	
-				PWORD pw_ = ((PWORD) pField + (Idx_ * FrameWidth));
-
-				for (int X_ = 0; X_ < FrameWidth; X_++)
-				{	int Of16_ = ((X_ + Idx_ + FieldNumber) % 16);
-				if (Of16_ == 0 || Of16_ == 1)
-				{	*pw_++ = 0xE080;
-				}
-				else
-				{	*pw_++ = 0x1080;
-				}
-				}
-			}
-			//--------------------------------------------------------------------------------Field alignment test
-			// Draw black on field line 480, F0 Left, F1 Right.
-			// These would be frame lines 960 and 961.
-			// Effect should be Left Line above Right Line.
-			{
-				int Line480_ = ( FieldHeight * 8 ) / 9;
-				PWORD pwLine_ = ((PWORD) pField + (Line480_ * FrameWidth));
-
-				// If F1, advance to right half.
-				if (FieldNumber & 1)
-				{
-					pwLine_ += (FrameWidth/2);
-				}
-				// Draw half a line.
-				for (int X_ = 0; X_ < (FrameWidth/2); X_++)
-				{	*pwLine_++ = 0x1080;
-				}
-			}
-			// Line 0: F0 Black / White, F1 White Black.
-			// These would be frame lines 0 and 1.
-			// Effect should be Frame Line 0 Black / White,
-			// and Frame Line 1 White Black, ie Left is
-			// Black ontop of White, and Right is White
-			// ontop of Black. These are so we can verify
-			// output with a digital scope.
-			{
-				PWORD pwLine_ = (PWORD) pField;
-				WORD wLeft_, wRight_;
-
-				if (FieldNumber & 1)
-					wLeft_ = 0xF080, wRight_ = 0x1080;
-				else
-					wLeft_ = 0x1080, wRight_ = 0xF080;
-
-				for (int X_ = 0; X_ < FrameWidth; X_++)
-				{
-					if (X_ < (FrameWidth/2))
-						*pwLine_++ = wLeft_;
-					else
-						*pwLine_++ = wRight_;
-				}
-			}
-		}
-
-		void operator() ( const void* )
-		{
-			Sleep(16);
-			//Sleep(33);
-			//Sleep(1000);
-			DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
-			m_Outstream->process_frame(&m_TestMap);
-			//printf("%d\n",m_Counter++);
-		}
-		FrameWork::thread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
-
-	private:
-		FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
-		FrameWork::Outstream_Interface * const m_Outstream;
-		size_t m_Counter;
-};
-
 void main()
 {
-	DDraw_Preview test;
-	FrameGrabber_TestPattern grabber(test.GetPreview());
-	grabber.StartStreaming();
+	//DDraw_Preview test(DDraw_Preview::eSmartDashboard);
+	DDraw_Preview test(DDraw_Preview::eStandAlone);
 	test.CommandLineInterface();
 }
