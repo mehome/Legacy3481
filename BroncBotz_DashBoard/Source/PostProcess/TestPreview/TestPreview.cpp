@@ -86,6 +86,7 @@ private:
 	size_t m_Counter;
 };
 
+const wchar_t * const cwsz_DefaultSmartFile=L"C:\\WindRiver\\WPILib\\SmartDashboard.jar";
 
 class DDraw_Preview 
 {
@@ -97,8 +98,8 @@ class DDraw_Preview
 		};
 
 		void Init(WindowType type);
-		DDraw_Preview(WindowType type=eStandAlone, const wchar_t source_name[] = L"Preview",LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
-		DDraw_Preview(WindowType type, const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos);
+		DDraw_Preview(WindowType type=eStandAlone, const wchar_t source_name[] = L"Preview",const wchar_t *smart_file=cwsz_DefaultSmartFile,LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
+		DDraw_Preview(WindowType type, const wchar_t source_name[],const wchar_t *smart_file,LONG XRes,LONG YRes,LONG XPos,LONG YPos);
 		virtual ~DDraw_Preview();
 		//returns true to quit
 		bool CommandLineInterface();
@@ -117,7 +118,7 @@ class DDraw_Preview
 		Window *m_Window;
 		Preview *m_DD_StreamOut;
 
-		std::wstring m_PreviewName;
+		std::wstring m_PreviewName,m_SmartDashBoard_FileName;
 		RECT m_DefaultWindow;  //left=xRes top=yRes right=xPos bottom=YPos
 
 		FrameGrabber_TestPattern m_FrameGrabber;
@@ -160,17 +161,21 @@ void DDraw_Preview::Init(WindowType type)
 	m_FrameGrabber=NULL;
 }
 
-DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],LONG XRes,LONG YRes,float XPos,float YPos)
+DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const wchar_t *smart_file,LONG XRes,LONG YRes,float XPos,float YPos)
 {
+	m_SmartDashBoard_FileName=smart_file;
 	SetDefaults(source_name,XRes,YRes,XPos,YPos);
 	Init(type);
 }
 
-DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos)
+DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const wchar_t *smart_file,LONG XRes,LONG YRes,LONG XPos,LONG YPos)
 {
+	m_SmartDashBoard_FileName=smart_file;
 	SetDefaults(source_name,XRes,YRes,XPos,YPos);
 	Init(type);
 }
+
+WINDOWPLACEMENT g_WindowInfo;
 
 void DDraw_Preview::CloseResources()
 {
@@ -179,6 +184,7 @@ void DDraw_Preview::CloseResources()
 	m_DD_StreamOut=NULL;
 	if (m_Window)
 	{
+		GetWindowPlacement(*m_Window,&g_WindowInfo);
 		delete m_Window;
 		m_Window=NULL;
 	}
@@ -222,9 +228,7 @@ void DDraw_Preview::OpenResources()
 	if (m_WindowType==eSmartDashboard)
 	{
 		IsPopup=true;
-		XPos=10;
-		YPos=30;
-		LPTSTR szCmdline = _tcsdup(TEXT("C:\\WindRiver\\WPILib\\SmartDashboard.jar"));
+		LPTSTR szCmdline = _tcsdup(m_SmartDashBoard_FileName.c_str());
 		//Note:
 		//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
 		//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
@@ -524,11 +528,60 @@ void DDraw_Preview::RunApp()
 
 void main()
 {
-	DDraw_Preview test(DDraw_Preview::eSmartDashboard);
-	//DDraw_Preview test(DDraw_Preview::eStandAlone);
+	wstring SmartDashboard=cwsz_DefaultSmartFile;
+	long XRes,YRes,XPos,YPos;
+	const char * const csz_FileName="BroncBotz_Dashboard.ini";
+	{
+		string InFile = csz_FileName;
+		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
+		if (in.is_open())
+		{
+			const size_t NoEnties=10;
+			string StringEntry[NoEnties];
+			for (size_t i=0;i<NoEnties;i++)
+			{
+				in>>StringEntry[i];
+			}
+			in.close();
+			int left=atoi(StringEntry[1].c_str());
+			int top=atoi(StringEntry[3].c_str());
+			int right=atoi(StringEntry[5].c_str());
+			int bottom=atoi(StringEntry[7].c_str());
+			XRes=right-left;
+			YRes=bottom-top;
+			XPos=left;
+			YPos=top;
+			char2wchar(StringEntry[9].c_str());
+			SmartDashboard=char2wchar_pwchar;
+		}
+		else
+		{
+			XRes=320;
+			YRes=240;
+			XPos=20;
+			YPos=10;
+		}
+	}
+	HWND ConsoleHWnd=FindConsoleHandle();
+	DDraw_Preview test(DDraw_Preview::eSmartDashboard,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
+	//DDraw_Preview test(DDraw_Preview::eStandAlone,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
 	#if 0
 	test.CommandLineInterface();
 	#else
+	ShowWindow(ConsoleHWnd,SW_HIDE);
 	test.RunApp();
 	#endif
+	{
+		WINDOWPLACEMENT WindowInfo;
+		GetWindowPlacement(ConsoleHWnd,&WindowInfo);
+		string OutFile = csz_FileName;
+		ofstream out(OutFile.c_str(), std::ios::out );
+		out << "left " << g_WindowInfo.rcNormalPosition.left << endl;
+		out << "top "  << g_WindowInfo.rcNormalPosition.top << endl;
+		out << "right " << g_WindowInfo.rcNormalPosition.right << endl;
+		out << "bottom "  << g_WindowInfo.rcNormalPosition.bottom << endl;
+		wchar2char(SmartDashboard.c_str());
+		out << "SmartDashboard " << wchar2char_pchar << endl;
+		out.close();
+	}
 }
