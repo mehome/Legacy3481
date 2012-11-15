@@ -1,0 +1,8 @@
+<IMAGE>
+MediaFile=v:\AVI\Piano0.avi
+TotalFrames=2282
+ActualFrames=2282
+CropIn=0
+CropOut=2282
+Id=1
+MediaType=3

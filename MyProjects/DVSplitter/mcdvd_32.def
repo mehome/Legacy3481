@@ -1,0 +1,8 @@
+LIBRARY mcdvd_32.dll
+
+
+EXPORTS
+	; Non Exported Symbols
+	; Other file exported symbols
+	 _CompressBuffer_DV @1
+	 _DecompressBuffer_DV @2

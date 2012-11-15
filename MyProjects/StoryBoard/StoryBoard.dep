@@ -1,0 +1,2259 @@
+# Microsoft Developer Studio Generated Dependency File, included by StoryBoard.mak
+
+.\audio.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\AudioGUI.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\AudioPlayer.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\Capture.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\CBasic.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\CGpoints.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\console.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\controls.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\DragObject.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\DVCam.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\FilterCG.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\Filters.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\FilterTitlerCG.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\FXobject.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\GBasic.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\HandleMain.cpp : \
+	"..\..\newteksdk\include\newtek\rtvlib.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\shldisp.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\HandleMain.rc : \
+	".\Exodusmm.bmp"\
+	".\ico00001.ico"\
+	".\icon1.ico"\
+	
+
+.\loaderAVI.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\loaderBMP.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\loaderIFF.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaderiff.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\loaderJPG.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	"..\include\ijl.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\loaderPCX.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\pcxconsole.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\loaderRTV.cpp : \
+	"..\..\newteksdk\include\newtek\rtvlib.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\loaders.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\loaderTGA.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\loadertga.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\loaderTIF.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	".\unlzwstrip.h"\
+	
+
+.\miniscrub.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\Project.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\RGBvideorender.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\Security.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\StoryBoardObject.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\StoryBoardTools.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\StorySourceBase.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\StorySourceClass.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\textedit.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\Toaster.cpp : \
+	"..\..\newteksdk\include\newtek\beethoven_protos.h"\
+	"..\..\newteksdk\include\newtek\javaconst.h"\
+	"..\..\newteksdk\include\newtek\newtekrtme_msg.h"\
+	"..\..\newteksdk\include\newtek\newtekrtme_protos.h"\
+	"..\..\newteksdk\include\newtek\rtme_hub_names.h"\
+	"..\..\newteksdk\include\proof\class_bases.h"\
+	"..\..\newteksdk\include\proof\classusr.h"\
+	"..\..\newteksdk\include\proof\proof_lib.h"\
+	"..\..\newteksdk\include\proof\proof_os.h"\
+	"..\..\newteksdk\include\proof\proof_protos.h"\
+	"..\..\newteksdk\include\proof\stream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	
+
+.\UnLZWstrip.cpp : \
+	"..\..\program files\microsoft platform sdk\classes\base\amextra.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\amfilter.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cache.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\combase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\cprop.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\ctlutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\dllsetup.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\fourcc.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\measure.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\msgthrd.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\mtype.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\outputq.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\pstream.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\refclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\reftime.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\renbase.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\schedule.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\source.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\streams.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\strmctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\sysclock.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transfrm.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\transip.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\videoctl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\vtrans.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winctrl.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\winutil.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxdebug.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxlist.h"\
+	"..\..\program files\microsoft platform sdk\classes\base\wxutil.h"\
+	"..\..\program files\microsoft platform sdk\include\audevcod.h"\
+	"..\..\program files\microsoft platform sdk\include\basetsd.h"\
+	"..\..\program files\microsoft platform sdk\include\guiddef.h"\
+	"..\..\program files\microsoft platform sdk\include\propidl.h"\
+	"..\..\program files\microsoft platform sdk\include\tvout.h"\
+	"..\..\program files\microsoft platform sdk\include\winefs.h"\
+	"..\include\crossbar.h"\
+	"..\include\dvcam.h"\
+	".\audio.h"\
+	".\Capture.h"\
+	".\cbasic.h"\
+	".\console.h"\
+	".\controls.h"\
+	".\DragObject.h"\
+	".\filters.h"\
+	".\FXobject.h"\
+	".\gbasic.h"\
+	".\HandleMain.h"\
+	".\loaders.h"\
+	".\Project.h"\
+	".\RGBvideorender.h"\
+	".\Security.h"\
+	".\StoryBoardObject.h"\
+	".\StorySourceBase.h"\
+	".\StorySourceClass.h"\
+	".\structgo.h"\
+	".\structstay.h"\
+	".\textedit.h"\
+	".\Toaster.h"\
+	".\unlzwstrip.h"\
+	

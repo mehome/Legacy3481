@@ -1,0 +1,32 @@
+Take out delete key...
+
+Fixed* A minor note, you should put a \ at the end of the path so that you recognize its a path and not a file
+
+Note: the DVCamlib.dll had to be changed because of this
+
+Fixed* The file should dictate the name of the clip by default and the allow the user to change the name whatever the dv file name is, plug that into the clipname CoolClip.avi then the default media name should be CoolClip
+
+Fixed* scarverEMM: you can edit the path.  It doesn't detect the del key
+
+Note: StoryBoard needs the delete... so I'm going to have to research an alternate method to handle key strokes.
+
+Still have yet to do the .ini
+* make .ini the bug was - if the path doesn't exist, it doesn't create the path or tell you the path doesn't exist, do you want me to create it.  Instead it just crashes When you exit, save the current path to a file and then load those defaults the nextime the user runs the program.
+
+The most important feature is the 2gig fix, and also to remove resolution hacks... need camera... so this will have to wait... also may want to include security.
+
+------------------------------------------------------------------------------------------
+To Do later:
+scarverEMM: Big Bug!!!!   It needs to detect if its a DV file.  It crashes if you select a non DV avi it would be better to convert the AVI any avi
+
+Note: We'll try to detect for DV for now... The other AVI codec support will come later
+
+These are cosmetic... low priority
+scarverEMM: its doing it very fast.  Why does it pause during the conversion?  Is it filling the buffer and then writting out the buffer?
+scarverEMM: as a marketing thing, it would be nice to have a thing in the console that say Converted 1:00 footage in 5 seconds get start and end time of task then time to convert=end-start
+scarverEMM: tab doesn't switch from audio to video
+
+
+NoCanDo... scarverEMM: can you allocate the buffer to take advantage of all the ram
+note: check that audio does't trunicate upon end.
+

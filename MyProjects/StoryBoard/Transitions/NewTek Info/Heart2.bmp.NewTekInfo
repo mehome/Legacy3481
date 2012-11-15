@@ -1,0 +1,4 @@
+["Alternate Name" = ""]
+{
+	[const Boolean "Loadable Into Editor" = ["false" "true" "true"] const]
+}

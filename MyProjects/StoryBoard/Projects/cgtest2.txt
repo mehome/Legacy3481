@@ -1,0 +1,17 @@
+<IMAGE>
+MediaFile=C:\MyProjects\StoryBoard\Imports\Black1Frame.rtv
+TotalFrames=120
+ActualFrames=120
+CropIn=0
+CropOut=120
+Id=1
+MediaType=2
+<FILTERCG>
+FilterFile=C:\MyProjects\StoryBoard\Filters\JamesCG.tga
+XYpoints=
+TransparencyPoints=
+X=90
+Y=0
+In=0
+Out=120
+Transparency=128
