@@ -8,6 +8,8 @@
 
 #pragma comment (lib,"shell32")
 
+const bool g_Use_Console=false;
+
 // Converts a GUID to a string
 inline void GUIDtow(GUID id,wchar_t *string) {
 	wsprintfW(string,L"%x-%x-%x-%x%x-%x%x%x%x%x%x",id.Data1,id.Data2,id.Data3,
@@ -115,6 +117,7 @@ class DDraw_Preview
 		void SetDefaults(const wchar_t source_name[] = L"Preview",LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
 		void SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos);
 		FrameWork::event m_Terminate;
+		HWND m_ParentHwnd;
 		Window *m_Window;
 		Preview *m_DD_StreamOut;
 
@@ -157,6 +160,7 @@ void DDraw_Preview::Init(WindowType type)
 	m_WindowType=type;
 
 	m_Window=NULL;
+	m_ParentHwnd=NULL;
 	m_DD_StreamOut=NULL;
 	m_FrameGrabber=NULL;
 }
@@ -187,6 +191,13 @@ void DDraw_Preview::CloseResources()
 		GetWindowPlacement(*m_Window,&g_WindowInfo);
 		delete m_Window;
 		m_Window=NULL;
+	}
+	if (m_ParentHwnd)
+	{
+		//for now only do for console until I can listen of WM_CLOSE from parent (and Nullify m_ParentHwnd)
+		if (g_Use_Console)
+			PostMessage(m_ParentHwnd,WM_CLOSE,0,0);
+		m_ParentHwnd=NULL;
 	}
 }
 
@@ -241,7 +252,7 @@ void DDraw_Preview::OpenResources()
 			Sleep(100);
 			ParentHwnd=FindWindow(L"SunAwtFrame",L"SmartDashboard - ");
 		} while ((ParentHwnd==NULL)&&(TimeOut++<50)); //This may take a while on cold start
-
+		m_ParentHwnd=ParentHwnd;
 	}
 
 	{
@@ -483,7 +494,8 @@ bool DDraw_Preview::CommandLineInterface()
 					::CloseHandle( process_info.hProcess );
 					::CloseHandle( process_info.hThread );
 				}
-				#else
+				#endif
+				#if 0
 				LPTSTR szCmdline = _tcsdup(TEXT("C:\\WindRiver\\WPILib\\SmartDashboard.jar"));
 				//Note:
 				//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
@@ -500,6 +512,12 @@ bool DDraw_Preview::CommandLineInterface()
 				} while ((TestHwnd==NULL)&&(TimeOut++<50)); //This may take a while on cold start
 				printf("test=%p\n",TestHwnd);
 				#endif
+				#if 1
+				assert(m_ParentHwnd);
+				SetWindowLongPtr(*m_Window,GWLP_WNDPROC, (LONG_PTR)
+					GetWindowLongPtr(m_ParentHwnd,GWLP_WNDPROC)
+					);
+				#endif
 			}
 			else if (!_strnicmp( input_line, "Help", 4))
 				DisplayHelp();
@@ -509,12 +527,14 @@ bool DDraw_Preview::CommandLineInterface()
 			}
 			else if (!_strnicmp( input_line, "Quit", 4))
 			{
+				CloseResources();  //call early to obtain window position
 				return true;
 			}
 			else
 				cout << "huh? - try \"help\"" << endl;
 		}
 	}
+	CloseResources();  //call early to obtain window position
 	return false;  //just exit
 }
 
@@ -565,15 +585,15 @@ void main()
 	HWND ConsoleHWnd=FindConsoleHandle();
 	DDraw_Preview test(DDraw_Preview::eSmartDashboard,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
 	//DDraw_Preview test(DDraw_Preview::eStandAlone,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
-	#if 0
-	test.CommandLineInterface();
-	#else
-	ShowWindow(ConsoleHWnd,SW_HIDE);
-	test.RunApp();
-	#endif
+	if  (g_Use_Console)
+		test.CommandLineInterface();
+	else
 	{
-		WINDOWPLACEMENT WindowInfo;
-		GetWindowPlacement(ConsoleHWnd,&WindowInfo);
+		ShowWindow(ConsoleHWnd,SW_HIDE);
+		test.RunApp();
+	}
+	
+	{
 		string OutFile = csz_FileName;
 		ofstream out(OutFile.c_str(), std::ios::out );
 		out << "left " << g_WindowInfo.rcNormalPosition.left << endl;
