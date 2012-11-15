@@ -102,7 +102,9 @@ class DDraw_Preview
 		virtual ~DDraw_Preview();
 		//returns true to quit
 		bool CommandLineInterface();
+		void RunApp();
 		Preview *GetPreview() {return m_DD_StreamOut;}
+		virtual long Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l);
 	protected:
 		virtual void CloseResources();
 		virtual void OpenResources();
@@ -111,7 +113,7 @@ class DDraw_Preview
 		// -1 for x and y res will revert to hard coded defaults (this keeps tweaking inside the cpp file)
 		void SetDefaults(const wchar_t source_name[] = L"Preview",LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
 		void SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos);
-
+		FrameWork::event m_Terminate;
 		Window *m_Window;
 		Preview *m_DD_StreamOut;
 
@@ -124,6 +126,26 @@ class DDraw_Preview
 };
 
 using namespace std;
+
+  /*******************************************************************************************************/
+ /*											DDraw_Window												*/
+/*******************************************************************************************************/
+
+class DDraw_Window : public Window
+{
+	public:
+		DDraw_Window(DDraw_Preview *pParent, HWND HWND_Parent=NULL , const bool IsPopup=true , 
+			const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL ) : Window(HWND_Parent,IsPopup,pWindowName,pWindowPosition), m_pParent(pParent)
+		{
+		}
+	protected:
+		virtual long Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
+		{
+			return m_pParent->Dispatcher(window,message,w,l);
+		}
+	private:
+		DDraw_Preview * const m_pParent;
+};
 
   /*******************************************************************************************************/
  /*											DDraw_Preview												*/
@@ -226,7 +248,7 @@ void DDraw_Preview::OpenResources()
 			LONG X=XPos;
 			LONG Y=YPos;
 			RECT lWindowPosition = {  X,Y,X+XRes,Y+YRes};
-			m_Window=new Window(ParentHwnd,IsPopup,source_name,&lWindowPosition);
+			m_Window=new DDraw_Window(this,ParentHwnd,IsPopup,source_name,&lWindowPosition);
 			while ((!(HWND)*m_Window)&&(TimeOut++<100))
 				Sleep(10);
 			assert((HWND)*m_Window);
@@ -273,6 +295,19 @@ void DDraw_Preview::SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,
 	LONG X=(LONG)(((float)(::GetSystemMetrics(SM_CXSCREEN)-XRes))*XPos);
 	LONG Y=(LONG)(((float)(::GetSystemMetrics(SM_CYSCREEN)-YRes))*YPos);
 	SetDefaults(source_name,XRes,YRes,X,Y);
+}
+
+long DDraw_Preview::Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
+{
+	switch (message)
+	{
+	case WM_CLOSE:
+		m_Terminate.set();
+		break;
+	default:
+		return DefWindowProc(window,message,w,l);
+	}
+	return 0;
 }
 
 void cls(HANDLE hConsole=NULL) 
@@ -479,9 +514,21 @@ bool DDraw_Preview::CommandLineInterface()
 	return false;  //just exit
 }
 
+void DDraw_Preview::RunApp()
+{
+	ShowWindow(FindConsoleHandle(),SW_HIDE);
+	OpenResources();
+	m_Terminate.wait();
+	CloseResources();
+}
+
 void main()
 {
 	DDraw_Preview test(DDraw_Preview::eSmartDashboard);
 	//DDraw_Preview test(DDraw_Preview::eStandAlone);
+	#if 0
 	test.CommandLineInterface();
+	#else
+	test.RunApp();
+	#endif
 }

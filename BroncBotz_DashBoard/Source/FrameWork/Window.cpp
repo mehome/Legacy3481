@@ -37,7 +37,7 @@ Window::~Window( void )
 		delete m_pThread;
 }
 
-LRESULT CALLBACK Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
+long Window::Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
 {
 	switch (message)
 	{
@@ -49,6 +49,24 @@ LRESULT CALLBACK Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
 			return DefWindowProc(window,message,w,l);
 	}
 	return 0;
+}
+
+long CALLBACK Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
+{
+	Window *BaseClass=(Window*)GetWindowLongPtr(window,GWLP_USERDATA);		
+	long ret;
+	if (BaseClass) 
+	{
+		// If we could get access to the canvas, then we will use it's callback to
+		// get the result
+		ret=BaseClass->Dispatcher(window,message,w,l);
+	}
+	else
+	{
+		// If there is no item, just a default callback
+		ret=DefWindowProc(window,message,w,l);
+	}
+	return ret;
 }
 
 // Converts a GUID to a string
@@ -71,7 +89,7 @@ void Window::operator() ( const void* )
 		WNDCLASS wc;
 		memset(&wc,0,sizeof(WNDCLASS));
 		wc.style=CS_HREDRAW|CS_VREDRAW;
-		wc.lpfnWndProc=(WNDPROC)Dispatcher;
+		wc.lpfnWndProc=(WNDPROC)::Dispatcher;
 		wc.lpszMenuName=m_pWindowName;
 		wc.lpszClassName=Unique_ClassName;
 		if (!RegisterClass(&wc))
@@ -83,6 +101,9 @@ void Window::operator() ( const void* )
 								m_WindowPosn.right-m_WindowPosn.left , m_WindowPosn.bottom-m_WindowPosn.top , 
 								m_Parent_hWnd , NULL , NULL , NULL );
 	assert(m_hWnd);
+	// Setup the window long values	
+	SetWindowLongPtr(m_hWnd,GWLP_USERDATA, (LONG_PTR)this);
+
 	{	//Fill w/ black
 		HDC hdc=GetDC(m_hWnd);
 		RECT rc;

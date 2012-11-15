@@ -11,6 +11,9 @@ struct Window
 				// Cast to an HWND
 				operator HWND( void );
 
+				virtual long Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l);
+
+
 private:		// The child window pointer
 				HWND	m_hWnd;
 				HWND	m_Parent_hWnd;
