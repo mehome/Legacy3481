@@ -3,10 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestPreview", "TestPreview.vcproj", "{A4F2FCE2-A61E-4B82-B6A3-E22293595E09}"
 	ProjectSection(ProjectDependencies) = postProject
+		{318D7084-B647-4BAA-A105-0B11D458351D} = {318D7084-B647-4BAA-A105-0B11D458351D}
 		{455B6FC3-BCD0-4927-B561-55F896A96185} = {455B6FC3-BCD0-4927-B561-55F896A96185}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameWork", "..\..\FrameWork\FrameWork.vcproj", "{455B6FC3-BCD0-4927-B561-55F896A96185}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HookSpyDll", "..\HookSpyDll\HookSpyDll.vcproj", "{318D7084-B647-4BAA-A105-0B11D458351D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,6 +25,10 @@ Global
 		{455B6FC3-BCD0-4927-B561-55F896A96185}.Debug|Win32.Build.0 = Debug|Win32
 		{455B6FC3-BCD0-4927-B561-55F896A96185}.Release|Win32.ActiveCfg = Release|Win32
 		{455B6FC3-BCD0-4927-B561-55F896A96185}.Release|Win32.Build.0 = Release|Win32
+		{318D7084-B647-4BAA-A105-0B11D458351D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{318D7084-B647-4BAA-A105-0B11D458351D}.Debug|Win32.Build.0 = Debug|Win32
+		{318D7084-B647-4BAA-A105-0B11D458351D}.Release|Win32.ActiveCfg = Release|Win32
+		{318D7084-B647-4BAA-A105-0B11D458351D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

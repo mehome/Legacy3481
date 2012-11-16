@@ -5,10 +5,10 @@
 #include "../../FrameWork/FrameWork.h"
 #include "../../FrameWork/Window.h"
 #include "../../FrameWork/Preview.h"
-
+#include "../HookSpyDll/HookSpyDll.h"
 #pragma comment (lib,"shell32")
 
-const bool g_Use_Console=false;
+const bool g_Use_Console=true;
 
 // Converts a GUID to a string
 inline void GUIDtow(GUID id,wchar_t *string) {
@@ -250,6 +250,9 @@ void DDraw_Preview::OpenResources()
 		do 
 		{
 			Sleep(100);
+			//theAwtToolkitWindow
+			//SmartDashboard - /SunAwtFrame
+			//ParentHwnd=FindWindow(L"SunAwtToolkit",L"theAwtToolkitWindow");
 			ParentHwnd=FindWindow(L"SunAwtFrame",L"SmartDashboard - ");
 		} while ((ParentHwnd==NULL)&&(TimeOut++<50)); //This may take a while on cold start
 		m_ParentHwnd=ParentHwnd;
@@ -521,15 +524,42 @@ bool DDraw_Preview::CommandLineInterface()
 				} while ((TestHwnd==NULL)&&(TimeOut++<50)); //This may take a while on cold start
 				printf("test=%p\n",TestHwnd);
 				#endif
-				#if 1
+				#if 0
 				//SetWindowLongPtr(*m_Window,GWLP_WNDPROC, (LONG_PTR)
 				//	GetWindowLongPtr(m_ParentHwnd,GWLP_WNDPROC)
 				//	);
 				assert(m_ParentHwnd);
-				HINSTANCE instance=(HINSTANCE)GetWindowLongPtr(m_ParentHwnd,GWL_HINSTANCE);
+				//Note this is the wrong instance
+				HINSTANCE instance=(HINSTANCE)GetWindowLongPtr(*m_Window,GWL_HINSTANCE);
 				assert (instance);
-				HHOOK test=SetWindowsHookEx(WH_CALLWNDPROC,CallWndProc,instance,0);
+				HHOOK test=SetWindowsHookEx(WH_CALLWNDPROC,CallWndProc,instance,GetWindowThreadProcessId(m_ParentHwnd,NULL));
 				printf("%x\n",test);
+				#endif
+				#if 0
+				DWORD PID, TID;
+				TID = ::GetWindowThreadProcessId (m_ParentHwnd, &PID);
+				assert (GetCurrentProcessId () != PID);
+
+				wchar_t Test[1024];
+				HANDLE hProcess = 
+					OpenProcess(
+					PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ,
+					FALSE, PID);		
+
+				if (hProcess != NULL) 
+				{
+					MessageBeep(MB_OK);
+					GetWindowTextRemote (hProcess,m_ParentHwnd,Test);
+					CloseHandle( hProcess );
+				}
+				#endif
+				#if 1
+				bool IsClosing=str_1[0]=='1'?true:false;
+				printf("%s hook\n",IsClosing?"Closing":"Opening");
+				if (!IsClosing)
+					BindToProcess(m_ParentHwnd);
+				else
+					ReleaseProcess();
 				#endif
 			}
 			else if (!_strnicmp( input_line, "Help", 4))
