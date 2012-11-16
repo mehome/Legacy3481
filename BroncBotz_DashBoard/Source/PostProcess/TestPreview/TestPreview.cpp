@@ -404,6 +404,15 @@ size_t FillArguments(const char *input_line,char *command,char *str_1,char *str_
 	return ret;
 }
 
+LRESULT CALLBACK CallWndProc(_In_  int nCode, _In_  WPARAM wParam, _In_  LPARAM lParam )
+{
+	LRESULT ret=0;
+	if (nCode<0)
+		ret=CallNextHookEx(0,nCode,wParam,lParam);
+	printf("Message %d %x %x\n",nCode,wParam,lParam);
+	return ret;
+}
+
 bool DDraw_Preview::CommandLineInterface()
 {
 	OpenResources();
@@ -513,10 +522,14 @@ bool DDraw_Preview::CommandLineInterface()
 				printf("test=%p\n",TestHwnd);
 				#endif
 				#if 1
+				//SetWindowLongPtr(*m_Window,GWLP_WNDPROC, (LONG_PTR)
+				//	GetWindowLongPtr(m_ParentHwnd,GWLP_WNDPROC)
+				//	);
 				assert(m_ParentHwnd);
-				SetWindowLongPtr(*m_Window,GWLP_WNDPROC, (LONG_PTR)
-					GetWindowLongPtr(m_ParentHwnd,GWLP_WNDPROC)
-					);
+				HINSTANCE instance=(HINSTANCE)GetWindowLongPtr(m_ParentHwnd,GWL_HINSTANCE);
+				assert (instance);
+				HHOOK test=SetWindowsHookEx(WH_CALLWNDPROC,CallWndProc,instance,0);
+				printf("%x\n",test);
 				#endif
 			}
 			else if (!_strnicmp( input_line, "Help", 4))
