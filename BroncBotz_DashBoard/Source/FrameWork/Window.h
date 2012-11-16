@@ -13,14 +13,15 @@ struct Window
 
 				virtual long Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l);
 
-
-private:		// The child window pointer
+protected:
+				virtual void InitializeWindow() {}  //override to do special customization to window once its created
 				HWND	m_hWnd;
 				HWND	m_Parent_hWnd;
 				RECT	m_WindowPosn;
 				bool	m_PopupWindow;
 				const wchar_t *m_pWindowName;
 
+private:		// The child window pointer
 				// The thread callback
 				void operator() ( const void* );
 

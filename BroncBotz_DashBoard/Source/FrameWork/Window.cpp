@@ -111,8 +111,10 @@ void Window::operator() ( const void* )
 		BitBlt(hdc,rc.left,rc.top,rc.right-rc.left,rc.bottom-rc.top,NULL,0,0,BLACKNESS);
 		ReleaseDC(m_hWnd,hdc);
 	}
+	InitializeWindow();
 	// The threaded message loop
 	MSG msg;
+	#if 0
 	while(::GetMessage(&msg,NULL,0,0)!=0)
 	{	// Is this a quit message
 		if ( (msg.hwnd==m_hWnd) && 
@@ -126,7 +128,23 @@ void Window::operator() ( const void* )
             DispatchMessage(&msg); 
         }
 	}
+	#else
+	//Using PeekMessage allows us to not lockup if the window is a child on a separate process
+	do
+	{
+		while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE) > 0) //Or use an if statement
+		{
+			if ( (msg.hwnd==m_hWnd) && 	(msg.message==WM_USER) && (msg.wParam==(long)(size_t)this) )
+				break;
 
+			TranslateMessage (&msg);
+			DispatchMessage (&msg);
+		}
+		if ( (msg.hwnd==m_hWnd) && 	(msg.message==WM_USER) && (msg.wParam==(long)(size_t)this) )
+			break;
+		Sleep(100);
+	} while (WM_QUIT != msg.message);
+	#endif
 	// Close the window
 	::DestroyWindow( m_hWnd ); 
 }

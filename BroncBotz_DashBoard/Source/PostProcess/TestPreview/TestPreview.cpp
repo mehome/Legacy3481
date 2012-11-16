@@ -8,7 +8,7 @@
 #include "../HookSpyDll/HookSpyDll.h"
 #pragma comment (lib,"shell32")
 
-const bool g_Use_Console=true;
+const bool g_Use_Console=false;
 
 // Converts a GUID to a string
 inline void GUIDtow(GUID id,wchar_t *string) {
@@ -139,14 +139,26 @@ class DDraw_Window : public Window
 {
 	public:
 		DDraw_Window(DDraw_Preview *pParent, HWND HWND_Parent=NULL , const bool IsPopup=true , 
-			const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL ) : Window(HWND_Parent,IsPopup,pWindowName,pWindowPosition), m_pParent(pParent)
+			const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL ) : Window(HWND_Parent,IsPopup,pWindowName,pWindowPosition), 
+			m_pParent(pParent)
 		{
+		}
+		~DDraw_Window()
+		{
+			//if (!m_PopupWindow)
+			//	KillTimer(m_hWnd,1);
 		}
 	protected:
 		virtual long Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
 		{
 			return m_pParent->Dispatcher(window,message,w,l);
 		}
+		virtual void InitializeWindow() 
+		{
+			//if (!m_PopupWindow)
+			//	SetTimer(m_hWnd,1,1000,NULL);
+		}
+
 	private:
 		DDraw_Preview * const m_pParent;
 };
@@ -180,6 +192,7 @@ DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const w
 }
 
 WINDOWPLACEMENT g_WindowInfo;
+bool g_IsPopup=true;
 
 void DDraw_Preview::CloseResources()
 {
@@ -235,10 +248,9 @@ void DDraw_Preview::OpenResources()
 
 	HWND hWnd_ForDDraw=NULL;
 	HWND ParentHwnd=NULL;
-	bool IsPopup=true;
+	bool IsPopup=g_IsPopup;
 	if (m_WindowType==eSmartDashboard)
 	{
-		IsPopup=true;
 		LPTSTR szCmdline = _tcsdup(m_SmartDashBoard_FileName.c_str());
 		//Note:
 		//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
@@ -266,7 +278,8 @@ void DDraw_Preview::OpenResources()
 			LONG X=XPos;
 			LONG Y=YPos;
 			RECT lWindowPosition = {  X,Y,X+XRes,Y+YRes};
-			m_Window=new DDraw_Window(this,ParentHwnd,IsPopup,source_name,&lWindowPosition);
+			//Note: A child option can only be presented if we have the parent window
+			m_Window=new DDraw_Window(this,ParentHwnd,ParentHwnd?IsPopup:true,source_name,&lWindowPosition);
 			while ((!(HWND)*m_Window)&&(TimeOut++<100))
 				Sleep(10);
 			assert((HWND)*m_Window);
@@ -319,7 +332,19 @@ long DDraw_Preview::Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
 {
 	switch (message)
 	{
+	#if 0
+	case WM_TIMER:
+		if (m_ParentHwnd)
+		{
+			//agghhhh polling for now yuck
+			m_ParentHwnd=FindWindow(L"SunAwtFrame",L"SmartDashboard - ");
+			if (!m_ParentHwnd)
+				m_Terminate.set();
+		}
+		break;
+	#endif
 	case WM_CLOSE:
+	case WM_DESTROY:
 		m_Terminate.set();
 		break;
 	default:
@@ -553,7 +578,7 @@ bool DDraw_Preview::CommandLineInterface()
 					CloseHandle( hProcess );
 				}
 				#endif
-				#if 1
+				#if 0
 				bool IsClosing=str_1[0]=='1'?true:false;
 				printf("%s hook\n",IsClosing?"Closing":"Opening");
 				if (!IsClosing)
@@ -599,7 +624,7 @@ void main()
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=10;
+			const size_t NoEnties=6 << 1;
 			string StringEntry[NoEnties];
 			for (size_t i=0;i<NoEnties;i++)
 			{
@@ -616,6 +641,7 @@ void main()
 			YPos=top;
 			char2wchar(StringEntry[9].c_str());
 			SmartDashboard=char2wchar_pwchar;
+			g_IsPopup=atoi(StringEntry[11].c_str())==0?false:true;
 		}
 		else
 		{
@@ -645,6 +671,7 @@ void main()
 		out << "bottom "  << g_WindowInfo.rcNormalPosition.bottom << endl;
 		wchar2char(SmartDashboard.c_str());
 		out << "SmartDashboard " << wchar2char_pchar << endl;
+		out << "IsPopup " << g_IsPopup << endl;
 		out.close();
 	}
 }
