@@ -19,8 +19,8 @@ Notice:	If this code works, it was written by Robert Kuster.
 #endif
 
 ///returns true if successful
-HOOKDLL_API bool BindToProcess(HWND hWnd);
-HOOKDLL_API void ReleaseProcess();
+HOOKDLL_API int BindToProcess(HWND hWnd);
+HOOKDLL_API int ReleaseProcess();
 
 
 #endif // !defined(HOOKSPY_DLL_H)
