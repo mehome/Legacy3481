@@ -481,13 +481,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	{
 		string OutFile = csz_FileName;
 		ofstream out(OutFile.c_str(), std::ios::out );
-		out << "left " << g_WindowInfo.rcNormalPosition.left << endl;
-		out << "top "  << g_WindowInfo.rcNormalPosition.top << endl;
-		out << "right " << g_WindowInfo.rcNormalPosition.right << endl;
-		out << "bottom "  << g_WindowInfo.rcNormalPosition.bottom << endl;
+		out << "left= " << g_WindowInfo.rcNormalPosition.left << endl;
+		out << "top= "  << g_WindowInfo.rcNormalPosition.top << endl;
+		out << "right= " << g_WindowInfo.rcNormalPosition.right << endl;
+		out << "bottom= "  << g_WindowInfo.rcNormalPosition.bottom << endl;
 		wchar2char(SmartDashboard.c_str());
-		out << "SmartDashboard " << wchar2char_pchar << endl;
-		out << "IsPopup " << g_IsPopup << endl;
+		out << "SmartDashboard= " << wchar2char_pchar << endl;
+		out << "IsPopup= " << g_IsPopup << endl;
 		out.close();
 	}
 	return 0;
