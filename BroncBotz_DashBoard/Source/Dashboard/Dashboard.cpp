@@ -517,36 +517,75 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	wstring SmartDashboard=cwsz_DefaultSmartFile;
 	wstring Plugin=cwsz_PlugInFile;
 	long XRes,YRes,XPos,YPos;
-	const char * const csz_FileName="BroncBotz_Dashboard.ini";
+	wstring Title=L"Preview";
+	string sz_FileName="BroncBotz_Dashboard.ini";
+	wchar_t *ext=wcsrchr(lpCmdLine,L'.');
+	if ((ext)&&(wcsicmp(ext,L".ini")==0))
 	{
-		string InFile = csz_FileName;
+		wchar2char(lpCmdLine);
+		sz_FileName=wchar2char_pchar;
+	}
+	{
+		string InFile = sz_FileName.c_str();
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=7 << 1;
+			const size_t NoEnties=8 << 2;  //add extras for multiple args (TODO probably a cleaner way)
 			string StringEntry[NoEnties];
 			for (size_t i=0;i<NoEnties;i++)
 			{
 				in>>StringEntry[i];
 			}
+			size_t argIndex=1;
 			in.close();
-			int left=atoi(StringEntry[1].c_str());
-			int top=atoi(StringEntry[3].c_str());
-			int right=atoi(StringEntry[5].c_str());
-			int bottom=atoi(StringEntry[7].c_str());
+			{
+				char2wchar(StringEntry[argIndex].c_str());
+				Title=char2wchar_pwchar;
+			}
+			argIndex+=2;
+			int left=atoi(StringEntry[argIndex].c_str());
+			argIndex+=2;
+			int top=atoi(StringEntry[argIndex].c_str());
+			argIndex+=2;
+			int right=atoi(StringEntry[argIndex].c_str());
+			argIndex+=2;
+			int bottom=atoi(StringEntry[argIndex].c_str());
+			argIndex+=2;
 			XRes=right-left;
 			YRes=bottom-top;
 			XPos=left;
 			YPos=top;
 			{
-				char2wchar(StringEntry[9].c_str());
+				char2wchar(StringEntry[argIndex].c_str());
 				SmartDashboard=char2wchar_pwchar;
+				argIndex++;
+				if (SmartDashboard.c_str()[0]=='\"')
+				{
+					const wchar_t *posn=SmartDashboard.c_str();
+					posn+=sizeof(wchar_t);
+					wstring CheckNextEntry=posn; //keep wchar form
+					do 
+					{
+						posn=wcsrchr(CheckNextEntry.c_str(),L'\"');
+						if (posn==NULL)
+						{
+							SmartDashboard+=L" ";
+							char2wchar(StringEntry[argIndex].c_str());
+							SmartDashboard+=char2wchar_pwchar;
+							CheckNextEntry=char2wchar_pwchar;
+							argIndex+=1;
+						}
+					} while (posn==NULL);
+				}
+				argIndex++;
 			}
-			g_IsPopup=atoi(StringEntry[11].c_str())==0?false:true;
+			g_IsPopup=atoi(StringEntry[argIndex].c_str())==0?false:true;
+			argIndex+=2;
 			{
-				char2wchar(StringEntry[13].c_str());
+				char2wchar(StringEntry[argIndex].c_str());
 				Plugin=char2wchar_pwchar;
 			}
+			argIndex+=2;
 		}
 		else
 		{
@@ -565,20 +604,24 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	DDraw_Preview::WindowType window_type=DDraw_Preview::eStandAlone;
 	#endif
 
-	DDraw_Preview TheApp(window_type,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos,Plugin.c_str());
+	DDraw_Preview TheApp(window_type,Title.c_str(),SmartDashboard.c_str(),XRes,YRes,XPos,YPos,Plugin.c_str());
 
 	TheApp.RunApp();
 	
 	{
-		string OutFile = csz_FileName;
+		string OutFile = sz_FileName.c_str();
 		ofstream out(OutFile.c_str(), std::ios::out );
+		{
+			wchar2char(Title.c_str());
+			out << "title= " << g_WindowInfo.rcNormalPosition.left << endl;
+		}
 		out << "left= " << g_WindowInfo.rcNormalPosition.left << endl;
 		out << "top= "  << g_WindowInfo.rcNormalPosition.top << endl;
 		out << "right= " << g_WindowInfo.rcNormalPosition.right << endl;
 		out << "bottom= "  << g_WindowInfo.rcNormalPosition.bottom << endl;
 		{
 			wchar2char(SmartDashboard.c_str());
-			out << "SmartDashboard= " << wchar2char_pchar << endl;
+			out << "StartUp= " << wchar2char_pchar << endl;
 		}
 		out << "IsPopup= " << g_IsPopup << endl;
 		{
