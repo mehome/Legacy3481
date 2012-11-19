@@ -6,6 +6,7 @@
 #include "../FrameWork/FrameWork.h"
 #include "../FrameWork/Window.h"
 #include "../FrameWork/Preview.h"
+#include "../ProcessingVision/ProcessingVision.h"
 #pragma comment (lib,"shell32")
 
 
@@ -67,6 +68,38 @@ private:
 	size_t m_Counter;
 };
 
+
+class ProcessingVision : public FrameWork::Outstream_Interface
+{
+	public:
+		ProcessingVision(FrameWork::Outstream_Interface *Preview=NULL) : m_Outstream(Preview) {}
+
+		void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_Outstream=Preview;}
+		void StartStreaming() {m_IsStreaming=true;}
+		void StopStreaming() {m_IsStreaming=false;}
+
+		virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgr_u8 *pBuffer)
+		{
+			#if 0
+			if (m_IsStreaming)
+				m_Outstream->process_frame(pBuffer); //just passing through			
+			#else
+			if (m_IsStreaming)
+			{
+				using namespace FrameWork::Bitmaps;
+				Bitmap_Frame frame((PBYTE)(*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
+				Bitmap_Frame out_frame=*(ProcessFrame_RGB24(&frame));
+				bitmap_bgr_u8 dest((pixel_bgr_u8 *)out_frame.Memory,out_frame.XRes,out_frame.YRes,out_frame.Stride);
+				m_Outstream->process_frame(&dest);
+			}
+			#endif
+		}
+	private:
+		FrameWork::Outstream_Interface * m_Outstream; //I'm not checking for NULL so stream must be stopped while pointer is invalid
+		bool m_IsStreaming;
+};
+
+
 const wchar_t * const cwsz_DefaultSmartFile=L"C:\\WindRiver\\WPILib\\SmartDashboard.jar";
 
 class DDraw_Preview 
@@ -109,6 +142,7 @@ class DDraw_Preview
 		RECT m_DefaultWindow;  //left=xRes top=yRes right=xPos bottom=YPos
 
 		FrameGrabber_TestPattern m_FrameGrabber;
+		ProcessingVision m_ProcessingVision;
 
 		WindowType m_WindowType;
 		bool m_IsPopup_LastOpenedState;  //This is only written at the point when window is created
@@ -231,6 +265,7 @@ void DDraw_Preview::Init(WindowType type)
 	m_ParentHwnd=NULL;
 	m_DD_StreamOut=NULL;
 	m_FrameGrabber=NULL;
+	m_ProcessingVision=NULL;
 }
 
 DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const wchar_t *smart_file,LONG XRes,LONG YRes,float XPos,float YPos)
@@ -251,7 +286,9 @@ void DDraw_Preview::CloseResources()
 {
 	//before closing the resources ensure the upstream is not streaming to us
 	m_FrameGrabber.StopStreaming();
+	m_ProcessingVision.StopStreaming();
 	m_FrameGrabber.SetOutstream_Interface(NULL);  //pedantic
+	m_ProcessingVision.SetOutstream_Interface(NULL);
 	delete m_DD_StreamOut;
 	m_DD_StreamOut=NULL;
 	if (m_Window)
@@ -385,9 +422,15 @@ void DDraw_Preview::OpenResources()
 		printf("No HWnd for DDraw\n");
 	if (m_DD_StreamOut)
 	{
+		#if 0
 		m_FrameGrabber.SetOutstream_Interface(m_DD_StreamOut);
+		#else
+		m_ProcessingVision.SetOutstream_Interface(m_DD_StreamOut);
+		m_FrameGrabber.SetOutstream_Interface(&m_ProcessingVision);
+		#endif
 		//Now to start the frame grabber
 		m_FrameGrabber.StartStreaming();
+		m_ProcessingVision.StartStreaming();
 	}
 }
 
@@ -477,7 +520,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	#if 1
 	DDraw_Preview::WindowType window_type=DDraw_Preview::eSmartDashboard;
-	if (SmartDashboard.c_str()[0]==0)
+	if (wcsicmp(SmartDashboard.c_str(),L"none")==0)
 		window_type=DDraw_Preview::eStandAlone;
 	#else
 	DDraw_Preview::WindowType window_type=DDraw_Preview::eStandAlone;
