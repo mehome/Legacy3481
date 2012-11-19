@@ -109,6 +109,7 @@ class DDraw_Preview
 		FrameGrabber_TestPattern m_FrameGrabber;
 
 		WindowType m_WindowType;
+		bool m_IsPopup_LastOpenedState;  //This is only written at the point when window is created
 };
 
 using namespace std;
@@ -292,6 +293,7 @@ void DDraw_Preview::OpenResources()
 	HWND hWnd_ForDDraw=NULL;
 	HWND ParentHwnd=NULL;
 	bool IsPopup=g_IsPopup;
+	bool IsSmartDashboardStarted=g_IsSmartDashboardStarted;
 	if (m_WindowType==eSmartDashboard)
 	{
 		if (!g_IsSmartDashboardStarted)
@@ -302,7 +304,7 @@ void DDraw_Preview::OpenResources()
 			//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
 			//of the error codes below.
 			HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
-			g_IsSmartDashboardStarted=true;
+			IsSmartDashboardStarted=true;
 		}
 		//Give this some time to open
 		size_t TimeOut=0;
@@ -320,23 +322,52 @@ void DDraw_Preview::OpenResources()
 	//If we don't have a parent window then we must be a Popup
 	if (!ParentHwnd)
 		g_IsPopup=IsPopup=true;
+
+	//for a previous ran session... we'll want to grab the last known position for this round
+	if (g_IsSmartDashboardStarted)
 	{
+		//If we still have our parent window or if we have always been a pop-up
+		if ((m_ParentHwnd) || (g_IsPopup && m_IsPopup_LastOpenedState))
 		{
-			assert (!m_Window);
-			//apparently there is a racing condition where the window needs a thread to set its handle
-			size_t TimeOut=0;
-			LONG X=XPos;
-			LONG Y=YPos;
-			RECT lWindowPosition = {  X,Y,X+XRes,Y+YRes};
-			//Note: A child option can only be presented if we have the parent window
-			assert(IsPopup || ParentHwnd);
-			m_Window=new DDraw_Window(this,ParentHwnd,IsPopup,source_name,&lWindowPosition);
-			while ((!(HWND)*m_Window)&&(TimeOut++<100))
-				Sleep(10);
-			assert((HWND)*m_Window);
-			hWnd_ForDDraw=(HWND)*m_Window;
+			//we'll want to to set the defaults to the last set position
+			XPos=g_WindowInfo.rcNormalPosition.left;
+			YPos=g_WindowInfo.rcNormalPosition.top;
+			XRes=g_WindowInfo.rcNormalPosition.right - XPos;
+			YRes=g_WindowInfo.rcNormalPosition.bottom - YPos;
+			//translate from child to pop-up or vise versa
+
+			if (g_IsPopup!=m_IsPopup_LastOpenedState)
+			{
+				RECT Parent;
+				GetWindowRect(m_ParentHwnd,&Parent);
+				if (g_IsPopup)  //child to pop-up
+					XPos+=Parent.left,YPos+=Parent.top;
+				else
+					XPos-=Parent.left,YPos-=Parent.top;
+			}
+			//Pedantic but we should keep this updated
+			SetDefaults(m_PreviewName.c_str(),XRes,YRes,XPos,YPos);
 		}
 	}
+	g_IsSmartDashboardStarted=IsSmartDashboardStarted;
+
+	{
+		assert (!m_Window);
+		//apparently there is a racing condition where the window needs a thread to set its handle
+		size_t TimeOut=0;
+		LONG X=XPos;
+		LONG Y=YPos;
+		RECT lWindowPosition = {  X,Y,X+XRes,Y+YRes};
+		//Note: A child option can only be presented if we have the parent window
+		assert(IsPopup || ParentHwnd);
+		m_IsPopup_LastOpenedState=IsPopup;  //this is the only place this is written
+		m_Window=new DDraw_Window(this,ParentHwnd,IsPopup,source_name,&lWindowPosition);
+		while ((!(HWND)*m_Window)&&(TimeOut++<100))
+			Sleep(10);
+		assert((HWND)*m_Window);
+		hWnd_ForDDraw=(HWND)*m_Window;
+	}
+	
 	if (hWnd_ForDDraw)
 	{
 		assert (!m_DD_StreamOut);
@@ -373,6 +404,8 @@ void DDraw_Preview::Reset_DPC()
 
 void DDraw_Preview::SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos)
 {
+	//Note: we use the rect as such
+	//left=xRes top=yRes right=xPos bottom=YPos
 	m_PreviewName=source_name;
 	m_DefaultWindow.left =XRes,
 	m_DefaultWindow.top=YRes,
