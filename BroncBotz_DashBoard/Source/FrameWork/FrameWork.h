@@ -16,8 +16,19 @@ namespace FrameWork
 
 	namespace Bitmaps
 	{
-		#include "Bitmap.h"
+		// The bitmap template
+		#include "bitmap.h"
+		#include "bitmap-inc.h"
+
+		#include "bitmap_422.h"
 		#include "bitmap_422-inc.h"
+
+		// Basic pixel implementations
+		#include "pixel_types.h"
+		#include "bitmap_types.h"
+
+		// Color conversions
+		#include "color_conversions.h"		
 	}
 
 #include "Misc.h"

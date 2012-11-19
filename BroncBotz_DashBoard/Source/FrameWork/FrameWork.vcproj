@@ -211,11 +211,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\bitmap-inc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Bitmap.h"
 				>
 			</File>
 			<File
 				RelativePath=".\bitmap_422-inc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bitmap_422.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bitmap_types.h"
+				>
+			</File>
+			<File
+				RelativePath=".\color_conversions.h"
 				>
 			</File>
 			<File
@@ -248,6 +264,10 @@
 			</File>
 			<File
 				RelativePath=".\Misc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pixel_types.h"
 				>
 			</File>
 			<File
