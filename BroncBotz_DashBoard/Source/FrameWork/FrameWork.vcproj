@@ -149,6 +149,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\convert_bgr_ycbcr.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\convert_ycbcr_bgr.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\critical_section.cpp"
 				>
 			</File>

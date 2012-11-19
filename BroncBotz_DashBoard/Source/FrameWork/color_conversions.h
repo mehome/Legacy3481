@@ -59,7 +59,7 @@ void convert_line( const src_type* __restrict p_src, dst_type* __restrict p_dst,
 template<const typename src_type> 
 __forceinline void convert_line( const src_type* __restrict p_src, src_type* __restrict p_dst, const int width ) { memcpy( p_dst, p_src, width*sizeof(src_type) ); }								// Optimized
 
-// 422 lines need to be sprcialized to ensure that the resolution is supported right
+// 422 lines need to be specialized to ensure that the resolution is supported right
 template<> __forceinline void convert_line( const pixel_ycbcr_u8 * __restrict p_src, pixel_ycbcr_u8 * __restrict p_dst, const int width ) { memcpy( p_dst, p_src, (width/2)*sizeof(p_src[0]) ); }	// Optimized
 template<> __forceinline void convert_line( const pixel_ycbcr_s8 * __restrict p_src, pixel_ycbcr_s8 * __restrict p_dst, const int width ) { memcpy( p_dst, p_src, (width/2)*sizeof(p_src[0]) ); }	// Optimized
 template<> __forceinline void convert_line( const pixel_ycbcr_u16* __restrict p_src, pixel_ycbcr_u16* __restrict p_dst, const int width ) { memcpy( p_dst, p_src, (width/2)*sizeof(p_src[0]) ); }	// Optimized
@@ -103,11 +103,11 @@ template<> void  convert_line( const float*	__restrict p_src, short* __restrict 
 template<> void  convert_line( const short*	__restrict p_src, float* __restrict p_dst, const int width );						// Optimized
 template<> void  convert_line( const int*	__restrict p_src, float* __restrict p_dst, const int width );						// Optimized
 
-template<> __forceinline void convert_line( const pixel_bgra_u16* __restrict p_src, pixel_bgra_u8*  __restrict p_dst, const int width ) { convert_line<WORD ,BYTE>( (WORD *)p_src, (BYTE*)p_dst, width*4 ); }
-template<> __forceinline void convert_line( const pixel_bgra_f32* __restrict p_src, pixel_bgra_u8*  __restrict p_dst, const int width ) { convert_line<float,BYTE>( (float*)p_src, (BYTE*)p_dst, width*4 ); }
-template<> __forceinline void convert_line( const pixel_bgra_f32* __restrict p_src, pixel_bgra_u16* __restrict p_dst, const int width ) { convert_line<float,WORD>( (float*)p_src, (WORD*)p_dst, width*4 ); }
-template<> __forceinline void convert_line( const pixel_bgr_u16*  __restrict p_src, pixel_bgr_u8*   __restrict p_dst, const int width ) { convert_line<WORD ,BYTE>( (WORD *)p_src, (BYTE*)p_dst, width*3 ); }
-template<> __forceinline void convert_line( const pixel_bgr_f32*  __restrict p_src, pixel_bgr_u8*   __restrict p_dst, const int width ) { convert_line<float,BYTE>( (float*)p_src, (BYTE*)p_dst, width*3 ); }
+template<> __inline void convert_line( const pixel_bgra_u16* __restrict p_src, pixel_bgra_u8*  __restrict p_dst, const int width ) { convert_line<WORD ,BYTE>( (WORD *)p_src, (BYTE*)p_dst, width*4 ); }
+template<> __inline void convert_line( const pixel_bgra_f32* __restrict p_src, pixel_bgra_u8*  __restrict p_dst, const int width ) { convert_line<float,BYTE>( (float*)p_src, (BYTE*)p_dst, width*4 ); }
+template<> __inline void convert_line( const pixel_bgra_f32* __restrict p_src, pixel_bgra_u16* __restrict p_dst, const int width ) { convert_line<float,WORD>( (float*)p_src, (WORD*)p_dst, width*4 ); }
+template<> __inline void convert_line( const pixel_bgr_u16*  __restrict p_src, pixel_bgr_u8*   __restrict p_dst, const int width ) { convert_line<WORD ,BYTE>( (WORD *)p_src, (BYTE*)p_dst, width*3 ); }
+template<> __inline void convert_line( const pixel_bgr_f32*  __restrict p_src, pixel_bgr_u8*   __restrict p_dst, const int width ) { convert_line<float,BYTE>( (float*)p_src, (BYTE*)p_dst, width*3 ); }
 
 // BGR to BGRA
 template<> void  convert_line( const pixel_bgr_u8*  __restrict p_src, pixel_bgra_u8*  __restrict p_dst, const int width );		// Decently fast

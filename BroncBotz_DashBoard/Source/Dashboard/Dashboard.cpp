@@ -54,13 +54,15 @@ private:
 		//Sleep(33);
 		//Sleep(1000);
 		DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
-		m_Outstream->process_frame(&m_TestMap);
+		m_RGB=m_TestMap;
+		m_Outstream->process_frame(&m_RGB);
 		//printf("%d\n",m_Counter++);
 	}
 	FrameWork::tThread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
 
 private:
 	FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
+	FrameWork::Bitmaps::bitmap_bgr_u8 m_RGB;
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
 	size_t m_Counter;
 };
@@ -473,9 +475,16 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		}
 	}
 
-	//TODO use .ini to determine standalone case
-	DDraw_Preview TheApp(DDraw_Preview::eSmartDashboard,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
-	//DDraw_Preview TheApp(DDraw_Preview::eStandAlone,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
+	#if 1
+	DDraw_Preview::WindowType window_type=DDraw_Preview::eSmartDashboard;
+	if (SmartDashboard.c_str()[0]==0)
+		window_type=DDraw_Preview::eStandAlone;
+	#else
+	DDraw_Preview::WindowType window_type=DDraw_Preview::eStandAlone;
+	#endif
+
+	DDraw_Preview TheApp(window_type,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
+
 	TheApp.RunApp();
 	
 	{
