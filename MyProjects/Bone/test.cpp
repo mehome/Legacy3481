@@ -1,7 +1,7 @@
 #include "HandleMain.h"
 
 
-testclass::Callback(HWND w_ptr,
+int testclass::Callback(HWND w_ptr,
 	UINT uMsg,
 	WPARAM wParam,
 	LPARAM lParam) 

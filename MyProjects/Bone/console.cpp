@@ -1,7 +1,8 @@
 #include "HandleMain.h"
 
+#pragma warning ( disable : 4996 )
 
-consoleclass::handleconsole(HWND w_ptr,
+int consoleclass::handleconsole(HWND w_ptr,
 	UINT uMsg,
 	WPARAM wParam,
 	LPARAM lParam) 

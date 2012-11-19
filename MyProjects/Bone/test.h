@@ -8,7 +8,7 @@ class testclass : public messagebase {
 
 		testclass();
 		~testclass();
-		Callback(HWND w_ptr, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		int Callback(HWND w_ptr, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		void createwindow(HWND w_ptr);
 		void startup();
 		void shutdown();
