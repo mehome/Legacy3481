@@ -47,3 +47,5 @@ class Outstream_Interface
 };
 
 void DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber );
+
+void DebugOutput(const char *format, ... );

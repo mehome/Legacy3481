@@ -83,8 +83,10 @@ class DDraw_Preview
 		//returns true to quit
 		bool CommandLineInterface();
 		void RunApp();
+		void SignalQuit() { m_Terminate.set(); }
+
 		Preview *GetPreview() {return m_DD_StreamOut;}
-		virtual long Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l);
+		void Reset();  //can be used to change window from popup to child
 	protected:
 		virtual void CloseResources();
 		virtual void OpenResources();
@@ -112,6 +114,9 @@ using namespace std;
  /*											DDraw_Window												*/
 /*******************************************************************************************************/
 
+WINDOWPLACEMENT g_WindowInfo;
+bool g_IsPopup=true;
+
 class DDraw_Window : public Window
 {
 	public:
@@ -126,9 +131,76 @@ class DDraw_Window : public Window
 			//	KillTimer(m_hWnd,1);
 		}
 	protected:
+		enum MenuSelection
+		{
+			eMenu_NoSelection,
+			eMenu_Floating=100,	//typically win32 starts these at 100  (not sure why, but it is probably optional)
+			eMenu_Dockable,
+			eMenu_NoEntries
+		};
+
 		virtual long Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
 		{
-			return m_pParent->Dispatcher(window,message,w,l);
+			long ret=0;
+			switch (message)
+			{
+			case WM_RBUTTONDOWN:
+				{
+					HMENU hPopupMenu = CreatePopupMenu();
+					InsertMenu(hPopupMenu, 0, ( g_IsPopup?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Floating, L"Floating");
+					InsertMenu(hPopupMenu, 0, (!g_IsPopup?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Dockable, L"Dockable");
+					SetForegroundWindow(window);
+
+					//TODO omit this... I thought I needed to exclude from DDraw surface but it works fine
+					//TPMPARAMS excludeRegion;
+					//excludeRegion.cbSize=sizeof(TPMPARAMS);
+					//GetWindowRect(window,&excludeRegion.rcExclude);
+					//TODO omit this... If I want to keep it centered
+					//UINT L_R_Alignment=GetSystemMetrics(SM_MENUDROPALIGNMENT)==0?TPM_LEFTALIGN:TPM_RIGHTALIGN;
+					int XPos=0;
+					int YPos=0;
+					if (!g_IsPopup)
+					{
+						WINDOWPLACEMENT parent;
+						GetWindowPlacement(GetParent(*this),&parent);
+						XPos=parent.rcNormalPosition.left;
+						YPos=parent.rcNormalPosition.top;
+					}
+					GetWindowPlacement(*this,&g_WindowInfo);
+					XPos+=(g_WindowInfo.rcNormalPosition.left+g_WindowInfo.rcNormalPosition.right) >> 1;
+					YPos+=(g_WindowInfo.rcNormalPosition.top+g_WindowInfo.rcNormalPosition.bottom) >> 1;
+					MenuSelection selection=(MenuSelection)TrackPopupMenuEx(hPopupMenu, TPM_CENTERALIGN | TPM_RETURNCMD, XPos, YPos	, window, NULL);
+					if (selection!=eMenu_NoSelection)
+					{
+						FrameWork::DebugOutput("Selection=%d\n",selection);
+						switch (selection)
+						{
+							case eMenu_Floating:
+								if (!g_IsPopup)		//only commit if it was changed
+								{
+									g_IsPopup=true;
+									//m_pParent->Reset();  //TODO DPC
+								}
+								break;
+							case eMenu_Dockable:
+								if (g_IsPopup)		//only commit if it was changed
+								{
+									g_IsPopup=false;
+									//m_pParent->Reset();  //TODO DPC
+								}
+								break;
+						}
+					}
+				}
+				break;
+			case WM_CLOSE:
+			case WM_DESTROY:
+				m_pParent->SignalQuit();
+				break;
+			default:
+				ret=DefWindowProc(window,message,w,l);
+			}
+			return ret;
 		}
 		virtual void InitializeWindow() 
 		{
@@ -168,12 +240,11 @@ DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const w
 	Init(type);
 }
 
-WINDOWPLACEMENT g_WindowInfo;
-bool g_IsPopup=true;
-
 void DDraw_Preview::CloseResources()
 {
+	//before closing the resources ensure the upstream is not streaming to us
 	m_FrameGrabber.StopStreaming();
+	m_FrameGrabber.SetOutstream_Interface(NULL);  //pedantic
 	delete m_DD_StreamOut;
 	m_DD_StreamOut=NULL;
 	if (m_Window)
@@ -238,6 +309,9 @@ void DDraw_Preview::OpenResources()
 		m_ParentHwnd=ParentHwnd;
 	}
 
+	//If we don't have a parent window then we must be a Popup
+	if (!ParentHwnd)
+		g_IsPopup=IsPopup=true;
 	{
 		{
 			assert (!m_Window);
@@ -247,7 +321,8 @@ void DDraw_Preview::OpenResources()
 			LONG Y=YPos;
 			RECT lWindowPosition = {  X,Y,X+XRes,Y+YRes};
 			//Note: A child option can only be presented if we have the parent window
-			m_Window=new DDraw_Window(this,ParentHwnd,ParentHwnd?IsPopup:true,source_name,&lWindowPosition);
+			assert(IsPopup || ParentHwnd);
+			m_Window=new DDraw_Window(this,ParentHwnd,IsPopup,source_name,&lWindowPosition);
 			while ((!(HWND)*m_Window)&&(TimeOut++<100))
 				Sleep(10);
 			assert((HWND)*m_Window);
@@ -275,6 +350,12 @@ void DDraw_Preview::OpenResources()
 	}
 }
 
+void DDraw_Preview::Reset()
+{
+	CloseResources();
+	OpenResources();
+}
+
 void DDraw_Preview::SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos)
 {
 	m_PreviewName=source_name;
@@ -294,31 +375,6 @@ void DDraw_Preview::SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,
 	LONG X=(LONG)(((float)(::GetSystemMetrics(SM_CXSCREEN)-XRes))*XPos);
 	LONG Y=(LONG)(((float)(::GetSystemMetrics(SM_CYSCREEN)-YRes))*YPos);
 	SetDefaults(source_name,XRes,YRes,X,Y);
-}
-
-long DDraw_Preview::Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
-{
-	switch (message)
-	{
-	#if 0
-	case WM_TIMER:
-		if (m_ParentHwnd)
-		{
-			//agghhhh polling for now yuck
-			m_ParentHwnd=FindWindow(L"SunAwtFrame",L"SmartDashboard - ");
-			if (!m_ParentHwnd)
-				m_Terminate.set();
-		}
-		break;
-	#endif
-	case WM_CLOSE:
-	case WM_DESTROY:
-		m_Terminate.set();
-		break;
-	default:
-		return DefWindowProc(window,message,w,l);
-	}
-	return 0;
 }
 
 void DDraw_Preview::RunApp()
@@ -371,7 +427,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	//TODO use .ini to determine standalone case
 	DDraw_Preview TheApp(DDraw_Preview::eSmartDashboard,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
-	//DDraw_Preview test(DDraw_Preview::eStandAlone,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
+	//DDraw_Preview TheApp(DDraw_Preview::eStandAlone,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
 	TheApp.RunApp();
 	
 	{

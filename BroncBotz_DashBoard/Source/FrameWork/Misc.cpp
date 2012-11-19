@@ -1,6 +1,15 @@
 #include "stdafx.h"
 #include "FrameWork.h"
 
+void FrameWork::DebugOutput(const char *format, ... )
+{	char Temp[2048];
+	va_list marker;
+	va_start(marker,format);
+		vsprintf(Temp,format,marker);
+		OutputDebugStringA(Temp);
+	va_end(marker);		
+}
+
 void FrameWork::DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber )
 {
 	{ // aka Black Field section
