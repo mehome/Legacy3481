@@ -1,7 +1,7 @@
 #pragma once
 
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-thread<threadcall_type,threadcall_param_type,auto_loop>::thread( threadcall_type *pCaller )
+tThread<threadcall_type,threadcall_param_type,auto_loop>::tThread( threadcall_type *pCaller )
 	:	m_pDestination( pCaller ) ,
 		m_Handle( NULL ) , m_thread_should_exit( false ),
 		m_time_out( INFINITE ),
@@ -12,7 +12,7 @@ thread<threadcall_type,threadcall_param_type,auto_loop>::thread( threadcall_type
 }
 
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-thread<threadcall_type,threadcall_param_type,auto_loop>::thread( threadcall_type &rCaller )
+tThread<threadcall_type,threadcall_param_type,auto_loop>::tThread( threadcall_type &rCaller )
 	:	m_pDestination( &rCaller ) ,
 		m_Handle( NULL ) , m_thread_should_exit( false ),
 		m_time_out( INFINITE ),
@@ -23,7 +23,7 @@ thread<threadcall_type,threadcall_param_type,auto_loop>::thread( threadcall_type
 }
 
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-thread<threadcall_type,threadcall_param_type,auto_loop>::thread( threadcall_type *pCaller, threadcall_param_type data )
+tThread<threadcall_type,threadcall_param_type,auto_loop>::tThread( threadcall_type *pCaller, threadcall_param_type data )
 	:	m_pDestination( pCaller ) ,
 		m_Handle( NULL ) , 
 		m_thread_should_exit( false ), 
@@ -36,7 +36,7 @@ thread<threadcall_type,threadcall_param_type,auto_loop>::thread( threadcall_type
 }
 
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-thread<threadcall_type,threadcall_param_type,auto_loop>::thread( threadcall_type &rCaller, threadcall_param_type data )
+tThread<threadcall_type,threadcall_param_type,auto_loop>::tThread( threadcall_type &rCaller, threadcall_param_type data )
 	:	m_pDestination( &rCaller ) ,
 		m_Handle( NULL ) , 
 		m_thread_should_exit( false ),
@@ -50,7 +50,7 @@ thread<threadcall_type,threadcall_param_type,auto_loop>::thread( threadcall_type
 
 // Destructor
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-thread<threadcall_type,threadcall_param_type,auto_loop>::~thread( void )
+tThread<threadcall_type,threadcall_param_type,auto_loop>::~tThread( void )
 {	// Stop the thread
 	// Start the thread
 	const bool _Stop = Stop();
@@ -58,7 +58,7 @@ thread<threadcall_type,threadcall_param_type,auto_loop>::~thread( void )
 }
 
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-bool thread<threadcall_type,threadcall_param_type,auto_loop>::Start( const int StackSize )
+bool tThread<threadcall_type,threadcall_param_type,auto_loop>::Start( const int StackSize )
 {	// We cannot be running
 	if (m_Handle) return false;
 	if (!m_pDestination) return false;
@@ -78,12 +78,12 @@ bool thread<threadcall_type,threadcall_param_type,auto_loop>::Start( const int S
 
 // Get the Thread ID
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-const DWORD thread<threadcall_type,threadcall_param_type,auto_loop>::thread_id( void ) const
+const DWORD tThread<threadcall_type,threadcall_param_type,auto_loop>::thread_id( void ) const
 {	return m_ID;
 }
 
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-bool thread<threadcall_type,threadcall_param_type,auto_loop>::Stop( void )
+bool tThread<threadcall_type,threadcall_param_type,auto_loop>::Stop( void )
 {	// We must be running
 	if (!m_Handle) return false;
 
@@ -148,9 +148,9 @@ try_again:
 
 // The thread callback
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-DWORD thread<threadcall_type,threadcall_param_type,auto_loop>::thread_proc( void *p_ptr )
+DWORD tThread<threadcall_type,threadcall_param_type,auto_loop>::thread_proc( void *p_ptr )
 {	// Get the pointer to myself
-	thread *p_this = (thread*)p_ptr;
+	tThread *p_this = (tThread*)p_ptr;
 	assert( p_this );
 	assert( p_this->m_pDestination );
 
@@ -170,41 +170,41 @@ DWORD thread<threadcall_type,threadcall_param_type,auto_loop>::thread_proc( void
 
 // Set the priority
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-void thread<threadcall_type,threadcall_param_type,auto_loop>::realtime_priority( void )
+void tThread<threadcall_type,threadcall_param_type,auto_loop>::realtime_priority( void )
 {	assert( m_Handle );
 	::SetThreadPriority( m_Handle , THREAD_PRIORITY_TIME_CRITICAL );
 }
 
 // Set the priority
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-void thread<threadcall_type,threadcall_param_type,auto_loop>::high_priority( void )
+void tThread<threadcall_type,threadcall_param_type,auto_loop>::high_priority( void )
 {	assert( m_Handle );
 	::SetThreadPriority( m_Handle , THREAD_PRIORITY_HIGHEST );
 }
 
 // Set the priority
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-void thread<threadcall_type,threadcall_param_type,auto_loop>::medium_priority( void )
+void tThread<threadcall_type,threadcall_param_type,auto_loop>::medium_priority( void )
 {	assert( m_Handle );
 	::SetThreadPriority( m_Handle , THREAD_PRIORITY_NORMAL );
 }
 
 // Set the priority
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-void thread<threadcall_type,threadcall_param_type,auto_loop>::low_priority( void )
+void tThread<threadcall_type,threadcall_param_type,auto_loop>::low_priority( void )
 {	assert( m_Handle );
 	::SetThreadPriority( m_Handle , THREAD_PRIORITY_LOWEST );
 }
 
 // Set the priority
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-void thread<threadcall_type,threadcall_param_type,auto_loop>::idle_priority( void )
+void tThread<threadcall_type,threadcall_param_type,auto_loop>::idle_priority( void )
 {	assert( m_Handle );
 	::SetThreadPriority( m_Handle , THREAD_PRIORITY_IDLE );
 }
 
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-void thread<threadcall_type,threadcall_param_type,auto_loop>::set_time_out( const DWORD time )
+void tThread<threadcall_type,threadcall_param_type,auto_loop>::set_time_out( const DWORD time )
 {	m_time_out = time;
 }
 
@@ -212,7 +212,7 @@ void thread<threadcall_type,threadcall_param_type,auto_loop>::set_time_out( cons
 
 // Set thread name
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-void thread<threadcall_type,threadcall_param_type,auto_loop>::set_thread_name( const char *p_thread_name )
+void tThread<threadcall_type,threadcall_param_type,auto_loop>::set_thread_name( const char *p_thread_name )
 {	
 #pragma pack(push,8)
 typedef struct tagTHREADNAME_INFO
@@ -234,6 +234,6 @@ typedef struct tagTHREADNAME_INFO
  }
 
 template< typename threadcall_type, typename threadcall_param_type, const bool auto_loop >
-void thread<threadcall_type,threadcall_param_type,auto_loop>::set_exit_error( bool* p_err )
+void tThread<threadcall_type,threadcall_param_type,auto_loop>::set_exit_error( bool* p_err )
 {	m_p_error = p_err;
 }
