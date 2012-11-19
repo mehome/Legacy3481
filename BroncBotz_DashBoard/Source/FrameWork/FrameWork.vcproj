@@ -185,6 +185,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\thread.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Time_Type.cpp"
 				>
 			</File>

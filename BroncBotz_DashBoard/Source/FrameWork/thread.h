@@ -27,16 +27,16 @@
 //struct FRAMEWORK_THREADS_API thread_memtrack {};
 
 template< typename threadcall_type, typename threadcall_param_type = const void*, const bool auto_loop = true >
-struct thread
+struct tThread
 {			// Constructor
-			thread( threadcall_type *pCaller );
-			thread( threadcall_type &rCaller );
+			tThread( threadcall_type *pCaller );
+			tThread( threadcall_type &rCaller );
 
-			thread( threadcall_type *pCaller, threadcall_param_type data );
-			thread( threadcall_type &rCaller, threadcall_param_type data );
+			tThread( threadcall_type *pCaller, threadcall_param_type data );
+			tThread( threadcall_type &rCaller, threadcall_param_type data );
 
 			// Destructor
-			~thread( void );			
+			~tThread( void );			
 
 			// Set the priority
 			void realtime_priority( void );
@@ -62,7 +62,7 @@ struct thread
 			void set_thread_name( const char *p_thread_name );
 
 private:	// Deliberately private so that it cannot be copied.
-			thread( const thread &CopyFrom ) { assert(false); }
+			tThread( const tThread &CopyFrom ) { assert(false); }
 	
 			// Start the thread
 			bool Start( const int StackSize = 128*1024 );
@@ -94,3 +94,54 @@ private:	// Deliberately private so that it cannot be copied.
 };
 
 #include "thread-inc.h"
+
+struct thread
+{			// Constructor
+	thread( const DWORD stack_size = 16*1024 );	// Warning small default stack size
+
+	// Destructor
+	~thread( void );
+
+	// Cast the thread
+	__forceinline operator HANDLE ( void ) { return m_h_thread; }
+
+	// Is this the thread that we are currently running on (this is a very fast call)
+	__forceinline bool is_current_thread( void ) { return ( ::GetCurrentThreadId() == m_thread_id ); }
+
+	// Set the thread priority
+	void priority_idle( void );
+	void priority_lowest( void );
+	void priority_below_normal( void );
+	void priority_normal( void );
+	void priority_above_normal( void );
+	void priority_highest( void );
+	void priority_time_critical( void );
+
+	// This allows you to wait on an event and also allow other functions to run
+	enum e_wait_result
+	{	e_wait_result_exit,			// The thread is being exited
+	e_wait_result_timeout,		// We timed out waiting.
+	e_wait_result_fcncall,		// A function call was made which made the wait complete
+	e_wait_result_triggered_0,	// Event 0 was trigered
+	e_wait_result_triggered_1,	// Event 1 was trigered
+	e_wait_result_triggered_2,	// Event 2 was trigered
+	e_wait_result_triggered_3,	// Event 3 was trigered				
+	};
+
+	e_wait_result	wait( const DWORD time_out = INFINITE, HANDLE event0 = NULL, HANDLE event1 = NULL, HANDLE event2 = NULL, HANDLE event3 = NULL );
+
+	// This will recover the thread pointer that you are currently on, or NULL otherwise.
+	static thread* get_thread( void );
+
+private:	// The thread handle
+	HANDLE	m_h_thread;
+	HANDLE	m_h_thread_should_exit;
+	HANDLE	m_h_thread_started;
+
+	// The thread ID for very quick determination whether this is the thread being used.
+	DWORD	m_thread_id;
+
+	// The thread proc
+	static DWORD WINAPI threadproc( void* lpParameter );
+
+}; // struct thread

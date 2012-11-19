@@ -31,7 +31,7 @@ public:
 	void StartStreaming()
 	{
 		m_Counter=0;
-		m_pThread = new FrameWork::thread<FrameGrabber_TestPattern>(this);
+		m_pThread = new FrameWork::tThread<FrameGrabber_TestPattern>(this);
 	}
 
 	void StopStreaming()
@@ -45,7 +45,7 @@ public:
 		StopStreaming();
 	}
 private:
-	friend FrameWork::thread<FrameGrabber_TestPattern>;
+	friend FrameWork::tThread<FrameGrabber_TestPattern>;
 
 	void operator() ( const void* )
 	{
@@ -57,7 +57,7 @@ private:
 		m_Outstream->process_frame(&m_TestMap);
 		//printf("%d\n",m_Counter++);
 	}
-	FrameWork::thread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
+	FrameWork::tThread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
 
 private:
 	FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
@@ -86,16 +86,19 @@ class DDraw_Preview
 		void SignalQuit() { m_Terminate.set(); }
 
 		Preview *GetPreview() {return m_DD_StreamOut;}
-		void Reset();  //can be used to change window from popup to child
+		void Reset_DPC();  //This launches reset on a deferred procedure call
 	protected:
 		virtual void CloseResources();
 		virtual void OpenResources();
 	private:
+		void Reset();
 		void DisplayHelp();
 		// -1 for x and y res will revert to hard coded defaults (this keeps tweaking inside the cpp file)
 		void SetDefaults(const wchar_t source_name[] = L"Preview",LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
 		void SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos);
 		FrameWork::event m_Terminate;
+		FrameWork::thread m_thread;  //For DPC support
+
 		HWND m_ParentHwnd;
 		Window *m_Window;
 		Preview *m_DD_StreamOut;
@@ -116,6 +119,7 @@ using namespace std;
 
 WINDOWPLACEMENT g_WindowInfo;
 bool g_IsPopup=true;
+bool g_IsSmartDashboardStarted=false;  //only run shell execute one time
 
 class DDraw_Window : public Window
 {
@@ -179,14 +183,14 @@ class DDraw_Window : public Window
 								if (!g_IsPopup)		//only commit if it was changed
 								{
 									g_IsPopup=true;
-									//m_pParent->Reset();  //TODO DPC
+									m_pParent->Reset_DPC();
 								}
 								break;
 							case eMenu_Dockable:
 								if (g_IsPopup)		//only commit if it was changed
 								{
 									g_IsPopup=false;
-									//m_pParent->Reset();  //TODO DPC
+									m_pParent->Reset_DPC();
 								}
 								break;
 						}
@@ -290,12 +294,16 @@ void DDraw_Preview::OpenResources()
 	bool IsPopup=g_IsPopup;
 	if (m_WindowType==eSmartDashboard)
 	{
-		LPTSTR szCmdline = _tcsdup(m_SmartDashBoard_FileName.c_str());
-		//Note:
-		//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
-		//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
-		//of the error codes below.
-		HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
+		if (!g_IsSmartDashboardStarted)
+		{
+			LPTSTR szCmdline = _tcsdup(m_SmartDashBoard_FileName.c_str());
+			//Note:
+			//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
+			//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
+			//of the error codes below.
+			HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
+			g_IsSmartDashboardStarted=true;
+		}
 		//Give this some time to open
 		size_t TimeOut=0;
 		do 
@@ -354,6 +362,13 @@ void DDraw_Preview::Reset()
 {
 	CloseResources();
 	OpenResources();
+}
+
+void DDraw_Preview::Reset_DPC()
+{
+	//This has to be a deferred procedure call because the primitive callback must complete!
+	using namespace FrameWork;
+	cpp::threadcall_ex( do_not_wait, m_thread, this, &DDraw_Preview::Reset);
 }
 
 void DDraw_Preview::SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos)

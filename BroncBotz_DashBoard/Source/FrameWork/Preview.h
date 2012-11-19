@@ -118,9 +118,9 @@ protected:
 
 private:
 	// My worker thread function that does something useful w/ a buffer after it's been filled
-	friend FrameWork::thread<Preview>;
+	friend FrameWork::tThread<Preview>;
 	void operator() ( const void* );
-	FrameWork::thread<Preview> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
+	FrameWork::tThread<Preview> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
 
 	Buffer *m_VideoBuffers[Preview_NoVideoBuffers];	//These are the surfaces that get filled
 	Buffer *m_LastBufferProcessed;  //keep track of last buffer processed for under-run timeout repaint
