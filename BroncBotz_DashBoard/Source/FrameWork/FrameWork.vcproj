@@ -259,6 +259,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\thread-inc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\thread.h"
 				>
 			</File>
