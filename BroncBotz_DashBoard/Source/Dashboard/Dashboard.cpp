@@ -72,35 +72,63 @@ private:
 class ProcessingVision : public FrameWork::Outstream_Interface
 {
 	public:
-		ProcessingVision(FrameWork::Outstream_Interface *Preview=NULL) : m_Outstream(Preview) {}
+		ProcessingVision(FrameWork::Outstream_Interface *Preview=NULL) : m_DriverProc(NULL),m_PlugIn(NULL),m_Outstream(Preview) {}
+		~ProcessingVision()
+		{
+			FlushPlugin();
+		}
 
 		void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_Outstream=Preview;}
+		void LoadPlugIn(const wchar_t Plugin[])
+		{
+			FlushPlugin();  //ensure its not already loaded
+			m_PlugIn=LoadLibrary(Plugin);
+			if (m_PlugIn)
+			{
+				m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_RGB24");
+				if (!m_DriverProc)
+					FlushPlugin();
+			}
+		}
 		void StartStreaming() {m_IsStreaming=true;}
 		void StopStreaming() {m_IsStreaming=false;}
 
 		virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgr_u8 *pBuffer)
 		{
-			#if 0
-			if (m_IsStreaming)
-				m_Outstream->process_frame(pBuffer); //just passing through			
-			#else
 			if (m_IsStreaming)
 			{
-				using namespace FrameWork::Bitmaps;
-				Bitmap_Frame frame((PBYTE)(*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
-				Bitmap_Frame out_frame=*(ProcessFrame_RGB24(&frame));
-				bitmap_bgr_u8 dest((pixel_bgr_u8 *)out_frame.Memory,out_frame.XRes,out_frame.YRes,out_frame.Stride);
-				m_Outstream->process_frame(&dest);
+				if (m_DriverProc)
+				{
+					using namespace FrameWork::Bitmaps;
+					Bitmap_Frame frame((PBYTE)(*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
+					Bitmap_Frame out_frame=*((*m_DriverProc)(&frame));
+					bitmap_bgr_u8 dest((pixel_bgr_u8 *)out_frame.Memory,out_frame.XRes,out_frame.YRes,out_frame.Stride);
+					m_Outstream->process_frame(&dest);
+				}
+				else
+					m_Outstream->process_frame(pBuffer); //just passing through			
 			}
-			#endif
 		}
 	private:
+		typedef Bitmap_Frame * (*DriverProc_t)(Bitmap_Frame *Frame);
+		DriverProc_t m_DriverProc;
+		void FlushPlugin()
+		{
+			if (m_PlugIn)
+			{
+				FreeLibrary(m_PlugIn);
+				m_PlugIn = NULL;
+			}
+		}
+
+		HMODULE m_PlugIn;
 		FrameWork::Outstream_Interface * m_Outstream; //I'm not checking for NULL so stream must be stopped while pointer is invalid
 		bool m_IsStreaming;
 };
 
 
 const wchar_t * const cwsz_DefaultSmartFile=L"C:\\WindRiver\\WPILib\\SmartDashboard.jar";
+const wchar_t * const cwsz_PlugInFile=L"ProcessingVision.dll";
 
 class DDraw_Preview 
 {
@@ -112,8 +140,8 @@ class DDraw_Preview
 		};
 
 		void Init(WindowType type);
-		DDraw_Preview(WindowType type=eStandAlone, const wchar_t source_name[] = L"Preview",const wchar_t *smart_file=cwsz_DefaultSmartFile,LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
-		DDraw_Preview(WindowType type, const wchar_t source_name[],const wchar_t *smart_file,LONG XRes,LONG YRes,LONG XPos,LONG YPos);
+		//DDraw_Preview(WindowType type=eStandAlone, const wchar_t source_name[] = L"Preview",const wchar_t *smart_file=cwsz_DefaultSmartFile,LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
+		DDraw_Preview(WindowType type, const wchar_t source_name[],const wchar_t smart_file[],LONG XRes,LONG YRes,LONG XPos,LONG YPos,const wchar_t plugin_file[]);
 		virtual ~DDraw_Preview();
 		//returns true to quit
 		bool CommandLineInterface();
@@ -138,7 +166,7 @@ class DDraw_Preview
 		Window *m_Window;
 		Preview *m_DD_StreamOut;
 
-		std::wstring m_PreviewName,m_SmartDashBoard_FileName;
+		std::wstring m_PreviewName,m_SmartDashBoard_FileName,m_PlugInName;
 		RECT m_DefaultWindow;  //left=xRes top=yRes right=xPos bottom=YPos
 
 		FrameGrabber_TestPattern m_FrameGrabber;
@@ -268,16 +296,19 @@ void DDraw_Preview::Init(WindowType type)
 	m_ProcessingVision=NULL;
 }
 
+#if 0
 DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const wchar_t *smart_file,LONG XRes,LONG YRes,float XPos,float YPos)
 {
 	m_SmartDashBoard_FileName=smart_file;
 	SetDefaults(source_name,XRes,YRes,XPos,YPos);
 	Init(type);
 }
+#endif
 
-DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const wchar_t *smart_file,LONG XRes,LONG YRes,LONG XPos,LONG YPos)
+DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const wchar_t smart_file[],LONG XRes,LONG YRes,LONG XPos,LONG YPos,const wchar_t plugin_file[])
 {
 	m_SmartDashBoard_FileName=smart_file;
+	m_PlugInName=plugin_file;
 	SetDefaults(source_name,XRes,YRes,XPos,YPos);
 	Init(type);
 }
@@ -319,6 +350,7 @@ void DDraw_Preview::OpenResources()
 {
 	CloseResources(); //just ensure all resources are closed
 
+	m_ProcessingVision.LoadPlugIn(m_PlugInName.c_str());
 	LONG XRes=m_DefaultWindow.left, YRes=m_DefaultWindow.top, XPos=m_DefaultWindow.right, YPos=m_DefaultWindow.bottom;
 	const wchar_t *source_name=m_PreviewName.c_str();
 
@@ -483,6 +515,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 					   int       nCmdShow)
 {
 	wstring SmartDashboard=cwsz_DefaultSmartFile;
+	wstring Plugin=cwsz_PlugInFile;
 	long XRes,YRes,XPos,YPos;
 	const char * const csz_FileName="BroncBotz_Dashboard.ini";
 	{
@@ -490,7 +523,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=6 << 1;
+			const size_t NoEnties=7 << 1;
 			string StringEntry[NoEnties];
 			for (size_t i=0;i<NoEnties;i++)
 			{
@@ -505,9 +538,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			YRes=bottom-top;
 			XPos=left;
 			YPos=top;
-			char2wchar(StringEntry[9].c_str());
-			SmartDashboard=char2wchar_pwchar;
+			{
+				char2wchar(StringEntry[9].c_str());
+				SmartDashboard=char2wchar_pwchar;
+			}
 			g_IsPopup=atoi(StringEntry[11].c_str())==0?false:true;
+			{
+				char2wchar(StringEntry[13].c_str());
+				Plugin=char2wchar_pwchar;
+			}
 		}
 		else
 		{
@@ -526,7 +565,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	DDraw_Preview::WindowType window_type=DDraw_Preview::eStandAlone;
 	#endif
 
-	DDraw_Preview TheApp(window_type,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos);
+	DDraw_Preview TheApp(window_type,L"Preview",SmartDashboard.c_str(),XRes,YRes,XPos,YPos,Plugin.c_str());
 
 	TheApp.RunApp();
 	
@@ -537,9 +576,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		out << "top= "  << g_WindowInfo.rcNormalPosition.top << endl;
 		out << "right= " << g_WindowInfo.rcNormalPosition.right << endl;
 		out << "bottom= "  << g_WindowInfo.rcNormalPosition.bottom << endl;
-		wchar2char(SmartDashboard.c_str());
-		out << "SmartDashboard= " << wchar2char_pchar << endl;
+		{
+			wchar2char(SmartDashboard.c_str());
+			out << "SmartDashboard= " << wchar2char_pchar << endl;
+		}
 		out << "IsPopup= " << g_IsPopup << endl;
+		{
+			wchar2char(Plugin.c_str());
+			out << "PlugIn= " << wchar2char_pchar << endl;
+		}
 		out.close();
 	}
 	return 0;

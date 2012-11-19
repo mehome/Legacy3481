@@ -4,7 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dashboard", "Dashboard.vcproj", "{770EC6B2-8666-4C8D-8092-C4D49B0D6BD5}"
 	ProjectSection(ProjectDependencies) = postProject
 		{455B6FC3-BCD0-4927-B561-55F896A96185} = {455B6FC3-BCD0-4927-B561-55F896A96185}
-		{C97978F2-F958-4EA9-9BAA-55DD5C3E31E2} = {C97978F2-F958-4EA9-9BAA-55DD5C3E31E2}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameWork", "..\FrameWork\FrameWork.vcproj", "{455B6FC3-BCD0-4927-B561-55F896A96185}"
