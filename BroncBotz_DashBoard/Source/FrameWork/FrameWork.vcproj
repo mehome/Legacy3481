@@ -189,6 +189,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\wait.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\wait_item.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Window.cpp"
 				>
 			</File>
@@ -219,6 +227,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\fcncall_cpp-inc.h"
+				>
+			</File>
+			<File
+				RelativePath=".\fcncall_cpp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\fcncall_cpp_ex-inc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\FrameWork.h"
 				>
 			</File>
@@ -240,6 +260,14 @@
 			</File>
 			<File
 				RelativePath=".\Time_Type.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wait.h"
+				>
+			</File>
+			<File
+				RelativePath=".\wait_item.h"
 				>
 			</File>
 			<File
