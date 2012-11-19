@@ -530,62 +530,34 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=8 << 2;  //add extras for multiple args (TODO probably a cleaner way)
+			const size_t NoEnties=8 << 1;
 			string StringEntry[NoEnties];
 			for (size_t i=0;i<NoEnties;i++)
 			{
 				in>>StringEntry[i];
 			}
-			size_t argIndex=1;
 			in.close();
 			{
-				char2wchar(StringEntry[argIndex].c_str());
+				char2wchar(StringEntry[1].c_str());
 				Title=char2wchar_pwchar;
 			}
-			argIndex+=2;
-			int left=atoi(StringEntry[argIndex].c_str());
-			argIndex+=2;
-			int top=atoi(StringEntry[argIndex].c_str());
-			argIndex+=2;
-			int right=atoi(StringEntry[argIndex].c_str());
-			argIndex+=2;
-			int bottom=atoi(StringEntry[argIndex].c_str());
-			argIndex+=2;
+			int left=atoi(StringEntry[3].c_str());
+			int top=atoi(StringEntry[5].c_str());
+			int right=atoi(StringEntry[7].c_str());
+			int bottom=atoi(StringEntry[9].c_str());
 			XRes=right-left;
 			YRes=bottom-top;
 			XPos=left;
 			YPos=top;
 			{
-				char2wchar(StringEntry[argIndex].c_str());
+				char2wchar(StringEntry[11].c_str());
 				SmartDashboard=char2wchar_pwchar;
-				argIndex++;
-				if (SmartDashboard.c_str()[0]=='\"')
-				{
-					const wchar_t *posn=SmartDashboard.c_str();
-					posn+=sizeof(wchar_t);
-					wstring CheckNextEntry=posn; //keep wchar form
-					do 
-					{
-						posn=wcsrchr(CheckNextEntry.c_str(),L'\"');
-						if (posn==NULL)
-						{
-							SmartDashboard+=L" ";
-							char2wchar(StringEntry[argIndex].c_str());
-							SmartDashboard+=char2wchar_pwchar;
-							CheckNextEntry=char2wchar_pwchar;
-							argIndex+=1;
-						}
-					} while (posn==NULL);
-				}
-				argIndex++;
 			}
-			g_IsPopup=atoi(StringEntry[argIndex].c_str())==0?false:true;
-			argIndex+=2;
+			g_IsPopup=atoi(StringEntry[13].c_str())==0?false:true;
 			{
-				char2wchar(StringEntry[argIndex].c_str());
+				char2wchar(StringEntry[15].c_str());
 				Plugin=char2wchar_pwchar;
 			}
-			argIndex+=2;
 		}
 		else
 		{
