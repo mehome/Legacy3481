@@ -129,6 +129,8 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 
 const wchar_t * const cwsz_DefaultSmartFile=L"C:\\WindRiver\\WPILib\\SmartDashboard.jar";
 const wchar_t * const cwsz_PlugInFile=L"ProcessingVision.dll";
+const wchar_t * const cwsz_ClassName=L"SunAwtFrame";
+const wchar_t * const cwsz_WindowName=L"SmartDashboard - ";
 
 class DDraw_Preview 
 {
@@ -141,10 +143,10 @@ class DDraw_Preview
 				eSmartDashboard
 			} window_type;
 			std::wstring source_name;
-			std::wstring smart_file;
+			std::wstring smart_file;			//startup this parent window app
+			std::wstring ClassName,WindowName;  //find this window
 			std::wstring plugin_file;
-			std::wstring aux_startup_file;
-			std::wstring aux_startup_file_Args;
+			std::wstring aux_startup_file,aux_startup_file_Args;	//startup an aux... (no window finding for this)
 			LONG XRes,YRes,XPos,YPos;
 			//provide an alternate way to determine window coordinates
 			// -1 for x and y res will revert to hard coded defaults (this keeps tweaking inside the cpp file)
@@ -168,6 +170,7 @@ class DDraw_Preview
 		void Reset();
 		void DisplayHelp();
 		void SetDefaults(LONG XRes,LONG YRes,LONG XPos,LONG YPos);
+		void UpdateDefaultsFromWindowPlacement();
 		FrameWork::event m_Terminate;
 		FrameWork::thread m_thread;  //For DPC support
 
@@ -317,6 +320,32 @@ DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),
 	SetDefaults(props.XRes,props.YRes,props.XPos,props.YPos);
 }
 
+void DDraw_Preview::UpdateDefaultsFromWindowPlacement()
+{
+	//If we still have our parent window or if we have always been a pop-up
+	if ((m_ParentHwnd) || (g_IsPopup && m_IsPopup_LastOpenedState))
+	{
+		//we'll want to to set the defaults to the last set position
+		LONG XPos=g_WindowInfo.rcNormalPosition.left;
+		LONG YPos=g_WindowInfo.rcNormalPosition.top;
+		LONG XRes=g_WindowInfo.rcNormalPosition.right - XPos;
+		LONG YRes=g_WindowInfo.rcNormalPosition.bottom - YPos;
+		//translate from child to pop-up or vise versa
+
+		if (g_IsPopup!=m_IsPopup_LastOpenedState)
+		{
+			RECT Parent;
+			GetWindowRect(m_ParentHwnd,&Parent);
+			if (g_IsPopup)  //child to pop-up
+				XPos+=Parent.left,YPos+=Parent.top;
+			else
+				XPos-=Parent.left,YPos-=Parent.top;
+		}
+		//Pedantic but we should keep this updated
+		SetDefaults(XRes,YRes,XPos,YPos);
+	}
+}
+
 void DDraw_Preview::CloseResources()
 {
 	//before closing the resources ensure the upstream is not streaming to us
@@ -329,6 +358,7 @@ void DDraw_Preview::CloseResources()
 	if (m_Window)
 	{
 		GetWindowPlacement(*m_Window,&g_WindowInfo);
+		UpdateDefaultsFromWindowPlacement();
 		delete m_Window;
 		m_Window=NULL;
 	}
@@ -363,7 +393,7 @@ void DDraw_Preview::OpenResources()
 	HWND ParentHwnd=NULL;
 	bool IsPopup=g_IsPopup;
 	bool IsSmartDashboardStarted=g_IsSmartDashboardStarted;
-	if (m_Props.window_type==PrevProps::eSmartDashboard)
+	if ((m_Props.smart_file.c_str()[0]!=0)&&(m_Props.window_type!=PrevProps::eStandAlone))
 	{
 		if (!g_IsSmartDashboardStarted)
 		{
@@ -375,15 +405,17 @@ void DDraw_Preview::OpenResources()
 			HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
 			IsSmartDashboardStarted=true;
 		}
+	}
+	if ((m_Props.WindowName.c_str()[0]!=0)&&(m_Props.window_type!=PrevProps::eStandAlone))
+	{
 		//Give this some time to open
 		size_t TimeOut=0;
 		do 
 		{
 			Sleep(100);
-			//theAwtToolkitWindow
 			//SmartDashboard - /SunAwtFrame
-			//ParentHwnd=FindWindow(L"SunAwtToolkit",L"theAwtToolkitWindow");
-			ParentHwnd=FindWindow(L"SunAwtFrame",L"SmartDashboard - ");
+			//ParentHwnd=FindWindow(L"SunAwtFrame",L"SmartDashboard - ");
+			ParentHwnd=FindWindow(m_Props.ClassName.c_str(),m_Props.WindowName.c_str());
 		} while ((ParentHwnd==NULL)&&(TimeOut++<50)); //This may take a while on cold start
 		m_ParentHwnd=ParentHwnd;
 	}
@@ -391,33 +423,6 @@ void DDraw_Preview::OpenResources()
 	//If we don't have a parent window then we must be a Popup
 	if (!ParentHwnd)
 		g_IsPopup=IsPopup=true;
-
-	//for a previous ran session... we'll want to grab the last known position for this round
-	if (g_IsSmartDashboardStarted)
-	{
-		//If we still have our parent window or if we have always been a pop-up
-		if ((m_ParentHwnd) || (g_IsPopup && m_IsPopup_LastOpenedState))
-		{
-			//we'll want to to set the defaults to the last set position
-			XPos=g_WindowInfo.rcNormalPosition.left;
-			YPos=g_WindowInfo.rcNormalPosition.top;
-			XRes=g_WindowInfo.rcNormalPosition.right - XPos;
-			YRes=g_WindowInfo.rcNormalPosition.bottom - YPos;
-			//translate from child to pop-up or vise versa
-
-			if (g_IsPopup!=m_IsPopup_LastOpenedState)
-			{
-				RECT Parent;
-				GetWindowRect(m_ParentHwnd,&Parent);
-				if (g_IsPopup)  //child to pop-up
-					XPos+=Parent.left,YPos+=Parent.top;
-				else
-					XPos-=Parent.left,YPos-=Parent.top;
-			}
-			//Pedantic but we should keep this updated
-			SetDefaults(XRes,YRes,XPos,YPos);
-		}
-	}
 
 	{
 		assert (!m_Window);
@@ -504,6 +509,55 @@ void DDraw_Preview::RunApp()
 	CloseResources();
 }
 
+size_t split_arguments(const std::string& str, std::vector<std::string>& arguments)
+{
+	arguments.clear();
+
+	if (str.empty())
+		return 0;
+
+	const std::string whitespace = " \t\n\r";
+	const char group_char = '"';
+	bool in_argument = false;
+
+	arguments.push_back(std::string());
+	for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
+	{
+		if (*it == group_char)
+			in_argument = !in_argument;
+		else if (in_argument || whitespace.find(*it) == std::string::npos)
+			arguments.back().push_back(*it);
+		else if (!arguments.back().empty())
+			arguments.push_back(std::string());
+	}
+
+	if (arguments.back().empty())
+		arguments.pop_back();
+
+	assert(!in_argument); // Uneven quotes?
+
+	return arguments.size();
+}
+
+void AssignInput(wstring &output,const char *input)
+{
+	std::vector<std::string> Args;
+	split_arguments(std::string(input),Args);
+	//just use the first argument found
+	char2wchar(Args[0].c_str());
+	output=char2wchar_pwchar;
+	if (wcscmp(output.c_str(),L"none")==0)
+		output=L"";
+}
+
+void AssignOutput(string &output,const wchar_t *input)
+{
+	wchar2char(input);
+	output=wchar2char_pchar;
+	if (output[0]==0)
+		output="none";
+}
+
 int APIENTRY _tWinMain(HINSTANCE hInstance,
 					   HINSTANCE hPrevInstance,
 					   LPTSTR    lpCmdLine,
@@ -515,6 +569,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	wstring Plugin=cwsz_PlugInFile;
 	wstring AuxStart=L"none";
 	wstring AuxArgs=L"none";
+	wstring ClassName=cwsz_ClassName;
+	wstring WindowName=cwsz_WindowName;
 
 	string sz_FileName="BroncBotz_Dashboard.ini";
 	wchar_t *ext=wcsrchr(lpCmdLine,L'.');
@@ -528,17 +584,19 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=10 << 1;
-			string StringEntry[NoEnties];
-			for (size_t i=0;i<NoEnties;i++)
+			const size_t NoEnties=12;
+			string StringEntry[NoEnties<<1];
 			{
-				in>>StringEntry[i];
+				char Buffer[1024];
+				for (size_t i=0;i<NoEnties;i++)
+				{
+					in>>StringEntry[i<<1];
+					in.getline(Buffer,1024);
+					StringEntry[(i<<1)+1]=Buffer;
+				}
 			}
 			in.close();
-			{
-				char2wchar(StringEntry[1].c_str());
-				Title=char2wchar_pwchar;
-			}
+			AssignInput(Title,StringEntry[1].c_str());
 			int left=atoi(StringEntry[3].c_str());
 			int top=atoi(StringEntry[5].c_str());
 			int right=atoi(StringEntry[7].c_str());
@@ -547,23 +605,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			props.YRes=bottom-top;
 			props.XPos=left;
 			props.YPos=top;
-			{
-				char2wchar(StringEntry[11].c_str());
-				SmartDashboard=char2wchar_pwchar;
-			}
-			g_IsPopup=atoi(StringEntry[13].c_str())==0?false:true;
-			{
-				char2wchar(StringEntry[15].c_str());
-				Plugin=char2wchar_pwchar;
-			}
-			{
-				char2wchar(StringEntry[17].c_str());
-				AuxStart=char2wchar_pwchar;
-			}
-			{
-				char2wchar(StringEntry[19].c_str());
-				AuxArgs=char2wchar_pwchar;
-			}
+			AssignInput(SmartDashboard,StringEntry[11].c_str());
+			AssignInput(ClassName,StringEntry[13].c_str());
+			AssignInput(WindowName,StringEntry[15].c_str());
+			g_IsPopup=atoi(StringEntry[17].c_str())==0?false:true;
+			AssignInput(Plugin,StringEntry[19].c_str());
+			AssignInput(AuxStart,StringEntry[21].c_str());
+			AssignInput(AuxArgs,StringEntry[23].c_str());
 		}
 		else
 		{
@@ -576,21 +624,17 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	#if 1
 	props.window_type=DDraw_Preview::DDraw_Preview_Props::eSmartDashboard;
-	if (wcsicmp(SmartDashboard.c_str(),L"none")==0)
-		props.window_type=DDraw_Preview::DDraw_Preview_Props::eStandAlone;
 	#else
-	DDraw_Preview::WindowType window_type=DDraw_Preview::DDraw_Preview_Props::eStandAlone;
+	props.window_type=DDraw_Preview::DDraw_Preview_Props::eStandAlone;
 	#endif
 
-	props.source_name=Title.c_str();
-	props.smart_file=SmartDashboard.c_str();
-	props.plugin_file=Plugin.c_str();
-	props.aux_startup_file=AuxStart.c_str();
-	if (wcsicmp(props.aux_startup_file.c_str(),L"none")==0)
-		props.aux_startup_file=L"";
-	props.aux_startup_file_Args=AuxArgs.c_str();
-	if (wcsicmp(props.aux_startup_file_Args.c_str(),L"none")==0)
-		props.aux_startup_file_Args=L"";
+	props.source_name=Title;
+	props.smart_file=SmartDashboard;
+	props.ClassName=ClassName;
+	props.WindowName=WindowName;
+	props.plugin_file=Plugin;
+	props.aux_startup_file=AuxStart;
+	props.aux_startup_file_Args=AuxArgs;
 
 	DDraw_Preview TheApp(props);
 
@@ -598,32 +642,31 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	
 	{
 		string OutFile = sz_FileName.c_str();
+		string output;
+
 		ofstream out(OutFile.c_str(), std::ios::out );
-		{
-			wchar2char(Title.c_str());
-			out << "title= " << wchar2char_pchar << endl;
-		}
+
+		AssignOutput(output,Title.c_str());
+		out << "title= " << output << endl;
+
 		out << "left= " << g_WindowInfo.rcNormalPosition.left << endl;
 		out << "top= "  << g_WindowInfo.rcNormalPosition.top << endl;
 		out << "right= " << g_WindowInfo.rcNormalPosition.right << endl;
 		out << "bottom= "  << g_WindowInfo.rcNormalPosition.bottom << endl;
-		{
-			wchar2char(SmartDashboard.c_str());
-			out << "SmartDashboard= " << wchar2char_pchar << endl;
-		}
+
+		AssignOutput(output,SmartDashboard.c_str());
+		out << "SmartDashboard= " << output << endl;
+		AssignOutput(output,ClassName.c_str());
+		out << "ClassName= " << output << endl;
+		AssignOutput(output,WindowName.c_str());
+		out << "WindowName= " << "\"" << output << "\"" << endl;
 		out << "IsPopup= " << g_IsPopup << endl;
-		{
-			wchar2char(Plugin.c_str());
-			out << "PlugIn= " << wchar2char_pchar << endl;
-		}
-		{
-			wchar2char(AuxStart.c_str());
-			out << "AuxStartupFile= " << wchar2char_pchar << endl;
-		}
-		{
-			wchar2char(AuxArgs.c_str());
-			out << "AuxStartupFileArgs= " << wchar2char_pchar << endl;
-		}
+		AssignOutput(output,Plugin.c_str());
+		out << "PlugIn= " << output << endl;
+		AssignOutput(output,AuxStart.c_str());
+		out << "AuxStartupFile= " << output << endl;
+		AssignOutput(output,AuxArgs.c_str());
+		out << "AuxStartupFileArgs= " << output << endl;
 		out.close();
 	}
 	return 0;
