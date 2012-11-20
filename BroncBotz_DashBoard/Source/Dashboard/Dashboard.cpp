@@ -133,15 +133,26 @@ const wchar_t * const cwsz_PlugInFile=L"ProcessingVision.dll";
 class DDraw_Preview 
 {
 	public:
-		enum WindowType
+		struct DDraw_Preview_Props
 		{
-			eStandAlone,
-			eSmartDashboard
+			enum WindowType
+			{
+				eStandAlone,
+				eSmartDashboard
+			} window_type;
+			std::wstring source_name;
+			std::wstring smart_file;
+			std::wstring plugin_file;
+			std::wstring aux_startup_file;
+			std::wstring aux_startup_file_Args;
+			LONG XRes,YRes,XPos,YPos;
+			//provide an alternate way to determine window coordinates
+			// -1 for x and y res will revert to hard coded defaults (this keeps tweaking inside the cpp file)
+			void SetDefaults(LONG XRes_=-1,LONG YRes_=-1,float XPos_=0.5f,float YPos_=0.5f);
 		};
+		typedef DDraw_Preview_Props::WindowType WindowType;
 
-		void Init(WindowType type);
-		//DDraw_Preview(WindowType type=eStandAlone, const wchar_t source_name[] = L"Preview",const wchar_t *smart_file=cwsz_DefaultSmartFile,LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
-		DDraw_Preview(WindowType type, const wchar_t source_name[],const wchar_t smart_file[],LONG XRes,LONG YRes,LONG XPos,LONG YPos,const wchar_t plugin_file[]);
+		DDraw_Preview(const DDraw_Preview_Props &props);
 		virtual ~DDraw_Preview();
 		//returns true to quit
 		bool CommandLineInterface();
@@ -156,9 +167,7 @@ class DDraw_Preview
 	private:
 		void Reset();
 		void DisplayHelp();
-		// -1 for x and y res will revert to hard coded defaults (this keeps tweaking inside the cpp file)
-		void SetDefaults(const wchar_t source_name[] = L"Preview",LONG XRes=-1,LONG YRes=-1,float XPos=0.5f,float YPos=0.5f);
-		void SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos);
+		void SetDefaults(LONG XRes,LONG YRes,LONG XPos,LONG YPos);
 		FrameWork::event m_Terminate;
 		FrameWork::thread m_thread;  //For DPC support
 
@@ -166,13 +175,12 @@ class DDraw_Preview
 		Window *m_Window;
 		Preview *m_DD_StreamOut;
 
-		std::wstring m_PreviewName,m_SmartDashBoard_FileName,m_PlugInName;
+		DDraw_Preview_Props m_Props;
 		RECT m_DefaultWindow;  //left=xRes top=yRes right=xPos bottom=YPos
 
 		FrameGrabber_TestPattern m_FrameGrabber;
 		ProcessingVision m_ProcessingVision;
 
-		WindowType m_WindowType;
 		bool m_IsPopup_LastOpenedState;  //This is only written at the point when window is created
 };
 
@@ -281,36 +289,32 @@ class DDraw_Window : public Window
 		DDraw_Preview * const m_pParent;
 };
 
+
+using namespace FrameWork;
+
+  /*******************************************************************************************************/
+ /*									DDraw_Preview::DDraw_Preview_Props									*/
+/*******************************************************************************************************/
+
+void DDraw_Preview::DDraw_Preview_Props::SetDefaults(LONG XRes_,LONG YRes_,float XPos_,float YPos_)
+{
+	XRes=(XRes_==-1)?480:XRes_;
+	YRes=(YRes_==-1)?270:YRes_;
+
+	XPos=(LONG)(((float)(::GetSystemMetrics(SM_CXSCREEN)-XRes))*XPos_);
+	YPos=(LONG)(((float)(::GetSystemMetrics(SM_CYSCREEN)-YRes))*YPos_);
+}
+
   /*******************************************************************************************************/
  /*											DDraw_Preview												*/
 /*******************************************************************************************************/
 
-void DDraw_Preview::Init(WindowType type)
-{
-	m_WindowType=type;
 
-	m_Window=NULL;
-	m_ParentHwnd=NULL;
-	m_DD_StreamOut=NULL;
-	m_FrameGrabber=NULL;
-	m_ProcessingVision=NULL;
-}
-
-#if 0
-DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const wchar_t *smart_file,LONG XRes,LONG YRes,float XPos,float YPos)
+DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),m_ParentHwnd(NULL),m_DD_StreamOut(NULL),
+	m_FrameGrabber(NULL),m_ProcessingVision(NULL)
 {
-	m_SmartDashBoard_FileName=smart_file;
-	SetDefaults(source_name,XRes,YRes,XPos,YPos);
-	Init(type);
-}
-#endif
-
-DDraw_Preview::DDraw_Preview(WindowType type,const wchar_t source_name[],const wchar_t smart_file[],LONG XRes,LONG YRes,LONG XPos,LONG YPos,const wchar_t plugin_file[])
-{
-	m_SmartDashBoard_FileName=smart_file;
-	m_PlugInName=plugin_file;
-	SetDefaults(source_name,XRes,YRes,XPos,YPos);
-	Init(type);
+	m_Props=props;
+	SetDefaults(props.XRes,props.YRes,props.XPos,props.YPos);
 }
 
 void DDraw_Preview::CloseResources()
@@ -348,28 +352,22 @@ DDraw_Preview::~DDraw_Preview()
 
 void DDraw_Preview::OpenResources()
 {
+	typedef DDraw_Preview::DDraw_Preview_Props PrevProps;
 	CloseResources(); //just ensure all resources are closed
 
-	m_ProcessingVision.LoadPlugIn(m_PlugInName.c_str());
+	m_ProcessingVision.LoadPlugIn(m_Props.plugin_file.c_str());
 	LONG XRes=m_DefaultWindow.left, YRes=m_DefaultWindow.top, XPos=m_DefaultWindow.right, YPos=m_DefaultWindow.bottom;
-	const wchar_t *source_name=m_PreviewName.c_str();
-
-	enum WindowType
-	{
-		eStandAlone,
-		eSmartDashboard
-	};
-
+	const wchar_t *source_name=m_Props.source_name.c_str();
 
 	HWND hWnd_ForDDraw=NULL;
 	HWND ParentHwnd=NULL;
 	bool IsPopup=g_IsPopup;
 	bool IsSmartDashboardStarted=g_IsSmartDashboardStarted;
-	if (m_WindowType==eSmartDashboard)
+	if (m_Props.window_type==PrevProps::eSmartDashboard)
 	{
 		if (!g_IsSmartDashboardStarted)
 		{
-			LPTSTR szCmdline = _tcsdup(m_SmartDashBoard_FileName.c_str());
+			LPTSTR szCmdline = _tcsdup(m_Props.smart_file.c_str());
 			//Note:
 			//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
 			//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
@@ -417,10 +415,9 @@ void DDraw_Preview::OpenResources()
 					XPos-=Parent.left,YPos-=Parent.top;
 			}
 			//Pedantic but we should keep this updated
-			SetDefaults(m_PreviewName.c_str(),XRes,YRes,XPos,YPos);
+			SetDefaults(XRes,YRes,XPos,YPos);
 		}
 	}
-	g_IsSmartDashboardStarted=IsSmartDashboardStarted;
 
 	{
 		assert (!m_Window);
@@ -464,6 +461,17 @@ void DDraw_Preview::OpenResources()
 		m_FrameGrabber.StartStreaming();
 		m_ProcessingVision.StartStreaming();
 	}
+	//see if there is another file to launch
+	if ((!g_IsSmartDashboardStarted)&& (m_Props.aux_startup_file.c_str()[0]!=0))
+	{
+		const wchar_t *Args=m_Props.aux_startup_file_Args.c_str();
+		if (Args[0]==0)
+			Args=NULL;
+		HINSTANCE test=ShellExecute(NULL,L"open",m_Props.aux_startup_file.c_str(),Args,NULL,SW_SHOWNORMAL);
+		DebugOutput("Launching %ls, result=%x",m_Props.aux_startup_file.c_str(),test);
+	}
+
+	g_IsSmartDashboardStarted=IsSmartDashboardStarted;
 }
 
 void DDraw_Preview::Reset()
@@ -479,27 +487,14 @@ void DDraw_Preview::Reset_DPC()
 	cpp::threadcall_ex( do_not_wait, m_thread, this, &DDraw_Preview::Reset);
 }
 
-void DDraw_Preview::SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,LONG XPos,LONG YPos)
+void DDraw_Preview::SetDefaults(LONG XRes,LONG YRes,LONG XPos,LONG YPos)
 {
 	//Note: we use the rect as such
 	//left=xRes top=yRes right=xPos bottom=YPos
-	m_PreviewName=source_name;
 	m_DefaultWindow.left =XRes,
 	m_DefaultWindow.top=YRes,
 	m_DefaultWindow.right=XPos,
 	m_DefaultWindow.bottom=YPos;
-}
-
-void DDraw_Preview::SetDefaults(const wchar_t source_name[],LONG XRes,LONG YRes,float XPos,float YPos)
-{
-	if (XRes==-1)
-		XRes=480;
-	if (YRes==-1)
-		YRes=270;
-
-	LONG X=(LONG)(((float)(::GetSystemMetrics(SM_CXSCREEN)-XRes))*XPos);
-	LONG Y=(LONG)(((float)(::GetSystemMetrics(SM_CYSCREEN)-YRes))*YPos);
-	SetDefaults(source_name,XRes,YRes,X,Y);
 }
 
 void DDraw_Preview::RunApp()
@@ -514,10 +509,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 					   LPTSTR    lpCmdLine,
 					   int       nCmdShow)
 {
+	DDraw_Preview::DDraw_Preview_Props props;
 	wstring SmartDashboard=cwsz_DefaultSmartFile;
-	wstring Plugin=cwsz_PlugInFile;
-	long XRes,YRes,XPos,YPos;
 	wstring Title=L"Preview";
+	wstring Plugin=cwsz_PlugInFile;
+	wstring AuxStart=L"none";
+	wstring AuxArgs=L"none";
+
 	string sz_FileName="BroncBotz_Dashboard.ini";
 	wchar_t *ext=wcsrchr(lpCmdLine,L'.');
 	if ((ext)&&(wcsicmp(ext,L".ini")==0))
@@ -530,7 +528,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=8 << 1;
+			const size_t NoEnties=10 << 1;
 			string StringEntry[NoEnties];
 			for (size_t i=0;i<NoEnties;i++)
 			{
@@ -545,10 +543,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			int top=atoi(StringEntry[5].c_str());
 			int right=atoi(StringEntry[7].c_str());
 			int bottom=atoi(StringEntry[9].c_str());
-			XRes=right-left;
-			YRes=bottom-top;
-			XPos=left;
-			YPos=top;
+			props.XRes=right-left;
+			props.YRes=bottom-top;
+			props.XPos=left;
+			props.YPos=top;
 			{
 				char2wchar(StringEntry[11].c_str());
 				SmartDashboard=char2wchar_pwchar;
@@ -558,25 +556,43 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 				char2wchar(StringEntry[15].c_str());
 				Plugin=char2wchar_pwchar;
 			}
+			{
+				char2wchar(StringEntry[17].c_str());
+				AuxStart=char2wchar_pwchar;
+			}
+			{
+				char2wchar(StringEntry[19].c_str());
+				AuxArgs=char2wchar_pwchar;
+			}
 		}
 		else
 		{
-			XRes=320;
-			YRes=240;
-			XPos=20;
-			YPos=10;
+			props.XRes=320;
+			props.YRes=240;
+			props.XPos=20;
+			props.YPos=10;
 		}
 	}
 
 	#if 1
-	DDraw_Preview::WindowType window_type=DDraw_Preview::eSmartDashboard;
+	props.window_type=DDraw_Preview::DDraw_Preview_Props::eSmartDashboard;
 	if (wcsicmp(SmartDashboard.c_str(),L"none")==0)
-		window_type=DDraw_Preview::eStandAlone;
+		props.window_type=DDraw_Preview::DDraw_Preview_Props::eStandAlone;
 	#else
-	DDraw_Preview::WindowType window_type=DDraw_Preview::eStandAlone;
+	DDraw_Preview::WindowType window_type=DDraw_Preview::DDraw_Preview_Props::eStandAlone;
 	#endif
 
-	DDraw_Preview TheApp(window_type,Title.c_str(),SmartDashboard.c_str(),XRes,YRes,XPos,YPos,Plugin.c_str());
+	props.source_name=Title.c_str();
+	props.smart_file=SmartDashboard.c_str();
+	props.plugin_file=Plugin.c_str();
+	props.aux_startup_file=AuxStart.c_str();
+	if (wcsicmp(props.aux_startup_file.c_str(),L"none")==0)
+		props.aux_startup_file=L"";
+	props.aux_startup_file_Args=AuxArgs.c_str();
+	if (wcsicmp(props.aux_startup_file_Args.c_str(),L"none")==0)
+		props.aux_startup_file_Args=L"";
+
+	DDraw_Preview TheApp(props);
 
 	TheApp.RunApp();
 	
@@ -585,7 +601,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		ofstream out(OutFile.c_str(), std::ios::out );
 		{
 			wchar2char(Title.c_str());
-			out << "title= " << g_WindowInfo.rcNormalPosition.left << endl;
+			out << "title= " << wchar2char_pchar << endl;
 		}
 		out << "left= " << g_WindowInfo.rcNormalPosition.left << endl;
 		out << "top= "  << g_WindowInfo.rcNormalPosition.top << endl;
@@ -593,12 +609,20 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		out << "bottom= "  << g_WindowInfo.rcNormalPosition.bottom << endl;
 		{
 			wchar2char(SmartDashboard.c_str());
-			out << "StartUp= " << wchar2char_pchar << endl;
+			out << "SmartDashboard= " << wchar2char_pchar << endl;
 		}
 		out << "IsPopup= " << g_IsPopup << endl;
 		{
 			wchar2char(Plugin.c_str());
 			out << "PlugIn= " << wchar2char_pchar << endl;
+		}
+		{
+			wchar2char(AuxStart.c_str());
+			out << "AuxStartupFile= " << wchar2char_pchar << endl;
+		}
+		{
+			wchar2char(AuxArgs.c_str());
+			out << "AuxStartupFileArgs= " << wchar2char_pchar << endl;
 		}
 		out.close();
 	}
