@@ -244,7 +244,7 @@ class DDraw_Window : public Window
 	public:
 		DDraw_Window(DDraw_Preview *pParent, HWND HWND_Parent=NULL , const bool IsPopup=true , 
 			const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL ) : Window(HWND_Parent,IsPopup,pWindowName,pWindowPosition), 
-			m_pParent(pParent),m_Editable(false),m_IsDragging(false)
+			m_pParent(pParent),m_AspectRatio(4.0/3.0),m_Editable(false),m_IsDragging(false)
 		{
 		}
 		~DDraw_Window()
@@ -259,6 +259,11 @@ class DDraw_Window : public Window
 			eMenu_Floating=100,	//typically win32 starts these at 100  (not sure why, but it is probably optional)
 			eMenu_Dockable,
 			eMenu_Editable,
+			eMenu_Lock4x3,
+			eMenu_Lock16x9,
+			eMenu_Stretch,
+			eMenu_Show480i,
+			eMenu_ShowHalfRes,
 			eMenu_NoEntries
 		};
 
@@ -294,13 +299,82 @@ class DDraw_Window : public Window
 					SetWindowPos(*this,NULL,mouseloc.x+m_XGrab,mouseloc.y+m_YGrab,0,0,SWP_NOSIZE|SWP_NOZORDER);
 				}
 				break;
+			//This sizing was translated from here:
+			//http://cboard.cprogramming.com/windows-programming/98998-uniform-resize-window.html
+			//It works well...the only discrepancy is the the aspect ratio is height/width form (not the end of the world)
+			//  [11/21/2012 James]
+			case WM_SIZING:
+				{
+					double aspectRatio=(m_AspectRatio!=0.0)?1.0 / m_AspectRatio : 0.0;
+					WPARAM &wParam=w;
+					LPARAM &lParam=l;
+
+					if (m_AspectRatio!=0.0)
+					{
+						RECT sz;    
+						int w, h;
+						// Copy over the new size that was determined by windows        
+						memcpy(&sz, (const void *) lParam, sizeof(RECT));         
+						// Calculate the width and height of the window        
+						w = sz.right - sz.left;        
+						h = sz.bottom - sz.top;         
+						switch (wParam)        
+						{            
+						case WMSZ_LEFT:            
+						case WMSZ_RIGHT:                
+							// Modify the Height of the window                
+							sz.bottom = LONG(w * aspectRatio) + sz.top;                
+							break;             
+						case WMSZ_TOP:            
+						case WMSZ_BOTTOM:                
+							// Modify the Width of the window                
+							sz.right = LONG(h * (1 / aspectRatio)) + sz.left;                
+							break;             
+						case WMSZ_TOPRIGHT:            
+						case WMSZ_TOPLEFT:            
+						case WMSZ_BOTTOMRIGHT:            
+						case WMSZ_BOTTOMLEFT:                
+							// Adjust the width and height of the window to match aspect ratio                
+							if (double(h) / double(w) > aspectRatio)
+								w = int(double(h) / aspectRatio);                
+							else
+								h = int(double(w) * aspectRatio);
+
+							// Adjust Height                
+							if (wParam == WMSZ_TOPLEFT || wParam == WMSZ_TOPRIGHT)                
+								sz.top = sz.bottom - h;                
+							else
+								sz.bottom = sz.top + h;
+
+							// Adjust Width                
+							if (wParam == WMSZ_TOPLEFT || wParam == WMSZ_BOTTOMLEFT)
+								sz.left = sz.right - w;
+							else
+								sz.right = sz.left + w;
+							break;        
+						}         
+						// Copy back the size of the window        
+						memcpy((void *) lParam, &sz, sizeof(RECT));
+					}
+				}
+				break;
 			case WM_RBUTTONDOWN:
 				{
 					HMENU hPopupMenu = CreatePopupMenu();
 					if (!g_IsPopup)
-						InsertMenu(hPopupMenu, 0, ( m_Editable?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Editable, L"Editable");
-					InsertMenu(hPopupMenu, 0, ( g_IsPopup?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Floating, L"Floating");
-					InsertMenu(hPopupMenu, 0, (!g_IsPopup?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Dockable, L"Dockable");
+						InsertMenu(hPopupMenu, -1, ( m_Editable?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Editable, L"Editable");
+					InsertMenu(hPopupMenu, -1, ( g_IsPopup?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Floating, L"Floating");
+					InsertMenu(hPopupMenu, -1, (!g_IsPopup?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Dockable, L"Dockable");
+					if (g_IsPopup)
+					{
+						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_SEPARATOR, eMenu_NoSelection, NULL);
+						InsertMenu(hPopupMenu, -1, ((m_AspectRatio==4.0/3.0)?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Lock4x3, L"Lock 4x3 aspect");
+						InsertMenu(hPopupMenu, -1, ((m_AspectRatio==16.0/9.0)?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Lock16x9, L"Lock 16x9 aspect");
+						InsertMenu(hPopupMenu, -1, ((m_AspectRatio==0.0)?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Stretch, L"Stretch");
+						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_SEPARATOR, eMenu_NoSelection, NULL);
+						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Show480i, L"Size 480i");
+						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_ShowHalfRes, L"Size half res");
+					}
 					SetForegroundWindow(window);
 
 					//TODO omit this... I thought I needed to exclude from DDraw surface but it works fine
@@ -345,6 +419,43 @@ class DDraw_Window : public Window
 									m_pParent->Reset_DPC();
 								}
 								break;
+							case eMenu_Lock4x3:
+								m_AspectRatio=4.0/3.0;
+								break;
+							case eMenu_Lock16x9:
+								m_AspectRatio=16.0/9.0;
+								break;
+							case eMenu_Stretch:
+								m_AspectRatio=0.0;
+								break;
+							case eMenu_Show480i:
+								if (m_AspectRatio==16.0/9.0)
+								{
+									RECT rc;
+									GetWindowRect(*this,&rc);
+									SetWindowPos(*this,NULL,0,0,853,480,SWP_NOMOVE|SWP_NOZORDER);
+								}
+								else
+								{
+									RECT rc;
+									GetWindowRect(*this,&rc);
+									SetWindowPos(*this,NULL,0,0,640,480,SWP_NOMOVE|SWP_NOZORDER);
+								}
+								break;
+							case eMenu_ShowHalfRes:
+								if (m_AspectRatio==16.0/9.0)
+								{
+									RECT rc;
+									GetWindowRect(*this,&rc);
+									SetWindowPos(*this,NULL,0,0,427,240,SWP_NOMOVE|SWP_NOZORDER);
+								}
+								else
+								{
+									RECT rc;
+									GetWindowRect(*this,&rc);
+									SetWindowPos(*this,NULL,0,0,320,240,SWP_NOMOVE|SWP_NOZORDER);
+								}
+								break;
 						}
 					}
 				}
@@ -367,6 +478,8 @@ class DDraw_Window : public Window
 	private:
 		DDraw_Preview * const m_pParent;
 		LONG m_XGrab,m_YGrab;
+		//if this is 0 it does not lock
+		double m_AspectRatio;
 		bool m_Editable,m_IsDragging;
 };
 
