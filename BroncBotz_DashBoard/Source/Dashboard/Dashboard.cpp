@@ -166,6 +166,8 @@ class DDraw_Preview
 
 		Preview *GetPreview() {return m_DD_StreamOut;}
 		void Reset_DPC();  //This launches reset on a deferred procedure call
+		void StopStreaming();
+		void StartStreaming();
 	protected:
 		virtual void CloseResources();
 		virtual void OpenResources();
@@ -188,6 +190,7 @@ class DDraw_Preview
 		ProcessingVision m_ProcessingVision;
 
 		bool m_IsPopup_LastOpenedState;  //This is only written at the point when window is created
+		bool m_IsStreaming;
 };
 
 using namespace std;
@@ -200,12 +203,48 @@ WINDOWPLACEMENT g_WindowInfo;
 bool g_IsPopup=true;
 bool g_IsSmartDashboardStarted=false;  //only run shell execute one time
 
+void HighlightWindow( HWND hwnd, BOOL fDraw )
+{
+	HWND parent=GetParent(hwnd);
+	assert(parent);
+	if (!parent) return;
+	const LONG DINV=3;
+	HDC hdc;
+	RECT rc;
+	BOOL bBorderOn;
+	bBorderOn = fDraw;
+
+	if (hwnd == NULL || !IsWindow(hwnd))
+		return;
+
+	hdc = ::GetWindowDC(parent);
+	::GetWindowRect(hwnd, &rc);
+	//::OffsetRect(&rc, -rc.left, -rc.top);
+	rc.left-=DINV;
+	rc.top-=DINV;
+	rc.right+=DINV<<1;
+	rc.bottom+=DINV<<1;
+
+	if (!IsRectEmpty(&rc))
+	{
+		PatBlt(hdc, rc.left, rc.top, rc.right - rc.left, DINV,  DSTINVERT);
+		PatBlt(hdc, rc.left, rc.bottom - DINV, DINV,
+			-(rc.bottom - rc.top - 2 * DINV), DSTINVERT);
+		PatBlt(hdc, rc.right - DINV, rc.top + DINV, DINV,
+			rc.bottom - rc.top - 2 * DINV, DSTINVERT);
+		PatBlt(hdc, rc.right, rc.bottom - DINV, -(rc.right - rc.left),
+			DINV, DSTINVERT);
+	}
+
+	::ReleaseDC(parent, hdc);
+} 
+
 class DDraw_Window : public Window
 {
 	public:
 		DDraw_Window(DDraw_Preview *pParent, HWND HWND_Parent=NULL , const bool IsPopup=true , 
 			const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL ) : Window(HWND_Parent,IsPopup,pWindowName,pWindowPosition), 
-			m_pParent(pParent)
+			m_pParent(pParent),m_Editable(false),m_IsDragging(false)
 		{
 		}
 		~DDraw_Window()
@@ -219,6 +258,7 @@ class DDraw_Window : public Window
 			eMenu_NoSelection,
 			eMenu_Floating=100,	//typically win32 starts these at 100  (not sure why, but it is probably optional)
 			eMenu_Dockable,
+			eMenu_Editable,
 			eMenu_NoEntries
 		};
 
@@ -227,9 +267,38 @@ class DDraw_Window : public Window
 			long ret=0;
 			switch (message)
 			{
+			case WM_LBUTTONDOWN:
+				if (m_Editable)
+				{
+					WINDOWPLACEMENT preview_pos;
+					GetWindowPlacement(*this,&preview_pos);
+					struct tagPOINT mouseloc;
+					GetCursorPos(&mouseloc);
+					m_XGrab=preview_pos.rcNormalPosition.left-mouseloc.x;
+					m_YGrab=preview_pos.rcNormalPosition.top-mouseloc.y;
+					m_IsDragging=true;
+					HighlightWindow(*this,false);
+				}
+				break;
+			case WM_LBUTTONUP:
+				if (m_IsDragging)
+					HighlightWindow(*this,true);
+
+				m_IsDragging=false;
+				break;
+			case WM_MOUSEMOVE:
+				if (m_IsDragging)
+				{
+					struct tagPOINT mouseloc;
+					GetCursorPos(&mouseloc);
+					SetWindowPos(*this,NULL,mouseloc.x+m_XGrab,mouseloc.y+m_YGrab,0,0,SWP_NOSIZE|SWP_NOZORDER);
+				}
+				break;
 			case WM_RBUTTONDOWN:
 				{
 					HMENU hPopupMenu = CreatePopupMenu();
+					if (!g_IsPopup)
+						InsertMenu(hPopupMenu, 0, ( m_Editable?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Editable, L"Editable");
 					InsertMenu(hPopupMenu, 0, ( g_IsPopup?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Floating, L"Floating");
 					InsertMenu(hPopupMenu, 0, (!g_IsPopup?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Dockable, L"Dockable");
 					SetForegroundWindow(window);
@@ -258,6 +327,10 @@ class DDraw_Window : public Window
 						FrameWork::DebugOutput("Selection=%d\n",selection);
 						switch (selection)
 						{
+							case eMenu_Editable:
+								m_Editable=!m_Editable;
+								HighlightWindow(*this,m_Editable);
+								break;
 							case eMenu_Floating:
 								if (!g_IsPopup)		//only commit if it was changed
 								{
@@ -293,6 +366,8 @@ class DDraw_Window : public Window
 
 	private:
 		DDraw_Preview * const m_pParent;
+		LONG m_XGrab,m_YGrab;
+		bool m_Editable,m_IsDragging;
 };
 
 
@@ -317,7 +392,7 @@ void DDraw_Preview::DDraw_Preview_Props::SetDefaults(LONG XRes_,LONG YRes_,float
 
 
 DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),m_ParentHwnd(NULL),m_DD_StreamOut(NULL),
-	m_FrameGrabber(NULL,props.IP_Address.c_str()),m_ProcessingVision(NULL)
+	m_FrameGrabber(NULL,props.IP_Address.c_str()),m_ProcessingVision(NULL),m_IsStreaming(false)
 {
 	m_Props=props;
 	SetDefaults(props.XRes,props.YRes,props.XPos,props.YPos);
@@ -349,13 +424,22 @@ void DDraw_Preview::UpdateDefaultsFromWindowPlacement()
 	}
 }
 
+void DDraw_Preview::StopStreaming()
+{
+	if (m_IsStreaming)
+	{
+		//before closing the resources ensure the upstream is not streaming to us
+		m_FrameGrabber.StopStreaming();
+		m_ProcessingVision.StopStreaming();
+		m_FrameGrabber.SetOutstream_Interface(NULL);  //pedantic
+		m_ProcessingVision.SetOutstream_Interface(NULL);
+		m_IsStreaming=false;
+	}
+}
+
 void DDraw_Preview::CloseResources()
 {
-	//before closing the resources ensure the upstream is not streaming to us
-	m_FrameGrabber.StopStreaming();
-	m_ProcessingVision.StopStreaming();
-	m_FrameGrabber.SetOutstream_Interface(NULL);  //pedantic
-	m_ProcessingVision.SetOutstream_Interface(NULL);
+	StopStreaming();
 	delete m_DD_StreamOut;
 	m_DD_StreamOut=NULL;
 	if (m_Window)
@@ -382,6 +466,24 @@ DDraw_Preview::~DDraw_Preview()
 	CloseResources();
 }
 
+
+void DDraw_Preview::StartStreaming()
+{
+	if (!m_IsStreaming && m_DD_StreamOut)
+	{
+		m_IsStreaming=true;
+		#if 0
+		m_FrameGrabber.SetOutstream_Interface(m_DD_StreamOut);
+		#else
+		m_ProcessingVision.SetOutstream_Interface(m_DD_StreamOut);
+		m_FrameGrabber.SetOutstream_Interface(&m_ProcessingVision);
+		#endif
+		//Now to start the frame grabber
+		m_FrameGrabber.StartStreaming();
+		m_ProcessingVision.StartStreaming();
+	}
+
+}
 
 void DDraw_Preview::OpenResources()
 {
@@ -457,18 +559,7 @@ void DDraw_Preview::OpenResources()
 	}
 	else
 		printf("No HWnd for DDraw\n");
-	if (m_DD_StreamOut)
-	{
-		#if 0
-		m_FrameGrabber.SetOutstream_Interface(m_DD_StreamOut);
-		#else
-		m_ProcessingVision.SetOutstream_Interface(m_DD_StreamOut);
-		m_FrameGrabber.SetOutstream_Interface(&m_ProcessingVision);
-		#endif
-		//Now to start the frame grabber
-		m_FrameGrabber.StartStreaming();
-		m_ProcessingVision.StartStreaming();
-	}
+	StartStreaming();
 	//see if there is another file to launch
 	if ((!g_IsSmartDashboardStarted)&& (m_Props.aux_startup_file.c_str()[0]!=0))
 	{
