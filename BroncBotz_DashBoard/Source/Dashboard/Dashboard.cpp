@@ -65,7 +65,7 @@ private:
 
 private:
 	FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
-	FrameWork::Bitmaps::bitmap_bgr_u8 m_RGB;
+	FrameWork::Bitmaps::bitmap_bgra_u8 m_RGB;
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
 	size_t m_Counter;
 };
@@ -95,7 +95,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		void StartStreaming() {m_IsStreaming=true;}
 		void StopStreaming() {m_IsStreaming=false;}
 
-		virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgr_u8 *pBuffer)
+		virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 		{
 			if (m_IsStreaming)
 			{
@@ -104,7 +104,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 					using namespace FrameWork::Bitmaps;
 					Bitmap_Frame frame((PBYTE)(*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
 					Bitmap_Frame out_frame=*((*m_DriverProc)(&frame));
-					bitmap_bgr_u8 dest((pixel_bgr_u8 *)out_frame.Memory,out_frame.XRes,out_frame.YRes,out_frame.Stride);
+					bitmap_bgra_u8 dest((pixel_bgra_u8 *)out_frame.Memory,out_frame.XRes,out_frame.YRes,out_frame.Stride);
 					m_Outstream->process_frame(&dest);
 				}
 				else

@@ -164,7 +164,7 @@ PBYTE Buffer::pGetBufferData(size_t *pMemorySize,size_t desiredXRes,size_t desir
 	return (PBYTE)Desc.lpSurface;
 }
 
-void Buffer::process_frame(const FrameWork::Bitmaps::bitmap_bgr_u8 *pBuffer)
+void Buffer::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 {
 	m_FrameEvent.reset();
 	using namespace FrameWork::Bitmaps;
@@ -176,7 +176,7 @@ void Buffer::process_frame(const FrameWork::Bitmaps::bitmap_bgr_u8 *pBuffer)
 	int YResToUse=pBuffer->yres();
 	PBYTE frame=pGetBufferData(&MemorySize,pBuffer->xres(),YResToUse);
 	bitmap_ycbcr_u8 DestBuffer((pixel_ycbcr_u8 *)frame,pBuffer->xres(),YResToUse,m_Pitch>>2);
-	//bitmap_bgr_u8 DestBuffer((pixel_bgr_u8 *)frame,pBuffer->xres(),YResToUse,m_Pitch/3);
+	//bitmap_bgra_u8 DestBuffer((pixel_bgr_u8 *)frame,pBuffer->xres(),YResToUse,m_Pitch/3);
 	//perform the copy
 	DestBuffer=*pBuffer;
 	//update the state
@@ -283,7 +283,7 @@ void Preview::StartStreaming()
 			FrameWork::Bitmaps::bitmap_ycbcr_u8 black_frame(720,480);
 			const int FieldSize_ =(int) (720*480*2);
 			BlackField((PBYTE)black_frame(),FieldSize_);
-			FrameWork::Bitmaps::bitmap_bgr_u8 RGB;
+			FrameWork::Bitmaps::bitmap_bgra_u8 RGB;
 			RGB=black_frame;
 			m_LastBufferProcessed->process_frame(&RGB);
 		}
@@ -582,7 +582,7 @@ void Preview::operator() ( const void* )
 	}
 }
 
-void Preview::process_frame(const FrameWork::Bitmaps::bitmap_bgr_u8 *pBuffer)
+void Preview::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 {
 	bool result=false;
 	for (size_t i=0;i<Preview_NoVideoBuffers;i++)
