@@ -2615,9 +2615,17 @@ static int read_thread(void *arg)
     for (i = 0; i < (int)ic->nb_streams; i++)
         ic->streams[i]->discard = AVDISCARD_ALL;
     if (!video_disable)
+	{
         st_index[AVMEDIA_TYPE_VIDEO] =
             av_find_best_stream(ic, AVMEDIA_TYPE_VIDEO,
                                 wanted_stream[AVMEDIA_TYPE_VIDEO], -1, NULL, 0);
+		//hack not sure why we must have wanted stream... but for clips that put video stream on 1 (e.g. BadApple) we'll need to try to get it
+		//from this index
+		//  [11/27/2012 JamesK]
+		if (st_index[AVMEDIA_TYPE_VIDEO]!=wanted_stream[AVMEDIA_TYPE_VIDEO])
+			st_index[AVMEDIA_TYPE_VIDEO] =	av_find_best_stream(ic, AVMEDIA_TYPE_VIDEO,	wanted_stream[AVMEDIA_TYPE_AUDIO], -1, NULL, 0);
+
+	}
     if (!audio_disable)
         st_index[AVMEDIA_TYPE_AUDIO] =
             av_find_best_stream(ic, AVMEDIA_TYPE_AUDIO,
