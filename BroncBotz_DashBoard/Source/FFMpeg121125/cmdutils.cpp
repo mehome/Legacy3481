@@ -61,7 +61,12 @@ extern "C"
 #define CONFIG_AVFORMAT 0
 #define CONFIG_AVDEVICE 0
 #define CONFIG_AVFILTER 0
-#define FFMPEG_CONFIGURATION ""
+#define FFMPEG_CONFIGURATION "--disable-static --enable-shared --enable-gpl --enable-version3 --disable-pthreads --enable-runtime-cpudetect \
+--enable-avisynth --enable-bzlib --enable-frei0r --enable-libass --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libfreetype \
+--enable-libgsm --enable-libmp3lame --enable-libnut --enable-libopenjpeg --enable-libopus --enable-librtmp --enable-libschroedinger --enable-libspeex \
+--enable-libtheora --enable-libutvideo --enable-libvo-aacenc --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libx264 \
+--enable-libxavs --enable-libxvid --enable-zlib"
+
 #define FFMPEG_VERSION "121125"
 #define CC_IDENT ""
 #define FFMPEG_DATADIR "e:/Media/"
@@ -494,7 +499,9 @@ int opt_default(void *optctx, const char *opt, const char *arg)
     char opt_stripped[128];
     const char *p;
     const AVClass *cc = avcodec_get_class(), *fc = avformat_get_class();
+	#if CONFIG_SWSCALE
     const AVClass *sc, *swr_class;
+	#endif
 
     if (!(p = strchr(opt, ':')))
         p = opt + strlen(opt);
