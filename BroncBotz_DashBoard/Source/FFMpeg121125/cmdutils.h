@@ -478,11 +478,11 @@ void free_buffer_pool(FrameBuffer **pool);
 
 #define GET_SAMPLE_RATE_NAME(rate)\
     char name[16];\
-    snprintf(name, sizeof(name), "%d", rate);
+    _snprintf(name, sizeof(name), "%d", rate);
 
 #define GET_CH_LAYOUT_NAME(ch_layout)\
     char name[16];\
-    snprintf(name, sizeof(name), "0x%"PRIx64, ch_layout);
+    _snprintf(name, sizeof(name), "0x%"PRIx64, ch_layout);
 
 #define GET_CH_LAYOUT_DESC(ch_layout)\
     char name[128];\

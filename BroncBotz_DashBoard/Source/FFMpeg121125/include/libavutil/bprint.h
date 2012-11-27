@@ -71,6 +71,7 @@
  * internal buffer is large enough to hold a reasonable paragraph of text,
  * such as the current paragraph.
  */
+#if 0
 typedef struct AVBPrint {
     FF_PAD_STRUCTURE(1024,
     char *str;         /** string so far */
@@ -80,6 +81,25 @@ typedef struct AVBPrint {
     char reserved_internal_buffer[1];
     )
 } AVBPrint;
+#else
+struct AVB_Print_hack
+{
+	char *str;
+	unsigned len;
+	unsigned size;
+	unsigned size_max;
+	char reserved_internal_buffer[1];
+};
+
+struct AVBPrint {
+	char *str;         /** string so far */
+	unsigned len;      /** length so far */
+	unsigned size;     /** allocated memory */
+	unsigned size_max; /** maximum allocated memory */
+	char reserved_internal_buffer[1];
+	char reserved_padding[1024 - sizeof(AVB_Print_hack)];	
+};
+#endif
 
 /**
  * Convenience macros for special values for av_bprint_init() size_max

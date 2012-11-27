@@ -47,10 +47,13 @@ extern "C"
 }
 
 //#include "config.h"
+
 #include "include/inttypes.h"
 #include <math.h>
 #include <limits.h>
 #include <signal.h>
+extern "C"
+{
 #include "include/libavutil/avstring.h"
 #include "include/libavutil/colorspace.h"
 #include "include/libavutil/mathematics.h"
@@ -67,7 +70,7 @@ extern "C"
 #include "include/libavutil/opt.h"
 #include "include/libavcodec/avfft.h"
 #include "include/libswresample/swresample.h"
-
+}
 #if CONFIG_AVFILTER
 # include "libavfilter/avcodec.h"
 # include "libavfilter/avfilter.h"
@@ -82,6 +85,16 @@ extern "C"
 #include "cmdutils.h"
 
 #include <assert.h>
+#pragma comment (lib , "lib/avcodec.lib")
+#pragma comment (lib , "lib/avdevice.lib")
+#pragma comment (lib , "lib/avfilter.lib")
+#pragma comment (lib , "lib/avformat.lib")
+#pragma comment (lib , "lib/avutil.lib")
+//#pragma comment (lib , "lib/postproc.lib")
+#pragma comment (lib , "lib/swresample.lib")
+#pragma comment (lib , "lib/swscale.lib")
+#pragma comment (lib , "SDL/lib/x86/SDL.lib")
+#pragma comment (lib , "SDL/lib/x86/SDLmain.lib")
 
 //Not defined in visual studio so we'll make a simple one here
 //  [11/26/2012 JamesK]
@@ -3322,9 +3335,13 @@ int main(int argc, char **argv)
         flags &= ~SDL_INIT_AUDIO;
     if (display_disable)
         SDL_putenv(dummy_videodriver); /* For the event queue, we always need a video driver. */
-#if !defined(__MINGW32__) && !defined(__APPLE__)
-    flags |= SDL_INIT_EVENTTHREAD; /* Not supported on Windows or Mac OS X */
-#endif
+
+	//Not sure why this flag gets enabled but it fails SDL_Init() if it is set
+	//  [11/27/2012 James]
+//#if !defined(__MINGW32__) && !defined(__APPLE__)
+//    flags |= SDL_INIT_EVENTTHREAD; /* Not supported on Windows or Mac OS X */
+//#endif
+
     if (SDL_Init (flags)) {
         fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
         fprintf(stderr, "(Did you set the DISPLAY variable?)\n");
