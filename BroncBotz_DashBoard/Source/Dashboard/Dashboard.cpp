@@ -7,8 +7,18 @@
 #include "../FrameWork/Window.h"
 #include "../FrameWork/Preview.h"
 #include "../ProcessingVision/ProcessingVision.h"
+#include "../FFMpeg121125/FrameGrabber.h"
 #pragma comment (lib,"shell32")
-
+#pragma comment (lib,"../FFMpeg121125/lib/avcodec.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/avdevice.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/avfilter.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/avformat.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/avutil.lib")
+//#pragma comment (lib , "lib/postproc.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/swresample.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/swscale.lib")
+#pragma comment (lib , "../FFMpeg121125/SDL/lib/x86/SDL.lib")
+#pragma comment (lib , "../FFMpeg121125/SDL/lib/x86/SDLmain.lib")
 
 // Converts a GUID to a string
 inline void GUIDtow(GUID id,wchar_t *string) {
@@ -87,7 +97,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 			m_PlugIn=LoadLibrary(Plugin);
 			if (m_PlugIn)
 			{
-				m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_RGB24");
+				m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_RGB32");
 				if (!m_DriverProc)
 					FlushPlugin();
 			}
@@ -186,7 +196,13 @@ class DDraw_Preview
 		DDraw_Preview_Props m_Props;
 		RECT m_DefaultWindow;  //left=xRes top=yRes right=xPos bottom=YPos
 
+		//TODO use an iterface pointer... where test would use the test pattern
+		#if 0	
 		FrameGrabber_TestPattern m_FrameGrabber;
+		#else
+		FrameGrabber m_FrameGrabber;
+		#endif
+
 		ProcessingVision m_ProcessingVision;
 
 		bool m_IsPopup_LastOpenedState;  //This is only written at the point when window is created

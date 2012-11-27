@@ -3,12 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dashboard", "Dashboard.vcproj", "{770EC6B2-8666-4C8D-8092-C4D49B0D6BD5}"
 	ProjectSection(ProjectDependencies) = postProject
+		{15589F0D-F41D-43FA-A32B-EE592E478FA2} = {15589F0D-F41D-43FA-A32B-EE592E478FA2}
 		{455B6FC3-BCD0-4927-B561-55F896A96185} = {455B6FC3-BCD0-4927-B561-55F896A96185}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameWork", "..\FrameWork\FrameWork.vcproj", "{455B6FC3-BCD0-4927-B561-55F896A96185}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcessingVision", "..\ProcessingVision\ProcessingVision.vcproj", "{C97978F2-F958-4EA9-9BAA-55DD5C3E31E2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameGrabber", "..\FrameGrabber\FrameGrabber.vcproj", "{15589F0D-F41D-43FA-A32B-EE592E478FA2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,6 +31,10 @@ Global
 		{C97978F2-F958-4EA9-9BAA-55DD5C3E31E2}.Debug|Win32.Build.0 = Debug|Win32
 		{C97978F2-F958-4EA9-9BAA-55DD5C3E31E2}.Release|Win32.ActiveCfg = Release|Win32
 		{C97978F2-F958-4EA9-9BAA-55DD5C3E31E2}.Release|Win32.Build.0 = Release|Win32
+		{15589F0D-F41D-43FA-A32B-EE592E478FA2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{15589F0D-F41D-43FA-A32B-EE592E478FA2}.Debug|Win32.Build.0 = Debug|Win32
+		{15589F0D-F41D-43FA-A32B-EE592E478FA2}.Release|Win32.ActiveCfg = Release|Win32
+		{15589F0D-F41D-43FA-A32B-EE592E478FA2}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

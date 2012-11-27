@@ -90,6 +90,7 @@ extern "C"
 #include "cmdutils.h"
 
 #include <assert.h>
+#ifndef _LIB
 #pragma comment (lib , "lib/avcodec.lib")
 #pragma comment (lib , "lib/avdevice.lib")
 #pragma comment (lib , "lib/avfilter.lib")
@@ -100,6 +101,7 @@ extern "C"
 #pragma comment (lib , "lib/swscale.lib")
 #pragma comment (lib , "SDL/lib/x86/SDL.lib")
 #pragma comment (lib , "SDL/lib/x86/SDLmain.lib")
+#endif
 
 //Not defined in visual studio so we'll make a simple one here
 //  [11/26/2012 JamesK]
@@ -310,6 +312,7 @@ typedef struct VideoState {
 
 /* options specified by the user */
 static AVInputFormat *file_iformat;
+static std::string m_URL;
 static const char *input_filename;
 static const char *window_title;
 static int fs_screen_width;
@@ -1688,7 +1691,7 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
 		pict.data[1] = 0;
 		pict.data[2] = 0;
 
-		pict.linesize[0] = bitmap.stride();
+		pict.linesize[0] = bitmap.stride_in_bytes();
 		pict.linesize[1] = 0;
 		pict.linesize[2] = 0;
 
@@ -1703,6 +1706,7 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
                   0, src_frame->height, pict.data, pict.linesize);
 
 		is->Preview->process_frame(&bitmap);
+		Sleep(16); //TODO figure out the timing
     }
     return 0;
 }
@@ -3483,7 +3487,15 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 	signal(SIGTERM, sigterm_handler); /* Termination (ANSI).  */
 
 	//show_banner(argc, argv, options);
+	#if 0
 	input_filename="rtsp://FRC:FRC@10.28.1.11/axis-media/media.amp";
+	#else
+	{
+		wchar2char(IPAddress);
+		m_URL=wchar2char_pchar;
+		input_filename=m_URL.c_str();
+	}
+	#endif
 
 	audio_disable=1;
 
@@ -3536,7 +3548,9 @@ void FrameGrabber::StartStreaming()
 		do_exit(NULL);
 	}
 
+	#ifndef _LIB
 	event_loop((VideoState *)m_VideoStream);
+	#endif
 }
 
 void FrameGrabber::StopStreaming()
@@ -3555,6 +3569,7 @@ class DebugOut_Update : public FrameWork::Outstream_Interface
 		}
 };
 
+#ifndef _LIB
 int main(int argc, char **argv)
 {
 	FrameGrabber test;
@@ -3564,3 +3579,4 @@ int main(int argc, char **argv)
 	
 	return 0;
 }
+#endif

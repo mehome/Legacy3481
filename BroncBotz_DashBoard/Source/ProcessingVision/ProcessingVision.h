@@ -19,4 +19,4 @@ struct Bitmap_Frame
 /// (e.g. targeting reticle or bound box feedback of acquired target).  You can return the same frame sent or create a new one that has
 /// different properties typically the stride may be different depending on the kind of buffers you need to allocate
 /// The format color space of the memory is RGB 24.  This does not change and must remain this for frames returned
-extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB24(Bitmap_Frame *Frame);
+extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *Frame);
