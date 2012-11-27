@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FFMpeg121125", "FFMpeg121125.vcproj", "{ABBCF724-778B-48D9-8734-4852DEDDE6B4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FFMpegPlayCPP", "FFMpegPlayCPP.vcproj", "{1A8BFA39-D870-49CC-B7FE-C723A6925C8B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +15,10 @@ Global
 		{ABBCF724-778B-48D9-8734-4852DEDDE6B4}.Debug|Win32.Build.0 = Debug|Win32
 		{ABBCF724-778B-48D9-8734-4852DEDDE6B4}.Release|Win32.ActiveCfg = Release|Win32
 		{ABBCF724-778B-48D9-8734-4852DEDDE6B4}.Release|Win32.Build.0 = Release|Win32
+		{1A8BFA39-D870-49CC-B7FE-C723A6925C8B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1A8BFA39-D870-49CC-B7FE-C723A6925C8B}.Debug|Win32.Build.0 = Debug|Win32
+		{1A8BFA39-D870-49CC-B7FE-C723A6925C8B}.Release|Win32.ActiveCfg = Release|Win32
+		{1A8BFA39-D870-49CC-B7FE-C723A6925C8B}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
