@@ -1,3 +1,8 @@
+
+#include "stdafx.h"
+#include "../FrameWork/FrameWork.h"
+#include "FrameGrabber.h"
+
 /*
  * Copyright (c) 2003 Fabrice Bellard
  *
@@ -188,6 +193,7 @@ enum {
 };
 
 typedef struct VideoState {
+	FrameWork::Outstream_Interface *Preview;  //Temp for now
     SDL_Thread *read_tid;
     SDL_Thread *video_tid;
     SDL_Thread *refresh_tid;
@@ -1465,6 +1471,7 @@ display:
             av_diff = 0;
             if (is->audio_st && is->video_st)
                 av_diff = get_audio_clock(is) - get_video_clock(is);
+			#if 0
             printf("%7.2f A-V:%7.3f fd=%4d aq=%5dKB vq=%5dKB sq=%5dB f=%i64d/%i64d   \r",
                    get_master_clock(is),
                    av_diff,
@@ -1475,6 +1482,8 @@ display:
                    is->video_st ? is->video_st->codec->pts_correction_num_faulty_dts : 0,
                    is->video_st ? is->video_st->codec->pts_correction_num_faulty_pts : 0);
             fflush(stdout);
+			#endif
+
             last_time = cur_time;
         }
     }
@@ -1644,6 +1653,56 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_
         SDL_LockMutex(is->pictq_mutex);
         is->pictq_size++;
         SDL_UnlockMutex(is->pictq_mutex);
+    }
+    return 0;
+}
+
+static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_t pos, int serial)
+{
+    double frame_delay, pts = pts1;
+
+    /* compute the exact PTS for the picture if it is omitted in the stream
+     * pts1 is the dts of the pkt / pts of the frame */
+    if (pts != 0) {
+        /* update video clock with pts, if present */
+        is->video_clock = pts;
+    } else {
+        pts = is->video_clock;
+    }
+    /* update video clock for next frame */
+    frame_delay = av_q2d(is->video_st->codec->time_base);
+    /* for MPEG2, the frame can be repeated, so we update the
+       clock accordingly */
+    frame_delay += src_frame->repeat_pict * (frame_delay * 0.5);
+    is->video_clock += frame_delay;
+
+    if (is->videoq.abort_request)
+        return -1;
+
+
+	//always dispatch
+    {
+		FrameWork::Bitmaps::bitmap_bgra_u8 bitmap(src_frame->width,src_frame->height);
+		AVPicture pict = { { 0 } };
+		pict.data[0] = (uint8_t *) bitmap();
+		pict.data[1] = 0;
+		pict.data[2] = 0;
+
+		pict.linesize[0] = bitmap.stride();
+		pict.linesize[1] = 0;
+		pict.linesize[2] = 0;
+
+        sws_flags = (int)av_get_int(sws_opts, "sws_flags", NULL);
+        is->img_convert_ctx = sws_getCachedContext(is->img_convert_ctx,
+            src_frame->width, src_frame->height, (AVPixelFormat)src_frame->format,bitmap.xres(), bitmap.yres(),
+            AV_PIX_FMT_BGRA, sws_flags, NULL, NULL, NULL);
+
+		assert(is->img_convert_ctx != NULL);
+
+        sws_scale(is->img_convert_ctx, src_frame->data, src_frame->linesize,
+                  0, src_frame->height, pict.data, pict.linesize);
+
+		is->Preview->process_frame(&bitmap);
     }
     return 0;
 }
@@ -1935,7 +1994,11 @@ static int video_thread(void *arg)
         }
 #else
         pts = pts_int * av_q2d(is->video_st->time_base);
+		#if 0
         ret = queue_picture(is, frame, pts, pkt.pos, serial);
+		#else
+		ret = dispatch_picture(is, frame, pts, pkt.pos, serial);
+		#endif
 #endif
 
         if (ret < 0)
@@ -2821,7 +2884,7 @@ static int read_thread(void *arg)
     return 0;
 }
 
-static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
+static VideoState *stream_open(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream)
 {
     VideoState *is;
 
@@ -2851,6 +2914,8 @@ static VideoState *stream_open(const char *filename, AVInputFormat *iformat)
     is->audio_current_pts_drift = -av_gettime() / 1000000.0;
     is->video_current_pts_drift = is->audio_current_pts_drift;
     is->av_sync_type = av_sync_type;
+	assert(Outstream);
+	is->Preview=Outstream;
     is->read_tid     = SDL_CreateThread(read_thread, is);
     if (!is->read_tid) {
         av_free(is);
@@ -3298,93 +3363,204 @@ static int lockmgr(void **mtx, enum AVLockOp op)
    return 1;
 }
 
+#if 0
 /* Called from the main */
 int main(int argc, char **argv)
 {
-    int flags;
-    VideoState *is;
-    char dummy_videodriver[] = "SDL_VIDEODRIVER=dummy";
+	int flags;
+	VideoState *is;
+	char dummy_videodriver[] = "SDL_VIDEODRIVER=dummy";
 
-    av_log_set_flags(AV_LOG_SKIP_REPEATED);
-    parse_loglevel(argc, argv, options);
+	av_log_set_flags(AV_LOG_SKIP_REPEATED);
+	parse_loglevel(argc, argv, options);
 
-    /* register all codecs, demux and protocols */
-    avcodec_register_all();
+	/* register all codecs, demux and protocols */
+	avcodec_register_all();
 #if CONFIG_AVDEVICE
-    avdevice_register_all();
+	avdevice_register_all();
 #endif
 #if CONFIG_AVFILTER
-    avfilter_register_all();
+	avfilter_register_all();
 #endif
-    av_register_all();
-    avformat_network_init();
+	av_register_all();
+	avformat_network_init();
 
-    init_opts();
+	init_opts();
 
-    signal(SIGINT , sigterm_handler); /* Interrupt (ANSI).    */
-    signal(SIGTERM, sigterm_handler); /* Termination (ANSI).  */
+	signal(SIGINT , sigterm_handler); /* Interrupt (ANSI).    */
+	signal(SIGTERM, sigterm_handler); /* Termination (ANSI).  */
 
-    show_banner(argc, argv, options);
+	show_banner(argc, argv, options);
 
-    parse_options(NULL, argc, argv, options, opt_input_file);
+	parse_options(NULL, argc, argv, options, opt_input_file);
 
-    if (!input_filename) {
-        show_usage();
-        fprintf(stderr, "An input file must be specified\n");
-        fprintf(stderr, "Use -h to get full help or, even better, run 'man %s'\n", program_name);
-        exit(1);
-    }
+	if (!input_filename) {
+		show_usage();
+		fprintf(stderr, "An input file must be specified\n");
+		fprintf(stderr, "Use -h to get full help or, even better, run 'man %s'\n", program_name);
+		exit(1);
+	}
 
-    if (display_disable) {
-        video_disable = 1;
-    }
-    flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
-    if (audio_disable)
-        flags &= ~SDL_INIT_AUDIO;
-    if (display_disable)
-        SDL_putenv(dummy_videodriver); /* For the event queue, we always need a video driver. */
+	if (display_disable) {
+		video_disable = 1;
+	}
+	flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
+	if (audio_disable)
+		flags &= ~SDL_INIT_AUDIO;
+	if (display_disable)
+		SDL_putenv(dummy_videodriver); /* For the event queue, we always need a video driver. */
 
 	//Not sure why this flag gets enabled but it fails SDL_Init() if it is set
 	//  [11/27/2012 James]
-//#if !defined(__MINGW32__) && !defined(__APPLE__)
-//    flags |= SDL_INIT_EVENTTHREAD; /* Not supported on Windows or Mac OS X */
-//#endif
+	//#if !defined(__MINGW32__) && !defined(__APPLE__)
+	//    flags |= SDL_INIT_EVENTTHREAD; /* Not supported on Windows or Mac OS X */
+	//#endif
 
-    if (SDL_Init (flags)) {
-        fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
-        fprintf(stderr, "(Did you set the DISPLAY variable?)\n");
-        exit(1);
-    }
+	if (SDL_Init (flags)) {
+		fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
+		fprintf(stderr, "(Did you set the DISPLAY variable?)\n");
+		exit(1);
+	}
 
-    if (!display_disable) {
+	if (!display_disable) {
 #if HAVE_SDL_VIDEO_SIZE
-        const SDL_VideoInfo *vi = SDL_GetVideoInfo();
-        fs_screen_width = vi->current_w;
-        fs_screen_height = vi->current_h;
+		const SDL_VideoInfo *vi = SDL_GetVideoInfo();
+		fs_screen_width = vi->current_w;
+		fs_screen_height = vi->current_h;
 #endif
-    }
+	}
 
-    SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
-    SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
-    SDL_EventState(SDL_USEREVENT, SDL_IGNORE);
+	SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
+	SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
+	SDL_EventState(SDL_USEREVENT, SDL_IGNORE);
 
-    if (av_lockmgr_register(lockmgr)) {
-        fprintf(stderr, "Could not initialize lock manager!\n");
-        do_exit(NULL);
-    }
+	if (av_lockmgr_register(lockmgr)) {
+		fprintf(stderr, "Could not initialize lock manager!\n");
+		do_exit(NULL);
+	}
 
-    av_init_packet(&flush_pkt);
-    flush_pkt.data = (uint8_t *)((char *)(intptr_t)"FLUSH");
+	av_init_packet(&flush_pkt);
+	flush_pkt.data = (uint8_t *)((char *)(intptr_t)"FLUSH");
 
-    is = stream_open(input_filename, file_iformat);
-    if (!is) {
-        fprintf(stderr, "Failed to initialize VideoState!\n");
-        do_exit(NULL);
-    }
+	is = stream_open(input_filename, file_iformat);
+	if (!is) {
+		fprintf(stderr, "Failed to initialize VideoState!\n");
+		do_exit(NULL);
+	}
 
-    event_loop(is);
+	event_loop(is);
 
-    /* never returns */
+	/* never returns */
 
-    return 0;
+	return 0;
+}
+#endif
+
+  /***************************************************************************************************************/
+ /*													FrameGrabber												*/
+/***************************************************************************************************************/
+
+FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL)
+{
+	if (IPAddress[0]!=0)
+		FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
+
+	int flags;
+	//VideoState *is;
+	char dummy_videodriver[] = "SDL_VIDEODRIVER=dummy";
+
+	av_log_set_flags(AV_LOG_SKIP_REPEATED);
+	//parse_loglevel(argc, argv, options);
+
+	/* register all codecs, demux and protocols */
+	avcodec_register_all();
+	av_register_all();
+	avformat_network_init();
+
+	init_opts();
+
+	signal(SIGINT , sigterm_handler); /* Interrupt (ANSI).    */
+	signal(SIGTERM, sigterm_handler); /* Termination (ANSI).  */
+
+	//show_banner(argc, argv, options);
+	input_filename="rtsp://FRC:FRC@10.28.1.11/axis-media/media.amp";
+
+	audio_disable=1;
+
+	flags = SDL_INIT_VIDEO | SDL_INIT_TIMER;
+
+	if (display_disable)
+		SDL_putenv(dummy_videodriver); /* For the event queue, we always need a video driver. */
+
+	if (SDL_Init (flags)) {
+		fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
+		fprintf(stderr, "(Did you set the DISPLAY variable?)\n");
+		exit(1);
+	}
+
+	SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
+	SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
+	SDL_EventState(SDL_USEREVENT, SDL_IGNORE);
+
+	if (av_lockmgr_register(lockmgr)) {
+		fprintf(stderr, "Could not initialize lock manager!\n");
+		do_exit(NULL);
+	}
+
+	av_init_packet(&flush_pkt);
+	flush_pkt.data = (uint8_t *)((char *)(intptr_t)"FLUSH");
+}
+
+FrameGrabber::~FrameGrabber()
+{
+	StopStreaming();
+
+	av_lockmgr_register(NULL);
+	uninit_opts();
+#if CONFIG_AVFILTER
+	avfilter_uninit();
+	av_freep(&vfilters);
+#endif
+	avformat_network_deinit();
+	if (show_status)
+		printf("\n");
+	SDL_Quit();
+	av_log(NULL, AV_LOG_QUIET, "%s", "");
+}
+
+void FrameGrabber::StartStreaming()
+{
+	m_VideoStream = stream_open(input_filename, file_iformat, m_Outstream);
+	if (!m_VideoStream) {
+		fprintf(stderr, "Failed to initialize VideoState!\n");
+		do_exit(NULL);
+	}
+
+	event_loop((VideoState *)m_VideoStream);
+}
+
+void FrameGrabber::StopStreaming()
+{
+	if (m_VideoStream) 
+		stream_close((VideoState *)m_VideoStream);
+}
+
+class DebugOut_Update : public FrameWork::Outstream_Interface
+{
+	protected:
+		virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
+		{
+			static size_t counter=0;
+			printf ("\r %d received           ",counter++);
+		}
+};
+
+int main(int argc, char **argv)
+{
+	FrameGrabber test;
+	DebugOut_Update testOut;
+	test.SetOutstream_Interface(&testOut);
+	test.StartStreaming();
+	
+	return 0;
 }
