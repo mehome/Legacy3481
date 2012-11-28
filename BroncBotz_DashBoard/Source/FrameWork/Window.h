@@ -30,4 +30,5 @@ private:		// The child window pointer
 
 				// The thread
 				FrameWork::tThread<Window>	*m_pThread;
+				bool m_IsClosing;
 };

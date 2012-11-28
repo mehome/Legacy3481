@@ -14,7 +14,7 @@ Window::Window( HWND Parent , const bool IsPopup ,
 		m_pThread( NULL ) ,
 		m_Parent_hWnd( Parent ) , 
 		m_PopupWindow( IsPopup ) ,
-		m_pWindowName( pWindowName )
+		m_pWindowName( pWindowName ), m_IsClosing(false)
 {	// Store the position
 	if (!pWindowPosition)
 	{	static RECT lWindowPosition = { ::GetSystemMetrics(SM_CXSCREEN)/4 , 
@@ -31,7 +31,9 @@ Window::Window( HWND Parent , const bool IsPopup ,
 
 // Destructor
 Window::~Window( void )
-{	if (m_hWnd) 
+{
+	m_IsClosing=true;
+	if (m_hWnd) 
 		::PostMessage( m_hWnd , WM_USER , (long)(size_t)this , 0 );
 	if (m_pThread)
 		delete m_pThread;
@@ -78,6 +80,12 @@ inline void GUIDtow(GUID id,wchar_t *string) {
 // The thread callback
 void Window::operator() ( const void* )
 {	
+	//If we are closing ensure the thread does not recreate the window
+	if (m_IsClosing)
+	{
+		Sleep(10);
+		return;
+	}
 	GUID UniqueClassID;
 	if (FAILED(CoCreateGuid(&UniqueClassID))) 
 		assert(false);
@@ -143,8 +151,9 @@ void Window::operator() ( const void* )
 		if ( (msg.hwnd==m_hWnd) && 	(msg.message==WM_USER) && (msg.wParam==(long)(size_t)this) )
 			break;
 		Sleep(100);
-	} while (WM_QUIT != msg.message);
+	} while ((WM_QUIT != msg.message)&&(!m_IsClosing));
 	#endif
 	// Close the window
 	::DestroyWindow( m_hWnd ); 
+	m_hWnd=NULL;
 }
