@@ -170,7 +170,7 @@ void HighlightWindow( HWND hwnd, BOOL fDraw )
 	if (!parent) return;
 	const LONG DINV=3;
 	HDC hdc;
-	RECT rc;
+	RECT rc,parent_rect;
 	BOOL bBorderOn;
 	bBorderOn = fDraw;
 
@@ -178,10 +178,11 @@ void HighlightWindow( HWND hwnd, BOOL fDraw )
 		return;
 
 	hdc = ::GetWindowDC(parent);
+	::GetWindowRect(parent, &parent_rect);
 	::GetWindowRect(hwnd, &rc);
-	//::OffsetRect(&rc, -rc.left, -rc.top);
-	rc.left-=DINV;
-	rc.top-=DINV;
+	::OffsetRect(&rc, -parent_rect.left, -parent_rect.top);
+	rc.left-=DINV<<1;
+	rc.top-=DINV<<1;
 	rc.right+=DINV<<1;
 	rc.bottom+=DINV<<1;
 

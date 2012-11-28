@@ -3434,7 +3434,7 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 	if ((m_URL.c_str()[0]>='0')&&(m_URL.c_str()[0]<='9'))
 	{
 		char Buffer[1024];
-		//this is lazy but effective
+		//this is lazy but effective... TODO parse numbers remove leading zero's as this will cause it to fail
 		sprintf_s(Buffer,1024,"rtsp://FRC:FRC@%s/axis-media/media.amp",m_URL.c_str());
 		audio_disable=1;
 		m_URL=Buffer;
