@@ -3,6 +3,10 @@
 #include "../FrameWork/FrameWork.h"
 #include "FrameGrabber.h"
 
+#ifndef _LIB
+#define __EnableOptions__
+#endif
+
 /*
  * Copyright (c) 2003 Fabrice Bellard
  *
@@ -3176,41 +3180,6 @@ static void event_loop(VideoState *cur_stream)
     }
 }
 
-void FFPlay_Controller::Flush() 
-{
-
-}
-int FFPlay_Controller::Run (void)
-{
-	StartStreaming();
-	VideoState * is=(VideoState *)m_VideoStream;
-	if (is->paused)
-		toggle_pause(is);
-	return 0;
-}
-int FFPlay_Controller::Stop (void)
-{
-	VideoState * is=(VideoState *)m_VideoStream;
-	if (!is->paused)
-		toggle_pause(is);
-	return 0;
-}
-int FFPlay_Controller::Pause (void)
-{
-	VideoState * is=(VideoState *)m_VideoStream;
-	toggle_pause(is);
-	return 0;
-}
-int FFPlay_Controller::Seek (double, double,  bool scrubbing )
-{
-	return 0;
-}
-int FFPlay_Controller::SetRate (int)
-{
-	return 0;
-}
-
-
 static int opt_frame_size(void *optctx, const char *opt, const char *arg)
 {
     av_log(NULL, AV_LOG_WARNING, "Option -s is deprecated, use -video_size.\n");
@@ -3412,6 +3381,48 @@ static int lockmgr(void **mtx, enum AVLockOp op)
  /*													FrameGrabber												*/
 /***************************************************************************************************************/
 
+static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
+{
+#ifndef NDEBUG
+	if (level > av_log_get_level() || strstr(fmt, "%td"))
+		return;
+
+	char Temp[BUFSIZ];
+	vsprintf_s(Temp, BUFSIZ, fmt, vl);
+	OutputDebugStringA(Temp);
+#endif
+}
+
+size_t FrameGrabber::split_arguments(const std::string& str, std::vector<std::string>& arguments)
+{
+	arguments.clear();
+
+	if (str.empty())
+		return 0;
+
+	const std::string whitespace = " \t\n\r";
+	const char group_char = '"';
+	bool in_argument = false;
+
+	arguments.push_back(std::string());
+	for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
+	{
+		if (*it == group_char)
+			in_argument = !in_argument;
+		else if (in_argument || whitespace.find(*it) == std::string::npos)
+			arguments.back().push_back(*it);
+		else if (!arguments.back().empty())
+			arguments.push_back(std::string());
+	}
+
+	if (arguments.back().empty())
+		arguments.pop_back();
+
+	assert(!in_argument); // Uneven quotes?
+
+	return arguments.size();
+}
+
 FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL),m_TestPattern(Preview,IPAddress)
 {
 	if (IPAddress[0]!=0)
@@ -3446,16 +3457,38 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 	char dummy_videodriver[] = "SDL_VIDEODRIVER=dummy";
 
 	av_log_set_flags(AV_LOG_SKIP_REPEATED);
-	//parse_loglevel(argc, argv, options);
+
+	#ifdef __EnableOptions__
+	std::vector<std::string> Args;
+	split_arguments(m_Options,Args);
+	//form agrc and agrv from string
+	int argc=Args.size(); char **argv;
+		
+	size_t opt_len=sizeof(void *);
+	for (size_t i=0;i<Args.size();i++)
+		opt_len+=sizeof(void *);
+	
+	argv=(char **)_alloca(opt_len);
+
+	argv[0]="FrameGrabber";
+	for (size_t i=0;i<Args.size();i++)
+		const_cast<const char **>(argv)[i+1]=Args[i].c_str();
+
+	parse_loglevel(argc, argv, options);
+	#endif
+
+	//av_log_set_callback(ffm_logger);
 
 	/* register all codecs, demux and protocols */
 	avcodec_register_all();
 	av_register_all();
 	avformat_network_init();
 
-	//init_opts();
+	#ifdef __EnableOptions__
+	init_opts();
+	show_banner(argc, argv, options);
+	#endif
 
-	//show_banner(argc, argv, options);
 
 	flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
 	if (audio_disable)
@@ -3532,4 +3565,42 @@ void FrameGrabber::StopStreaming()
 
 	stream_close((VideoState *)m_VideoStream);
 	m_VideoStream=NULL;
+}
+
+  /***************************************************************************************************************/
+ /*												FFPlay_Controller												*/
+/***************************************************************************************************************/
+
+void FFPlay_Controller::Flush() 
+{
+
+}
+int FFPlay_Controller::Run (void)
+{
+	StartStreaming();
+	VideoState * is=(VideoState *)m_VideoStream;
+	if (is->paused)
+		toggle_pause(is);
+	return 0;
+}
+int FFPlay_Controller::Stop (void)
+{
+	VideoState * is=(VideoState *)m_VideoStream;
+	if (!is->paused)
+		toggle_pause(is);
+	return 0;
+}
+int FFPlay_Controller::Pause (void)
+{
+	VideoState * is=(VideoState *)m_VideoStream;
+	toggle_pause(is);
+	return 0;
+}
+int FFPlay_Controller::Seek (double, double,  bool scrubbing )
+{
+	return 0;
+}
+int FFPlay_Controller::SetRate (int)
+{
+	return 0;
 }

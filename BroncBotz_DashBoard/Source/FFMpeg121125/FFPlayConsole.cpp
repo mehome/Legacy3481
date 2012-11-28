@@ -187,19 +187,11 @@ bool FFPlayTest::CommandLineInterface()
 			else if (!_strnicmp( input_line, "Seek", 4))
 			{
 				OpenResources();
-#if 0
-				if ((IMediaSeeking*)*m_Streamer)
-				{
-					((IMediaControl*)*m_Streamer)->Pause();	
-					time_type Current(atof(str_1));
-					((IMediaSeeking*)*m_Streamer)->SetPositions((LONGLONG *)Current,AM_SEEKING_AbsolutePositioning,NULL,AM_SEEKING_NoPositioning);
-				}
-#endif
 				double time=atof(str_1);
 				if (m_Streamer)
 				{
 					//m_MasterClock->pause();
-					m_Streamer->Pause();
+					//m_Streamer->Pause();
 					m_Streamer->Seek(time,0,true);
 				}
 			}
