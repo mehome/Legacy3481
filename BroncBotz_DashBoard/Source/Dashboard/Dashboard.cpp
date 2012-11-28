@@ -26,61 +26,6 @@ inline void GUIDtow(GUID id,wchar_t *string) {
 		id.Data4[0],id.Data4[1],id.Data4[2],id.Data4[3],id.Data4[4],id.Data4[5],id.Data4[6],id.Data4[7]);
 }
 
-  /*******************************************************************************************************/
- /*										FrameGrabber_TestPattern										*/
-/*******************************************************************************************************/
-
-//Throw together the infamous test pattern that streams the frames out
-class FrameGrabber_TestPattern
-{
-public:
-	FrameGrabber_TestPattern(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : m_pThread(NULL),m_TestMap(720,480),m_Outstream(Preview)
-	{
-		if (IPAddress[0]!=0)
-			FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
-	}
-	//allow late binding of the output (hence start streaming exists for this delay)
-	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_Outstream=Preview;}
-	void StartStreaming()
-	{
-		m_Counter=0;
-		m_pThread = new FrameWork::tThread<FrameGrabber_TestPattern>(this);
-	}
-
-	void StopStreaming()
-	{
-		delete m_pThread;
-		m_pThread=NULL;
-	}
-
-	virtual ~FrameGrabber_TestPattern()
-	{
-		StopStreaming();
-	}
-private:
-	friend FrameWork::tThread<FrameGrabber_TestPattern>;
-
-	void operator() ( const void* )
-	{
-		using namespace FrameWork;
-		Sleep(16);
-		//Sleep(33);
-		//Sleep(1000);
-		DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
-		m_RGB=m_TestMap;
-		m_Outstream->process_frame(&m_RGB);
-		//printf("%d\n",m_Counter++);
-	}
-	FrameWork::tThread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
-
-private:
-	FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
-	FrameWork::Bitmaps::bitmap_bgra_u8 m_RGB;
-	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
-	size_t m_Counter;
-};
-
-
 class ProcessingVision : public FrameWork::Outstream_Interface
 {
 	public:
@@ -196,8 +141,7 @@ class DDraw_Preview
 		DDraw_Preview_Props m_Props;
 		RECT m_DefaultWindow;  //left=xRes top=yRes right=xPos bottom=YPos
 
-		//TODO use an iterface pointer... where test would use the test pattern
-		#if 0	
+		#if 0
 		FrameGrabber_TestPattern m_FrameGrabber;
 		#else
 		FrameGrabber m_FrameGrabber;

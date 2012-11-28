@@ -3470,10 +3470,34 @@ int main(int argc, char **argv)
  /*													FrameGrabber												*/
 /***************************************************************************************************************/
 
-FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL)
+FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL),m_TestPattern(Preview,IPAddress)
 {
 	if (IPAddress[0]!=0)
 		FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
+
+	#if 0
+	input_filename="rtsp://FRC:FRC@10.28.1.11/axis-media/media.amp";
+	#else
+	{
+		wchar2char(IPAddress);
+		m_URL=wchar2char_pchar;
+	}
+	#endif
+
+	//If we have no IPAddress we have no work to do
+	if(IPAddress[0]==0)
+		return;
+
+	//Now to evaluate if it is a number... we'll want to have some intelligent way to deal with the correct URL but for now just hard code the m1011's H264's URL
+	if ((m_URL.c_str()[0]>='0')&&(m_URL.c_str()[0]<='9'))
+	{
+		char Buffer[1024];
+		//this is lazy but effective
+		sprintf_s(Buffer,1024,"rtsp://FRC:FRC@%s/axis-media/media.amp",m_URL.c_str());
+		audio_disable=1;
+		m_URL=Buffer;
+	}
+	input_filename=m_URL.c_str();
 
 	int flags;
 	//VideoState *is;
@@ -3490,17 +3514,6 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 	//init_opts();
 
 	//show_banner(argc, argv, options);
-	#if 0
-	input_filename="rtsp://FRC:FRC@10.28.1.11/axis-media/media.amp";
-	#else
-	{
-		wchar2char(IPAddress);
-		m_URL=wchar2char_pchar;
-		input_filename=m_URL.c_str();
-	}
-	#endif
-
-	//audio_disable=1;
 
 	flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
 	if (audio_disable)
@@ -3532,6 +3545,11 @@ FrameGrabber::~FrameGrabber()
 {
 	StopStreaming();
 
+	//TODO I should be able to call functions even if they were never open...
+	//I'll need to ensure the code can handle that
+	if (m_URL[0]==0)
+		return;
+
 	av_lockmgr_register(NULL);
 	uninit_opts();
 #if CONFIG_AVFILTER
@@ -3545,8 +3563,20 @@ FrameGrabber::~FrameGrabber()
 	av_log(NULL, AV_LOG_QUIET, "%s", "");
 }
 
+void FrameGrabber::SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) 
+{
+	m_Outstream=Preview;
+	m_TestPattern.SetOutstream_Interface(Preview);
+}
+
 void FrameGrabber::StartStreaming()
 {
+	if (m_URL[0]==0)
+	{
+		m_TestPattern.StartStreaming();
+		return;
+	}
+
 	m_VideoStream = stream_open(input_filename, file_iformat, m_Outstream);
 	if (!m_VideoStream) {
 		fprintf(stderr, "Failed to initialize VideoState!\n");
@@ -3560,6 +3590,7 @@ void FrameGrabber::StartStreaming()
 
 void FrameGrabber::StopStreaming()
 {
+	m_TestPattern.StopStreaming();  //this is fine to call checks implicitly
 	if (m_VideoStream) 
 	{
 		stream_close((VideoState *)m_VideoStream);
