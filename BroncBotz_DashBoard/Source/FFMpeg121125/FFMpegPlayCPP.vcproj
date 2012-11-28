@@ -181,6 +181,10 @@
 				RelativePath=".\ffplay2.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\FFPlayConsole.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

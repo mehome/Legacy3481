@@ -1712,7 +1712,7 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
                   0, src_frame->height, pict.data, pict.linesize);
 
 		is->Preview->process_frame(&bitmap);
-		Sleep(16); //TODO figure out the timing
+		//Sleep(16); //TODO figure out the timing
     }
     return 0;
 }
@@ -3176,6 +3176,41 @@ static void event_loop(VideoState *cur_stream)
     }
 }
 
+void FFPlay_Controller::Flush() 
+{
+
+}
+int FFPlay_Controller::Run (void)
+{
+	StartStreaming();
+	VideoState * is=(VideoState *)m_VideoStream;
+	if (is->paused)
+		toggle_pause(is);
+	return 0;
+}
+int FFPlay_Controller::Stop (void)
+{
+	VideoState * is=(VideoState *)m_VideoStream;
+	if (!is->paused)
+		toggle_pause(is);
+	return 0;
+}
+int FFPlay_Controller::Pause (void)
+{
+	VideoState * is=(VideoState *)m_VideoStream;
+	toggle_pause(is);
+	return 0;
+}
+int FFPlay_Controller::Seek (double, double,  bool scrubbing )
+{
+	return 0;
+}
+int FFPlay_Controller::SetRate (int)
+{
+	return 0;
+}
+
+
 static int opt_frame_size(void *optctx, const char *opt, const char *arg)
 {
     av_log(NULL, AV_LOG_WARNING, "Option -s is deprecated, use -video_size.\n");
@@ -3373,99 +3408,6 @@ static int lockmgr(void **mtx, enum AVLockOp op)
    return 1;
 }
 
-#if 0
-/* Called from the main */
-int main(int argc, char **argv)
-{
-	int flags;
-	VideoState *is;
-	char dummy_videodriver[] = "SDL_VIDEODRIVER=dummy";
-
-	av_log_set_flags(AV_LOG_SKIP_REPEATED);
-	parse_loglevel(argc, argv, options);
-
-	/* register all codecs, demux and protocols */
-	avcodec_register_all();
-#if CONFIG_AVDEVICE
-	avdevice_register_all();
-#endif
-#if CONFIG_AVFILTER
-	avfilter_register_all();
-#endif
-	av_register_all();
-	avformat_network_init();
-
-	init_opts();
-
-	signal(SIGINT , sigterm_handler); /* Interrupt (ANSI).    */
-	signal(SIGTERM, sigterm_handler); /* Termination (ANSI).  */
-
-	show_banner(argc, argv, options);
-
-	parse_options(NULL, argc, argv, options, opt_input_file);
-
-	if (!input_filename) {
-		show_usage();
-		fprintf(stderr, "An input file must be specified\n");
-		fprintf(stderr, "Use -h to get full help or, even better, run 'man %s'\n", program_name);
-		exit(1);
-	}
-
-	if (display_disable) {
-		video_disable = 1;
-	}
-	flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
-	if (audio_disable)
-		flags &= ~SDL_INIT_AUDIO;
-	if (display_disable)
-		SDL_putenv(dummy_videodriver); /* For the event queue, we always need a video driver. */
-
-	//Not sure why this flag gets enabled but it fails SDL_Init() if it is set
-	//  [11/27/2012 James]
-	//#if !defined(__MINGW32__) && !defined(__APPLE__)
-	//    flags |= SDL_INIT_EVENTTHREAD; /* Not supported on Windows or Mac OS X */
-	//#endif
-
-	if (SDL_Init (flags)) {
-		fprintf(stderr, "Could not initialize SDL - %s\n", SDL_GetError());
-		fprintf(stderr, "(Did you set the DISPLAY variable?)\n");
-		exit(1);
-	}
-
-	if (!display_disable) {
-#if HAVE_SDL_VIDEO_SIZE
-		const SDL_VideoInfo *vi = SDL_GetVideoInfo();
-		fs_screen_width = vi->current_w;
-		fs_screen_height = vi->current_h;
-#endif
-	}
-
-	SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
-	SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
-	SDL_EventState(SDL_USEREVENT, SDL_IGNORE);
-
-	if (av_lockmgr_register(lockmgr)) {
-		fprintf(stderr, "Could not initialize lock manager!\n");
-		do_exit(NULL);
-	}
-
-	av_init_packet(&flush_pkt);
-	flush_pkt.data = (uint8_t *)((char *)(intptr_t)"FLUSH");
-
-	is = stream_open(input_filename, file_iformat);
-	if (!is) {
-		fprintf(stderr, "Failed to initialize VideoState!\n");
-		do_exit(NULL);
-	}
-
-	event_loop(is);
-
-	/* never returns */
-
-	return 0;
-}
-#endif
-
   /***************************************************************************************************************/
  /*													FrameGrabber												*/
 /***************************************************************************************************************/
@@ -3571,6 +3513,7 @@ void FrameGrabber::SetOutstream_Interface(FrameWork::Outstream_Interface *Previe
 
 void FrameGrabber::StartStreaming()
 {
+	if (m_VideoStream) return;
 	if (m_URL[0]==0)
 	{
 		m_TestPattern.StartStreaming();
@@ -3578,50 +3521,15 @@ void FrameGrabber::StartStreaming()
 	}
 
 	m_VideoStream = stream_open(input_filename, file_iformat, m_Outstream);
-	if (!m_VideoStream) {
+	if (!m_VideoStream) 
 		fprintf(stderr, "Failed to initialize VideoState!\n");
-		do_exit(NULL);
-	}
-
-	#ifndef _LIB
-	event_loop((VideoState *)m_VideoStream);
-	#endif
 }
 
 void FrameGrabber::StopStreaming()
 {
 	m_TestPattern.StopStreaming();  //this is fine to call checks implicitly
-	if (m_VideoStream) 
-	{
-		stream_close((VideoState *)m_VideoStream);
-		m_VideoStream=NULL;
-	}
-}
+	if (!m_VideoStream) return;
 
-class DebugOut_Update : public FrameWork::Outstream_Interface
-{
-	protected:
-		virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
-		{
-			static size_t counter=0;
-			printf ("\r %d received           ",counter++);
-		}
-};
-
-#ifndef _LIB
-int main(int argc, char **argv)
-{
-	DebugOut_Update testOut;
-	std::wstring URL=L"rtsp://FRC:FRC@10.28.1.11/axis-media/media.amp";
-	if (argc>1)
-	{
-		char2wchar(argv[1]);
-		URL=char2wchar_pwchar;
-	}
-	FrameGrabber test(&testOut,URL.c_str());
-	//test.SetOutstream_Interface(&testOut);
-	test.StartStreaming();
-	
-	return 0;
+	stream_close((VideoState *)m_VideoStream);
+	m_VideoStream=NULL;
 }
-#endif

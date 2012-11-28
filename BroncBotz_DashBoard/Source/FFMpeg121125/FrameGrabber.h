@@ -60,9 +60,25 @@ public:
 
 	virtual ~FrameGrabber();
 
-private:
-	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
+protected:
 
 	void *m_VideoStream;
+private:
+	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
 	FrameGrabber_TestPattern m_TestPattern;  //handle the empty string with something useful
+};
+
+class FFPlay_Controller : public FrameGrabber
+{
+public:
+	FFPlay_Controller(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : FrameGrabber(Preview,IPAddress)
+	{
+	}
+
+	void Flush();
+	int Run (void);											// run the filter graph
+	int Stop (void);										// stop filter graph
+	int Pause (void);										// pause filter graph
+	int Seek (double, double,  bool scrubbing =false);		// seek to start/stop positions (in seconds)
+	int SetRate (int);										// set the play speed  (as percentage of normal)
 };
