@@ -36,6 +36,8 @@
 #define __STDC_LIMIT_MACROS 1
 #endif
 
+#define CONFIG_RTSP_DEMUXER 1
+
 extern "C"
 {
 #include "include/libavutil/avutil.h"
@@ -1695,7 +1697,11 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
 		pict.linesize[1] = 0;
 		pict.linesize[2] = 0;
 
+		#if 1
+		sws_flags = 4;
+		#else
         sws_flags = (int)av_get_int(sws_opts, "sws_flags", NULL);
+		#endif
         is->img_convert_ctx = sws_getCachedContext(is->img_convert_ctx,
             src_frame->width, src_frame->height, (AVPixelFormat)src_frame->format,bitmap.xres(), bitmap.yres(),
             AV_PIX_FMT_BGRA, sws_flags, NULL, NULL, NULL);
@@ -3481,10 +3487,7 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 	av_register_all();
 	avformat_network_init();
 
-	init_opts();
-
-	signal(SIGINT , sigterm_handler); /* Interrupt (ANSI).    */
-	signal(SIGTERM, sigterm_handler); /* Termination (ANSI).  */
+	//init_opts();
 
 	//show_banner(argc, argv, options);
 	#if 0
@@ -3497,9 +3500,11 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 	}
 	#endif
 
-	audio_disable=1;
+	//audio_disable=1;
 
-	flags = SDL_INIT_VIDEO | SDL_INIT_TIMER;
+	flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
+	if (audio_disable)
+		flags &= ~SDL_INIT_AUDIO;
 
 	if (display_disable)
 		SDL_putenv(dummy_videodriver); /* For the event queue, we always need a video driver. */
@@ -3556,7 +3561,10 @@ void FrameGrabber::StartStreaming()
 void FrameGrabber::StopStreaming()
 {
 	if (m_VideoStream) 
+	{
 		stream_close((VideoState *)m_VideoStream);
+		m_VideoStream=NULL;
+	}
 }
 
 class DebugOut_Update : public FrameWork::Outstream_Interface
@@ -3572,9 +3580,15 @@ class DebugOut_Update : public FrameWork::Outstream_Interface
 #ifndef _LIB
 int main(int argc, char **argv)
 {
-	FrameGrabber test;
 	DebugOut_Update testOut;
-	test.SetOutstream_Interface(&testOut);
+	std::wstring URL=L"rtsp://FRC:FRC@10.28.1.11/axis-media/media.amp";
+	if (argc>1)
+	{
+		char2wchar(argv[1]);
+		URL=char2wchar_pwchar;
+	}
+	FrameGrabber test(&testOut,URL.c_str());
+	//test.SetOutstream_Interface(&testOut);
 	test.StartStreaming();
 	
 	return 0;
