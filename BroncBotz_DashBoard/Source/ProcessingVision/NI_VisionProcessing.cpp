@@ -25,6 +25,12 @@ struct ParticleData
 
 struct ParticleList
 {
+	ParticleList()
+	{
+		numParticles = 0;
+		particleData = NULL;
+	}
+
 	int numParticles;
 	ParticleData *particleData;
 };
@@ -75,6 +81,7 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame)
 		}
 	}
 
+	delete particleList.particleData;
 	imaqDispose(pImageArray);
 	imaqDispose(image);
 
@@ -96,8 +103,8 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	Image *image2 = imaqCreateImage(info.imageType, ImageBorder);
 	imaqDuplicate(image2, image);
 
-	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
-	imaqDuplicate(image3, image);
+	//Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
+	//imaqDuplicate(image3, image);
 
 #if 0
 	// blue
@@ -180,6 +187,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 		VisionErrChk(FindParticleCorners(image2, particleList));
 
+#if 0
 		// TODO: we need to use our own code for this, as the overlays are "non-destructive" - i.e., are not placed into the image buffers
 		// overlay some useful info
 		for(int i = 0; i < particleList.numParticles; i++)
@@ -238,10 +246,12 @@ int ProcessImage(Image *image, ParticleList &particleList)
 		}
 
 		delete[] particleList.particleData;
+#endif
 	}
 
 	// copy the end result 
-	imaqDuplicate(image, image3);
+	imaqDuplicate(image, image2);
+	imaqDispose(image2);
 
 Error:
 	return success;
