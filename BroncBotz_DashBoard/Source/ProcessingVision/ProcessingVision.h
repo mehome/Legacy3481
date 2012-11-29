@@ -20,3 +20,6 @@ struct Bitmap_Frame
 /// different properties typically the stride may be different depending on the kind of buffers you need to allocate
 /// The format color space of the memory is RGB 24.  This does not change and must remain this for frames returned
 extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *Frame);
+
+// redundant, but allows for easy separation.
+Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame);
