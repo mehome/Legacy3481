@@ -5,6 +5,7 @@
 
 #ifndef _LIB
 #define __EnableOptions__
+#define __Test_SDL_VideoPreview__
 #endif
 
 /*
@@ -2008,7 +2009,7 @@ static int video_thread(void *arg)
         }
 #else
         pts = pts_int * av_q2d(is->video_st->time_base);
-		#if 0
+		#ifdef __Test_SDL_VideoPreview__
         ret = queue_picture(is, frame, pts, pkt.pos, serial);
 		#else
 		ret = dispatch_picture(is, frame, pts, pkt.pos, serial);
@@ -3556,6 +3557,11 @@ void FrameGrabber::StartStreaming()
 	m_VideoStream = stream_open(input_filename, file_iformat, m_Outstream);
 	if (!m_VideoStream) 
 		fprintf(stderr, "Failed to initialize VideoState!\n");
+
+	#ifdef __Test_SDL_VideoPreview__
+	VideoState * is=(VideoState *)m_VideoStream;
+	event_loop(is);
+	#endif
 }
 
 void FrameGrabber::StopStreaming()
