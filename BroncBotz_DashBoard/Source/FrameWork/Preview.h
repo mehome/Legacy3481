@@ -27,6 +27,7 @@ public:
 	};
 	BufferState GetBufferState() const {return m_BufferState;}
 	void SetBufferState(BufferState state);
+	void WaitforVB() {m_pDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN,NULL);}
 protected:
 	void GetFrameInformation(int &FieldNumber) const;
 	int GetFramePitch( void ) const;
@@ -142,8 +143,12 @@ private:
 	FrameWork::event_array m_EventArray; //this consist of the current event index, and the terminate
 
 	FrameWork::event m_TerminateEvent;
+	FrameWork::event m_SignalFrameReady; //This sets signal every time a lock has occurred from any buffer
+
 	FrameWork::Blend_Averager<double> m_FrameRateAverage; //keeping track of average frame rate in milliseconds
 	FrameWork::time_type m_LastTime;  //keep track of time
+	size_t m_ConsecutiveRenderDelayCounter; //a simple counter of the delay count that resets every time it performs a Blit
+	size_t m_LastUsingProcessSlot;  //keeps track of last slot available for use
 
 	bool m_IsError;  //determined during construction
 	bool m_IsStreaming;

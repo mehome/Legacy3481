@@ -166,7 +166,7 @@ PBYTE Buffer::pGetBufferData(size_t *pMemorySize,size_t desiredXRes,size_t desir
 
 void Buffer::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 {
-	m_FrameEvent.reset();
+	//m_FrameEvent.reset();
 	using namespace FrameWork::Bitmaps;
 	assert (m_BufferState==eAvailable);
 	//Grab this buffer reserve for fill operation
@@ -237,6 +237,7 @@ void Buffer::SetBufferState(BufferState state)
 	#endif
 	assert(m_BufferState!=eInFlight); 
 	m_BufferState=state;
+	m_FrameEvent.reset();
 }
 
 
@@ -246,8 +247,8 @@ void Buffer::SetBufferState(BufferState state)
 
 
 Preview::Preview( HWND hWnd, Preview::eThreadPriority priority) : m_pThread(NULL), m_CurrentFrameIndex(0),m_hWnd(hWnd), 
-	m_pDisplayDeviceInfo(new DisplayDeviceInfo()),m_CurrDisplayDeviceIdx(0),m_ThreadPriority(priority),m_FrameRateAverage(0.20),
-	m_IsStreaming(false)
+	m_pDisplayDeviceInfo(new DisplayDeviceInfo()),m_CurrDisplayDeviceIdx(0),m_ThreadPriority(priority),m_FrameRateAverage(0.10),
+	m_ConsecutiveRenderDelayCounter(0),m_LastUsingProcessSlot(-1),m_IsStreaming(false)
 {
 	assert(::IsWindow(hWnd));
 	if (CreateAllDisplayDevices())
@@ -526,23 +527,31 @@ void Preview::operator() ( const void* )
 
 		if  ((!BufferToProcess->GetError()) && 
 			(BufferToProcess->GetBufferState()==Buffer::eReadyToRender) &&
-			((m_VideoBuffers[NextIndex]->GetBufferState()==Buffer::eReadyToRender) || (Delta>0.100))
+			((m_VideoBuffers[NextIndex]->GetBufferState()==Buffer::eReadyToRender) || 
+			 (m_ConsecutiveRenderDelayCounter>2) ||
+			 (Delta>0.100))
 			)
 		{
+			m_ConsecutiveRenderDelayCounter=0;
 			m_LastTime=current_time;
-			//printf("%d \t ",EventResult);
-			//printf("%d\n",(int)(Delta * 1000.0));
 			
 			if (Delta<0.100)
 			{
 				//The average frame rate should at least be 5 ms to limit the rate of this loop (i.e. give back cpu time)
 				double AverageRate=m_FrameRateAverage(max(Delta,0.005));
+
+				//printf("%d \t ",EventResult);
+				//printf("%d\n",(int)(Delta * 1000.0));
+				//DebugOutput("%d delta %d\n",(int)(AverageRate * 1000.0),(int)(Delta * 1000.0));
+
 				//printf("%d\n",(int)(AverageRate * 1000.0));
 				//We may need to slow down the thread to not catch up to the stream to keep a fluent timing
 				if ((Delta < AverageRate ) && (AverageRate<0.100))
 				{
 					int TimeDelay=(int)(AverageRate * 1000.0);
+					//int TimeDelay=(int)((AverageRate-Delta) * 1000.0);
 					//printf("sleep %d\n",TimeDelay);
+					//DebugOutput("sleep %d\n",TimeDelay);
 					Sleep(TimeDelay);
 				}
 			}
@@ -563,9 +572,16 @@ void Preview::operator() ( const void* )
 			if (m_pPrimary->IsLost())
 				m_pPrimary->Restore();
 			// Perform the blit
+			//DebugOutput("rendering %d\n",m_CurrentFrameIndex);
 			//hr = m_pPrimary->Blt(&wndRect, pBufferToDraw->GetSurface(), NULL, DDBLT_DDFX|DDBLT_WAIT, &BltFX);
 			hr = m_pPrimary->Blt(&wndRect, BufferToProcess->GetSurface(), NULL, DDBLT_ASYNC, NULL);
-			//assert(SUCCEEDED(hr));
+			#if 0
+			if (!SUCCEEDED(hr))
+				DebugOutput("Preview::operator()  Warning:m_pPrimary->Blt failed\n");
+			#else
+			assert(SUCCEEDED(hr));
+			#endif
+
 			//Now that this buffer has been used... this will be cached as last used (marked as available for next frame received)
 			if ((BufferToProcess!=m_LastBufferProcessed) || (m_VideoBuffers[NextIndex]->GetBufferState()==Buffer::eReadyToRender))
 			{
@@ -577,24 +593,53 @@ void Preview::operator() ( const void* )
 				m_CurrentFrameIndex=NextIndex; //advance the index
 			}
 		}
+		#if 0
 		else
-			Sleep(5);  //don't busy wait
+		{
+			if (m_ConsecutiveRenderDelayCounter==0)
+			{
+				m_SignalFrameReady.wait(100);
+				//BufferToProcess->WaitforVB();
+			}
+			else
+				Sleep(5);  //don't busy wait
+			m_ConsecutiveRenderDelayCounter++;
+			//DebugOutput("------ %d\n",m_ConsecutiveRenderDelayCounter);
+		}
+		#endif
 	}
 }
 
 void Preview::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 {
-	bool result=false;
-	for (size_t i=0;i<Preview_NoVideoBuffers;i++)
+	m_LastUsingProcessSlot=(m_LastUsingProcessSlot+1) % Preview_NoVideoBuffers;
+	if (m_VideoBuffers[m_LastUsingProcessSlot]->GetBufferState()!=Buffer::eAvailable)
+		Sleep(5);  //give it a chance to open up
+	if (m_VideoBuffers[m_LastUsingProcessSlot]->GetBufferState()!=Buffer::eAvailable)
 	{
-		if (m_VideoBuffers[i]->GetBufferState()==Buffer::eAvailable)
+		DebugOutput("   ***Preview::process_frame warning slots may be out of order\n");
+		m_LastUsingProcessSlot=-1;
+		for (size_t i=0;i<Preview_NoVideoBuffers;i++)
 		{
-			m_VideoBuffers[i]->process_frame(pBuffer);
-			result=true;
-			break;
+			if (m_VideoBuffers[i]->GetBufferState()==Buffer::eAvailable)
+			{
+				m_LastUsingProcessSlot=i;
+				break;
+			}
 		}
 	}
-	//Keep track of failed buffer matches (I can see this happening in some rare cases, but no flooding cases)
-	if (!result)
+	m_SignalFrameReady.set();
+
+
+	if (m_LastUsingProcessSlot!=-1)
+	{
+		m_VideoBuffers[m_LastUsingProcessSlot]->process_frame(pBuffer);
+		//DebugOutput("using %d\n",m_LastUsingProcessSlot);
+	}
+	else
+	{
+		//Keep track of failed buffer matches (I can see this happening in some rare cases, but no flooding cases)
 		printf("Preview::process_frame failed to find available buffer\n");
+		DebugOutput("Preview::process_frame failed to find available buffer\n");
+	}
 }

@@ -43,7 +43,7 @@
 #define __STDC_LIMIT_MACROS 1
 #endif
 
-#define CONFIG_RTSP_DEMUXER 1
+#define CONFIG_RTSP_DEMUXER 0
 
 extern "C"
 {
@@ -1673,6 +1673,16 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_
 
 static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_t pos, int serial)
 {
+	#if 0
+	{
+		static size_t counter=0;
+		if (counter++>30)
+		{
+			FrameWork::DebugOutput("vq=%d\n",is->videoq.nb_packets),
+			counter=0;
+		}
+	}
+	#endif
     double frame_delay, pts = pts1;
 
     /* compute the exact PTS for the picture if it is omitted in the stream
