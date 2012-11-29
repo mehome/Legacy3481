@@ -165,6 +165,8 @@ bool FFPlayTest::CommandLineInterface()
 						m_Streamer->SetRate(rate);
 					int result=m_Streamer->Run();
 					printf("result=%d\n",result);
+					if (result==1)
+						CloseResources();
 				}
 			}
 			else if (!_strnicmp( input_line, "Pause", 5))

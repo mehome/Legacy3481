@@ -8,6 +8,8 @@
 #define __Test_SDL_VideoPreview__
 #endif
 
+#undef __ShowFrameInfo__
+
 /*
  * Copyright (c) 2003 Fabrice Bellard
  *
@@ -1481,7 +1483,7 @@ display:
             av_diff = 0;
             if (is->audio_st && is->video_st)
                 av_diff = get_audio_clock(is) - get_video_clock(is);
-			#if 0
+			#ifdef __ShowFrameInfo__
             printf("%7.2f A-V:%7.3f fd=%4d aq=%5dKB vq=%5dKB sq=%5dB f=%i64d/%i64d   \r",
                    get_master_clock(is),
                    av_diff,
@@ -3037,8 +3039,9 @@ static void event_loop(VideoState *cur_stream)
 {
     SDL_Event event;
     double incr, pos, frac;
+	bool Done=false;
 
-    for (;;) {
+    while(!Done) {
         double x;
         SDL_WaitEvent(&event);
         switch (event.type) {
@@ -3166,7 +3169,8 @@ static void event_loop(VideoState *cur_stream)
             break;
         case SDL_QUIT:
         case FF_QUIT_EVENT:
-            do_exit(cur_stream);
+            //do_exit(cur_stream);
+			Done=true;
             break;
         case FF_ALLOC_EVENT:
             alloc_picture((VideoState *)event.user.data1);
@@ -3388,8 +3392,8 @@ static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
 	if (level > av_log_get_level() || strstr(fmt, "%td"))
 		return;
 
-	char Temp[BUFSIZ];
-	vsprintf_s(Temp, BUFSIZ, fmt, vl);
+	char Temp[2048];
+	vsprintf_s(Temp, 2048, fmt, vl);
 	OutputDebugStringA(Temp);
 #endif
 }
@@ -3478,7 +3482,7 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 	parse_loglevel(argc, argv, options);
 	#endif
 
-	//av_log_set_callback(ffm_logger);
+	av_log_set_callback(ffm_logger);
 
 	/* register all codecs, demux and protocols */
 	avcodec_register_all();
@@ -3587,7 +3591,11 @@ int FFPlay_Controller::Run (void)
 	VideoState * is=(VideoState *)m_VideoStream;
 	if (is->paused)
 		toggle_pause(is);
+	#ifdef __Test_SDL_VideoPreview__
+	return 1;
+	#else
 	return 0;
+	#endif
 }
 int FFPlay_Controller::Stop (void)
 {
