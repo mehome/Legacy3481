@@ -810,7 +810,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	DDraw_Preview TheApp(props);
 
 	TheApp.RunApp();
-	
+	bool SaveOnExit=true;
+	//TODO Hack bandaid... fixme
+	if (g_WindowInfo.rcNormalPosition.left + g_WindowInfo.rcNormalPosition.top + g_WindowInfo.rcNormalPosition.right + g_WindowInfo.rcNormalPosition.bottom == 0)
+		SaveOnExit=false;
+
+	if (SaveOnExit)
 	{
 		string OutFile = sz_FileName.c_str();
 		string output;
