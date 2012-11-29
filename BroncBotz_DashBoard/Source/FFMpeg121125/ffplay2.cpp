@@ -1488,8 +1488,10 @@ display:
                    get_master_clock(is),
                    av_diff,
                    is->frame_drops_early + is->frame_drops_late,
-                   aqsize / 1024,
-                   vqsize / 1024,
+//                   aqsize / 1024,
+					is->audioq.nb_packets,
+//                   vqsize / 1024,
+					is->videoq.nb_packets,
                    sqsize,
                    is->video_st ? is->video_st->codec->pts_correction_num_faulty_dts : 0,
                    is->video_st ? is->video_st->codec->pts_correction_num_faulty_pts : 0);
@@ -1770,7 +1772,9 @@ static int get_video_frame(VideoState *is, AVFrame *frame, int64_t *pts, AVPacke
             *pts = 0;
         }
 
-        if (framedrop>0 || (framedrop && get_master_sync_type(is) != AV_SYNC_VIDEO_MASTER)) {
+        if ((framedrop>0 || (framedrop && get_master_sync_type(is) != AV_SYNC_VIDEO_MASTER)) &&
+			(!is->realtime))		//do not delay realtime here -JamesK
+		{
             SDL_LockMutex(is->pictq_mutex);
             if (is->frame_last_pts != AV_NOPTS_VALUE && *pts) {
                 double clockdiff = get_video_clock(is) - get_master_clock(is);
