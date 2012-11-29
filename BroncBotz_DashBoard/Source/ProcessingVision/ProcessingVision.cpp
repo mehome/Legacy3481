@@ -5,7 +5,7 @@
 
 extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *Frame)
 {
-#if 1
+#if 0
 	Frame = NI_VisionProcessing(Frame);
 #else
 
