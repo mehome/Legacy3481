@@ -11,7 +11,7 @@ struct FileStuff
 	const char * const * const inputfile;
 };
 //Here is an easy way for us to share the same groups... just put your drive here:
-#define __Drive__ "E:\\"
+#define __Drive__ "D:\\"
 
 #define FileGroupListTemplate(n,x,y) \
 const size_t n ## _ ## x ## _NoSelections=COUNTOF(n ## _ ## x ## _Filelist); \
@@ -21,6 +21,7 @@ const char * const James_HTTP_Filelist[] =
 {
 	"http://www.termstech.com/files/Short0.avi",
 	"http://www.termstech.com/files/BadApple.mp4",
+	"rtsp://FRC:FRC@10.28.1.11/axis-media/media.amp",
 	"http://sirius/testing/cat.mxf",
 	"http://sirius/testing/clock.avi",
 	"http://sirius/testing/whirly.mpg",
