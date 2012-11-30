@@ -27,7 +27,6 @@ public:
 	};
 	BufferState GetBufferState() const {return m_BufferState;}
 	void SetBufferState(BufferState state);
-	void WaitforVB() {m_pDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN,NULL);}
 protected:
 	void GetFrameInformation(int &FieldNumber) const;
 	int GetFramePitch( void ) const;

@@ -20,6 +20,19 @@ static void BlackField( PBYTE pField, const int FrameSize )
 	}
 }
 
+static void ShowTimeDelta(char label[]="",bool UsePrintF=false)
+{
+	using namespace FrameWork;
+	static time_type LastTime=(0.0);
+	time_type currenttime=time_type::get_current_time();
+	time_type delta = currenttime-LastTime;
+	if (UsePrintF)
+		printf("%s-> %f\n",label,(double)delta*1000.0);
+	else
+		DebugOutput("%s-> %f\n",label,(double)delta*1000.0);
+	LastTime=currenttime;
+}
+
   /*********************************************************************************************************************************/
  /*														DisplayDeviceInfo												 		  */
 /*********************************************************************************************************************************/
@@ -166,7 +179,6 @@ PBYTE Buffer::pGetBufferData(size_t *pMemorySize,size_t desiredXRes,size_t desir
 
 void Buffer::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 {
-	//m_FrameEvent.reset();
 	using namespace FrameWork::Bitmaps;
 	assert (m_BufferState==eAvailable);
 	//Grab this buffer reserve for fill operation
@@ -235,9 +247,9 @@ void Buffer::SetBufferState(BufferState state)
 	if (m_BufferState==eInFlight)
 		DebugBreak();
 	#endif
-	assert(m_BufferState!=eInFlight); 
+	assert ((m_BufferState!=eInFlight)&&(state==eAvailable)); 
+	m_FrameEvent.reset();  //lock it down
 	m_BufferState=state;
-	m_FrameEvent.reset();
 }
 
 
@@ -513,7 +525,7 @@ void Preview::operator() ( const void* )
 
 		BufferToProcess->UpdateDisplayDeviceIdx(m_CurrDisplayDeviceIdx,GetCurrentDisplayDevice());
 
-		//for any problems such as underrun use the last successful buffer
+		//for any problems such as under-run use the last successful buffer
 		if  ((BufferToProcess->GetError()) || (BufferToProcess->GetBufferState()!=Buffer::eReadyToRender))
 		{
 			BufferToProcess=m_LastBufferProcessed;
@@ -525,36 +537,12 @@ void Preview::operator() ( const void* )
 		time_type current_time=time_type::get_current_time();
 		double Delta=(double)(current_time-m_LastTime);
 
-		if  ((!BufferToProcess->GetError()) && 
-			(BufferToProcess->GetBufferState()==Buffer::eReadyToRender) &&
-			((m_VideoBuffers[NextIndex]->GetBufferState()==Buffer::eReadyToRender) || 
-			 (m_ConsecutiveRenderDelayCounter>2) ||
-			 (Delta>0.100))
-			)
+		if  ((!BufferToProcess->GetError()) && 	(BufferToProcess->GetBufferState()==Buffer::eReadyToRender) )
 		{
 			m_ConsecutiveRenderDelayCounter=0;
 			m_LastTime=current_time;
-			
-			if (Delta<0.100)
-			{
-				//The average frame rate should at least be 5 ms to limit the rate of this loop (i.e. give back cpu time)
-				double AverageRate=m_FrameRateAverage(max(Delta,0.005));
+		
 
-				//printf("%d \t ",EventResult);
-				//printf("%d\n",(int)(Delta * 1000.0));
-				//DebugOutput("%d delta %d\n",(int)(AverageRate * 1000.0),(int)(Delta * 1000.0));
-
-				//printf("%d\n",(int)(AverageRate * 1000.0));
-				//We may need to slow down the thread to not catch up to the stream to keep a fluent timing
-				if ((Delta < AverageRate ) && (AverageRate<0.100))
-				{
-					int TimeDelay=(int)(AverageRate * 1000.0);
-					//int TimeDelay=(int)((AverageRate-Delta) * 1000.0);
-					//printf("sleep %d\n",TimeDelay);
-					//DebugOutput("sleep %d\n",TimeDelay);
-					Sleep(TimeDelay);
-				}
-			}
 			RECT wndRect = { 0 };
 			::GetWindowRect(m_hWnd, &wndRect);
 
@@ -575,6 +563,10 @@ void Preview::operator() ( const void* )
 			//DebugOutput("rendering %d\n",m_CurrentFrameIndex);
 			//hr = m_pPrimary->Blt(&wndRect, pBufferToDraw->GetSurface(), NULL, DDBLT_DDFX|DDBLT_WAIT, &BltFX);
 			hr = m_pPrimary->Blt(&wndRect, BufferToProcess->GetSurface(), NULL, DDBLT_ASYNC, NULL);
+			//ShowTimeDelta("Blt");
+
+			//I may omit this debug output... after some more testing
+			//  [11/30/2012 JamesK]
 			#if 0
 			if (!SUCCEEDED(hr))
 				DebugOutput("Preview::operator()  Warning:m_pPrimary->Blt failed\n");
@@ -593,20 +585,6 @@ void Preview::operator() ( const void* )
 				m_CurrentFrameIndex=NextIndex; //advance the index
 			}
 		}
-		#if 0
-		else
-		{
-			if (m_ConsecutiveRenderDelayCounter==0)
-			{
-				m_SignalFrameReady.wait(100);
-				//BufferToProcess->WaitforVB();
-			}
-			else
-				Sleep(5);  //don't busy wait
-			m_ConsecutiveRenderDelayCounter++;
-			//DebugOutput("------ %d\n",m_ConsecutiveRenderDelayCounter);
-		}
-		#endif
 	}
 }
 
@@ -629,7 +607,7 @@ void Preview::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 		}
 	}
 	m_SignalFrameReady.set();
-
+	//ShowTimeDelta("process_frame");
 
 	if (m_LastUsingProcessSlot!=-1)
 	{
