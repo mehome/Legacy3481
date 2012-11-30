@@ -1745,7 +1745,12 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
         sws_scale(is->img_convert_ctx, src_frame->data, src_frame->linesize,
                   0, src_frame->height, pict.data, pict.linesize);
 
-		is->Preview->process_frame(&bitmap);
+		//Don't let the queue grow
+		if (is->videoq.nb_packets<2)
+			is->Preview->process_frame(&bitmap);
+
+		//FrameWork::DebugOutput("vq=%d              \r",is->videoq.nb_packets);
+
 		//ShowTimeDelta("dispatch_picture",false);
 		//Sleep(16); //TODO figure out the timing
     }
