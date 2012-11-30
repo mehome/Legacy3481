@@ -1825,6 +1825,14 @@ static int get_video_frame(VideoState *is, AVFrame *frame, int64_t *pts, AVPacke
 
         return ret;
     }
+	//use to measure codec latency
+	#if 0
+	else
+	{
+		static size_t counter=0;
+		FrameWork::DebugOutput("Codec got picture fails count=%d\n",counter++);
+	}
+	#endif
     return 0;
 }
 
