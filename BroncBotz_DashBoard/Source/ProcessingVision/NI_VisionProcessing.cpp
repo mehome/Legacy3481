@@ -125,7 +125,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	int bluMin = 90; // -40
 	int bluMax = 175;
 #endif
-#if 1
+#if 0
 	// grey
 	int redMin = 150;	
 	int redMax = 200;	
@@ -143,6 +143,16 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	int bluMin = 0;
 	int bluMax = 175;
 #endif
+#if 1
+	// red
+	int redMin = 60;
+	int redMax = 255;
+	int grnMin = 20;
+	int grnMax = 75;
+	int bluMin = 20;
+	int bluMax = 75;
+#endif
+
 
 #if 0
 	// separate planes, and do low pass.
