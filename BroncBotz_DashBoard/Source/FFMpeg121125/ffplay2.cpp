@@ -118,6 +118,19 @@ __inline const int rint(float x){
 	return (int)(x+0.5);
 }
 
+static void ShowTimeDelta(char label[]="",bool UsePrintF=true)
+{
+	using namespace FrameWork;
+	static time_type LastTime=(0.0);
+	time_type currenttime=time_type::get_current_time();
+	time_type delta = currenttime-LastTime;
+	if (UsePrintF)
+		printf("%s-> %f\n",label,(double)delta*1000.0);
+	else
+		DebugOutput("%s-> %f\n",label,(double)delta*1000.0);
+	LastTime=currenttime;
+}
+
 const char program_name[] = "ffplay";
 const int program_birth_year = 2003;
 
@@ -1573,6 +1586,8 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_
     }
     SDL_UnlockMutex(is->pictq_mutex);
 
+	//ShowTimeDelta("thiers");
+
     if (is->videoq.abort_request)
         return -1;
 
@@ -1731,6 +1746,7 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
                   0, src_frame->height, pict.data, pict.linesize);
 
 		is->Preview->process_frame(&bitmap);
+		//ShowTimeDelta("dispatch_picture",false);
 		//Sleep(16); //TODO figure out the timing
     }
     return 0;
