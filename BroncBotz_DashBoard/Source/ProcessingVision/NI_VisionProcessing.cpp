@@ -134,8 +134,40 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	int bluMin = 120;	
 	int bluMax = 170;	
 #endif
+#if 0
+	// dark blue
+	int redMin = 20;
+	int redMax = 75;
+	int grnMin = 20;
+	int grnMax = 75;
+	int bluMin = 0;
+	int bluMax = 175;
+#endif
+
+#if 0
+	// separate planes, and do low pass.
+	Image *Plane1 = imaqCreateImage(IMAQ_IMAGE_RGB, ImageBorder);
+	Image *Plane2 = imaqCreateImage(IMAQ_IMAGE_RGB, ImageBorder);
+	Image *Plane3 = imaqCreateImage(IMAQ_IMAGE_RGB, ImageBorder);
+
+	VisionErrChk(imaqExtractColorPlanes(image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
+	
+	VisionErrChk(imaqLowPass(Plane1, Plane1, 7, 7, 0.01f, NULL)); 
+	VisionErrChk(imaqLowPass(Plane2, Plane2, 7, 7, 0.01f, NULL)); 
+	VisionErrChk(imaqLowPass(Plane3, Plane3, 7, 7, 0.01f, NULL)); 
+	
+	VisionErrChk(imaqReplaceColorPlanes(image, image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
+
+	imaqDispose(Plane1);
+	imaqDispose(Plane2);
+	imaqDispose(Plane3);
+#endif
 
 	VisionErrChk(ColorThreshold(image, redMin, redMax, grnMin, grnMax, bluMin, bluMax, IMAQ_RGB));
+
+	VisionErrChk(imaqFillHoles(image, image, true));
+
+#if 1
 
 	//-------------------------------------------------------------------//
 	//                Advanced Morphology: Remove Objects                //
@@ -255,7 +287,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 		}
 #endif
 	}
-
+#endif
 	// copy the end result 
 	//imaqMask(image3, image2, image);
 	imaqDuplicate(image, image2);
