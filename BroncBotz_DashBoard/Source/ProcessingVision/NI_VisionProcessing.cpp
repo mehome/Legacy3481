@@ -103,35 +103,26 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	Image *image2 = imaqCreateImage(info.imageType, ImageBorder);
 	imaqDuplicate(image2, image);
 
-	//Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
-	//imaqDuplicate(image3, image);
+	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
+	imaqDuplicate(image3, image);
 
-#if 0
+#if 1
 	// blue
-	int redMin = 50;
-	int redMax = 100;
-	int grnMin = 80;
-	int grnMax = 125;
-	int bluMin = 140;
+	int redMin = 20; // -30
+	int redMax = 80; // -20
+	int grnMin = 50; // -30
+	int grnMax = 100; // - 25
+	int bluMin = 90; // -40
 	int bluMax = 175;
 #endif
-#if 1
-	// grey
-	int redMin = 150;	//82;
-	int redMax = 200;	//255;
-	int grnMin = 130;	//0;
-	int grnMax = 180;	//122;
-	int bluMin = 120;	//0;
-	int bluMax = 170;	//126;
-#endif
 #if 0
-	// original red
-	int redMin = 82;
-	int redMax = 255;
-	int grnMin = 0;
-	int grnMax = 122;
-	int bluMin = 0;
-	int bluMax = 126;
+	// grey
+	int redMin = 150;	
+	int redMax = 200;	
+	int grnMin = 130;	
+	int grnMax = 180;	
+	int bluMin = 120;	
+	int bluMax = 170;	
 #endif
 
 	VisionErrChk(ColorThreshold(image, redMin, redMax, grnMin, grnMax, bluMin, bluMax, IMAQ_RGB));
@@ -176,6 +167,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	VisionErrChk(ParticleFilter(image, FilterMeasureTypes, plower, pUpper, 
 		pCalibrated, pExclude, FALSE, TRUE));
 
+
 	// Counts the number of particles in the image.
 	VisionErrChk(imaqCountParticles(image, TRUE, &particleList.numParticles));
 
@@ -187,7 +179,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 		VisionErrChk(FindParticleCorners(image2, particleList));
 
-#if 0
+#if 1
 		// TODO: we need to use our own code for this, as the overlays are "non-destructive" - i.e., are not placed into the image buffers
 		// overlay some useful info
 		for(int i = 0; i < particleList.numParticles; i++)
@@ -209,49 +201,51 @@ int ProcessImage(Image *image, ParticleList &particleList)
 			P2.x = particleList.particleData[i].center.x + 6;
 			P2.y = particleList.particleData[i].center.y;
 
-			imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_WHITE, NULL);
+			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, 255.0f );
+			//imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_WHITE, NULL);
 
 			P1.x = particleList.particleData[i].center.x;
 			P1.y = particleList.particleData[i].center.y - 6;
 			P2.x = particleList.particleData[i].center.x;
 			P2.y = particleList.particleData[i].center.y + 6;
 
-			imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_WHITE, NULL);
+			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, 255.0f );
+			//imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_WHITE, NULL);
 
-			// bounding box
-			rect.top = particleList.particleData[i].bound_top;
-			rect.left = particleList.particleData[i].bound_left;
-			rect.height = particleList.particleData[i].bound_height;
-			rect.width = particleList.particleData[i].bound_width;
+			//// bounding box
+			//rect.top = particleList.particleData[i].bound_top;
+			//rect.left = particleList.particleData[i].bound_left;
+			//rect.height = particleList.particleData[i].bound_height;
+			//rect.width = particleList.particleData[i].bound_width;
 
-			imaqOverlayRect(image3, rect, &IMAQ_RGB_GREEN, IMAQ_DRAW_VALUE, NULL);
+			//imaqOverlayRect(image3, rect, &IMAQ_RGB_GREEN, IMAQ_DRAW_VALUE, NULL);
 
-			// corner points
-			for(int j = 0; j < 4; j++)
-			{
-				P1.x = (int)particleList.particleData[i].Intersections[j].x - 6;
-				P1.y = (int)particleList.particleData[i].Intersections[j].y;
-				P2.x = (int)particleList.particleData[i].Intersections[j].x + 6;
-				P2.y = (int)particleList.particleData[i].Intersections[j].y;
+			//// corner points
+			//for(int j = 0; j < 4; j++)
+			//{
+			//	P1.x = (int)particleList.particleData[i].Intersections[j].x - 6;
+			//	P1.y = (int)particleList.particleData[i].Intersections[j].y;
+			//	P2.x = (int)particleList.particleData[i].Intersections[j].x + 6;
+			//	P2.y = (int)particleList.particleData[i].Intersections[j].y;
 
-				imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_YELLOW, NULL);
+			//	imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_YELLOW, NULL);
 
-				P1.x = (int)particleList.particleData[i].Intersections[j].x;
-				P1.y = (int)particleList.particleData[i].Intersections[j].y - 6;
-				P2.x = (int)particleList.particleData[i].Intersections[j].x;
-				P2.y = (int)particleList.particleData[i].Intersections[j].y + 6;
+			//	P1.x = (int)particleList.particleData[i].Intersections[j].x;
+			//	P1.y = (int)particleList.particleData[i].Intersections[j].y - 6;
+			//	P2.x = (int)particleList.particleData[i].Intersections[j].x;
+			//	P2.y = (int)particleList.particleData[i].Intersections[j].y + 6;
 
-				imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_YELLOW, NULL);
-			}
+			//	imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_YELLOW, NULL);
+			//}
 		}
-
-		delete[] particleList.particleData;
 #endif
 	}
 
 	// copy the end result 
+	//imaqMask(image3, image2, image);
 	imaqDuplicate(image, image2);
 	imaqDispose(image2);
+	imaqDispose(image3);
 
 Error:
 	return success;
