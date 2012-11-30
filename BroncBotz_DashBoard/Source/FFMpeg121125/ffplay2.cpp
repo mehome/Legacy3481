@@ -1746,7 +1746,7 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
                   0, src_frame->height, pict.data, pict.linesize);
 
 		//Don't let the queue grow
-		if (is->videoq.nb_packets<2)
+		if (is->videoq.nb_packets< is->realtime ? 2 : 8 )
 			is->Preview->process_frame(&bitmap);
 
 		//FrameWork::DebugOutput("vq=%d              \r",is->videoq.nb_packets);
