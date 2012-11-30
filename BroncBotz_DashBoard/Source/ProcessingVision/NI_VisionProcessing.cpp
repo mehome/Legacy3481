@@ -3,6 +3,16 @@
 
 #define VisionErrChk(Function) {if (!(Function)) {success = 0; /*printf("error: %d\n", imaqGetLastError());*/ goto Error;}}
 
+// color values for drawing
+#define COLOR_BLACK  0.0f
+#define COLOR_WHITE  255 + 255 * 256.0f + 255 * 256.0f * 256.0f
+#define COLOR_RED    255.0f
+#define COLOR_GREEN  255 * 256.0f
+#define COLOR_BLUE   255 * 256.0f * 256.0f
+#define COLOR_YELLOW 255 + 255 * 256.0f
+#define COLOR_MAGENT 255 + 255 * 256.0f * 256.0f
+#define COLOR_CYAN   255 * 256.0f + 255 * 256.0f * 256.0f
+
 struct LineSegment
 {
 	PointFloat p1;
@@ -106,7 +116,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
 	imaqDuplicate(image3, image);
 
-#if 1
+#if 0
 	// blue
 	int redMin = 20; // -30
 	int redMax = 80; // -20
@@ -115,7 +125,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	int bluMin = 90; // -40
 	int bluMax = 175;
 #endif
-#if 0
+#if 1
 	// grey
 	int redMin = 150;	
 	int redMax = 200;	
@@ -201,42 +211,47 @@ int ProcessImage(Image *image, ParticleList &particleList)
 			P2.x = particleList.particleData[i].center.x + 6;
 			P2.y = particleList.particleData[i].center.y;
 
-			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, 255.0f );
-			//imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_WHITE, NULL);
+			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
 
 			P1.x = particleList.particleData[i].center.x;
 			P1.y = particleList.particleData[i].center.y - 6;
 			P2.x = particleList.particleData[i].center.x;
 			P2.y = particleList.particleData[i].center.y + 6;
 
-			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, 255.0f );
-			//imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_WHITE, NULL);
+			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
 
-			//// bounding box
-			//rect.top = particleList.particleData[i].bound_top;
-			//rect.left = particleList.particleData[i].bound_left;
-			//rect.height = particleList.particleData[i].bound_height;
-			//rect.width = particleList.particleData[i].bound_width;
+			// draw a line from target to center of screen
+			P1.x = particleList.particleData[i].center.x;
+			P1.y = particleList.particleData[i].center.y;
+			P2.x = info.xRes / 2;
+			P2.y = info.yRes / 2;
+			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
 
-			//imaqOverlayRect(image3, rect, &IMAQ_RGB_GREEN, IMAQ_DRAW_VALUE, NULL);
+			// bounding box
+			rect.top = particleList.particleData[i].bound_top;
+			rect.left = particleList.particleData[i].bound_left;
+			rect.height = particleList.particleData[i].bound_height;
+			rect.width = particleList.particleData[i].bound_width;
 
-			//// corner points
-			//for(int j = 0; j < 4; j++)
-			//{
-			//	P1.x = (int)particleList.particleData[i].Intersections[j].x - 6;
-			//	P1.y = (int)particleList.particleData[i].Intersections[j].y;
-			//	P2.x = (int)particleList.particleData[i].Intersections[j].x + 6;
-			//	P2.y = (int)particleList.particleData[i].Intersections[j].y;
+			imaqDrawShapeOnImage(image2, image2, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
 
-			//	imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_YELLOW, NULL);
+			// corner points
+			for(int j = 0; j < 4; j++)
+			{
+				P1.x = (int)particleList.particleData[i].Intersections[j].x - 6;
+				P1.y = (int)particleList.particleData[i].Intersections[j].y;
+				P2.x = (int)particleList.particleData[i].Intersections[j].x + 6;
+				P2.y = (int)particleList.particleData[i].Intersections[j].y;
 
-			//	P1.x = (int)particleList.particleData[i].Intersections[j].x;
-			//	P1.y = (int)particleList.particleData[i].Intersections[j].y - 6;
-			//	P2.x = (int)particleList.particleData[i].Intersections[j].x;
-			//	P2.y = (int)particleList.particleData[i].Intersections[j].y + 6;
+				imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
 
-			//	imaqOverlayLine(image3, P1, P2, &IMAQ_RGB_YELLOW, NULL);
-			//}
+				P1.x = (int)particleList.particleData[i].Intersections[j].x;
+				P1.y = (int)particleList.particleData[i].Intersections[j].y - 6;
+				P2.x = (int)particleList.particleData[i].Intersections[j].x;
+				P2.y = (int)particleList.particleData[i].Intersections[j].y + 6;
+
+				imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
+			}
 		}
 #endif
 	}
