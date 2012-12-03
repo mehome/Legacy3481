@@ -3770,7 +3770,7 @@ void FrameGrabber_HttpStream::operator()(const ThreadType& type)
 }
 
   /***************************************************************************************************************/
- /*													FrameGrabber												*/
+ /*												FrameGrabber_FFMpeg												*/
 /***************************************************************************************************************/
 
 static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
@@ -3785,7 +3785,7 @@ static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
 #endif
 }
 
-size_t FrameGrabber::split_arguments(const std::string& str, std::vector<std::string>& arguments)
+size_t FrameGrabber_FFMpeg::split_arguments(const std::string& str, std::vector<std::string>& arguments)
 {
 	arguments.clear();
 
@@ -3815,7 +3815,7 @@ size_t FrameGrabber::split_arguments(const std::string& str, std::vector<std::st
 	return arguments.size();
 }
 
-FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL),m_TestPattern(Preview,IPAddress)
+FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL),m_TestPattern(Preview,IPAddress)
 {
 	if (IPAddress[0]!=0)
 		FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
@@ -3908,7 +3908,7 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 	flush_pkt.data = (uint8_t *)((char *)(intptr_t)"FLUSH");
 }
 
-FrameGrabber::~FrameGrabber()
+FrameGrabber_FFMpeg::~FrameGrabber_FFMpeg()
 {
 	StopStreaming();
 
@@ -3930,20 +3930,17 @@ FrameGrabber::~FrameGrabber()
 	av_log(NULL, AV_LOG_QUIET, "%s", "");
 }
 
-void FrameGrabber::SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) 
+void FrameGrabber_FFMpeg::SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) 
 {
 	m_Outstream=Preview;
 	m_TestPattern.SetOutstream_Interface(Preview);
 }
 
-void FrameGrabber::StartStreaming()
+bool FrameGrabber_FFMpeg::StartStreaming()
 {
-	if (m_VideoStream) return;
+	if (m_VideoStream) return true;
 	if (m_URL[0]==0)
-	{
-		m_TestPattern.StartStreaming();
-		return;
-	}
+		return m_TestPattern.StartStreaming();
 
 	m_VideoStream = stream_open(input_filename, file_iformat, m_Outstream);
 	if (!m_VideoStream) 
@@ -3953,14 +3950,63 @@ void FrameGrabber::StartStreaming()
 	VideoState * is=(VideoState *)m_VideoStream;
 	event_loop(is);
 	#endif
+	return m_VideoStream!=NULL;
 }
 
-void FrameGrabber::StopStreaming()
+void FrameGrabber_FFMpeg::StopStreaming()
 {
 	m_TestPattern.StopStreaming();  //this is fine to call checks implicitly
 	if (!m_VideoStream) return;
 
 	stream_close((VideoState *)m_VideoStream);
+	m_VideoStream=NULL;
+}
+  /***************************************************************************************************************/
+ /*													FrameGrabber												*/
+/***************************************************************************************************************/
+
+FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress,ReaderFormat format) : m_VideoStream(NULL)
+{
+	if (IPAddress[0]!=0)
+		FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
+
+	//determine which reader to use
+	if (IPAddress[0]==0)
+		m_VideoStream=new FrameGrabber_TestPattern(Preview,IPAddress);
+	else
+	{
+		std::wstring IPToUse=IPAddress;
+		//Now to evaluate if it is a number... we'll want to have some intelligent way to deal with the correct URL but for now just hard code the m1011's H264's URL
+		if ((IPToUse.c_str()[0]>='0')&&(IPToUse.c_str()[0]<='9'))
+		{
+			wchar_t Buffer[1024];
+			//this is lazy but effective... TODO parse numbers remove leading zero's as this will cause it to fail
+			if (format==eFFMPeg_Reader)
+				swprintf(Buffer,1024,L"rtsp://FRC:FRC@%s/axis-media/media.amp",IPToUse.c_str());
+			else
+				swprintf(Buffer,1024,L"http://FRC:FRC@%s/mjpg/video.mjpg",IPToUse.c_str());
+			IPToUse=Buffer;
+		}
+		switch (format)
+		{
+			case eTestPattern:
+				m_VideoStream=new FrameGrabber_TestPattern(Preview,IPToUse.c_str());
+				break;
+			case eFFMPeg_Reader:
+				m_VideoStream=new FrameGrabber_FFMpeg(Preview,IPToUse.c_str());
+				break;
+			case eHttpReader:
+				m_VideoStream=new FrameGrabber_HttpStream(Preview,IPToUse.c_str());
+				break;
+		}
+
+	}
+	assert(m_VideoStream);
+}
+
+FrameGrabber::~FrameGrabber()
+{
+	delete m_VideoStream;
 	m_VideoStream=NULL;
 }
 

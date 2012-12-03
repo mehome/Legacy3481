@@ -102,6 +102,7 @@ class DDraw_Preview
 			} window_type;
 			std::wstring source_name;
 			std::wstring IP_Address;
+			FrameGrabber::ReaderFormat ReaderFormat;
 			std::wstring smart_file;			//startup this parent window app
 			std::wstring ClassName,WindowName;  //find this window
 			std::wstring plugin_file;
@@ -467,7 +468,7 @@ void DDraw_Preview::DDraw_Preview_Props::SetDefaults(LONG XRes_,LONG YRes_,float
 
 
 DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),m_ParentHwnd(NULL),m_DD_StreamOut(NULL),
-	m_FrameGrabber(NULL,props.IP_Address.c_str()),m_ProcessingVision(NULL),m_IsStreaming(false)
+	m_FrameGrabber(NULL,props.IP_Address.c_str(),props.ReaderFormat),m_ProcessingVision(NULL),m_IsStreaming(false)
 {
 	m_Props=props;
 	SetDefaults(props.XRes,props.YRes,props.XPos,props.YPos);
@@ -741,6 +742,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	wstring ClassName=cwsz_ClassName;
 	wstring WindowName=cwsz_WindowName;
 	wstring IP_Address=L"none";
+	wstring StreamProfile=L"default";
 
 	string sz_FileName="Video1.ini";
 	wchar_t *ext=wcsrchr(lpCmdLine,L'.');
@@ -754,7 +756,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=13;
+			const size_t NoEnties=14;
 			string StringEntry[NoEnties<<1];
 			{
 				char Buffer[1024];
@@ -768,21 +770,22 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			in.close();
 			AssignInput(Title,StringEntry[1].c_str());
 			AssignInput(IP_Address,StringEntry[3].c_str());
-			int left=atoi(StringEntry[5].c_str());
-			int top=atoi(StringEntry[7].c_str());
-			int right=atoi(StringEntry[9].c_str());
-			int bottom=atoi(StringEntry[11].c_str());
+			AssignInput(StreamProfile,StringEntry[5].c_str());
+			int left=atoi(StringEntry[7].c_str());
+			int top=atoi(StringEntry[9].c_str());
+			int right=atoi(StringEntry[11].c_str());
+			int bottom=atoi(StringEntry[13].c_str());
 			props.XRes=right-left;
 			props.YRes=bottom-top;
 			props.XPos=left;
 			props.YPos=top;
-			AssignInput(SmartDashboard,StringEntry[13].c_str());
-			AssignInput(ClassName,StringEntry[15].c_str());
-			AssignInput(WindowName,StringEntry[17].c_str());
-			g_IsPopup=atoi(StringEntry[19].c_str())==0?false:true;
-			AssignInput(Plugin,StringEntry[21].c_str());
-			AssignInput(AuxStart,StringEntry[23].c_str());
-			AssignInput(AuxArgs,StringEntry[25].c_str());
+			AssignInput(SmartDashboard,StringEntry[15].c_str());
+			AssignInput(ClassName,StringEntry[17].c_str());
+			AssignInput(WindowName,StringEntry[19].c_str());
+			g_IsPopup=atoi(StringEntry[21].c_str())==0?false:true;
+			AssignInput(Plugin,StringEntry[23].c_str());
+			AssignInput(AuxStart,StringEntry[25].c_str());
+			AssignInput(AuxArgs,StringEntry[27].c_str());
 		}
 		else
 		{
@@ -801,6 +804,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	props.source_name=Title;
 	props.IP_Address=IP_Address;
+	props.ReaderFormat=FrameGrabber::eFFMPeg_Reader;
+	if (wcsicmp(StreamProfile.c_str(),L"mjpg")==0)
+		props.ReaderFormat=FrameGrabber::eHttpReader;
 	props.smart_file=SmartDashboard;
 	props.ClassName=ClassName;
 	props.WindowName=WindowName;
@@ -827,6 +833,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		out << "title= " << output << endl;
 		AssignOutput(output,IP_Address.c_str());
 		out << "IP_Address= " << output << endl;
+		AssignOutput(output,StreamProfile.c_str());
+		out << "StreamProfile= " << output << endl;
 
 		out << "left= " << g_WindowInfo.rcNormalPosition.left << endl;
 		out << "top= "  << g_WindowInfo.rcNormalPosition.top << endl;

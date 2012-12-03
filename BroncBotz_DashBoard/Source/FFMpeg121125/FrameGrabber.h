@@ -1,7 +1,17 @@
 
 #pragma once
 
-class FrameGrabber_TestPattern
+class FrameGrabber_Interface
+{
+public:
+	virtual ~FrameGrabber_Interface() {}
+
+	virtual void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview)=0;
+	virtual bool StartStreaming()=0;
+	virtual void StopStreaming()=0;
+};
+
+class FrameGrabber_TestPattern : public FrameGrabber_Interface
 {
 public:
 	FrameGrabber_TestPattern(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : m_pThread(NULL),m_TestMap(720,480),m_Outstream(Preview)
@@ -9,10 +19,11 @@ public:
 	}
 	//allow late binding of the output (hence start streaming exists for this delay)
 	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_Outstream=Preview;}
-	void StartStreaming()
+	bool StartStreaming()
 	{
 		m_Counter=0;
 		m_pThread = new FrameWork::tThread<FrameGrabber_TestPattern>(this);
+		return true;
 	}
 
 	void StopStreaming()
@@ -50,7 +61,7 @@ private:
 
 struct AVCodecContext;
 struct SwsContext;
-class FrameGrabber_HttpStream
+class FrameGrabber_HttpStream : public FrameGrabber_Interface
 {
 	enum ThreadType
 	{
@@ -107,21 +118,20 @@ private:
 	friend thread_t;
 };
 
-class FrameGrabber
+class FrameGrabber_FFMpeg : public FrameGrabber_Interface
 {
 public:
-	FrameGrabber(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"");
+	FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"");
 
 	//allow late binding of the output (hence start streaming exists for this delay)
 	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview);
-	void StartStreaming();
+	bool StartStreaming();
 	void StopStreaming();
 
-	virtual ~FrameGrabber();
-
+	virtual ~FrameGrabber_FFMpeg();
 protected:
-
 	void *m_VideoStream;
+
 private:
 	size_t split_arguments(const std::string& str, std::vector<std::string>& arguments);
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
@@ -129,10 +139,33 @@ private:
 	std::string m_Options; //Support options to see what options we would need
 };
 
-class FFPlay_Controller : public FrameGrabber
+class FrameGrabber : public FrameGrabber_Interface
 {
 public:
-	FFPlay_Controller(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : FrameGrabber(Preview,IPAddress)
+	enum ReaderFormat
+	{
+		eTestPattern,
+		eFFMPeg_Reader,
+		eHttpReader
+	};
+	FrameGrabber(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"",ReaderFormat format=eTestPattern);
+	virtual ~FrameGrabber();
+
+	//allow late binding of the output (hence start streaming exists for this delay)
+	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_VideoStream->SetOutstream_Interface(Preview);}
+	bool StartStreaming() {return m_VideoStream->StartStreaming();}
+	void StopStreaming() {m_VideoStream->StopStreaming();}
+
+
+protected:
+
+	FrameGrabber_Interface *m_VideoStream;
+};
+
+class FFPlay_Controller : public FrameGrabber_FFMpeg
+{
+public:
+	FFPlay_Controller(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : FrameGrabber_FFMpeg(Preview,IPAddress)
 	{
 	}
 
