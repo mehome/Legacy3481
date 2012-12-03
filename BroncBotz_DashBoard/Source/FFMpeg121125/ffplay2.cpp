@@ -3508,7 +3508,14 @@ bool FrameGrabber_HttpStream::StartStreaming(void)
 										const std::wstring boundaryToken = contentType.substr(boundaryOffset + boundaryTokenStartLength);
 										if (boundaryToken.length() != 0)
 										{
-											m_BoundaryToken = std::wstring(L"\r\n") + boundaryToken + std::wstring(L"\r\n");
+											const std::wstring boundaryPrefix = L"--";
+											bool addPrefix = (boundaryToken.compare(0, boundaryPrefix.length(), boundaryPrefix) != 0);
+
+											m_BoundaryToken =
+												(addPrefix ? boundaryPrefix : std::wstring())
+												+ boundaryToken
+												+ std::wstring(L"\r\n");
+
 											m_pRecvThread = new thread_t(this, ReceivingThread);
 										}
 									}
@@ -3646,8 +3653,12 @@ bool FrameGrabber_HttpStream::ReceiveData(void)
 		}
 		else
 		{
+			size_t dataSize = i;
+			if (dataSize > 1 && m_RecvBuffer[dataSize - 2] == L'\r' && m_RecvBuffer[dataSize - 1] == L'\n')
+				dataSize -= 2;
+
 			PreProcessedData data;
-			data.first  = i;
+			data.first  = dataSize;
 			data.second = new BYTE[data.first];
 
 			memcpy(data.second, &m_RecvBuffer[0], data.first);
