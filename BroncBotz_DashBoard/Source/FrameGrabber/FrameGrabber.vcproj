@@ -156,6 +156,10 @@
 				RelativePath="..\FFMpeg121125\ffplay2.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\FFMpeg121125\WinHttpUtils.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

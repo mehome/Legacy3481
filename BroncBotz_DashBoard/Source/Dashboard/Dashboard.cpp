@@ -9,6 +9,7 @@
 #include "../ProcessingVision/ProcessingVision.h"
 #include "../FFMpeg121125/FrameGrabber.h"
 #pragma comment (lib,"shell32")
+#pragma comment (lib,"winhttp.lib")
 #pragma comment (lib,"../FFMpeg121125/lib/avcodec.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/avdevice.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/avfilter.lib")
