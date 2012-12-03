@@ -3657,15 +3657,18 @@ bool FrameGrabber_HttpStream::ReceiveData(void)
 			if (dataSize > 1 && m_RecvBuffer[dataSize - 2] == L'\r' && m_RecvBuffer[dataSize - 1] == L'\n')
 				dataSize -= 2;
 
-			PreProcessedData data;
-			data.first  = dataSize;
-			data.second = new BYTE[data.first];
+			if (dataSize > 0)
+			{
+				PreProcessedData data;
+				data.first  = dataSize;
+				data.second = new BYTE[data.first];
 
-			memcpy(data.second, &m_RecvBuffer[0], data.first);
+				memcpy(data.second, &m_RecvBuffer[0], data.first);
 
-			m_ProcessingQueue_CS.lock();
-			m_ProcessingQueue.push(data);
-			m_ProcessingQueue_CS.unlock();
+				m_ProcessingQueue_CS.lock();
+				m_ProcessingQueue.push(data);
+				m_ProcessingQueue_CS.unlock();
+			}
 
 			m_RecvBuffer.erase(m_RecvBuffer.begin(), m_RecvBuffer.begin() + i);
 			m_RecvBufferSize -= i;
