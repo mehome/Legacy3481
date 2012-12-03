@@ -81,9 +81,9 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame)
 	size_t CenterY=Frame->YRes / 2;
 	size_t CenterX=Frame->XRes / 2;
 	size_t LineWidthInBytes=Frame->Stride * 4;
-	for (size_t y=CenterY;y<CenterY+10;y++)
+	for (size_t y=CenterY-5;y<CenterY+5;y++)
 	{
-		for (size_t x=CenterX; x<CenterX+10; x++)
+		for (size_t x=CenterX-5; x<CenterX+5; x++)
 		{
 			*(Frame->Memory+ (x*4 + 0) + (LineWidthInBytes * y))=0;
 			*(Frame->Memory+ (x*4 + 1) + (LineWidthInBytes * y))=255;
@@ -125,7 +125,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	int bluMin = 90; // -40
 	int bluMax = 175;
 #endif
-#if 0
+#if 1
 	// grey
 	int redMin = 150;	
 	int redMax = 200;	
@@ -143,7 +143,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	int bluMin = 0;
 	int bluMax = 175;
 #endif
-#if 1
+#if 0
 	// red
 	int redMin = 60;
 	int redMax = 255;
@@ -162,9 +162,18 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 	VisionErrChk(imaqExtractColorPlanes(image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
 	
-	VisionErrChk(imaqLowPass(Plane1, Plane1, 7, 7, 0.01f, NULL)); 
-	VisionErrChk(imaqLowPass(Plane2, Plane2, 7, 7, 0.01f, NULL)); 
-	VisionErrChk(imaqLowPass(Plane3, Plane3, 7, 7, 0.01f, NULL)); 
+	float kernel[] = {1,2,3,2,1,
+					  2,3,3,3,2,
+					  3,3,0,3,3,
+					  2,3,3,3,2,
+					  1,2,3,2,1};
+	VisionErrChk((Plane1, Plane1, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+	VisionErrChk((Plane2, Plane2, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+	VisionErrChk((Plane3, Plane3, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+
+	//VisionErrChk(imaqLowPass(Plane1, Plane1, 13, 13, 0.01f, NULL)); 
+	//VisionErrChk(imaqLowPass(Plane2, Plane2, 13, 13, 0.01f, NULL)); 
+	//VisionErrChk(imaqLowPass(Plane3, Plane3, 13, 13, 0.01f, NULL)); 
 	
 	VisionErrChk(imaqReplaceColorPlanes(image, image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
 
@@ -232,7 +241,6 @@ int ProcessImage(Image *image, ParticleList &particleList)
 		VisionErrChk(FindParticleCorners(image2, particleList));
 
 #if 1
-		// TODO: we need to use our own code for this, as the overlays are "non-destructive" - i.e., are not placed into the image buffers
 		// overlay some useful info
 		for(int i = 0; i < particleList.numParticles; i++)
 		{
@@ -246,6 +254,13 @@ int ProcessImage(Image *image, ParticleList &particleList)
 			// reject if aspect is too far out.
 			if(CheckAspect(particleList, i, aspectMin, aspectMax))
 				continue;
+
+			// draw a line from target CoM to center of screen
+			P1.x = particleList.particleData[i].center.x;
+			P1.y = particleList.particleData[i].center.y;
+			P2.x = info.xRes / 2;
+			P2.y = info.yRes / 2;
+			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
 
 			// center of mass
 			P1.x = particleList.particleData[i].center.x - 6;
@@ -261,13 +276,6 @@ int ProcessImage(Image *image, ParticleList &particleList)
 			P2.y = particleList.particleData[i].center.y + 6;
 
 			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
-
-			// draw a line from target to center of screen
-			P1.x = particleList.particleData[i].center.x;
-			P1.y = particleList.particleData[i].center.y;
-			P2.x = info.xRes / 2;
-			P2.y = info.yRes / 2;
-			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
 
 			// bounding box
 			rect.top = particleList.particleData[i].bound_top;
@@ -329,6 +337,8 @@ bool CheckAspect(ParticleList particleList, int ParticleNum, float min, float ma
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#define DRAW_ROI
+
 int FindParticleCorners(Image* image, ParticleList particleList)
 {
 	int success = 1;
@@ -350,12 +360,20 @@ int FindParticleCorners(Image* image, ParticleList particleList)
 		// Creates a new, empty region of interest.
 		VisionErrChk(roi = imaqCreateROI());
 
+		Rect rect;
+
 		// Creates a new rectangle ROI contour and adds the rectangle to the provided ROI.
 		// left side
-		VisionErrChk(imaqAddRotatedRectContour(roi, imaqMakeRotatedRect(particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10, 
-			particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/6, 
-			particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5, 
-			particleList.particleData[i].bound_width/3, 0)));
+		rect.top = particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10;
+		rect.left = particleList.particleData[i].bound_left - 8;
+		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
+		rect.width = particleList.particleData[i].bound_width/4;
+
+		VisionErrChk(imaqAddRectContour(roi, rect));
+
+#ifdef DRAW_ROI
+		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+#endif
 
 		VisionErrChk(FindEdge(image, roi, IMAQ_LEFT_TO_RIGHT, 
 			IMAQ_SEARCH_FOR_RISING_EDGES, 3, 1, 25, IMAQ_BILINEAR_FIXED, 
@@ -369,10 +387,16 @@ int FindParticleCorners(Image* image, ParticleList particleList)
 
 		// Creates a new rectangle ROI contour and adds the rectangle to the provided ROI.
 		// top side
-		VisionErrChk(imaqAddRotatedRectContour(roi1, imaqMakeRotatedRect(particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/6, 
-			particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10,
-			particleList.particleData[i].bound_height/3, 
-			particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5, 0)));
+		rect.top = particleList.particleData[i].bound_top - 8;
+		rect.left = particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10;
+		rect.height = particleList.particleData[i].bound_height/4;
+		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
+
+		VisionErrChk(imaqAddRectContour(roi1, rect));
+
+#ifdef DRAW_ROI
+		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+#endif
 
 		VisionErrChk(FindEdge(image, roi1, IMAQ_TOP_TO_BOTTOM, 
 			IMAQ_SEARCH_FOR_RISING_EDGES, 3, 1, 25, IMAQ_BILINEAR_FIXED, 
@@ -386,10 +410,16 @@ int FindParticleCorners(Image* image, ParticleList particleList)
 
 		// Creates a new rectangle ROI contour and adds the rectangle to the provided ROI.
 		// right side
-		VisionErrChk(imaqAddRotatedRectContour(roi2, imaqMakeRotatedRect(particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10, 
-			particleList.particleData[i].bound_right - particleList.particleData[i].bound_width/6, 
-			particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5, 
-			particleList.particleData[i].bound_width/3, 0)));
+		rect.top = particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10;
+		rect.left = particleList.particleData[i].bound_right - particleList.particleData[i].bound_width/4 + 8;
+		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
+		rect.width = particleList.particleData[i].bound_width/4;
+
+		VisionErrChk(imaqAddRectContour(roi2, rect));
+
+#ifdef DRAW_ROI
+		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+#endif
 
 		VisionErrChk(FindEdge(image, roi2, IMAQ_RIGHT_TO_LEFT, 
 			IMAQ_SEARCH_FOR_RISING_EDGES, 3, 1, 25, IMAQ_BILINEAR_FIXED, 
@@ -403,10 +433,16 @@ int FindParticleCorners(Image* image, ParticleList particleList)
 
 		// Creates a new rectangle ROI contour and adds the rectangle to the provided ROI.
 		// bottom side
-		VisionErrChk(imaqAddRotatedRectContour(roi3, imaqMakeRotatedRect(particleList.particleData[i].bound_bottom - particleList.particleData[i].bound_height/6, 
-			particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10, 
-			particleList.particleData[i].bound_height/3, 
-			particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5, 0)));
+		rect.top = particleList.particleData[i].bound_bottom - particleList.particleData[i].bound_height/4 + 8;
+		rect.left = particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10;
+		rect.height = particleList.particleData[i].bound_height/4;
+		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
+
+		VisionErrChk(imaqAddRectContour(roi3, rect));
+
+#ifdef DRAW_ROI
+		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+#endif
 
 		VisionErrChk(FindEdge(image, roi3, IMAQ_BOTTOM_TO_TOP, 
 			IMAQ_SEARCH_FOR_RISING_EDGES, 3, 1, 25, IMAQ_BILINEAR_FIXED, 
