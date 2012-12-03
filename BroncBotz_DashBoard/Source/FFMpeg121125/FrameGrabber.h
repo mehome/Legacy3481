@@ -86,6 +86,7 @@ private:
 	std::wstring m_Resource;
 	std::wstring m_UserName;
 	std::wstring m_Password;
+	DWORD m_AuthScheme;
 
 	HINTERNET m_hSession;
 	HINTERNET m_hConnection;

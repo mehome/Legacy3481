@@ -3431,7 +3431,7 @@ static int lockmgr(void **mtx, enum AVLockOp op)
 /***************************************************************************************************************/
 
 FrameGrabber_HttpStream::FrameGrabber_HttpStream(FrameWork::Outstream_Interface* Preview, const wchar_t* IPAddress)
-	: m_Error(true), m_pOutstream(Preview), m_pRecvThread(NULL), m_pProcThread(NULL), m_PortNum(INTERNET_DEFAULT_HTTP_PORT),
+	: m_Error(true), m_pOutstream(Preview), m_pRecvThread(NULL), m_pProcThread(NULL), m_PortNum(INTERNET_DEFAULT_HTTP_PORT), m_AuthScheme(0),
 	  m_hSession(NULL), m_hConnection(NULL), m_hRequest(NULL), m_RecvBufferSize(0), m_ParserOffset(0),
 	  m_pCodecCtx(NULL), m_pSwsContext(NULL)
 {
@@ -3476,28 +3476,65 @@ bool FrameGrabber_HttpStream::StartStreaming(void)
 		m_hRequest = WinHttpOpenRequest(m_hConnection, NULL, m_Resource.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
 		if (m_hRequest)
 		{
-			if (WinHttpSendRequest(m_hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, NULL, 0, 0, NULL) != FALSE)
-			{
-				if (WinHttpReceiveResponse(m_hRequest, NULL) != FALSE)
-				{
-					DWORD statusCode;
-					if (get_http_header(m_hRequest, WINHTTP_QUERY_STATUS_CODE, statusCode) && statusCode == HTTP_STATUS_OK)
-					{
-						std::wstring contentType;
-						if (get_http_header(m_hRequest, WINHTTP_QUERY_CONTENT_TYPE, contentType))
-						{
-							const wchar_t boundaryTokenStart[] = L"boundary=";
-							const size_t boundaryTokenStartLength = wcslen(boundaryTokenStart);
+			bool sendRequest = true;
 
-							size_t boundaryOffset = contentType.find(boundaryTokenStart);
-							if (boundaryOffset != std::wstring::npos)
+			size_t numSends = 0;
+			while (sendRequest)
+			{
+				sendRequest = false;
+				numSends++;
+
+				if (m_AuthScheme != 0)
+					WinHttpSetCredentials(m_hRequest, WINHTTP_AUTH_TARGET_SERVER, m_AuthScheme, m_UserName.c_str(), m_Password.c_str(), NULL);
+
+				if (WinHttpSendRequest(m_hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, NULL, 0, 0, NULL) != FALSE)
+				{
+					if (WinHttpReceiveResponse(m_hRequest, NULL) != FALSE)
+					{
+						DWORD statusCode;
+						if (get_http_header(m_hRequest, WINHTTP_QUERY_STATUS_CODE, statusCode))
+						{
+							if (statusCode == HTTP_STATUS_OK)
 							{
-								const std::wstring boundaryToken = contentType.substr(boundaryOffset + boundaryTokenStartLength);
-								if (boundaryToken.length() != 0)
+								std::wstring contentType;
+								if (get_http_header(m_hRequest, WINHTTP_QUERY_CONTENT_TYPE, contentType))
 								{
-									m_BoundaryToken = std::wstring(L"\r\n") + boundaryToken + std::wstring(L"\r\n");
-									m_pRecvThread = new thread_t(this, ReceivingThread);
+									const wchar_t boundaryTokenStart[] = L"boundary=";
+									const size_t boundaryTokenStartLength = wcslen(boundaryTokenStart);
+
+									size_t boundaryOffset = contentType.find(boundaryTokenStart);
+									if (boundaryOffset != std::wstring::npos)
+									{
+										const std::wstring boundaryToken = contentType.substr(boundaryOffset + boundaryTokenStartLength);
+										if (boundaryToken.length() != 0)
+										{
+											m_BoundaryToken = std::wstring(L"\r\n") + boundaryToken + std::wstring(L"\r\n");
+											m_pRecvThread = new thread_t(this, ReceivingThread);
+										}
+									}
 								}
+							}
+							else if (statusCode == HTTP_STATUS_DENIED)
+							{
+								DWORD supportedSchemes, firstScheme, authTarget;
+								if (WinHttpQueryAuthSchemes(m_hRequest, &supportedSchemes, &firstScheme, &authTarget) != FALSE)
+								{
+									if (supportedSchemes & WINHTTP_AUTH_SCHEME_NEGOTIATE)
+										m_AuthScheme = WINHTTP_AUTH_SCHEME_NEGOTIATE;
+									else if (supportedSchemes & WINHTTP_AUTH_SCHEME_NTLM)
+										m_AuthScheme = WINHTTP_AUTH_SCHEME_NTLM;
+									else if (supportedSchemes & WINHTTP_AUTH_SCHEME_PASSPORT)
+										m_AuthScheme = WINHTTP_AUTH_SCHEME_PASSPORT;
+									else if (supportedSchemes & WINHTTP_AUTH_SCHEME_DIGEST)
+										m_AuthScheme = WINHTTP_AUTH_SCHEME_DIGEST;
+									else if (supportedSchemes & WINHTTP_AUTH_SCHEME_BASIC)
+										m_AuthScheme = WINHTTP_AUTH_SCHEME_BASIC;
+									else
+										m_AuthScheme = 0;
+								}
+
+								if (numSends == 1)
+									sendRequest = (m_AuthScheme != 0 && (m_UserName.length() > 0 || m_Password.length() > 0));
 							}
 						}
 					}
