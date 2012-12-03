@@ -60,6 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="winhttp.lib"
 				OutputFile="$(OutDir)\FFPlay2.exe"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="msvcrt.lib"
@@ -134,6 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="winhttp.lib"
 				OutputFile="$(OutDir)\FFPlay2.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -185,6 +187,10 @@
 				RelativePath=".\FFPlayConsole.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\WinHttpUtils.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -201,6 +207,10 @@
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\WinHttpUtils.h"
 				>
 			</File>
 		</Filter>

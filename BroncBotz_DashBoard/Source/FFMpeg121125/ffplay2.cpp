@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "../FrameWork/FrameWork.h"
 #include "FrameGrabber.h"
+#include "WinHttpUtils.h"
 
 #ifndef _LIB
 #define __EnableOptions__
@@ -3423,6 +3424,298 @@ static int lockmgr(void **mtx, enum AVLockOp op)
           return 0;
    }
    return 1;
+}
+
+  /***************************************************************************************************************/
+ /*													FrameGrabber_HTTP											*/
+/***************************************************************************************************************/
+
+FrameGrabber_HttpStream::FrameGrabber_HttpStream(FrameWork::Outstream_Interface* Preview, const wchar_t* IPAddress)
+	: m_Error(true), m_pOutstream(Preview), m_pRecvThread(NULL), m_pProcThread(NULL), m_PortNum(INTERNET_DEFAULT_HTTP_PORT),
+	  m_hSession(NULL), m_hConnection(NULL), m_hRequest(NULL), m_RecvBufferSize(0), m_ParserOffset(0),
+	  m_pCodecCtx(NULL), m_pSwsContext(NULL)
+{
+	// TODO: I don't know if IPAddress should be the full URL to the MJPEG stream
+
+	if (!crack_url(IPAddress, m_HostName, m_Resource, m_PortNum, &m_UserName, &m_Password))
+		return;
+
+	m_hSession = WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+	if (!m_hSession)
+		return;
+
+	m_Error = false;
+}
+
+FrameGrabber_HttpStream::~FrameGrabber_HttpStream(void)
+{
+	StopStreaming();
+
+	if (m_hSession)
+		WinHttpCloseHandle(m_hSession);
+}
+
+void FrameGrabber_HttpStream::SetOutstream_Interface(FrameWork::Outstream_Interface* Preview)
+{
+	m_pOutstream = Preview;
+}
+
+bool FrameGrabber_HttpStream::StartStreaming(void)
+{
+	AVCodec* pCodec = avcodec_find_decoder(AV_CODEC_ID_MJPEG);
+	if (pCodec)
+	{
+		m_pCodecCtx = avcodec_alloc_context3(pCodec);
+		if (m_pCodecCtx)
+			avcodec_open2(m_pCodecCtx, NULL, NULL);
+	}
+
+	m_hConnection = WinHttpConnect(m_hSession, m_HostName.c_str(), static_cast<INTERNET_PORT>(m_PortNum), 0);
+	if (m_hConnection)
+	{
+		m_hRequest = WinHttpOpenRequest(m_hConnection, NULL, m_Resource.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+		if (m_hRequest)
+		{
+			if (WinHttpSendRequest(m_hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, NULL, 0, 0, NULL) != FALSE)
+			{
+				if (WinHttpReceiveResponse(m_hRequest, NULL) != FALSE)
+				{
+					DWORD statusCode;
+					if (get_http_header(m_hRequest, WINHTTP_QUERY_STATUS_CODE, statusCode) && statusCode == HTTP_STATUS_OK)
+					{
+						std::wstring contentType;
+						if (get_http_header(m_hRequest, WINHTTP_QUERY_CONTENT_TYPE, contentType))
+						{
+							const wchar_t boundaryTokenStart[] = L"boundary=";
+							const size_t boundaryTokenStartLength = wcslen(boundaryTokenStart);
+
+							size_t boundaryOffset = contentType.find(boundaryTokenStart);
+							if (boundaryOffset != std::wstring::npos)
+							{
+								const std::wstring boundaryToken = contentType.substr(boundaryOffset + boundaryTokenStartLength);
+								if (boundaryToken.length() != 0)
+								{
+									m_BoundaryToken = std::wstring(L"\r\n") + boundaryToken + std::wstring(L"\r\n");
+									m_pRecvThread = new thread_t(this, ReceivingThread);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (m_pRecvThread)
+		m_pProcThread = new thread_t(this, ProcessingThread);
+	else
+		StopStreaming();
+
+	return m_pRecvThread && m_pProcThread;
+}
+
+void FrameGrabber_HttpStream::StopStreaming(void)
+{
+	if (m_pRecvThread)
+	{
+		delete m_pRecvThread;
+		m_pRecvThread = NULL;
+	}
+
+	if (m_pProcThread)
+	{
+		delete m_pProcThread;
+		m_pProcThread = NULL;
+	}
+
+	if (m_hRequest)
+	{
+		WinHttpCloseHandle(m_hRequest);
+		m_hRequest = NULL;
+	}
+
+	if (m_hConnection)
+	{
+		WinHttpCloseHandle(m_hConnection);
+		m_hConnection = NULL;
+	}
+
+	if (m_pSwsContext)
+	{
+		sws_freeContext(m_pSwsContext);
+		m_pSwsContext = NULL;
+	}
+
+	if (m_pCodecCtx)
+	{
+		if (avcodec_is_open(m_pCodecCtx))
+			avcodec_close(m_pCodecCtx);
+
+		av_free(m_pCodecCtx);
+		m_pCodecCtx = NULL;
+	}
+
+	while (!m_ProcessingQueue.empty())
+	{
+		PreProcessedData data = m_ProcessingQueue.front();
+		m_ProcessingQueue.pop();
+		delete[] data.second;
+	}
+
+	if (m_RecvBuffer.capacity() > 0)
+	{
+		std::vector<BYTE> v;
+		m_RecvBuffer.swap(v);
+	}
+
+	m_BoundaryToken  = L"";
+	m_RecvBufferSize = 0;
+	m_ParserOffset   = 0;
+}
+
+bool FrameGrabber_HttpStream::ReceiveData(void)
+{
+	DWORD numBytesAvail;
+	if (WinHttpQueryDataAvailable(m_hRequest, &numBytesAvail) == FALSE || numBytesAvail == 0)
+		return false;
+
+	if (m_RecvBufferSize + numBytesAvail > m_RecvBuffer.size())
+		m_RecvBuffer.resize(m_RecvBufferSize + numBytesAvail);
+
+	DWORD numBytesRecv = 0;
+	if (WinHttpReadData(m_hRequest, &m_RecvBuffer[m_RecvBufferSize], numBytesAvail, &numBytesRecv) == FALSE)
+		return false;
+
+	assert(numBytesAvail == numBytesRecv);
+	m_RecvBufferSize += numBytesRecv;
+
+	size_t i = m_ParserOffset;
+	while (i < m_RecvBufferSize)
+	{
+		size_t j = 0;
+		while (i < m_RecvBufferSize && j < m_BoundaryToken.length())
+		{
+			if (m_RecvBuffer[i] != m_BoundaryToken[j])
+				break;
+
+			i++;
+			j++;
+		}
+
+		if (j < m_BoundaryToken.length())
+		{
+			i++;
+			continue;
+		}
+		else
+		{
+			PreProcessedData data;
+			data.first  = i;
+			data.second = new BYTE[data.first];
+
+			memcpy(data.second, &m_RecvBuffer[0], data.first);
+
+			m_ProcessingQueue_CS.lock();
+			m_ProcessingQueue.push(data);
+			m_ProcessingQueue_CS.unlock();
+
+			m_RecvBuffer.erase(m_RecvBuffer.begin(), m_RecvBuffer.begin() + i);
+			m_RecvBufferSize -= i;
+			i = 0;
+		}
+	}
+
+	m_ParserOffset = i;
+	return true;
+}
+
+bool FrameGrabber_HttpStream::ProcessData(void)
+{
+	const std::wstring httpHeaderEndToken = L"\r\n\r\n";
+
+	std::queue<PreProcessedData> queue;
+	{
+		FrameWork::auto_lock lock(m_ProcessingQueue_CS);
+		while (!m_ProcessingQueue.empty())
+		{
+			queue.push(m_ProcessingQueue.front());
+			m_ProcessingQueue.pop();
+		}
+	}
+
+	if (!m_pOutstream)
+		return false;
+
+	while (!queue.empty())
+	{
+		PreProcessedData data = queue.front();
+		queue.pop();
+
+		size_t i = 0;
+		while (i < data.first)
+		{
+			size_t j = 0;
+			while (i < data.first && j < httpHeaderEndToken.length())
+			{
+				if (data.second[i] != httpHeaderEndToken[j])
+					break;
+
+				i++;
+				j++;
+			}
+
+			if (j == httpHeaderEndToken.length())
+			{
+				if (m_pCodecCtx && avcodec_is_open(m_pCodecCtx))
+				{
+					AVPacket packet;
+					av_init_packet(&packet);
+					packet.data = data.second + i;
+					packet.size = data.first - i;
+
+					AVFrame frame;
+					avcodec_get_frame_defaults(&frame);
+
+					int gotPicture;
+					if (avcodec_decode_video2(m_pCodecCtx, &frame, &gotPicture, &packet) > 0 && gotPicture != 0)
+					{
+						AVPicture pic;
+						if (avpicture_alloc(&pic, AV_PIX_FMT_BGRA, frame.width, frame.height) == 0)
+						{
+							m_pSwsContext = sws_getCachedContext(m_pSwsContext, frame.width, frame.height, (AVPixelFormat)frame.format, frame.width, frame.height, AV_PIX_FMT_BGRA, SWS_BICUBIC, NULL, NULL, NULL);
+							assert(m_pSwsContext);
+
+							sws_scale(m_pSwsContext, frame.data, frame.linesize, 0, frame.height, pic.data, pic.linesize);
+
+							FrameWork::Bitmaps::bitmap_bgra_u8 bmp;
+							bmp.reference_in_bytes((FrameWork::Bitmaps::bitmap_bgra_u8::pixel_type*)pic.data[0], frame.width, frame.height, pic.linesize[0]);
+
+							if (m_pOutstream)
+								m_pOutstream->process_frame(&bmp);
+
+							avpicture_free(&pic);
+						}
+					}
+				}
+
+				break;
+			}
+
+			i++;
+		}
+	}
+
+	return true;
+}
+
+void FrameGrabber_HttpStream::operator()(const ThreadType& type)
+{
+	if (type == ReceivingThread)
+		ReceiveData();
+	else if (type == ProcessingThread)
+		ProcessData();
+
+	Sleep(1);
 }
 
   /***************************************************************************************************************/

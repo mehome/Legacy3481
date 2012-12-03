@@ -13,6 +13,7 @@
 #include <math.h>
 #include <windows.h>
 #include <winbase.h>
+#include <winhttp.h>
 #include <tchar.h>
 
 #pragma warning(disable : 4290)
