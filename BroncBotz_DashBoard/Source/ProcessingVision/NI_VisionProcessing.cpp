@@ -105,17 +105,6 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	int ImageBorder = 7;
 	ImageInfo info;
 
-	// copy image
-	// image  - used for particle operations - gets converted to 8 bit (binary).
-	// image2 - used for edge detection
-	// image3 - copy of original - used for overlays
-	imaqGetImageInfo(image, &info);
-	Image *image2 = imaqCreateImage(info.imageType, ImageBorder);
-	imaqDuplicate(image2, image);
-
-	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
-	imaqDuplicate(image3, image);
-
 #if 0
 	// blue
 	int redMin = 20; // -30
@@ -156,9 +145,9 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 #if 0
 	// separate planes, and do low pass.
-	Image *Plane1 = imaqCreateImage(IMAQ_IMAGE_RGB, ImageBorder);
-	Image *Plane2 = imaqCreateImage(IMAQ_IMAGE_RGB, ImageBorder);
-	Image *Plane3 = imaqCreateImage(IMAQ_IMAGE_RGB, ImageBorder);
+	Image *Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
+	Image *Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
+	Image *Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
 
 	VisionErrChk(imaqExtractColorPlanes(image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
 	
@@ -167,20 +156,44 @@ int ProcessImage(Image *image, ParticleList &particleList)
 					  3,3,0,3,3,
 					  2,3,3,3,2,
 					  1,2,3,2,1};
-	VisionErrChk((Plane1, Plane1, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
-	VisionErrChk((Plane2, Plane2, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
-	VisionErrChk((Plane3, Plane3, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
 
-	//VisionErrChk(imaqLowPass(Plane1, Plane1, 13, 13, 0.01f, NULL)); 
-	//VisionErrChk(imaqLowPass(Plane2, Plane2, 13, 13, 0.01f, NULL)); 
-	//VisionErrChk(imaqLowPass(Plane3, Plane3, 13, 13, 0.01f, NULL)); 
-	
+	VisionErrChk(imaqConvolve2(Plane1, Plane1, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+	VisionErrChk(imaqConvolve2(Plane2, Plane2, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+	VisionErrChk(imaqConvolve2(Plane3, Plane3, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+
+//#define DISPLAY_WINDOW 0
+//	// Display the image
+//	imaqMoveWindow(DISPLAY_WINDOW, imaqMakePoint(0,0));
+//	imaqSetWindowPalette(DISPLAY_WINDOW, /*IMAQ_PALETTE_BINARY*/ IMAQ_PALETTE_GRAY, NULL, 0);
+//	imaqDisplayImage(Plane1, DISPLAY_WINDOW, TRUE);
+//
+//	// Display the image
+//	imaqMoveWindow(DISPLAY_WINDOW + 1, imaqMakePoint(700,0));
+//	imaqSetWindowPalette(DISPLAY_WINDOW + 1, /*IMAQ_PALETTE_BINARY*/ IMAQ_PALETTE_GRAY, NULL, 0);
+//	imaqDisplayImage(Plane2, DISPLAY_WINDOW + 1, TRUE);
+//
+//	// Display the image
+//	imaqMoveWindow(DISPLAY_WINDOW + 2, imaqMakePoint(0,600));
+//	imaqSetWindowPalette(DISPLAY_WINDOW + 2, /*IMAQ_PALETTE_BINARY*/ IMAQ_PALETTE_GRAY, NULL, 0);
+//	imaqDisplayImage(Plane3, DISPLAY_WINDOW + 2, TRUE);
+
 	VisionErrChk(imaqReplaceColorPlanes(image, image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
 
 	imaqDispose(Plane1);
 	imaqDispose(Plane2);
 	imaqDispose(Plane3);
 #endif
+
+	// copy image
+	// image  - used for particle operations - gets converted to 8 bit (binary).
+	// image2 - used for edge detection
+	// image3 - copy of original - used for overlays
+	imaqGetImageInfo(image, &info);
+	Image *image2 = imaqCreateImage(info.imageType, ImageBorder);
+	imaqDuplicate(image2, image);
+
+	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
+	imaqDuplicate(image3, image);
 
 	VisionErrChk(ColorThreshold(image, redMin, redMax, grnMin, grnMax, bluMin, bluMax, IMAQ_RGB));
 
@@ -313,6 +326,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	imaqDispose(image3);
 
 Error:
+	int error = imaqGetLastError();
 	return success;
 }
 
