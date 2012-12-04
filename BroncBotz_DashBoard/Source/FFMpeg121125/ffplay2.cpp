@@ -4006,9 +4006,10 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 				m_VideoStream=new FrameGrabber_TestPattern(Preview,IPToUse.c_str());
 				break;
 			case eFFMPeg_Reader:
+			case eHttpReader:
 				m_VideoStream=new FrameGrabber_FFMpeg(Preview,IPToUse.c_str());
 				break;
-			case eHttpReader:
+			case eHttpReader2:
 				m_VideoStream=new FrameGrabber_HttpStream(Preview,IPToUse.c_str());
 				break;
 		}

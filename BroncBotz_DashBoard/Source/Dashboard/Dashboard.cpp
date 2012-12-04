@@ -805,8 +805,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	props.source_name=Title;
 	props.IP_Address=IP_Address;
 	props.ReaderFormat=FrameGrabber::eFFMPeg_Reader;
-	if (wcsicmp(StreamProfile.c_str(),L"mjpg")==0)
+	if  ((wcsicmp(StreamProfile.c_str(),L"mjpg")==0) || (wcsicmp(StreamProfile.c_str(),L"mjpeg")==0))
 		props.ReaderFormat=FrameGrabber::eHttpReader;
+	else if  ((wcsicmp(StreamProfile.c_str(),L"mjpg2")==0) || (wcsicmp(StreamProfile.c_str(),L"mjpeg2")==0))
+		props.ReaderFormat=FrameGrabber::eHttpReader2;
 	props.smart_file=SmartDashboard;
 	props.ClassName=ClassName;
 	props.WindowName=WindowName;

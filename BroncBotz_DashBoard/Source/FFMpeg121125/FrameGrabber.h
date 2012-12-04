@@ -146,7 +146,8 @@ public:
 	{
 		eTestPattern,
 		eFFMPeg_Reader,
-		eHttpReader
+		eHttpReader,
+		eHttpReader2
 	};
 	FrameGrabber(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"",ReaderFormat format=eTestPattern);
 	virtual ~FrameGrabber();
