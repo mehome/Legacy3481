@@ -3426,6 +3426,18 @@ static int lockmgr(void **mtx, enum AVLockOp op)
    return 1;
 }
 
+static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
+{
+#ifndef NDEBUG
+	if (level > av_log_get_level() || strstr(fmt, "%td"))
+		return;
+
+	char Temp[2048];
+	vsprintf_s(Temp, 2048, fmt, vl);
+	OutputDebugStringA(Temp);
+#endif
+}
+
   /***************************************************************************************************************/
  /*													FrameGrabber_HTTP											*/
 /***************************************************************************************************************/
@@ -3436,6 +3448,16 @@ FrameGrabber_HttpStream::FrameGrabber_HttpStream(FrameWork::Outstream_Interface*
 	  m_pCodecCtx(NULL), m_pSwsContext(NULL)
 {
 	// TODO: I don't know if IPAddress should be the full URL to the MJPEG stream
+
+	av_log_set_callback(ffm_logger);
+	avcodec_register_all();
+	av_register_all();
+	avformat_network_init();
+	if (av_lockmgr_register(lockmgr))
+	{
+		fprintf(stderr, "Could not initialize lock manager!\n");
+		do_exit(NULL);
+	}
 
 	if (!crack_url(IPAddress, m_HostName, m_Resource, m_PortNum, &m_UserName, &m_Password))
 		return;
@@ -3453,6 +3475,9 @@ FrameGrabber_HttpStream::~FrameGrabber_HttpStream(void)
 
 	if (m_hSession)
 		WinHttpCloseHandle(m_hSession);
+
+	av_lockmgr_register(NULL);
+	avformat_network_deinit();
 }
 
 void FrameGrabber_HttpStream::SetOutstream_Interface(FrameWork::Outstream_Interface* Preview)
@@ -3467,7 +3492,7 @@ bool FrameGrabber_HttpStream::StartStreaming(void)
 	{
 		m_pCodecCtx = avcodec_alloc_context3(pCodec);
 		if (m_pCodecCtx)
-			avcodec_open2(m_pCodecCtx, NULL, NULL);
+			avcodec_open2(m_pCodecCtx, pCodec, NULL);
 	}
 
 	m_hConnection = WinHttpConnect(m_hSession, m_HostName.c_str(), static_cast<INTERNET_PORT>(m_PortNum), 0);
@@ -3772,18 +3797,6 @@ void FrameGrabber_HttpStream::operator()(const ThreadType& type)
   /***************************************************************************************************************/
  /*												FrameGrabber_FFMpeg												*/
 /***************************************************************************************************************/
-
-static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
-{
-#ifndef NDEBUG
-	if (level > av_log_get_level() || strstr(fmt, "%td"))
-		return;
-
-	char Temp[2048];
-	vsprintf_s(Temp, 2048, fmt, vl);
-	OutputDebugStringA(Temp);
-#endif
-}
 
 size_t FrameGrabber_FFMpeg::split_arguments(const std::string& str, std::vector<std::string>& arguments)
 {
