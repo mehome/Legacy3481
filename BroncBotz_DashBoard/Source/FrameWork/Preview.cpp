@@ -5,7 +5,33 @@
 
 #include "Preview.h"
 
+#define IS_DDRAW_AVAILABLE
+typedef HRESULT (WINAPI *DirectDrawEnumerateExA_t)(LPDDENUMCALLBACKEXA, LPVOID, DWORD);
+typedef HRESULT (WINAPI *DirectDrawCreateEx_t)(GUID FAR*, LPVOID*, REFIID, IUnknown FAR*);
+
+#ifdef IS_DDRAW_AVAILABLE
+DirectDrawEnumerateExA_t fcn_DirectDrawEnumerateExA = DirectDrawEnumerateExA;
+DirectDrawCreateEx_t fcn_DirectDrawCreateEx = DirectDrawCreateEx;
 #pragma comment (lib,"Ddraw")
+#else
+DirectDrawEnumerateExA_t fcn_DirectDrawEnumerateExA = NULL;
+DirectDrawCreateEx_t fcn_DirectDrawCreateEx = NULL;
+
+static bool LoadDirectDraw(void)
+{
+	HMODULE ddrawLib = ::LoadLibrary(L"ddraw.dll");
+	if (!ddrawLib)
+		return false;
+
+	fcn_DirectDrawEnumerateExA = (DirectDrawEnumerateExA_t)GetProcAddress(ddrawLib, "DirectDrawEnumerateExA");
+	fcn_DirectDrawCreateEx = (DirectDrawCreateEx_t)GetProcAddress(ddrawLib, "DirectDrawCreateEx");
+
+	return fcn_DirectDrawEnumerateExA && fcn_DirectDrawCreateEx;
+}
+
+static bool DirectDrawLoaded = LoadDirectDraw();
+#endif
+
 #pragma comment (lib,"dxguid.lib")
 
 using namespace FrameWork;
@@ -66,7 +92,7 @@ DisplayDeviceInfo::DisplayDeviceInfo( void )
 {
 	if (!s_Descs.size())
 	{
-		HRESULT hr = ::DirectDrawEnumerateExA(sDDEnumCallbackEx, NULL, DDENUM_ATTACHEDSECONDARYDEVICES);
+		HRESULT hr = fcn_DirectDrawEnumerateExA(sDDEnumCallbackEx, NULL, DDENUM_ATTACHEDSECONDARYDEVICES);
 		assert(DD_OK == hr);
 
 		// If there are no monitors attached, used screen resolution only
@@ -435,7 +461,7 @@ bool Preview::CreateAllDisplayDevices( void )
 		GUID *pGUID = NULL;
 		if (!::IsEqualGUID(GUID_NULL, desc.m_GUID))
 			pGUID = &(desc.m_GUID);
-		HRESULT hr = ::DirectDrawCreateEx(pGUID, (void**)&pDD, IID_IDirectDraw7, NULL);
+		HRESULT hr = fcn_DirectDrawCreateEx(pGUID, (void**)&pDD, IID_IDirectDraw7, NULL);
 		if (FAILED(hr) || !pDD)
 		{
 			assert(false);
