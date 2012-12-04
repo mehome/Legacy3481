@@ -150,16 +150,23 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	Image *Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
 
 	VisionErrChk(imaqExtractColorPlanes(image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
-	
-	float kernel[] = {1,2,3,2,1,
-					  2,3,3,3,2,
-					  3,3,0,3,3,
-					  2,3,3,3,2,
-					  1,2,3,2,1};
 
-	VisionErrChk(imaqConvolve2(Plane1, Plane1, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
-	VisionErrChk(imaqConvolve2(Plane2, Plane2, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
-	VisionErrChk(imaqConvolve2(Plane3, Plane3, kernel, 5, 5, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+	int krows = 5;
+	int kcols = 5;
+
+	float kernel[] = {1,1,1,1,1,
+					  1,2,2,2,1,
+					  1,2,1,2,1,
+					  1,2,2,2,1,
+					  1,1,1,1,1};
+
+	float kernel2[] = {1,1,1,
+				   	   1,1,1,
+					   1,1,1};
+
+	VisionErrChk(imaqConvolve2(Plane1, Plane1, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+	VisionErrChk(imaqConvolve2(Plane2, Plane2, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+	VisionErrChk(imaqConvolve2(Plane3, Plane3, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
 
 //#define DISPLAY_WINDOW 0
 //	// Display the image
