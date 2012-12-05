@@ -13,6 +13,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcessingVision", "..\Proc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameGrabber", "..\FrameGrabber\FrameGrabber.vcproj", "{15589F0D-F41D-43FA-A32B-EE592E478FA2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dashboard_SDK", "..\Dashboard_SDK\Dashboard_SDK.vcproj", "{37720668-82F7-4F94-82BA-A7E41E90128C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{770EC6B2-8666-4C8D-8092-C4D49B0D6BD5} = {770EC6B2-8666-4C8D-8092-C4D49B0D6BD5}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -35,6 +40,10 @@ Global
 		{15589F0D-F41D-43FA-A32B-EE592E478FA2}.Debug|Win32.Build.0 = Debug|Win32
 		{15589F0D-F41D-43FA-A32B-EE592E478FA2}.Release|Win32.ActiveCfg = Release|Win32
 		{15589F0D-F41D-43FA-A32B-EE592E478FA2}.Release|Win32.Build.0 = Release|Win32
+		{37720668-82F7-4F94-82BA-A7E41E90128C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{37720668-82F7-4F94-82BA-A7E41E90128C}.Debug|Win32.Build.0 = Debug|Win32
+		{37720668-82F7-4F94-82BA-A7E41E90128C}.Release|Win32.ActiveCfg = Release|Win32
+		{37720668-82F7-4F94-82BA-A7E41E90128C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

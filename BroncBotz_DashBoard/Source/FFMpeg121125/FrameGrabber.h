@@ -1,5 +1,6 @@
 
 #pragma once
+#include "../Dashboard/Dashboard_Interfaces.h"
 
 class FrameGrabber_Interface
 {
@@ -9,6 +10,9 @@ public:
 	virtual void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview)=0;
 	virtual bool StartStreaming()=0;
 	virtual void StopStreaming()=0;
+
+	//override if you are a Dashboard_Controller_Interface
+	virtual Dashboard_Controller_Interface *GetDashboard_Controller_Interface() {return NULL;}
 };
 
 class FrameGrabber_TestPattern : public FrameGrabber_Interface
@@ -157,18 +161,24 @@ public:
 	bool StartStreaming() {return m_VideoStream->StartStreaming();}
 	void StopStreaming() {m_VideoStream->StopStreaming();}
 
-
+	//We could make this check for NULL, but this is all setup during the construction of the dashboard, so we assert
+	virtual Dashboard_Controller_Interface *GetDashboard_Controller_Interface() 
+		{assert ( m_VideoStream);return m_VideoStream->GetDashboard_Controller_Interface();}
 protected:
 
 	FrameGrabber_Interface *m_VideoStream;
 };
 
-class FFPlay_Controller : public FrameGrabber_FFMpeg
+class FFPlay_Controller : public FrameGrabber_FFMpeg, 
+						  public Dashboard_Controller_Interface
 {
 public:
 	FFPlay_Controller(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : FrameGrabber_FFMpeg(Preview,IPAddress)
 	{
 	}
+
+protected:
+	virtual Dashboard_Controller_Interface *GetDashboard_Controller_Interface() {return this;}
 
 	void Flush();
 	int Run (void);											// run the filter graph

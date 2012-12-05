@@ -4007,7 +4007,7 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 				break;
 			case eFFMPeg_Reader:
 			case eHttpReader:
-				m_VideoStream=new FrameGrabber_FFMpeg(Preview,IPToUse.c_str());
+				m_VideoStream=new FFPlay_Controller(Preview,IPToUse.c_str());
 				break;
 			case eHttpReader2:
 				m_VideoStream=new FrameGrabber_HttpStream(Preview,IPToUse.c_str());
