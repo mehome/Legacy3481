@@ -27,6 +27,16 @@ inline void GUIDtow(GUID id,wchar_t *string) {
 		id.Data4[0],id.Data4[1],id.Data4[2],id.Data4[3],id.Data4[4],id.Data4[5],id.Data4[6],id.Data4[7]);
 }
 
+
+static Dashboard_Controller_Interface *g_Dashboard_Interface;
+extern "C"
+{
+Dashboard_Controller_Interface * GetControllerInterface()
+{
+	return g_Dashboard_Interface;
+}
+}
+
 class ProcessingVision : public FrameWork::Outstream_Interface
 {
 	public:
@@ -470,6 +480,7 @@ void DDraw_Preview::DDraw_Preview_Props::SetDefaults(LONG XRes_,LONG YRes_,float
 DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),m_ParentHwnd(NULL),m_DD_StreamOut(NULL),
 	m_FrameGrabber(NULL,props.IP_Address.c_str(),props.ReaderFormat),m_ProcessingVision(NULL),m_IsStreaming(false)
 {
+	g_Dashboard_Interface=m_FrameGrabber.GetDashboard_Controller_Interface();
 	m_Props=props;
 	SetDefaults(props.XRes,props.YRes,props.XPos,props.YPos);
 }

@@ -205,6 +205,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Dashboard_Interfaces.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Resource.h"
 				>
 			</File>
