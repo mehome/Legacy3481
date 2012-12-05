@@ -26,9 +26,9 @@ private:		// The child window pointer
 				void operator() ( const void* );
 
 				// A friend
-				friend FrameWork::tThread<Window>;
+				friend FrameWork::Threads::thread<Window>;
 
 				// The thread
-				FrameWork::tThread<Window>	*m_pThread;
+				FrameWork::Threads::thread<Window>	*m_pThread;
 				bool m_IsClosing;
 };

@@ -4,7 +4,7 @@
 __declspec(thread) 
 void*	g_p_current_thread = NULL;
 
-using namespace FrameWork;
+using namespace FrameWork::Work;
 
 thread* thread::get_thread( void )
 {	assert( g_p_current_thread );

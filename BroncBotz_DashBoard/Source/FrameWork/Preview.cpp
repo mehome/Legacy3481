@@ -329,7 +329,7 @@ void Preview::StartStreaming()
 		m_LastTime=time_type::get_current_time();
 
 		//Note: We can assume there has been no error if we are here as there is an assertion in the constructor
-		m_pThread = new FrameWork::tThread<Preview>(this);
+		m_pThread = new FrameWork::Threads::thread<Preview>(this);
 		switch (m_ThreadPriority)
 		{
 		case eThreadPriority_Low:

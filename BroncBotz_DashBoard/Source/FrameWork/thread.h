@@ -1,5 +1,8 @@
 #pragma once
 
+namespace Threads
+{
+
 /*	An example of how to use the templated thread class :
 
 		struct MyTest
@@ -27,16 +30,16 @@
 //struct FRAMEWORK_THREADS_API thread_memtrack {};
 
 template< typename threadcall_type, typename threadcall_param_type = const void*, const bool auto_loop = true >
-struct tThread
+struct thread
 {			// Constructor
-			tThread( threadcall_type *pCaller );
-			tThread( threadcall_type &rCaller );
+			thread( threadcall_type *pCaller );
+			thread( threadcall_type &rCaller );
 
-			tThread( threadcall_type *pCaller, threadcall_param_type data );
-			tThread( threadcall_type &rCaller, threadcall_param_type data );
+			thread( threadcall_type *pCaller, threadcall_param_type data );
+			thread( threadcall_type &rCaller, threadcall_param_type data );
 
 			// Destructor
-			~tThread( void );			
+			~thread( void );			
 
 			// Set the priority
 			void realtime_priority( void );
@@ -62,7 +65,7 @@ struct tThread
 			void set_thread_name( const char *p_thread_name );
 
 private:	// Deliberately private so that it cannot be copied.
-			tThread( const tThread &CopyFrom ) { assert(false); }
+			thread( const thread &CopyFrom ) { assert(false); }
 	
 			// Start the thread
 			bool Start( const int StackSize = 128*1024 );
@@ -94,7 +97,10 @@ private:	// Deliberately private so that it cannot be copied.
 };
 
 #include "thread-inc.h"
+}
 
+namespace Work
+{
 struct thread
 {			// Constructor
 	thread( const DWORD stack_size = 16*1024 );	// Warning small default stack size
@@ -145,3 +151,4 @@ private:	// The thread handle
 	static DWORD WINAPI threadproc( void* lpParameter );
 
 }; // struct thread
+}

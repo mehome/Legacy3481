@@ -134,7 +134,7 @@ class DDraw_Preview
 		void SetDefaults(LONG XRes,LONG YRes,LONG XPos,LONG YPos);
 		void UpdateDefaultsFromWindowPlacement();
 		FrameWork::event m_Terminate;
-		FrameWork::thread m_thread;  //For DPC support
+		FrameWork::Work::thread m_thread;  //For DPC support
 
 		HWND m_ParentHwnd;
 		Window *m_Window;

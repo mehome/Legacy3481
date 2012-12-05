@@ -26,7 +26,7 @@ Window::Window( HWND Parent , const bool IsPopup ,
 	m_WindowPosn = *pWindowPosition;
 	
 	// Start the thread
-	m_pThread = new FrameWork::tThread<Window>( this );
+	m_pThread = new FrameWork::Threads::thread<Window>( this );
 }
 
 // Destructor

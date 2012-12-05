@@ -22,7 +22,7 @@ public:
 	bool StartStreaming()
 	{
 		m_Counter=0;
-		m_pThread = new FrameWork::tThread<FrameGrabber_TestPattern>(this);
+		m_pThread = new FrameWork::Threads::thread<FrameGrabber_TestPattern>(this);
 		return true;
 	}
 
@@ -37,7 +37,7 @@ public:
 		StopStreaming();
 	}
 private:
-	friend FrameWork::tThread<FrameGrabber_TestPattern>;
+	friend FrameWork::Threads::thread<FrameGrabber_TestPattern>;
 
 	void operator() ( const void* )
 	{
@@ -50,7 +50,7 @@ private:
 		m_Outstream->process_frame(&m_RGB);
 		//printf("%d\n",m_Counter++);
 	}
-	FrameWork::tThread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
+	FrameWork::Threads::thread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
 
 private:
 	FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
@@ -69,7 +69,7 @@ class FrameGrabber_HttpStream : public FrameGrabber_Interface
 		ProcessingThread,
 	};
 
-	typedef FrameWork::tThread<FrameGrabber_HttpStream, const ThreadType&> thread_t;
+	typedef FrameWork::Threads::thread<FrameGrabber_HttpStream, const ThreadType&> thread_t;
 
 public:
 	FrameGrabber_HttpStream(FrameWork::Outstream_Interface* Preview=NULL, const wchar_t* IPAddress=L"");
