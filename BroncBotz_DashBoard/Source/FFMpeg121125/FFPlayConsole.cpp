@@ -28,7 +28,7 @@ private:
 	void OpenResources();
 
 	DebugOut_Update m_TestOutDebug;
-	FFPlay_Controller *m_Streamer;
+	Dashboard_Controller_Interface *m_Streamer;
 };
 
 
