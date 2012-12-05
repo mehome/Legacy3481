@@ -1,0 +1,23 @@
+#pragma once
+
+#ifdef CONTROLS_EXPORTS
+#define CONTROLS_API __declspec(dllexport)
+#else
+#define CONTROLS_API __declspec(dllimport)
+#endif
+
+extern "C"
+{
+	void SmartCppDashboard_Run ();											// run the filter graph
+	void SmartCppDashboard_Stop ();											// stop filter graph
+	void SmartCppDashboard_Pause ();										// pause filter graph
+	void SmartCppDashboard_Seek (double start, double end,  bool scrubbing =false);	// seek to start/stop positions (in seconds)
+	void SmartCppDashboard_SetRate (int rate);									// set the play speed  (as percentage of normal)
+
+	//callbacks
+
+	//Populate your own menu items to be appended to the default menu
+	CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu);
+	//the value here will be any of your items starting with zero if they were selected
+	CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selection);
+};
