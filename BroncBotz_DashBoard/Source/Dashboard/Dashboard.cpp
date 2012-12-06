@@ -116,6 +116,7 @@ class DDraw_Preview
 			std::wstring smart_file;			//startup this parent window app
 			std::wstring ClassName,WindowName;  //find this window
 			std::wstring plugin_file;
+			std::wstring controls_plugin_file;
 			std::wstring aux_startup_file,aux_startup_file_Args;	//startup an aux... (no window finding for this)
 			LONG XRes,YRes,XPos,YPos;
 			//provide an alternate way to determine window coordinates
@@ -135,10 +136,29 @@ class DDraw_Preview
 		void Reset_DPC();  //This launches reset on a deferred procedure call
 		void StopStreaming();
 		void StartStreaming();
+
+		void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {m_Controls_PlugIn.Callback_AddMenuItems(hPopupMenu,StartingOffset);}
+		void Callback_On_Selection(int selection) {m_Controls_PlugIn.Callback_On_Selection(selection);}
 	protected:
 		virtual void CloseResources();
 		virtual void OpenResources();
 	private:
+		struct Controls_Plugin
+		{
+			void LoadPlugIn(const wchar_t Plugin[]);
+			void FlushPlugin();
+
+			HMODULE m_PlugIn;
+			typedef void (*function_AddMenuItems) (HMENU hPopupMenu,size_t StartingOffset);
+			function_AddMenuItems m_fpAddMenuItems;
+			typedef void (*function_On_Selection) (int selection);
+			function_On_Selection m_fpOn_Selection;
+
+			void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {if (m_PlugIn) (*m_fpAddMenuItems)(hPopupMenu,StartingOffset);}
+			void Callback_On_Selection(int selection) {if (m_PlugIn) (*m_fpOn_Selection)(selection);}
+
+		} m_Controls_PlugIn;
+
 		void Reset();
 		void DisplayHelp();
 		void SetDefaults(LONG XRes,LONG YRes,LONG XPos,LONG YPos);
@@ -348,6 +368,8 @@ class DDraw_Window : public Window
 						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Show480i, L"Size 480i");
 						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_ShowHalfRes, L"Size half res");
 					}
+					//go to plug-in for addition items
+					m_pParent->Callback_AddMenuItems(hPopupMenu,eMenu_NoEntries);
 					SetForegroundWindow(window);
 
 					//TODO omit this... I thought I needed to exclude from DDraw surface but it works fine
@@ -429,6 +451,12 @@ class DDraw_Window : public Window
 									SetWindowPos(*this,NULL,0,0,320,240,SWP_NOMOVE|SWP_NOZORDER);
 								}
 								break;
+							default:
+								{
+									int entry=(int)selection - eMenu_NoEntries;
+									assert (entry>=0);
+									m_pParent->Callback_On_Selection(entry);
+								}
 						}
 					}
 				}
@@ -476,10 +504,43 @@ void DDraw_Preview::DDraw_Preview_Props::SetDefaults(LONG XRes_,LONG YRes_,float
  /*											DDraw_Preview												*/
 /*******************************************************************************************************/
 
+void DDraw_Preview::Controls_Plugin::FlushPlugin()
+{
+	if (m_PlugIn)
+	{
+		FreeLibrary(m_PlugIn);
+		m_PlugIn = NULL;
+	}
+}
+
+void DDraw_Preview::Controls_Plugin::LoadPlugIn(const wchar_t Plugin[])
+{
+	FlushPlugin();  //ensure its not already loaded
+	m_PlugIn=LoadLibrary(Plugin);
+	if (m_PlugIn)
+	{
+		//Let's ensure they all work to avoid having to checking for NULL in each in implementation
+		try
+		{
+			m_fpAddMenuItems=(function_AddMenuItems) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_AddMenuItems");
+			if (!m_fpAddMenuItems) throw 0;
+			m_fpOn_Selection=(function_On_Selection) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_On_Selection");
+			if (!m_fpOn_Selection) throw 1;
+		}
+		catch (int ErrorCode)
+		{
+			DebugOutput("Controls Plugin failed error code=%d",ErrorCode);
+			FlushPlugin();
+		}
+	}
+}
+
 
 DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),m_ParentHwnd(NULL),m_DD_StreamOut(NULL),
 	m_FrameGrabber(NULL,props.IP_Address.c_str(),props.ReaderFormat),m_ProcessingVision(NULL),m_IsStreaming(false)
 {
+	m_Controls_PlugIn.LoadPlugIn(props.controls_plugin_file.c_str());
+
 	g_Dashboard_Interface=m_FrameGrabber.GetDashboard_Controller_Interface();
 	m_Props=props;
 	SetDefaults(props.XRes,props.YRes,props.XPos,props.YPos);
@@ -551,6 +612,7 @@ void DDraw_Preview::CloseResources()
 DDraw_Preview::~DDraw_Preview()
 {
 	CloseResources();
+	m_Controls_PlugIn.FlushPlugin();
 }
 
 
@@ -824,6 +886,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	props.ClassName=ClassName;
 	props.WindowName=WindowName;
 	props.plugin_file=Plugin;
+	props.controls_plugin_file=L"Controls.dll"; //TODO may want to allow user to specify none
 	props.aux_startup_file=AuxStart;
 	props.aux_startup_file_Args=AuxArgs;
 

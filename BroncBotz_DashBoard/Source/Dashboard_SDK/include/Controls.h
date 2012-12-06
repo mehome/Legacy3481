@@ -16,8 +16,9 @@ extern "C"
 
 	//callbacks
 
-	//Populate your own menu items to be appended to the default menu
-	CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu);
-	//the value here will be any of your items starting with zero if they were selected
+	/// Populate your own menu items to be appended to the default menu
+	/// \param StartingOffset you must start your enum entries with this starting offset (this ensures it will not conflict with the existing entries)
+	CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset);
+	/// the value here will be any of your items starting with zero if they were selected (i.e. the starting offset is subtracted)
 	CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selection);
 };
