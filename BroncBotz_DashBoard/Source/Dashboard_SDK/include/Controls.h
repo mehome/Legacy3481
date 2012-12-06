@@ -8,6 +8,8 @@
 
 extern "C"
 {
+	//simply pass Callback_Initialize() to here
+	SmartCppDashboard_Initialize(Dashboard_Controller_Interface *controller);
 	void SmartCppDashboard_Run ();											// run the filter graph
 	void SmartCppDashboard_Stop ();											// stop filter graph
 	void SmartCppDashboard_Pause ();										// pause filter graph
@@ -15,7 +17,7 @@ extern "C"
 	void SmartCppDashboard_SetRate (int rate);									// set the play speed  (as percentage of normal)
 
 	//callbacks
-
+	CONTROLS_API void Callback_Initialize(Dashboard_Controller_Interface *controller);
 	/// Populate your own menu items to be appended to the default menu
 	/// \param StartingOffset you must start your enum entries with this starting offset (this ensures it will not conflict with the existing entries)
 	CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset);
