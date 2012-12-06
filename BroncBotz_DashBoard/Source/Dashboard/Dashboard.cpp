@@ -1,5 +1,6 @@
 
 #include "stdafx.h"
+#include "Dashboard_Interfaces.h"
 #include <ddraw.h>
 #include <atlbase.h>
 #include <shellapi.h>
@@ -25,16 +26,6 @@
 inline void GUIDtow(GUID id,wchar_t *string) {
 	wsprintfW(string,L"%x-%x-%x-%x%x-%x%x%x%x%x%x",id.Data1,id.Data2,id.Data3,
 		id.Data4[0],id.Data4[1],id.Data4[2],id.Data4[3],id.Data4[4],id.Data4[5],id.Data4[6],id.Data4[7]);
-}
-
-
-static Dashboard_Controller_Interface *g_Dashboard_Interface;
-extern "C"
-{
-Dashboard_Controller_Interface * GetControllerInterface()
-{
-	return g_Dashboard_Interface;
-}
 }
 
 class ProcessingVision : public FrameWork::Outstream_Interface
@@ -153,11 +144,15 @@ class DDraw_Preview
 			function_AddMenuItems m_fpAddMenuItems;
 			typedef void (*function_On_Selection) (int selection);
 			function_On_Selection m_fpOn_Selection;
+			typedef void (*function_Initialize) (Dashboard_Controller_Interface *controller);
+			function_Initialize m_fpInitialize;
 
 			void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {if (m_PlugIn) (*m_fpAddMenuItems)(hPopupMenu,StartingOffset);}
 			void Callback_On_Selection(int selection) {if (m_PlugIn) (*m_fpOn_Selection)(selection);}
+			void Callback_Initialize(Dashboard_Controller_Interface *controller) {(*m_fpInitialize)(controller);}
 
 		} m_Controls_PlugIn;
+		void Callback_Initialize(Dashboard_Controller_Interface *controller) {m_Controls_PlugIn.Callback_Initialize(controller);}
 
 		void Reset();
 		void DisplayHelp();
@@ -526,6 +521,7 @@ void DDraw_Preview::Controls_Plugin::LoadPlugIn(const wchar_t Plugin[])
 			if (!m_fpAddMenuItems) throw 0;
 			m_fpOn_Selection=(function_On_Selection) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_On_Selection");
 			if (!m_fpOn_Selection) throw 1;
+			m_fpInitialize=(function_Initialize) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Initialize");
 		}
 		catch (int ErrorCode)
 		{
@@ -540,8 +536,8 @@ DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),
 	m_FrameGrabber(NULL,props.IP_Address.c_str(),props.ReaderFormat),m_ProcessingVision(NULL),m_IsStreaming(false)
 {
 	m_Controls_PlugIn.LoadPlugIn(props.controls_plugin_file.c_str());
-
-	g_Dashboard_Interface=m_FrameGrabber.GetDashboard_Controller_Interface();
+	Dashboard_Controller_Interface *l_Dashboard_Interface=m_FrameGrabber.GetDashboard_Controller_Interface();
+	Callback_Initialize(l_Dashboard_Interface);
 	m_Props=props;
 	SetDefaults(props.XRes,props.YRes,props.XPos,props.YPos);
 }

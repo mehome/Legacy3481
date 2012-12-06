@@ -22,14 +22,23 @@ enum MenuSelection
 	eMenu_NoEntries
 };
 
+Dashboard_Controller_Interface *g_Controller=NULL;
+
+extern "C" CONTROLS_API void Callback_SmartCppDashboard_Initialize (Dashboard_Controller_Interface *controller)
+{
+	g_Controller=controller;
+}
+
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
 {
 	InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_SEPARATOR, eMenu_NoSelection, NULL);
 	InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Controls+StartingOffset, L"File Controls...");
 }
 
+
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selection)
 {
 	DebugOutput("Selection=%d\n",selection);
-	//SmartCppDashboard_Pause();
+	g_Controller->Pause();
+	//printf("\n");
 }
