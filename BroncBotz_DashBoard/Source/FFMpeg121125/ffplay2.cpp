@@ -4049,6 +4049,14 @@ int FFPlay_Controller::Stop (void)
 	VideoState * is=(VideoState *)m_VideoStream;
 	if (!is->paused)
 		toggle_pause(is);
+	else
+	{
+		stream_seek(is,0,0,0);
+		//TODO this is a hack will need to have real seeking
+		toggle_pause(is);
+		Sleep(60);
+		toggle_pause(is);
+	}
 	return 0;
 }
 int FFPlay_Controller::Pause (void)
