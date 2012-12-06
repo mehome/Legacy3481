@@ -360,7 +360,7 @@ void Preview::StopStreaming()
 	if (m_IsStreaming)
 	{
 		m_IsStreaming=false;
-
+		m_TerminateEvent.set();
 		delete m_pThread;	// Stop my thread
 
 		for (size_t i=0;i<Preview_NoVideoBuffers;i++)
@@ -591,9 +591,8 @@ void Preview::operator() ( const void* )
 			hr = m_pPrimary->Blt(&wndRect, BufferToProcess->GetSurface(), NULL, DDBLT_ASYNC, NULL);
 			//ShowTimeDelta("Blt");
 
-			//I may omit this debug output... after some more testing
-			//  [11/30/2012 JamesK]
-			#if 0
+			//For now I'll leave this in as when it exits it could fail... I'll want to find out why this happens
+			#if 1
 			if (!SUCCEEDED(hr))
 				DebugOutput("Preview::operator()  Warning:m_pPrimary->Blt failed\n");
 			#else
