@@ -151,7 +151,7 @@ class DDraw_Preview
 
 			void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {if (m_PlugIn) (*m_fpAddMenuItems)(hPopupMenu,StartingOffset);}
 			void Callback_On_Selection(int selection,HWND pParent) {if (m_PlugIn) (*m_fpOn_Selection)(selection,pParent);}
-			void Callback_Initialize(Dashboard_Controller_Interface *controller) {(*m_fpInitialize)(controller);}
+			void Callback_Initialize(Dashboard_Controller_Interface *controller) {if (m_PlugIn) (*m_fpInitialize)(controller);}
 
 		} m_Controls_PlugIn;
 		void Callback_Initialize(Dashboard_Controller_Interface *controller) {m_Controls_PlugIn.Callback_Initialize(controller);}
