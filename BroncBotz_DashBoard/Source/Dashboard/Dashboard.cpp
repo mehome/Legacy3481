@@ -129,7 +129,9 @@ class DDraw_Preview
 		void StartStreaming();
 
 		void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {m_Controls_PlugIn.Callback_AddMenuItems(hPopupMenu,StartingOffset);}
-		void Callback_On_Selection(int selection) {m_Controls_PlugIn.Callback_On_Selection(selection);}
+		//void Callback_On_Selection(int selection,HWND pParent) {m_Controls_PlugIn.Callback_On_Selection(selection,pParent);}
+		void thread_Callback_On_Selection(int selection,HWND pParent);
+		void Callback_On_Selection(int selection,HWND pParent);
 	protected:
 		virtual void CloseResources();
 		virtual void OpenResources();
@@ -142,13 +144,13 @@ class DDraw_Preview
 			HMODULE m_PlugIn;
 			typedef void (*function_AddMenuItems) (HMENU hPopupMenu,size_t StartingOffset);
 			function_AddMenuItems m_fpAddMenuItems;
-			typedef void (*function_On_Selection) (int selection);
+			typedef void (*function_On_Selection) (int selection,HWND pParent);
 			function_On_Selection m_fpOn_Selection;
 			typedef void (*function_Initialize) (Dashboard_Controller_Interface *controller);
 			function_Initialize m_fpInitialize;
 
 			void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {if (m_PlugIn) (*m_fpAddMenuItems)(hPopupMenu,StartingOffset);}
-			void Callback_On_Selection(int selection) {if (m_PlugIn) (*m_fpOn_Selection)(selection);}
+			void Callback_On_Selection(int selection,HWND pParent) {if (m_PlugIn) (*m_fpOn_Selection)(selection,pParent);}
 			void Callback_Initialize(Dashboard_Controller_Interface *controller) {(*m_fpInitialize)(controller);}
 
 		} m_Controls_PlugIn;
@@ -450,7 +452,7 @@ class DDraw_Window : public Window
 								{
 									int entry=(int)selection - eMenu_NoEntries;
 									assert (entry>=0);
-									m_pParent->Callback_On_Selection(entry);
+									m_pParent->Callback_On_Selection(entry,*this);
 								}
 						}
 					}
@@ -729,6 +731,21 @@ void DDraw_Preview::Reset_DPC()
 	//This has to be a deferred procedure call because the primitive callback must complete!
 	using namespace FrameWork;
 	cpp::threadcall_ex( do_not_wait, m_thread, this, &DDraw_Preview::Reset);
+}
+
+void DDraw_Preview::thread_Callback_On_Selection(int selection,HWND pParent) 
+{
+	m_Controls_PlugIn.Callback_On_Selection(selection,pParent);
+}
+
+void DDraw_Preview::Callback_On_Selection(int selection,HWND pParent)
+{
+	#if 0
+	m_Controls_PlugIn.Callback_On_Selection(selection,pParent);
+	#else
+	using namespace FrameWork;
+	cpp::threadcall_ex( do_not_wait, m_thread, this, &DDraw_Preview::thread_Callback_On_Selection,selection,pParent);
+	#endif
 }
 
 void DDraw_Preview::SetDefaults(LONG XRes,LONG YRes,LONG XPos,LONG YPos)
