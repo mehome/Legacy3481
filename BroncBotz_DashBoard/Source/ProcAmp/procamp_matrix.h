@@ -149,30 +149,7 @@ private:	// The current matrix
 			settings m_settings;
 };
 
-//Here are the ranges for each
-//brightness	-1.0 - 1.0
-//contrast		 0.0 - 1.0
-//hue		  -180.0 - 180.0
-//saturation     0.0 - 1.0
-//u_offset		-1.0 - 1.0
-//v_offset		-1.0 - 1.0
-//u_gain		 0.0 - 1.0
-//v_gain	 	 0.0 - 1.0
-
-
-enum ProcAmp_enum
-{
-	e_procamp_brightness,
-	e_procamp_contrast,
-	e_procamp_hue,
-	e_procamp_saturation,
-	e_procamp_u_offset,
-	e_procamp_v_offset,
-	e_procamp_u_gain,
-	e_procamp_v_gain,
-	e_procamp_pedestal,
-	e_no_procamp_items
-};
+#include "../Dashboard/Dashboard_Interfaces.h"
 
 class Procamp_Manager
 {

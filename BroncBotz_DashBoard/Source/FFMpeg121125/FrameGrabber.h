@@ -1,6 +1,7 @@
 
 #pragma once
 #include "../Dashboard/Dashboard_Interfaces.h"
+#include "../ProcAmp/ProcAmp.h"
 
 class FrameGrabber_Interface
 {
@@ -186,4 +187,5 @@ protected:
 	int Pause (void);										// pause filter graph
 	int Seek (double, double,  bool scrubbing =false);		// seek to start/stop positions (in seconds)
 	int SetRate (int);										// set the play speed  (as percentage of normal)
+	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);
 };

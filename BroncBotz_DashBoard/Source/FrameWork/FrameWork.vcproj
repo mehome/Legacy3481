@@ -151,10 +151,34 @@
 			<File
 				RelativePath=".\convert_bgr_ycbcr.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						EnableIntrinsicFunctions="true"
+						BasicRuntimeChecks="0"
+						UsePrecompiledHeader="0"
+						DebugInformationFormat="3"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\convert_ycbcr_bgr.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						EnableIntrinsicFunctions="true"
+						BasicRuntimeChecks="0"
+						UsePrecompiledHeader="0"
+						DebugInformationFormat="3"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\critical_section.cpp"

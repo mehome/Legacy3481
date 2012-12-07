@@ -219,6 +219,7 @@ enum {
 
 typedef struct VideoState {
 	FrameWork::Outstream_Interface *Preview;  //Temp for now
+	Processing::FX::procamp::Procamp_Manager *procamp;
     SDL_Thread *read_tid;
     SDL_Thread *video_tid;
     SDL_Thread *refresh_tid;
@@ -1737,15 +1738,37 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
 		#else
         sws_flags = (int)av_get_int(sws_opts, "sws_flags", NULL);
 		#endif
-        is->img_convert_ctx = sws_getCachedContext(is->img_convert_ctx,
-            src_frame->width, src_frame->height, (AVPixelFormat)src_frame->format,bitmap.xres(), bitmap.yres(),
-            AV_PIX_FMT_BGRA, sws_flags, NULL, NULL, NULL);
+		if (is->procamp->Get_Procamp_Matrix()==NULL)
+		{
+			is->img_convert_ctx = sws_getCachedContext(is->img_convert_ctx,
+				src_frame->width, src_frame->height, (AVPixelFormat)src_frame->format,bitmap.xres(), bitmap.yres(),
+				AV_PIX_FMT_BGRA, sws_flags, NULL, NULL, NULL);
 
-		assert(is->img_convert_ctx != NULL);
+			assert(is->img_convert_ctx != NULL);
 
-        sws_scale(is->img_convert_ctx, src_frame->data, src_frame->linesize,
-                  0, src_frame->height, pict.data, pict.linesize);
+			sws_scale(is->img_convert_ctx, src_frame->data, src_frame->linesize,
+					  0, src_frame->height, pict.data, pict.linesize);
+		}
+		else
+		{
+			//unfortunately the procamp is in UYVY so we'll have to convert it to BGRA
+			FrameWork::Bitmaps::bitmap_ycbcr_u8 bitmap_ycbcr(src_frame->width,src_frame->height);
+			pict.data[0] = (uint8_t *) bitmap_ycbcr();
+			pict.linesize[0] = bitmap_ycbcr.stride_in_bytes();
 
+			is->img_convert_ctx = sws_getCachedContext(is->img_convert_ctx,
+				src_frame->width, src_frame->height, (AVPixelFormat)src_frame->format,bitmap_ycbcr.xres(), bitmap_ycbcr.yres(),
+				AV_PIX_FMT_UYVY422, sws_flags, NULL, NULL, NULL);
+
+			assert(is->img_convert_ctx != NULL);
+
+			sws_scale(is->img_convert_ctx, src_frame->data, src_frame->linesize,
+				0, src_frame->height, pict.data, pict.linesize);
+			//Apply the procamp
+			(*is->procamp)(bitmap_ycbcr);
+			//yuck... the conversion copy
+			bitmap=bitmap_ycbcr;
+		}
 		//Don't let the queue grow
 		if (is->videoq.nb_packets< is->realtime ? 2 : 8 )
 			is->Preview->process_frame(&bitmap);
@@ -3958,6 +3981,11 @@ bool FrameGrabber_FFMpeg::StartStreaming()
 	m_VideoStream = stream_open(input_filename, file_iformat, m_Outstream);
 	if (!m_VideoStream) 
 		fprintf(stderr, "Failed to initialize VideoState!\n");
+	else
+	{
+		VideoState *is=(VideoState *)m_VideoStream;
+		is->procamp=new Processing::FX::procamp::Procamp_Manager;
+	}
 
 	#ifdef __Test_SDL_VideoPreview__
 	VideoState * is=(VideoState *)m_VideoStream;
@@ -3971,7 +3999,12 @@ void FrameGrabber_FFMpeg::StopStreaming()
 	m_TestPattern.StopStreaming();  //this is fine to call checks implicitly
 	if (!m_VideoStream) return;
 
+	VideoState *is=(VideoState *)m_VideoStream;
+	//grab pointer before we nuke structure
+	Processing::FX::procamp::Procamp_Manager *procamp=is->procamp;
 	stream_close((VideoState *)m_VideoStream);
+	delete procamp;
+
 	m_VideoStream=NULL;
 }
   /***************************************************************************************************************/
@@ -4072,4 +4105,10 @@ int FFPlay_Controller::Seek (double, double,  bool scrubbing )
 int FFPlay_Controller::SetRate (int)
 {
 	return 0;
+}
+
+bool FFPlay_Controller::Set_ProcAmp(ProcAmp_enum ProcSetting,double value)
+{
+	VideoState * is=(VideoState *)m_VideoStream;
+	return is->procamp->Set_ProcAmp(ProcSetting,value);
 }
