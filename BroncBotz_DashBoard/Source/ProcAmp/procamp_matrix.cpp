@@ -22,6 +22,12 @@ static const SPMatrix	g_ycbcr_default(  1.0f, 0.0f, 0.0f, 0.0f,
 									      0.0f, 0.0f, 1.0f, 0.0f,
 										  0.0f, 0.0f, 0.0f, 1.0f );
 
+
+  /***********************************************************************************************************************/
+ /*														procamp_matrix													*/
+/***********************************************************************************************************************/
+
+
 const SPMatrix& procamp_matrix::rgb( void ) const
 {	// Setup
 	setup();
@@ -209,4 +215,107 @@ procamp_matrix::operator const procamp_matrix::settings& ( void ) const
 void procamp_matrix::operator= ( const settings& from )
 {	m_settings = from;
 	m_changed = true;
+}
+
+
+  /***********************************************************************************************************************/
+ /*														Procamp_Manager													*/
+/***********************************************************************************************************************/
+
+
+//These should never change
+const double c_procamp_NonCalibrated_brightness	= 0.0;
+const double c_procamp_NonCalibrated_contrast	= 1.0;
+const double c_procamp_NonCalibrated_hue		= 0.0;
+const double c_procamp_NonCalibrated_saturation	= 1.0;
+const double c_procamp_NonCalibrated_u_offset	= 0.0;
+const double c_procamp_NonCalibrated_v_offset	= 0.0;
+const double c_procamp_NonCalibrated_u_gain		= 1.0;
+const double c_procamp_NonCalibrated_v_gain		= 1.0;
+
+double ProcAmp_Defaults[e_no_procamp_items]=
+{
+	c_procamp_NonCalibrated_brightness,
+	c_procamp_NonCalibrated_contrast,
+	c_procamp_NonCalibrated_hue,
+	c_procamp_NonCalibrated_saturation,
+	c_procamp_NonCalibrated_u_offset,
+	c_procamp_NonCalibrated_v_offset,
+	c_procamp_NonCalibrated_u_gain,
+	c_procamp_NonCalibrated_v_gain,
+	0.0, //pedestal
+};
+
+Procamp_Manager::Procamp_Manager()
+{
+	//Note: for the flood control... component will set only one value to -55 to ensure the component gets called at least only once
+	//For standard def each setting will get set as each one has a corresponding i2c
+	for (size_t i=0;i<e_no_procamp_items;i++)
+	{
+		if (i!=0)
+		{
+			//We could init to the defaults, but it would be better to force it to set everything properly the first time
+			double value=ProcAmp_Defaults[i];
+			m_FloodControl[i]=value;
+		}
+		else
+			m_FloodControl[i]=-55;  //pick some number that is out of range for all
+	}
+	m_MatrixToSend=NULL; //hold off until we get a legit change
+}
+
+bool Procamp_Manager::Set_ProcAmp(ProcAmp_enum ProcSetting,double value)
+{
+	bool ret=true;
+	if (m_FloodControl[ProcSetting]!=value)
+	{
+		m_FloodControl[ProcSetting]=value;
+		bool ret=false;
+
+		switch (ProcSetting)
+		{
+		case e_procamp_brightness:
+			m_SDI_Matrix.brightness()=(float)value;
+			break;
+		case e_procamp_contrast:
+			m_SDI_Matrix.contrast()=(float)value;
+			break;
+		case e_procamp_hue:
+			//This gets the hue in the right direction for software matrix.  I'll need to check again for hardware support
+			m_SDI_Matrix.hue()=(float)(value*-1.0);
+			break;
+		case e_procamp_saturation:
+			m_SDI_Matrix.saturation()=(float)value;
+			break;
+		case e_procamp_u_offset:
+			m_SDI_Matrix.u_offset()=(float)value;
+			break;
+		case e_procamp_v_offset:
+			m_SDI_Matrix.v_offset()=(float)value;
+			break;
+		case e_procamp_u_gain:
+			m_SDI_Matrix.u_gain()=(float)value;
+			break;
+		case e_procamp_v_gain:
+			m_SDI_Matrix.v_gain()=(float)value;
+			break;
+		}
+		m_ycbcr_matrix=m_SDI_Matrix.ycbcr();
+		{//Send this as matrix to send
+			m_MatrixTransposed=m_ycbcr_matrix;
+			m_MatrixTransposed.Transpose();
+			m_MatrixToSend=m_SDI_Matrix.is_default()?NULL:(color_matrix *)&m_MatrixTransposed;
+		}
+
+	}
+	return ret;
+}
+
+
+void Procamp_Manager::operator()(FrameWork::Bitmaps::bitmap_ycbcr_u8 &apply_to_bitmap)
+{
+	//This is a temporary solution to apply software procamp to any chip that returns successful to use a color matrix
+	const color_matrix *matrix=Get_Procamp_Matrix();
+	if (matrix)
+		ycbcr(apply_to_bitmap,apply_to_bitmap,*matrix);
 }

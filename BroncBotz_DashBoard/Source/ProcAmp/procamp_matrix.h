@@ -148,3 +148,59 @@ private:	// The current matrix
 			// The current settings
 			settings m_settings;
 };
+
+//Here are the ranges for each
+//brightness	-1.0 - 1.0
+//contrast		 0.0 - 1.0
+//hue		  -180.0 - 180.0
+//saturation     0.0 - 1.0
+//u_offset		-1.0 - 1.0
+//v_offset		-1.0 - 1.0
+//u_gain		 0.0 - 1.0
+//v_gain	 	 0.0 - 1.0
+
+
+enum ProcAmp_enum
+{
+	e_procamp_brightness,
+	e_procamp_contrast,
+	e_procamp_hue,
+	e_procamp_saturation,
+	e_procamp_u_offset,
+	e_procamp_v_offset,
+	e_procamp_u_gain,
+	e_procamp_v_gain,
+	e_procamp_pedestal,
+	e_no_procamp_items
+};
+
+class Procamp_Manager
+{
+	public:
+		Procamp_Manager();
+		bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);
+
+		static void* operator new ( const size_t size )
+		{
+			return ::_aligned_malloc( size,16 );
+		}
+		static void  operator delete ( void* ptr )
+		{
+			::_aligned_free(ptr);
+		}
+
+		void operator()(FrameWork::Bitmaps::bitmap_ycbcr_u8 &apply_to_bitmap);
+	protected:
+		typedef float color_matrix[ 3 ][ 4 ];
+		virtual const color_matrix *Get_Procamp_Matrix() const {return m_MatrixToSend;}
+	private:
+		double m_FloodControl[e_no_procamp_items]; //ProcAmp() uses this to determine if a change has been made
+		//The component I2C's require a 4x3 matrix; the procamp object handles these values
+		procamp_matrix m_SDI_Matrix;
+		//Keep these aligned!
+		Matrix::SPMatrix m_ycbcr_matrix;  //This contains an up-to-date color matrix to be used
+		//This is a transposed form used for processing FX
+		Matrix::SPMatrix m_MatrixTransposed;
+		color_matrix *m_MatrixToSend; //This is a transposed matrix to use for processing FX (this is not needed one hardware is working)
+
+};
