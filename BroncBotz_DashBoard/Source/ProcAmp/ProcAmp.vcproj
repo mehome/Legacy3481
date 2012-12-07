@@ -151,27 +151,6 @@
 			<File
 				RelativePath=".\procamp_matrix.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						EnableIntrinsicFunctions="true"
-						WholeProgramOptimization="false"
-						BasicRuntimeChecks="0"
-						UsePrecompiledHeader="0"
-						DebugInformationFormat="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\procamp_ycbcr.cpp"
