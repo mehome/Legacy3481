@@ -179,6 +179,9 @@ class Procamp_Manager
 	public:
 		Procamp_Manager();
 		bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);
+		//Client code can check for NULL to setup in an optimized fashion
+		typedef float color_matrix[ 3 ][ 4 ];
+		virtual const color_matrix *Get_Procamp_Matrix() const {return m_MatrixToSend;}
 
 		static void* operator new ( const size_t size )
 		{
@@ -190,9 +193,6 @@ class Procamp_Manager
 		}
 
 		void operator()(FrameWork::Bitmaps::bitmap_ycbcr_u8 &apply_to_bitmap);
-	protected:
-		typedef float color_matrix[ 3 ][ 4 ];
-		virtual const color_matrix *Get_Procamp_Matrix() const {return m_MatrixToSend;}
 	private:
 		double m_FloodControl[e_no_procamp_items]; //ProcAmp() uses this to determine if a change has been made
 		//The component I2C's require a 4x3 matrix; the procamp object handles these values
