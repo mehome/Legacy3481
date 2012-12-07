@@ -19,66 +19,154 @@ extern HMODULE g_hModule;
 Dashboard_Controller_Interface *g_Controller=NULL;
 HWND g_hDialogHWND=NULL;
 
-class MyDlg
+class DialogBase
 {
     public:
-        // Constructor and Destructor for MyDlg.
-        MyDlg();
-        ~MyDlg(void);
+        DialogBase();
+        virtual ~DialogBase(void);
 
 		// Runs the Dialog.
         bool Run(HWND pParent);
+		void OnEndDialog(void);
 
+	protected:
+		virtual size_t GetDialogResource() const =0;
+		virtual LPARAM GetInstance() const =0;
+		virtual const wchar_t * const GetTitlePrefix() const =0;
+		virtual int DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam );
     private:
         HWND        m_hDlg;                     // HWND of Dialog.
-
-		//char		m_WindowTitle[128];
-
-		//HANDLE		m_hDisplayTerminate;
-
-		//void OnTimer(void);
-		//void OnPaint(void);
-		//void RePaint( HDC hDC );
-
-		int DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam );
+		
         static int CALLBACK BaseDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
         int OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam );
-        void OnEndDialog(void);
 		void MessagePump();
 		bool m_IsClosing;
-} *g_pMyDlg;
+};
 
-MyDlg::MyDlg() : m_IsClosing(false)
+class FileControls : public DialogBase
 {
-	//m_hDisplayTerminate = CreateEvent( NULL, true, false, NULL );
+	protected:
+		virtual size_t GetDialogResource() const {return IDD_FILE_DIALOG;}
+		virtual LPARAM GetInstance() const {return (LPARAM) this;}
+		virtual const wchar_t * const GetTitlePrefix() const  {return L"File controls for ";}
+		virtual int DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam );
+} *g_pFileControls;
+
+
+  /***********************************************************************************************************************/
+ /*														DialogBase														*/
+/***********************************************************************************************************************/
+
+
+DialogBase::DialogBase() : m_IsClosing(false)
+{
+	DebugOutput("DialogBase() starting %p",this);
 }
 
-MyDlg::~MyDlg(void)
+DialogBase::~DialogBase(void)
 {
-	//Do not use PostQuitMessage... as this will force app to exit early... instead just use a bool to stop the message pump
-	//PostQuitMessage(0);
-	m_IsClosing=true;
+	//Note: Do not use PostQuitMessage... as this will force app to exit early... instead just use a bool to stop the message pump
+	DebugOutput("~DialogBase() ending %p",this);
 }
 
-int MyDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam )
+int DialogBase::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	return(TRUE);
 }
 
-void MyDlg::OnEndDialog(void)
+void DialogBase::OnEndDialog(void)
 {
-	//KillTimer( m_hDlg, 1 );
-	g_pMyDlg=NULL;
+	m_IsClosing=true;
+}
+
+int DialogBase::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
+{
+	switch(uMsg)
+	{
+	case WM_INITDIALOG:
+		OnInitDialog( uMsg, wParam, lParam );
+		break;
+
+	case WM_CLOSE:
+		OnEndDialog();
+		break;
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+int CALLBACK DialogBase::BaseDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
+{
+	DialogBase *pThis_;
+
+	if (uMsg == WM_INITDIALOG)
+	{   
+		pThis_ = (DialogBase*) lParam;
+		pThis_->m_hDlg = hDlg;
+		SetWindowLongPtr( hDlg, GWL_USERDATA, lParam );
+	}
+	else
+	   pThis_ = (DialogBase*) GetWindowLongPtr( hDlg, GWL_USERDATA );
+	
+
+	int Result_=FALSE;
+	if (pThis_)
+		Result_ = pThis_->DlgProc( uMsg, wParam, lParam );
+	return(Result_);
+}
+
+void DialogBase::MessagePump()
+{
+	MSG Msg;
+	do
+	{
+		while(PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE) > 0)
+		{
+			if(!IsDialogMessage(g_hDialogHWND, &Msg))
+			{
+				TranslateMessage(&Msg);
+				DispatchMessage(&Msg);
+			}
+		}
+		Sleep(100);
+	} while ((WM_QUIT != Msg.message)&&(!m_IsClosing));
+	// Close the window
+	::DestroyWindow( g_hDialogHWND ); 
+	g_hDialogHWND=NULL;
+	g_pFileControls=NULL;
 	delete this;
 }
 
-int MyDlg::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
+bool DialogBase::Run(HWND pParent)
+{
+	// Display the main dialog box.
+	g_hDialogHWND= CreateDialogParam( g_hModule, MAKEINTRESOURCE(GetDialogResource()), pParent, BaseDlgProc, GetInstance() );
+	bool bResult_=  g_hDialogHWND!=NULL;
+	if (bResult_)
+	{
+		wchar_t Buffer[128];
+		GetWindowText(pParent,Buffer,128);
+		std::wstring Name=GetTitlePrefix();
+		Name+=Buffer;
+		SetWindowText(g_hDialogHWND,Name.c_str());
+		ShowWindow(g_hDialogHWND, SW_SHOW);
+	}
+	MessagePump();
+	return (bResult_);
+}
+
+
+  /***********************************************************************************************************************/
+ /*														FileControls													*/
+/***********************************************************************************************************************/
+
+int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	switch(uMsg)
 	{
 		case WM_COMMAND: 
 			{
-				//nostaticpreview=nostaticxypreview=-1;
 				WORD notifycode = HIWORD(wParam);
 				WORD buttonid = LOWORD(wParam);
 				if (notifycode==BN_CLICKED) 
@@ -101,83 +189,16 @@ int MyDlg::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 				}
 			}
 			break;
-		case WM_INITDIALOG:
-			OnInitDialog( uMsg, wParam, lParam );
-			break;
-
-		//case WM_PAINT:
-		//	OnPaint();
-		//	break;
-		//case WM_TIMER:
-		//	OnTimer();
-		//	break;
-
-		case WM_CLOSE:
-			OnEndDialog();
-			break;
 		default:
-			return FALSE;
+			return __super::DlgProc(uMsg,wParam,lParam);
 	}
 	return TRUE;
 }
 
 
-int CALLBACK MyDlg::BaseDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{
-	MyDlg *pThis_;
-
-	if (uMsg == WM_INITDIALOG)
-	{   
-		pThis_ = (MyDlg*) lParam;
-		pThis_->m_hDlg = hDlg;
-		SetWindowLongPtr( hDlg, GWL_USERDATA, lParam );
-	}
-	else
-	   pThis_ = (MyDlg*) GetWindowLongPtr( hDlg, GWL_USERDATA );
-	
-
-	int Result_ = pThis_->DlgProc( uMsg, wParam, lParam );
-	return(Result_);
-}
-
-void MyDlg::MessagePump()
-{
-	MSG Msg;
-	do
-	{
-		while(PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE) > 0)
-		{
-			if(!IsDialogMessage(g_hDialogHWND, &Msg))
-			{
-				TranslateMessage(&Msg);
-				DispatchMessage(&Msg);
-			}
-		}
-		Sleep(100);
-	} while ((WM_QUIT != Msg.message)&&(!m_IsClosing));
-	// Close the window
-	::DestroyWindow( g_hDialogHWND ); 
-	g_hDialogHWND=NULL;
-}
-
-bool MyDlg::Run(HWND pParent)
-{
-	// Display the main dialog box.
-	g_hDialogHWND= CreateDialogParam( g_hModule, MAKEINTRESOURCE(IDD_FILE_DIALOG), pParent, BaseDlgProc, (LPARAM) this );
-	bool bResult_=  g_hDialogHWND!=NULL;
-	if (bResult_)
-	{
-		wchar_t Buffer[128];
-		GetWindowText(pParent,Buffer,128);
-		std::wstring Name=L"File controls for ";
-		Name+=Buffer;
-		SetWindowText(g_hDialogHWND,Name.c_str());
-		ShowWindow(g_hDialogHWND, SW_SHOW);
-	}
-	MessagePump();
-	return (bResult_);
-}
-
+  /***********************************************************************************************************************/
+ /*													C Global functions													*/
+/***********************************************************************************************************************/
 
 
 enum MenuSelection
@@ -198,7 +219,7 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPop
 	if (g_Controller)
 	{
 		InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_SEPARATOR, eMenu_NoSelection, NULL);
-		InsertMenu(hPopupMenu, -1, (g_pMyDlg?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Controls+StartingOffset, L"File Controls...");
+		InsertMenu(hPopupMenu, -1, (g_pFileControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Controls+StartingOffset, L"File Controls...");
 	}
 }
 
@@ -208,10 +229,10 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 	{
 		case eMenu_Controls:
 			DebugOutput("Selection=%d\n",selection);
-			if (!g_pMyDlg)
+			if (!g_pFileControls)
 			{
-				g_pMyDlg=new MyDlg;
-				g_pMyDlg->Run(pParent);
+				g_pFileControls=new FileControls;
+				g_pFileControls->Run(pParent);
 			}
 			else
 			{
@@ -224,8 +245,7 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_Shutdown()
 {
-	delete g_pMyDlg;
-	//While this is set to NULL implicitly, setting it here will get it NULL much quicker to avoid any racing condition
-	if (g_pMyDlg)		//using if for debugging
-		g_pMyDlg=NULL;
+	//Just signal... it will destroy itself from within the message pump
+	if (g_pFileControls)
+		g_pFileControls->OnEndDialog();
 }
