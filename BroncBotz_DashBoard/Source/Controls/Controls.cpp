@@ -196,8 +196,10 @@ int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			{
 				WORD pos = HIWORD(wParam);
 				WORD TB_Type = LOWORD(wParam);
-				switch (TB_Type)
+				if ((HWND)lParam==GetDlgItem(g_hDialogHWND,IDC_SCRUB))
 				{
+					switch (TB_Type)
+					{
 					case SB_THUMBPOSITION:
 					case SB_THUMBTRACK:
 						DebugOutput("Position=%d %d\n",pos,lParam);
@@ -215,10 +217,11 @@ int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 					case SB_LINERIGHT: //Scrolls right by one unit. 
 					case SB_PAGELEFT: //Scrolls left by the width of the window. 
 					case SB_PAGERIGHT:
-						LRESULT dwPos = SendMessage(g_hDialogHWND, SBM_GETPOS, 0, 0); 
-						DebugOutput("Position= %d\n",pos);
+						LRESULT dwPos = SendMessage((HWND)lParam, SBM_GETPOS, 0, 0); 
+						DebugOutput("Position= %d %d\n",pos,lParam);
 						break;
 
+					}
 				}
 			}
 			break;
