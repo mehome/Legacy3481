@@ -149,8 +149,6 @@ private:	// The current matrix
 			settings m_settings;
 };
 
-#include "../Dashboard/Dashboard_Interfaces.h"
-
 class Procamp_Manager
 {
 	public:

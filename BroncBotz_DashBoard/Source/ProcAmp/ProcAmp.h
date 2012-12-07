@@ -1,5 +1,6 @@
 #pragma once
 #include "../FrameWork/FrameWork.h"
+#include "../Dashboard/Dashboard_Interfaces.h"
 
 namespace Processing
 {
