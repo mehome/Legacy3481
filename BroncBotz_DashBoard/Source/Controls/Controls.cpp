@@ -185,7 +185,40 @@ int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 						break;
 					case IDC_BROWSE:
 						break;
+					case IDC_SCRUB:
+						DebugOutput("Inside Scrub\n");
+						break;
 					}
+				}
+			}
+			break;
+		case WM_HSCROLL:
+			{
+				WORD pos = HIWORD(wParam);
+				WORD TB_Type = LOWORD(wParam);
+				switch (TB_Type)
+				{
+					case SB_THUMBPOSITION:
+					case SB_THUMBTRACK:
+						DebugOutput("Position=%d %d\n",pos,lParam);
+						if (false)
+						{
+							double test=(double)(pos-50)*.01;
+							g_Controller->Set_ProcAmp(e_procamp_brightness,test);
+						}
+						break;
+
+					case SB_ENDSCROLL: // Ends scroll. 
+					case SB_LEFT: //Scrolls to the upper left. 
+					case SB_RIGHT: //Scrolls to the lower right. 
+					case SB_LINELEFT: //Scrolls left by one unit. 
+					case SB_LINERIGHT: //Scrolls right by one unit. 
+					case SB_PAGELEFT: //Scrolls left by the width of the window. 
+					case SB_PAGERIGHT:
+						LRESULT dwPos = SendMessage(g_hDialogHWND, SBM_GETPOS, 0, 0); 
+						DebugOutput("Position= %d\n",pos);
+						break;
+
 				}
 			}
 			break;
