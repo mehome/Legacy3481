@@ -7,9 +7,15 @@ namespace Processing
 	{	
 		namespace procamp
 		{
-#include "procamp_ycbcr.h"
-		}
 
+#include "procamp_ycbcr.h"
+namespace Matrix
+{
+	#include "SPMatrix.h"
+}
+#include "procamp_matrix.h"
+
+		}
 	}
 }
 

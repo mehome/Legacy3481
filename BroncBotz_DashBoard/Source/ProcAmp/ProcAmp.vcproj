@@ -149,7 +149,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\procamp_matrix.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\procamp_ycbcr.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SPMatrix.cpp"
 				>
 			</File>
 			<File
@@ -183,7 +191,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\procamp_matrix.h"
+				>
+			</File>
+			<File
 				RelativePath=".\procamp_ycbcr.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SPMatrix.h"
 				>
 			</File>
 			<File
