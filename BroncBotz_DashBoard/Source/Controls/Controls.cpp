@@ -2,6 +2,8 @@
 #include "Controls.h"
 #include "Resource.h"
 
+#undef __DoModal__
+
 // No C library depreciation warnings
 #pragma warning ( disable : 4995 )
 #pragma warning ( disable : 4996 )
@@ -17,6 +19,7 @@ static void DebugOutput(const char *format, ... )
 
 extern HMODULE g_hModule;
 Dashboard_Controller_Interface *g_Controller=NULL;
+HWND g_hDialogHWND=NULL;
 
 class MyDlg
 {
@@ -43,15 +46,21 @@ class MyDlg
         static int CALLBACK BaseDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
         int OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam );
         void OnEndDialog(void);
+		void MessagePump();
+		bool m_IsClosing;
 } *g_pMyDlg;
 
-MyDlg::MyDlg()
+MyDlg::MyDlg() : m_IsClosing(false)
 {
 	//m_hDisplayTerminate = CreateEvent( NULL, true, false, NULL );
 }
 
 MyDlg::~MyDlg(void)
 {
+	#ifndef __DoModal__
+	PostQuitMessage(0);
+	m_IsClosing=true;
+	#endif
 }
 
 int MyDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -61,57 +70,62 @@ int MyDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam )
 
 void MyDlg::OnEndDialog(void)
 {
-	g_pMyDlg=NULL;
 	//KillTimer( m_hDlg, 1 );
+	g_pMyDlg=NULL;
+	#ifdef __DoModal__
 	EndDialog( m_hDlg, TRUE );
+	#else
+	delete this;
+	#endif
 }
 
 int MyDlg::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-	int Result_ = FALSE;
 	switch(uMsg)
 	{
-	case WM_COMMAND: 
-		{
-			//nostaticpreview=nostaticxypreview=-1;
-			WORD notifycode = HIWORD(wParam);
-			WORD buttonid = LOWORD(wParam);
-			if (notifycode==BN_CLICKED) 
+		case WM_COMMAND: 
 			{
-				//Handle our button up
-				switch (buttonid) 
+				//nostaticpreview=nostaticxypreview=-1;
+				WORD notifycode = HIWORD(wParam);
+				WORD buttonid = LOWORD(wParam);
+				if (notifycode==BN_CLICKED) 
 				{
-				case IDC_PAUSE:
-					g_Controller->Pause();
-					break;
-				case IDC_STOP:
-					g_Controller->Stop();
-					break;
-				case IDC_PLAY:
-					g_Controller->Run();
-					break;
-				case IDC_BROWSE:
-					break;
+					//Handle our button up
+					switch (buttonid) 
+					{
+					case IDC_PAUSE:
+						g_Controller->Pause();
+						break;
+					case IDC_STOP:
+						g_Controller->Stop();
+						break;
+					case IDC_PLAY:
+						g_Controller->Run();
+						break;
+					case IDC_BROWSE:
+						break;
+					}
 				}
 			}
-		}
-		break;
-	case WM_INITDIALOG:
-		Result_ = OnInitDialog( uMsg, wParam, lParam );
-		break;
+			break;
+		case WM_INITDIALOG:
+			OnInitDialog( uMsg, wParam, lParam );
+			break;
 
-	//case WM_PAINT:
-	//	OnPaint();
-	//	break;
-	//case WM_TIMER:
-	//	OnTimer();
-	//	break;
+		//case WM_PAINT:
+		//	OnPaint();
+		//	break;
+		//case WM_TIMER:
+		//	OnTimer();
+		//	break;
 
-	case WM_CLOSE:
-		OnEndDialog();
-		break;
+		case WM_CLOSE:
+			OnEndDialog();
+			break;
+		default:
+			return FALSE;
 	}
-	return(Result_);
+	return TRUE;
 }
 
 
@@ -133,10 +147,38 @@ int CALLBACK MyDlg::BaseDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	return(Result_);
 }
 
+void MyDlg::MessagePump()
+{
+	MSG Msg;
+	do
+	{
+		while(PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE) > 0)
+		{
+			if(!IsDialogMessage(g_hDialogHWND, &Msg))
+			{
+				TranslateMessage(&Msg);
+				DispatchMessage(&Msg);
+			}
+		}
+		Sleep(100);
+	} while ((WM_QUIT != Msg.message)&&(!m_IsClosing));
+	// Close the window
+	::DestroyWindow( g_hDialogHWND ); 
+	g_hDialogHWND=NULL;
+}
+
 bool MyDlg::Run(HWND pParent)
 {
 	// Display the main dialog box.
+	#ifdef __DoModal__
 	bool bResult_ = (DialogBoxParam( g_hModule, MAKEINTRESOURCE(IDD_FILE_DIALOG), pParent, BaseDlgProc, (LPARAM) this ) != 0);
+	#else
+	g_hDialogHWND= CreateDialogParam( g_hModule, MAKEINTRESOURCE(IDD_FILE_DIALOG), pParent, BaseDlgProc, (LPARAM) this );
+	bool bResult_=  g_hDialogHWND!=NULL;
+	if (bResult_)
+		ShowWindow(g_hDialogHWND, SW_SHOW);
+	MessagePump();
+	#endif
 	return (bResult_);
 }
 
@@ -154,16 +196,13 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_Initialize (Dashboard_Co
 	g_Controller=controller;
 }
 
-//Note: the dialog is currently modal, but I have treated the logic as if it is not... in case this needs to change
-//for now I'll keep it modal
-
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
 {
 	//only populate this if we have a controller
 	if (g_Controller)
 	{
 		InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_SEPARATOR, eMenu_NoSelection, NULL);
-		InsertMenu(hPopupMenu, -1, (g_pMyDlg?MF_DISABLED:0) | MF_BYPOSITION | MF_STRING, eMenu_Controls+StartingOffset, L"File Controls...");
+		InsertMenu(hPopupMenu, -1, (g_pMyDlg?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Controls+StartingOffset, L"File Controls...");
 	}
 }
 
