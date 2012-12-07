@@ -204,16 +204,21 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPop
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selection,HWND pParent)
 {
-	DebugOutput("Selection=%d\n",selection);
-	if (!g_pMyDlg)
+	switch (selection)
 	{
-		g_pMyDlg=new MyDlg;
-		g_pMyDlg->Run(pParent);
-	}
-	else
-	{
-		DebugOutput("Controls Dialog already running\n");
-		assert(false);
+		case eMenu_Controls:
+			DebugOutput("Selection=%d\n",selection);
+			if (!g_pMyDlg)
+			{
+				g_pMyDlg=new MyDlg;
+				g_pMyDlg->Run(pParent);
+			}
+			else
+			{
+				DebugOutput("Controls Dialog already running\n");
+				assert(false);
+			}
+			break;
 	}
 }
 
