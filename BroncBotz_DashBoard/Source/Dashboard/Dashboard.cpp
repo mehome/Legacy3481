@@ -121,7 +121,11 @@ class DDraw_Preview
 		//returns true to quit
 		bool CommandLineInterface();
 		void RunApp();
-		void SignalQuit() { m_Terminate.set(); }
+		void SignalQuit() 
+		{ 
+			m_Terminate.set(); 
+			Callback_Shutdown();
+		}
 
 		Preview *GetPreview() {return m_DD_StreamOut;}
 		void Reset_DPC();  //This launches reset on a deferred procedure call
@@ -148,13 +152,17 @@ class DDraw_Preview
 			function_On_Selection m_fpOn_Selection;
 			typedef void (*function_Initialize) (Dashboard_Controller_Interface *controller);
 			function_Initialize m_fpInitialize;
+			typedef void (*function_Shutdown) ();
+			function_Shutdown m_fpShutdown;
 
 			void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {if (m_PlugIn) (*m_fpAddMenuItems)(hPopupMenu,StartingOffset);}
 			void Callback_On_Selection(int selection,HWND pParent) {if (m_PlugIn) (*m_fpOn_Selection)(selection,pParent);}
 			void Callback_Initialize(Dashboard_Controller_Interface *controller) {if (m_PlugIn) (*m_fpInitialize)(controller);}
+			void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
 
 		} m_Controls_PlugIn;
 		void Callback_Initialize(Dashboard_Controller_Interface *controller) {m_Controls_PlugIn.Callback_Initialize(controller);}
+		void Callback_Shutdown() {m_Controls_PlugIn.Callback_Shutdown();}
 
 		void Reset();
 		void DisplayHelp();
@@ -524,6 +532,9 @@ void DDraw_Preview::Controls_Plugin::LoadPlugIn(const wchar_t Plugin[])
 			m_fpOn_Selection=(function_On_Selection) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_On_Selection");
 			if (!m_fpOn_Selection) throw 1;
 			m_fpInitialize=(function_Initialize) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Initialize");
+			if (!m_fpInitialize) throw 2;
+			m_fpShutdown=(function_Shutdown) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
+			if (!m_fpShutdown) throw 3;
 		}
 		catch (int ErrorCode)
 		{

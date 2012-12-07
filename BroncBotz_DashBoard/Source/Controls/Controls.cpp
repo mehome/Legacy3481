@@ -58,7 +58,8 @@ MyDlg::MyDlg() : m_IsClosing(false)
 MyDlg::~MyDlg(void)
 {
 	#ifndef __DoModal__
-	PostQuitMessage(0);
+	//Do not use PostQuitMessage... as this will force app to exit early... instead just use a bool to stop the message pump
+	//PostQuitMessage(0);
 	m_IsClosing=true;
 	#endif
 }
@@ -219,4 +220,12 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 		DebugOutput("Controls Dialog already running\n");
 		assert(false);
 	}
+}
+
+extern "C" CONTROLS_API void Callback_SmartCppDashboard_Shutdown()
+{
+	delete g_pMyDlg;
+	//While this is set to NULL implicitly, setting it here will get it NULL much quicker to avoid any racing condition
+	if (g_pMyDlg)		//using if for debugging
+		g_pMyDlg=NULL;
 }
