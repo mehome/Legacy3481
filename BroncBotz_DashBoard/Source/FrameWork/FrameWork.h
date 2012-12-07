@@ -104,3 +104,4 @@ static const work_flags long_function = 2;
 
 namespace FTHRDS   = FrameWork;
 namespace FTHREADS = FrameWork;
+namespace FBMP = FrameWork::Bitmaps;
