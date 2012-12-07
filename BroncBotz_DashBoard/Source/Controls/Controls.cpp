@@ -2,8 +2,6 @@
 #include "Controls.h"
 #include "Resource.h"
 
-#undef __DoModal__
-
 // No C library depreciation warnings
 #pragma warning ( disable : 4995 )
 #pragma warning ( disable : 4996 )
@@ -57,11 +55,9 @@ MyDlg::MyDlg() : m_IsClosing(false)
 
 MyDlg::~MyDlg(void)
 {
-	#ifndef __DoModal__
 	//Do not use PostQuitMessage... as this will force app to exit early... instead just use a bool to stop the message pump
 	//PostQuitMessage(0);
 	m_IsClosing=true;
-	#endif
 }
 
 int MyDlg::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -73,11 +69,7 @@ void MyDlg::OnEndDialog(void)
 {
 	//KillTimer( m_hDlg, 1 );
 	g_pMyDlg=NULL;
-	#ifdef __DoModal__
-	EndDialog( m_hDlg, TRUE );
-	#else
 	delete this;
-	#endif
 }
 
 int MyDlg::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -171,15 +163,18 @@ void MyDlg::MessagePump()
 bool MyDlg::Run(HWND pParent)
 {
 	// Display the main dialog box.
-	#ifdef __DoModal__
-	bool bResult_ = (DialogBoxParam( g_hModule, MAKEINTRESOURCE(IDD_FILE_DIALOG), pParent, BaseDlgProc, (LPARAM) this ) != 0);
-	#else
 	g_hDialogHWND= CreateDialogParam( g_hModule, MAKEINTRESOURCE(IDD_FILE_DIALOG), pParent, BaseDlgProc, (LPARAM) this );
 	bool bResult_=  g_hDialogHWND!=NULL;
 	if (bResult_)
+	{
+		wchar_t Buffer[128];
+		GetWindowText(pParent,Buffer,128);
+		std::wstring Name=L"File controls for ";
+		Name+=Buffer;
+		SetWindowText(g_hDialogHWND,Name.c_str());
 		ShowWindow(g_hDialogHWND, SW_SHOW);
+	}
 	MessagePump();
-	#endif
 	return (bResult_);
 }
 
