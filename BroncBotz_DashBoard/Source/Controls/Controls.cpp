@@ -19,6 +19,9 @@ extern HMODULE g_hModule;
 Dashboard_Controller_Interface *g_Controller=NULL;
 DLGPROC g_WinProc;
 
+#define TBM_GETPOS              (WM_USER)
+#define TBM_SETPOS              (WM_USER+5)
+
 class DialogBase : public MessageBase_Interface
 {
     public:
@@ -26,7 +29,7 @@ class DialogBase : public MessageBase_Interface
         virtual ~DialogBase(void);
 
 		// Runs the Dialog.
-        bool Run(HWND pParent);
+        virtual bool Run(HWND pParent);
 		void OnEndDialog(void);
 
 	protected:
@@ -60,6 +63,7 @@ class ProcampControls : public DialogBase
 	public:
 		ProcampControls();
 		~ProcampControls();
+		virtual bool Run(HWND pParent);
 	protected:
 		virtual size_t GetDialogResource() const {return IDD_PROCAMP_DIALOG;}
 		virtual LPARAM GetInstance() const {return (LPARAM) this;}
@@ -230,7 +234,7 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					si.nPos=m_ScrubValue;
 					ScrollAdjust(wParam,si);
 					m_ScrubValue=si.nPos;
-					DebugOutput("Position= %d\n",m_ScrubValue);
+					DebugOutput("Position= %d\n",SendMessage(hWndScroller,TBM_GETPOS,0,0));
 				}
 			}
 			break;
@@ -246,7 +250,15 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 
 ProcampControls::ProcampControls() : m_ScrubBrightness(0),m_ScrubContrast(0)
 {
+}
 
+bool ProcampControls::Run(HWND pParent)
+{
+	bool ret=__super::Run(pParent);
+	HWND hWndScroller=GetDlgItem(m_hDlg, IDC_SliderBrightness);
+	//SetScrollPos(hWndScroller,SB_HORZ,50,true);
+	SendMessage(hWndScroller,SBM_SETPOS,TRUE,50);
+	return ret;
 }
 
 ProcampControls::~ProcampControls()
@@ -269,9 +281,10 @@ long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPara
 
 				if (hWndScroller==GetDlgItem(m_hDlg, IDC_SliderBrightness))
 				{
-					si.nPos=m_ScrubBrightness;
-					ScrollAdjust(wParam,si);
-					m_ScrubBrightness=si.nPos;
+					//si.nPos=m_ScrubBrightness;
+					//ScrollAdjust(wParam,si);
+					//m_ScrubBrightness=si.nPos;
+					m_ScrubBrightness=SendMessage(hWndScroller,TBM_GETPOS,0,0);
 					DebugOutput("Brightness= %d\n",m_ScrubBrightness);
 					double value=(m_ScrubBrightness-50) * 0.02;
 					g_Controller->Set_ProcAmp(e_procamp_brightness,value);
