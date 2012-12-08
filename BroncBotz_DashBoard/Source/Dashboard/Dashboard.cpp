@@ -133,9 +133,8 @@ class DDraw_Preview
 		void StartStreaming();
 
 		void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {m_Controls_PlugIn.Callback_AddMenuItems(hPopupMenu,StartingOffset);}
-		//void Callback_On_Selection(int selection,HWND pParent) {m_Controls_PlugIn.Callback_On_Selection(selection,pParent);}
-		void thread_Callback_On_Selection(int selection,HWND pParent);
-		void Callback_On_Selection(int selection,HWND pParent);
+		//Note: it is imperative to enter client code on the GUI thread
+		void Callback_On_Selection(int selection,HWND pParent) {m_Controls_PlugIn.Callback_On_Selection(selection,pParent);}
 	protected:
 		virtual void CloseResources();
 		virtual void OpenResources();
@@ -150,18 +149,18 @@ class DDraw_Preview
 			function_AddMenuItems m_fpAddMenuItems;
 			typedef void (*function_On_Selection) (int selection,HWND pParent);
 			function_On_Selection m_fpOn_Selection;
-			typedef void (*function_Initialize) (Dashboard_Controller_Interface *controller);
+			typedef void (*function_Initialize) (Dashboard_Controller_Interface *controller,DLGPROC gWinProc);
 			function_Initialize m_fpInitialize;
 			typedef void (*function_Shutdown) ();
 			function_Shutdown m_fpShutdown;
 
 			void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {if (m_PlugIn) (*m_fpAddMenuItems)(hPopupMenu,StartingOffset);}
 			void Callback_On_Selection(int selection,HWND pParent) {if (m_PlugIn) (*m_fpOn_Selection)(selection,pParent);}
-			void Callback_Initialize(Dashboard_Controller_Interface *controller) {if (m_PlugIn) (*m_fpInitialize)(controller);}
+			void Callback_Initialize(Dashboard_Controller_Interface *controller,DLGPROC gWinProc) {if (m_PlugIn) (*m_fpInitialize)(controller,gWinProc);}
 			void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
 
 		} m_Controls_PlugIn;
-		void Callback_Initialize(Dashboard_Controller_Interface *controller) {m_Controls_PlugIn.Callback_Initialize(controller);}
+		void Callback_Initialize(Dashboard_Controller_Interface *controller,DLGPROC gWinProc) {m_Controls_PlugIn.Callback_Initialize(controller,gWinProc);}
 		void Callback_Shutdown() {m_Controls_PlugIn.Callback_Shutdown();}
 
 		void Reset();
@@ -550,7 +549,7 @@ DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),
 {
 	m_Controls_PlugIn.LoadPlugIn(props.controls_plugin_file.c_str());
 	Dashboard_Controller_Interface *l_Dashboard_Interface=m_FrameGrabber.GetDashboard_Controller_Interface();
-	Callback_Initialize(l_Dashboard_Interface);
+	Callback_Initialize(l_Dashboard_Interface,m_Window->GetDispatcherBase());
 	m_Props=props;
 	SetDefaults(props.XRes,props.YRes,props.XPos,props.YPos);
 }
@@ -742,21 +741,6 @@ void DDraw_Preview::Reset_DPC()
 	//This has to be a deferred procedure call because the primitive callback must complete!
 	using namespace FrameWork;
 	cpp::threadcall_ex( do_not_wait, m_thread, this, &DDraw_Preview::Reset);
-}
-
-void DDraw_Preview::thread_Callback_On_Selection(int selection,HWND pParent) 
-{
-	m_Controls_PlugIn.Callback_On_Selection(selection,pParent);
-}
-
-void DDraw_Preview::Callback_On_Selection(int selection,HWND pParent)
-{
-	#if 0
-	m_Controls_PlugIn.Callback_On_Selection(selection,pParent);
-	#else
-	using namespace FrameWork;
-	cpp::threadcall_ex( do_not_wait, m_thread, this, &DDraw_Preview::thread_Callback_On_Selection,selection,pParent);
-	#endif
 }
 
 void DDraw_Preview::SetDefaults(LONG XRes,LONG YRes,LONG XPos,LONG YPos)

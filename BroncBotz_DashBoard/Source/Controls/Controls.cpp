@@ -17,8 +17,9 @@ static void DebugOutput(const char *format, ... )
 
 extern HMODULE g_hModule;
 Dashboard_Controller_Interface *g_Controller=NULL;
+DLGPROC g_WinProc;
 
-class DialogBase
+class DialogBase : public MessageBase_Interface
 {
     public:
         DialogBase();
@@ -32,13 +33,11 @@ class DialogBase
 		virtual size_t GetDialogResource() const =0;
 		virtual LPARAM GetInstance() const =0;
 		virtual const wchar_t * const GetTitlePrefix() const =0;
-		virtual int DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam );
-
+		virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
 		HWND        m_hDlg;                     // HWND of Dialog.
     private:
         static int CALLBACK BaseDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
         int OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam );
-		void MessagePump();
 		bool m_IsClosing;
 };
 
@@ -51,7 +50,7 @@ class FileControls : public DialogBase
 		virtual size_t GetDialogResource() const {return IDD_FILE_DIALOG;}
 		virtual LPARAM GetInstance() const {return (LPARAM) this;}
 		virtual const wchar_t * const GetTitlePrefix() const  {return L"File controls for ";}
-		virtual int DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam );
+		virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	private:
 		int m_ScrubValue;
 } *g_pFileControls;
@@ -65,7 +64,7 @@ class ProcampControls : public DialogBase
 		virtual size_t GetDialogResource() const {return IDD_PROCAMP_DIALOG;}
 		virtual LPARAM GetInstance() const {return (LPARAM) this;}
 		virtual const wchar_t * const GetTitlePrefix() const  {return L"Procamp for ";}
-		virtual int DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam );
+		virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	private:
 		int m_ScrubBrightness,m_ScrubContrast;
 } *g_pProcamp;
@@ -93,10 +92,16 @@ int DialogBase::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam )
 
 void DialogBase::OnEndDialog(void)
 {
-	m_IsClosing=true;
+	if (!m_IsClosing)
+	{
+		m_IsClosing=true;
+		::DestroyWindow( m_hDlg ); 
+		m_hDlg=NULL;
+		delete this;
+	}
 }
 
-int DialogBase::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
+long DialogBase::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch(uMsg)
 	{
@@ -105,6 +110,7 @@ int DialogBase::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 		break;
 
 	case WM_CLOSE:
+	case WM_DESTROY:
 		OnEndDialog();
 		break;
 	default:
@@ -113,51 +119,12 @@ int DialogBase::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 	return TRUE;
 }
 
-int CALLBACK DialogBase::BaseDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{
-	DialogBase *pThis_;
-
-	if (uMsg == WM_INITDIALOG)
-	{   
-		pThis_ = (DialogBase*) lParam;
-		pThis_->m_hDlg = hDlg;
-		SetWindowLongPtr( hDlg, GWL_USERDATA, lParam );
-	}
-	else
-	   pThis_ = (DialogBase*) GetWindowLongPtr( hDlg, GWL_USERDATA );
-	
-
-	int Result_=FALSE;
-	if (pThis_)
-		Result_ = pThis_->DlgProc( uMsg, wParam, lParam );
-	return(Result_);
-}
-
-void DialogBase::MessagePump()
-{
-	MSG Msg;
-	do
-	{
-		while(PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE) > 0)
-		{
-			if(!IsDialogMessage(m_hDlg, &Msg))
-			{
-				TranslateMessage(&Msg);
-				DispatchMessage(&Msg);
-			}
-		}
-		Sleep(100);
-	} while ((WM_QUIT != Msg.message)&&(!m_IsClosing));
-	// Close the window
-	::DestroyWindow( m_hDlg ); 
-	m_hDlg=NULL;
-	delete this;
-}
-
 bool DialogBase::Run(HWND pParent)
 {
 	// Display the main dialog box.
-	m_hDlg= CreateDialogParam( g_hModule, MAKEINTRESOURCE(GetDialogResource()), pParent, BaseDlgProc, GetInstance() );
+	m_hDlg= CreateDialog( g_hModule, MAKEINTRESOURCE(GetDialogResource()), pParent, g_WinProc );
+	SetWindowLongPtr(m_hDlg,GWLP_USERDATA, (LONG_PTR)GetInstance());
+
 	bool bResult_=  m_hDlg!=NULL;
 	if (bResult_)
 	{
@@ -168,7 +135,6 @@ bool DialogBase::Run(HWND pParent)
 		SetWindowText(m_hDlg,Name.c_str());
 		ShowWindow(m_hDlg, SW_SHOW);
 	}
-	MessagePump();
 	return (bResult_);
 }
 
@@ -221,7 +187,7 @@ FileControls::~FileControls()
 	g_pFileControls=NULL;
 }
 
-int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
+long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch(uMsg)
 	{
@@ -269,7 +235,7 @@ int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			}
 			break;
 		default:
-			return __super::DlgProc(uMsg,wParam,lParam);
+			return __super::Dispatcher(w_ptr,uMsg,wParam,lParam);
 	}
 	return TRUE;
 }
@@ -288,7 +254,7 @@ ProcampControls::~ProcampControls()
 	g_pProcamp=NULL;
 }
 
-int ProcampControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
+long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch(uMsg)
 	{
@@ -322,7 +288,7 @@ int ProcampControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			}
 			break;
 		default:
-			return __super::DlgProc(uMsg,wParam,lParam);
+			return __super::Dispatcher(w_ptr,uMsg,wParam,lParam);
 	}
 	return TRUE;
 }
@@ -340,9 +306,10 @@ enum MenuSelection
 	eMenu_NoEntries
 };
 
-extern "C" CONTROLS_API void Callback_SmartCppDashboard_Initialize (Dashboard_Controller_Interface *controller)
+extern "C" CONTROLS_API void Callback_SmartCppDashboard_Initialize (Dashboard_Controller_Interface *controller,DLGPROC gWinProc)
 {
 	g_Controller=controller;
+	g_WinProc=gWinProc;
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)

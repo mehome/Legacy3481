@@ -1,4 +1,5 @@
 #pragma once
+
 //Here are the ranges for each
 //brightness	-1.0 - 1.0
 //contrast		 0.0 - 1.0
@@ -35,4 +36,10 @@ public:
 	virtual int SetRate (int)=0;										// set the play speed  (as percentage of normal)
 
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value)=0;
+};
+
+class MessageBase_Interface
+{
+public:
+	virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)=0;
 };

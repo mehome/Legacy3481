@@ -53,9 +53,9 @@ long Window::Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
 	return 0;
 }
 
-long CALLBACK Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
+int CALLBACK Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
 {
-	Window *BaseClass=(Window*)GetWindowLongPtr(window,GWLP_USERDATA);		
+	MessageBase *BaseClass=(MessageBase*)GetWindowLongPtr(window,GWLP_USERDATA);		
 	long ret;
 	if (BaseClass) 
 	{
@@ -69,6 +69,11 @@ long CALLBACK Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l)
 		ret=DefWindowProc(window,message,w,l);
 	}
 	return ret;
+}
+
+DLGPROC Window::GetDispatcherBase()
+{
+	return ::Dispatcher;
 }
 
 // Converts a GUID to a string

@@ -1,6 +1,11 @@
 #pragma once
+class MessageBase 
+{
+public:
+	virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)=0;
+};
 
-struct Window
+struct Window : public MessageBase
 {				// Constructor
 				Window( HWND Parent=NULL , const bool IsPopup=true , 
 						const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL );
@@ -12,7 +17,7 @@ struct Window
 				operator HWND( void );
 
 				virtual long Dispatcher(HWND window,UINT message, WPARAM w,LPARAM l);
-
+				DLGPROC GetDispatcherBase();
 protected:
 				virtual void InitializeWindow() {}  //override to do special customization to window once its created
 				HWND	m_hWnd;

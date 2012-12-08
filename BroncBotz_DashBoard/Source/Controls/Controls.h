@@ -10,7 +10,7 @@
 extern "C"
 {
 	//callbacks
-	CONTROLS_API void Callback_SmartCppDashboard_Initialize(Dashboard_Controller_Interface *controller);
+	CONTROLS_API void Callback_SmartCppDashboard_Initialize(Dashboard_Controller_Interface *controller,DLGPROC gWinProc);
 	CONTROLS_API void Callback_SmartCppDashboard_Shutdown();
 	/// Populate your own menu items to be appended to the default menu
 	/// \param StartingOffset you must start your enum entries with this starting offset (this ensures it will not conflict with the existing entries)
