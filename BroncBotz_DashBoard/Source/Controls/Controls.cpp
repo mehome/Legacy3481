@@ -17,7 +17,6 @@ static void DebugOutput(const char *format, ... )
 
 extern HMODULE g_hModule;
 Dashboard_Controller_Interface *g_Controller=NULL;
-HWND g_hDialogHWND=NULL;
 
 class DialogBase
 {
@@ -34,9 +33,9 @@ class DialogBase
 		virtual LPARAM GetInstance() const =0;
 		virtual const wchar_t * const GetTitlePrefix() const =0;
 		virtual int DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam );
+
+		HWND        m_hDlg;                     // HWND of Dialog.
     private:
-        HWND        m_hDlg;                     // HWND of Dialog.
-		
         static int CALLBACK BaseDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
         int OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam );
 		void MessagePump();
@@ -47,6 +46,7 @@ class FileControls : public DialogBase
 {
 	public:
 		FileControls();
+		~FileControls();
 	protected:
 		virtual size_t GetDialogResource() const {return IDD_FILE_DIALOG;}
 		virtual LPARAM GetInstance() const {return (LPARAM) this;}
@@ -56,6 +56,19 @@ class FileControls : public DialogBase
 		int m_ScrubValue;
 } *g_pFileControls;
 
+class ProcampControls : public DialogBase
+{
+	public:
+		ProcampControls();
+		~ProcampControls();
+	protected:
+		virtual size_t GetDialogResource() const {return IDD_PROCAMP_DIALOG;}
+		virtual LPARAM GetInstance() const {return (LPARAM) this;}
+		virtual const wchar_t * const GetTitlePrefix() const  {return L"Procamp for ";}
+		virtual int DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam );
+	private:
+		int m_ScrubBrightness,m_ScrubContrast;
+} *g_pProcamp;
 
   /***********************************************************************************************************************/
  /*														DialogBase														*/
@@ -127,7 +140,7 @@ void DialogBase::MessagePump()
 	{
 		while(PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE) > 0)
 		{
-			if(!IsDialogMessage(g_hDialogHWND, &Msg))
+			if(!IsDialogMessage(m_hDlg, &Msg))
 			{
 				TranslateMessage(&Msg);
 				DispatchMessage(&Msg);
@@ -136,25 +149,24 @@ void DialogBase::MessagePump()
 		Sleep(100);
 	} while ((WM_QUIT != Msg.message)&&(!m_IsClosing));
 	// Close the window
-	::DestroyWindow( g_hDialogHWND ); 
-	g_hDialogHWND=NULL;
-	g_pFileControls=NULL;
+	::DestroyWindow( m_hDlg ); 
+	m_hDlg=NULL;
 	delete this;
 }
 
 bool DialogBase::Run(HWND pParent)
 {
 	// Display the main dialog box.
-	g_hDialogHWND= CreateDialogParam( g_hModule, MAKEINTRESOURCE(GetDialogResource()), pParent, BaseDlgProc, GetInstance() );
-	bool bResult_=  g_hDialogHWND!=NULL;
+	m_hDlg= CreateDialogParam( g_hModule, MAKEINTRESOURCE(GetDialogResource()), pParent, BaseDlgProc, GetInstance() );
+	bool bResult_=  m_hDlg!=NULL;
 	if (bResult_)
 	{
 		wchar_t Buffer[128];
 		GetWindowText(pParent,Buffer,128);
 		std::wstring Name=GetTitlePrefix();
 		Name+=Buffer;
-		SetWindowText(g_hDialogHWND,Name.c_str());
-		ShowWindow(g_hDialogHWND, SW_SHOW);
+		SetWindowText(m_hDlg,Name.c_str());
+		ShowWindow(m_hDlg, SW_SHOW);
 	}
 	MessagePump();
 	return (bResult_);
@@ -204,6 +216,11 @@ FileControls::FileControls() : m_ScrubValue(0)
 {
 }
 
+FileControls::~FileControls()
+{
+	g_pFileControls=NULL;
+}
+
 int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	switch(uMsg)
@@ -242,7 +259,7 @@ int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 				ZeroMemory(&si,sizeof(SCROLLINFO));
 				si.nMax=100;
 
-				if (hWndScroller==GetDlgItem(g_hDialogHWND, IDC_SCRUB))
+				if (hWndScroller==GetDlgItem(m_hDlg, IDC_SCRUB))
 				{
 					si.nPos=m_ScrubValue;
 					ScrollAdjust(wParam,si);
@@ -257,6 +274,58 @@ int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 	return TRUE;
 }
 
+  /***********************************************************************************************************************/
+ /*														ProcampControls													*/
+/***********************************************************************************************************************/
+
+ProcampControls::ProcampControls() : m_ScrubBrightness(0),m_ScrubContrast(0)
+{
+
+}
+
+ProcampControls::~ProcampControls()
+{
+	g_pProcamp=NULL;
+}
+
+int ProcampControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
+{
+	switch(uMsg)
+	{
+		case WM_COMMAND: 
+			break;
+		case WM_HSCROLL:
+			{
+				HWND hWndScroller=(HWND)lParam;
+				SCROLLINFO si;
+				ZeroMemory(&si,sizeof(SCROLLINFO));
+				si.nMax=100;
+
+				if (hWndScroller==GetDlgItem(m_hDlg, IDC_SliderBrightness))
+				{
+					si.nPos=m_ScrubBrightness;
+					ScrollAdjust(wParam,si);
+					m_ScrubBrightness=si.nPos;
+					DebugOutput("Brightness= %d\n",m_ScrubBrightness);
+					double value=(m_ScrubBrightness-50) * 0.02;
+					g_Controller->Set_ProcAmp(e_procamp_brightness,value);
+				}
+				if (hWndScroller==GetDlgItem(m_hDlg, IDC_SliderContrast))
+				{
+					si.nPos=m_ScrubContrast;
+					ScrollAdjust(wParam,si);
+					m_ScrubContrast=si.nPos;
+					DebugOutput("Contrast= %d\n",m_ScrubContrast);
+					double value=(m_ScrubContrast) * 0.04;
+					g_Controller->Set_ProcAmp(e_procamp_contrast,value);
+				}
+			}
+			break;
+		default:
+			return __super::DlgProc(uMsg,wParam,lParam);
+	}
+	return TRUE;
+}
 
   /***********************************************************************************************************************/
  /*													C Global functions													*/
@@ -267,6 +336,7 @@ enum MenuSelection
 {
 	eMenu_NoSelection,
 	eMenu_Controls,
+	eMenu_Procamp,
 	eMenu_NoEntries
 };
 
@@ -282,15 +352,16 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPop
 	{
 		InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_SEPARATOR, eMenu_NoSelection, NULL);
 		InsertMenu(hPopupMenu, -1, (g_pFileControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Controls+StartingOffset, L"File Controls...");
+		InsertMenu(hPopupMenu, -1, (g_pProcamp?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Procamp+StartingOffset, L"Procamp...");
 	}
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selection,HWND pParent)
 {
+	DebugOutput("Selection=%d\n",selection);
 	switch (selection)
 	{
 		case eMenu_Controls:
-			DebugOutput("Selection=%d\n",selection);
 			if (!g_pFileControls)
 			{
 				g_pFileControls=new FileControls;
@@ -302,6 +373,18 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 				assert(false);
 			}
 			break;
+		case eMenu_Procamp:
+			if (!g_pProcamp)
+			{
+				g_pProcamp=new ProcampControls;
+				g_pProcamp->Run(pParent);
+			}
+			else
+			{
+				DebugOutput("Procamp Dialog already running\n");
+				assert(false);
+			}
+			break;
 	}
 }
 
@@ -310,4 +393,6 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_Shutdown()
 	//Just signal... it will destroy itself from within the message pump
 	if (g_pFileControls)
 		g_pFileControls->OnEndDialog();
+	if (g_pProcamp)
+		g_pProcamp->OnEndDialog();
 }

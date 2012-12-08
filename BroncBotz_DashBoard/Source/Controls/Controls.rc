@@ -65,6 +65,19 @@ BEGIN
     PUSHBUTTON      "...",IDC_BROWSE,113,19,20,14
 END
 
+IDD_PROCAMP_DIALOG DIALOGEX 0, 0, 244, 127
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Property Page"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Brightness",IDC_LabelBrightness,16,23,34,11
+    CONTROL         "",IDC_SliderBrightness,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,21,100,15
+    EDITTEXT        IDC_EditBrightness,62,21,40,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderContrast,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,43,100,15
+    EDITTEXT        IDC_EditContrast,63,43,40,14,ES_AUTOHSCROLL
+    LTEXT           "Contrast",IDC_LabelContrast,20,45,29,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -80,6 +93,14 @@ BEGIN
         RIGHTMARGIN, 188
         TOPMARGIN, 7
         BOTTOMMARGIN, 106
+    END
+
+    IDD_PROCAMP_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 237
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 120
     END
 END
 #endif    // APSTUDIO_INVOKED
