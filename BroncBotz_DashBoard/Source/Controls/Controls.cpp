@@ -45,11 +45,15 @@ class DialogBase
 
 class FileControls : public DialogBase
 {
+	public:
+		FileControls();
 	protected:
 		virtual size_t GetDialogResource() const {return IDD_FILE_DIALOG;}
 		virtual LPARAM GetInstance() const {return (LPARAM) this;}
 		virtual const wchar_t * const GetTitlePrefix() const  {return L"File controls for ";}
 		virtual int DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam );
+	private:
+		int m_ScrubValue;
 } *g_pFileControls;
 
 
@@ -157,9 +161,48 @@ bool DialogBase::Run(HWND pParent)
 }
 
 
+//Agghhh this is not perfect but gets the job done... we have to keep track of our own adjustments since the GetScrollInfo() is not working
+//  [12/7/2012 James]
+static void ScrollAdjust(WPARAM wParam,SCROLLINFO &si,int numrows=20)
+{
+	switch (LOWORD(wParam)) 
+	{
+		case SB_LINEDOWN: //Scrolls one line down. 
+			//if (si.nPos+(numrows-1)<si.nMax) si.nPos+=1;
+			if (si.nPos<si.nMax) si.nPos+=1;
+			break;
+		case SB_LINEUP: //Scrolls one line up. 
+			if (si.nPos>0) si.nPos-=1;
+			break;
+		case SB_PAGEDOWN: //Scrolls one page down. 
+			//if (numrows+si.nPos<si.nMax-(numrows-1))
+			//	si.nPos+=numrows;
+			//else
+			//	si.nPos=si.nMax-(numrows-1);
+			si.nPos+=numrows;
+			if (si.nPos>si.nMax)
+				si.nPos=si.nMax;
+			break;
+		case SB_PAGEUP: //Scrolls one page up. 
+			si.nPos-=numrows;
+			if (si.nPos<si.nMin)
+				si.nPos=si.nMin;
+			break;
+		case SB_THUMBTRACK: 
+			si.nPos=HIWORD(wParam);
+			break;
+	} //End switch
+}
+
+
   /***********************************************************************************************************************/
  /*														FileControls													*/
 /***********************************************************************************************************************/
+
+
+FileControls::FileControls() : m_ScrubValue(0)
+{
+}
 
 int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
@@ -194,34 +237,17 @@ int FileControls::DlgProc( UINT uMsg, WPARAM wParam, LPARAM lParam )
 			break;
 		case WM_HSCROLL:
 			{
-				WORD pos = HIWORD(wParam);
-				WORD TB_Type = LOWORD(wParam);
-				if ((HWND)lParam==GetDlgItem(g_hDialogHWND,IDC_SCRUB))
+				HWND hWndScroller=(HWND)lParam;
+				SCROLLINFO si;
+				ZeroMemory(&si,sizeof(SCROLLINFO));
+				si.nMax=100;
+
+				if (hWndScroller==GetDlgItem(g_hDialogHWND, IDC_SCRUB))
 				{
-					switch (TB_Type)
-					{
-					case SB_THUMBPOSITION:
-					case SB_THUMBTRACK:
-						DebugOutput("Position=%d %d\n",pos,lParam);
-						if (false)
-						{
-							double test=(double)(pos-50)*.01;
-							g_Controller->Set_ProcAmp(e_procamp_brightness,test);
-						}
-						break;
-
-					case SB_ENDSCROLL: // Ends scroll. 
-					case SB_LEFT: //Scrolls to the upper left. 
-					case SB_RIGHT: //Scrolls to the lower right. 
-					case SB_LINELEFT: //Scrolls left by one unit. 
-					case SB_LINERIGHT: //Scrolls right by one unit. 
-					case SB_PAGELEFT: //Scrolls left by the width of the window. 
-					case SB_PAGERIGHT:
-						LRESULT dwPos = SendMessage((HWND)lParam, SBM_GETPOS, 0, 0); 
-						DebugOutput("Position= %d %d\n",pos,lParam);
-						break;
-
-					}
+					si.nPos=m_ScrubValue;
+					ScrollAdjust(wParam,si);
+					m_ScrubValue=si.nPos;
+					DebugOutput("Position= %d\n",m_ScrubValue);
 				}
 			}
 			break;
