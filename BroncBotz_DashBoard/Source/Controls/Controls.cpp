@@ -70,7 +70,7 @@ class ProcampControls : public DialogBase
 		virtual const wchar_t * const GetTitlePrefix() const  {return L"Procamp for ";}
 		virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	private:
-		int m_ScrubBrightness,m_ScrubContrast;
+		double m_ProcAmpValues[e_no_procamp_items];  
 } *g_pProcamp;
 
   /***********************************************************************************************************************/
@@ -80,13 +80,12 @@ class ProcampControls : public DialogBase
 
 DialogBase::DialogBase() : m_IsClosing(false)
 {
-	DebugOutput("DialogBase() starting %p",this);
+	//DebugOutput("DialogBase() starting %p\n",this);
 }
 
 DialogBase::~DialogBase(void)
 {
-	//Note: Do not use PostQuitMessage... as this will force app to exit early... instead just use a bool to stop the message pump
-	DebugOutput("~DialogBase() ending %p",this);
+	//DebugOutput("~DialogBase() ending %p\n",this);
 }
 
 int DialogBase::OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam )
@@ -248,22 +247,111 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
  /*														ProcampControls													*/
 /***********************************************************************************************************************/
 
-ProcampControls::ProcampControls() : m_ScrubBrightness(0),m_ScrubContrast(0)
+//These should never change
+const double c_procamp_NonCalibrated_brightness	= 0.0;
+const double c_procamp_NonCalibrated_contrast	= 1.0;
+const double c_procamp_NonCalibrated_hue		= 0.0;
+const double c_procamp_NonCalibrated_saturation	= 1.0;
+const double c_procamp_NonCalibrated_u_offset	= 0.0;
+const double c_procamp_NonCalibrated_v_offset	= 0.0;
+const double c_procamp_NonCalibrated_u_gain		= 1.0;
+const double c_procamp_NonCalibrated_v_gain		= 1.0;
+
+double ProcAmp_Defaults[e_no_procamp_items]=
 {
+	c_procamp_NonCalibrated_brightness,
+	c_procamp_NonCalibrated_contrast,
+	c_procamp_NonCalibrated_hue,
+	c_procamp_NonCalibrated_saturation,
+	c_procamp_NonCalibrated_u_offset,
+	c_procamp_NonCalibrated_v_offset,
+	c_procamp_NonCalibrated_u_gain,
+	c_procamp_NonCalibrated_v_gain,
+	0.0, //pedestal
+};
+
+//These entries correspond to the ProcAmp enumeration... where -1 is used for all entries not supported
+static size_t s_ProcampResourceTable[]=
+{
+	IDC_SliderBrightness,
+	IDC_SliderContrast,
+	-1,-1,
+	-1,-1,-1,-1,
+	-1
+};
+
+const int c_MaxTrackbarRange=100;
+const int c_HalfTrackbarMaxRange=c_MaxTrackbarRange>>1;
+
+static int GetTrackerBarPos(double Input,ProcAmp_enum setting)
+{
+	int Position=0;
+	switch (setting)
+	{
+		//-1 to 1 range
+		case e_procamp_brightness:
+		case e_procamp_u_offset:
+		case e_procamp_v_offset:
+			Position= (int)((Input + 1.0) * (double)c_HalfTrackbarMaxRange);
+			break;
+		case e_procamp_contrast:
+		case e_procamp_saturation:
+		case e_procamp_u_gain:
+		case e_procamp_v_gain:
+			Position = (int)(Input * 0.25 * (double)c_MaxTrackbarRange);
+			break;
+	}
+	return Position;
+}
+
+static double GetTrackerBarValue (int Position,ProcAmp_enum setting)
+{
+	double Value=0.0;
+	assert((Position>=0) && (Position<=c_MaxTrackbarRange));
+	double ScaledPosition=(double)Position/c_MaxTrackbarRange; //converted to a proportion value from 0-1
+	switch (setting)
+	{
+		//-1 to 1 range
+	case e_procamp_brightness:
+	case e_procamp_u_offset:
+	case e_procamp_v_offset:
+		Value= (ScaledPosition - 0.5) * 2.0;
+		break;
+	case e_procamp_contrast:
+	case e_procamp_saturation:
+	case e_procamp_u_gain:
+	case e_procamp_v_gain:
+		Value=(ScaledPosition) * 4.0;  
+		break;
+	}
+	return Value;
+}
+
+ProcampControls::ProcampControls()
+{
+	for (size_t i=0;i<e_no_procamp_items;i++)
+		m_ProcAmpValues[i]=ProcAmp_Defaults[i];
+	//TO BLS load values here
 }
 
 bool ProcampControls::Run(HWND pParent)
 {
 	bool ret=__super::Run(pParent);
-	HWND hWndScroller=GetDlgItem(m_hDlg, IDC_SliderBrightness);
-	//SetScrollPos(hWndScroller,SB_HORZ,50,true);
-	SendMessage(hWndScroller,SBM_SETPOS,TRUE,50);
+	for (int i=0;i<e_no_procamp_items;i++)
+	{
+		if (s_ProcampResourceTable[i]!=-1)
+		{
+			HWND hWndScroller=GetDlgItem(m_hDlg, s_ProcampResourceTable[i]);
+			SendMessage(hWndScroller,TBM_SETPOS,TRUE,GetTrackerBarPos(m_ProcAmpValues[i],(ProcAmp_enum)i));
+		}
+	}
 	return ret;
 }
 
 ProcampControls::~ProcampControls()
 {
 	g_pProcamp=NULL;
+	//TODO BLS save values here
 }
 
 long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
@@ -275,28 +363,16 @@ long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPara
 		case WM_HSCROLL:
 			{
 				HWND hWndScroller=(HWND)lParam;
-				SCROLLINFO si;
-				ZeroMemory(&si,sizeof(SCROLLINFO));
-				si.nMax=100;
-
-				if (hWndScroller==GetDlgItem(m_hDlg, IDC_SliderBrightness))
+				for (size_t i=0;i<e_no_procamp_items;i++)
 				{
-					//si.nPos=m_ScrubBrightness;
-					//ScrollAdjust(wParam,si);
-					//m_ScrubBrightness=si.nPos;
-					m_ScrubBrightness=SendMessage(hWndScroller,TBM_GETPOS,0,0);
-					DebugOutput("Brightness= %d\n",m_ScrubBrightness);
-					double value=(m_ScrubBrightness-50) * 0.02;
-					g_Controller->Set_ProcAmp(e_procamp_brightness,value);
-				}
-				if (hWndScroller==GetDlgItem(m_hDlg, IDC_SliderContrast))
-				{
-					si.nPos=m_ScrubContrast;
-					ScrollAdjust(wParam,si);
-					m_ScrubContrast=si.nPos;
-					DebugOutput("Contrast= %d\n",m_ScrubContrast);
-					double value=(m_ScrubContrast) * 0.04;
-					g_Controller->Set_ProcAmp(e_procamp_contrast,value);
+					if ((s_ProcampResourceTable[i]!=-1)&&(hWndScroller==GetDlgItem(m_hDlg, s_ProcampResourceTable[i])))
+					{
+						int position=SendMessage(hWndScroller,TBM_GETPOS,0,0);
+						DebugOutput("setting[%d]= %d\n",i,position);
+						m_ProcAmpValues[i]=GetTrackerBarValue(position,(ProcAmp_enum)i);
+						g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
+						break;
+					}
 				}
 			}
 			break;

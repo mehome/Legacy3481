@@ -2,13 +2,13 @@
 
 //Here are the ranges for each
 //brightness	-1.0 - 1.0
-//contrast		 0.0 - 1.0
+//contrast		 0.0 - 1.0 (unity) - about 4.0
 //hue		  -180.0 - 180.0
-//saturation     0.0 - 1.0
+//saturation     0.0 - 1.0 (unity) - about 4.0
 //u_offset		-1.0 - 1.0
 //v_offset		-1.0 - 1.0
-//u_gain		 0.0 - 1.0
-//v_gain	 	 0.0 - 1.0
+//u_gain		 0.0 - 1.0 (unity) - about 4.0
+//v_gain	 	 0.0 - 1.0 (unity) - about 4.0
 
 
 enum ProcAmp_enum
