@@ -281,7 +281,7 @@ bool Procamp_Manager::Set_ProcAmp(ProcAmp_enum ProcSetting,double value)
 			m_SDI_Matrix.contrast()=(float)value;
 			break;
 		case e_procamp_hue:
-			//This gets the hue in the right direction for software matrix.  I'll need to check again for hardware support
+			//This gets the hue in the right direction for software matrix.
 			m_SDI_Matrix.hue()=(float)(value*-1.0);
 			break;
 		case e_procamp_saturation:
@@ -311,6 +311,39 @@ bool Procamp_Manager::Set_ProcAmp(ProcAmp_enum ProcSetting,double value)
 	return ret;
 }
 
+double Procamp_Manager::Get_ProcAmp(ProcAmp_enum ProcSetting) const
+{
+	double ret=0.0;
+	switch (ProcSetting)
+	{
+	case e_procamp_brightness:
+		ret=m_SDI_Matrix.brightness();
+		break;
+	case e_procamp_contrast:
+		ret=m_SDI_Matrix.contrast();
+		break;
+	case e_procamp_hue:
+		//This gets the hue in the right direction for software matrix.
+		ret=m_SDI_Matrix.hue()*-1.0f;
+		break;
+	case e_procamp_saturation:
+		ret=m_SDI_Matrix.saturation();
+		break;
+	case e_procamp_u_offset:
+		ret=m_SDI_Matrix.u_offset();
+		break;
+	case e_procamp_v_offset:
+		ret=m_SDI_Matrix.v_offset();
+		break;
+	case e_procamp_u_gain:
+		ret=m_SDI_Matrix.u_gain();
+		break;
+	case e_procamp_v_gain:
+		ret=m_SDI_Matrix.v_gain();
+		break;
+	}
+	return ret;
+}
 
 void Procamp_Manager::operator()(FrameWork::Bitmaps::bitmap_ycbcr_u8 &apply_to_bitmap)
 {

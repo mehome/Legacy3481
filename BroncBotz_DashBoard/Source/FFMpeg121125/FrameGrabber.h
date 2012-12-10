@@ -188,4 +188,5 @@ protected:
 	int Seek (double, double,  bool scrubbing =false);		// seek to start/stop positions (in seconds)
 	int SetRate (int);										// set the play speed  (as percentage of normal)
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);
+	virtual double Get_ProcAmp(ProcAmp_enum ProcSetting) const;
 };

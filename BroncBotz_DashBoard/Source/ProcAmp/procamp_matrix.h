@@ -154,6 +154,7 @@ class Procamp_Manager
 	public:
 		Procamp_Manager();
 		bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);
+		double Get_ProcAmp(ProcAmp_enum ProcSetting) const;
 		//Client code can check for NULL to setup in an optimized fashion
 		typedef float color_matrix[ 3 ][ 4 ];
 		virtual const color_matrix *Get_Procamp_Matrix() const {return m_MatrixToSend;}

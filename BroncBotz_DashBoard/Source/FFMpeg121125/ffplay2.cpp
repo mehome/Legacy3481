@@ -4112,3 +4112,9 @@ bool FFPlay_Controller::Set_ProcAmp(ProcAmp_enum ProcSetting,double value)
 	VideoState * is=(VideoState *)m_VideoStream;
 	return is->procamp->Set_ProcAmp(ProcSetting,value);
 }
+
+double FFPlay_Controller::Get_ProcAmp(ProcAmp_enum ProcSetting) const
+{
+	VideoState * is=(VideoState *)m_VideoStream;
+	return is->procamp->Get_ProcAmp(ProcSetting);
+}

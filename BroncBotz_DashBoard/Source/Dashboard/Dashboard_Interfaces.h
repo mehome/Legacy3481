@@ -36,6 +36,7 @@ public:
 	virtual int SetRate (int)=0;										// set the play speed  (as percentage of normal)
 
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value)=0;
+	virtual double Get_ProcAmp(ProcAmp_enum ProcSetting) const=0;
 };
 
 class MessageBase_Interface
