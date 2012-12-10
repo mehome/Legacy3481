@@ -220,6 +220,32 @@ static double GetValueForFormattedString(wchar_t Input[],ProcAmp_enum setting)
 	return ret;
 }
 
+const char * const csz_Filename="ProcAmp.ini";
+
+void ProcAmp_Initialize()
+{
+	using namespace std;
+	string InFile = csz_Filename;
+	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
+	if (in.is_open())
+	{
+		const size_t NoEnties=e_no_procamp_items;
+		string StringEntry[e_no_procamp_items<<1];
+		{
+			char Buffer[1024];
+			for (size_t i=0;i<NoEnties;i++)
+			{
+				in>>StringEntry[i<<1];
+				in.getline(Buffer,1024);
+				StringEntry[(i<<1)+1]=Buffer;
+			}
+		}
+		in.close();
+		for (size_t i=0;i<8;i++)
+			g_Controller->Set_ProcAmp((ProcAmp_enum)i,atof(StringEntry[(i<<1)+1].c_str()));
+	}
+}
+
 ProcampControls::ProcampControls()
 {
 	for (size_t i=0;i<e_no_procamp_items;i++)
@@ -229,7 +255,50 @@ ProcampControls::ProcampControls()
 		m_UpdatingEdit[i]=false;
 		m_UpdatingSlider[i]=false;
 	}
-	//TO BLS load values here
+	//Now to load procamp values from .ini (if it exists)
+	using namespace std;
+	string InFile = csz_Filename;
+	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
+	if (in.is_open())
+	{
+		const size_t NoEnties=e_no_procamp_items;
+		string StringEntry[e_no_procamp_items<<1];
+		{
+			char Buffer[1024];
+			for (size_t i=0;i<NoEnties;i++)
+			{
+				in>>StringEntry[i<<1];
+				in.getline(Buffer,1024);
+				StringEntry[(i<<1)+1]=Buffer;
+			}
+		}
+		in.close();
+		for (size_t i=0;i<8;i++)
+		{
+			m_ProcAmpValues[i]=atof(StringEntry[(i<<1)+1].c_str());
+		}
+	}
+}
+
+ProcampControls::~ProcampControls()
+{
+	using namespace std;
+	g_pProcamp=NULL;
+	string OutFile = csz_Filename;
+	string output;
+
+	ofstream out(OutFile.c_str(), std::ios::out );
+	//this is unrolled to look pretty... :)
+	out << "Brightness= " << m_ProcAmpValues[0] << endl;
+	out << "contrast= " << m_ProcAmpValues[1] << endl;
+	out << "Hue= " << m_ProcAmpValues[2] << endl;
+	out << "Saturation= " << m_ProcAmpValues[3] << endl;
+	out << "U_Offset= " << m_ProcAmpValues[4] << endl;
+	out << "V_Offset= " << m_ProcAmpValues[5] << endl;
+	out << "U_Gain= " << m_ProcAmpValues[6] << endl;
+	out << "V_Gain= " << m_ProcAmpValues[7] << endl;
+	out << "Pedestal= " << m_ProcAmpValues[8] << endl;
+	out.close();
 }
 
 void ProcampControls::UpdateText(ProcAmp_enum setting, bool ForceUpdate)
@@ -270,12 +339,6 @@ bool ProcampControls::Run(HWND pParent)
 		UpdateText((ProcAmp_enum)i,true);
 	}
 	return ret;
-}
-
-ProcampControls::~ProcampControls()
-{
-	g_pProcamp=NULL;
-	//TODO BLS save values here
 }
 
 long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)

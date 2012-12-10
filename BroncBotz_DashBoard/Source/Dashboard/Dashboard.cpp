@@ -151,16 +151,19 @@ class DDraw_Preview
 			function_On_Selection m_fpOn_Selection;
 			typedef void (*function_Initialize) (Dashboard_Controller_Interface *controller,DLGPROC gWinProc);
 			function_Initialize m_fpInitialize;
-			typedef void (*function_Shutdown) ();
-			function_Shutdown m_fpShutdown;
+			typedef void (*function_void) ();
+			function_void m_fpShutdown;
+			function_void m_fpStartedStreaming;
 
 			void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {if (m_PlugIn) (*m_fpAddMenuItems)(hPopupMenu,StartingOffset);}
 			void Callback_On_Selection(int selection,HWND pParent) {if (m_PlugIn) (*m_fpOn_Selection)(selection,pParent);}
 			void Callback_Initialize(Dashboard_Controller_Interface *controller,DLGPROC gWinProc) {if (m_PlugIn) (*m_fpInitialize)(controller,gWinProc);}
+			void Callback_StartedStreaming() {if (m_PlugIn) (*m_fpStartedStreaming)();}
 			void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
 
 		} m_Controls_PlugIn;
 		void Callback_Initialize(Dashboard_Controller_Interface *controller,DLGPROC gWinProc) {m_Controls_PlugIn.Callback_Initialize(controller,gWinProc);}
+		void Callback_StartedStreaming() {m_Controls_PlugIn.Callback_StartedStreaming();}
 		void Callback_Shutdown() {m_Controls_PlugIn.Callback_Shutdown();}
 
 		void Reset();
@@ -532,8 +535,10 @@ void DDraw_Preview::Controls_Plugin::LoadPlugIn(const wchar_t Plugin[])
 			if (!m_fpOn_Selection) throw 1;
 			m_fpInitialize=(function_Initialize) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Initialize");
 			if (!m_fpInitialize) throw 2;
-			m_fpShutdown=(function_Shutdown) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
+			m_fpShutdown=(function_void) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
 			if (!m_fpShutdown) throw 3;
+			m_fpStartedStreaming=(function_void) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_StartedStreaming");
+			if (!m_fpStartedStreaming) throw 4;
 		}
 		catch (int ErrorCode)
 		{
@@ -638,6 +643,7 @@ void DDraw_Preview::StartStreaming()
 		//Now to start the frame grabber
 		m_FrameGrabber.StartStreaming();
 		m_ProcessingVision.StartStreaming();
+		Callback_StartedStreaming();
 	}
 
 }

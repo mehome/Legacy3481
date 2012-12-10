@@ -17,6 +17,7 @@ DLGPROC g_WinProc;
 
 DialogBase *g_pProcamp;
 DialogBase *CreateProcampDialog();
+void ProcAmp_Initialize();
 
 class FileControls : public DialogBase
 {
@@ -221,6 +222,11 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_Initialize (Dashboard_Co
 {
 	g_Controller=controller;
 	g_WinProc=gWinProc;
+}
+
+extern "C" CONTROLS_API void Callback_SmartCppDashboard_StartedStreaming()
+{
+	ProcAmp_Initialize();
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
