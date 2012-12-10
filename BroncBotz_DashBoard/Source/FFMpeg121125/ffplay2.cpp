@@ -1288,7 +1288,7 @@ static double compute_target_delay(double delay, VideoState *is)
 {
     double sync_threshold, diff;
 
-    /* update delay to follow master synchronisation source */
+    /* update delay to follow master synchronization source */
     if (get_master_sync_type(is) != AV_SYNC_VIDEO_MASTER) {
         /* if video is slave, we try to correct big delays by
            duplicating or deleting a frame */
@@ -1775,8 +1775,49 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
 
 		//FrameWork::DebugOutput("vq=%d              \r",is->videoq.nb_packets);
 
+		//VideoPicture vp;
+		//vp.pts = pts;
+		//vp.pos = pos;
+		//vp.skip = 0;
+		//vp.serial = serial;
+
+		// compute nominal last_duration
+		double last_duration = pts - is->frame_last_pts;
+		if (last_duration > 0 && last_duration < 10.0) {
+			/* if duration of the last frame was sane, update last_duration in video state */
+			is->frame_last_duration = last_duration;
+		}
+		double delay = compute_target_delay(is->frame_last_duration, is);
+
+		double time= av_gettime()/1000000.0;
+		if ((time > is->frame_timer + delay) && (delay > 0))
+		{
+			is->frame_timer += delay * FFMAX(1, floor((time-is->frame_timer) / delay));
+		}
+
+		//double diff=delay - (time-is->frame_timer);
+		double TimeDelta;
+		{
+			using namespace FrameWork;
+			static time_type LastTime=(0.0);
+			time_type currenttime=time_type::get_current_time();
+			time_type delta = currenttime-LastTime;
+			TimeDelta=(double)delta;
+			LastTime=currenttime;
+		}
+		if ((is->frame_last_duration-TimeDelta)<0.002)
+			TimeDelta=0.0;
+		double diff=is->frame_last_duration - TimeDelta;
+		FrameWork::DebugOutput("%f\n",TimeDelta);
+
+		if (diff>0.0)
+		{
+			//FrameWork::DebugOutput("%f\n",diff);
+			Sleep((DWORD)(diff*1000.0)); //TODO figure out the timing
+		}
+
 		//ShowTimeDelta("dispatch_picture",false);
-		//Sleep(16); //TODO figure out the timing
+		update_video_pts(is, pts, pos, serial);
     }
     return 0;
 }
@@ -2673,6 +2714,7 @@ static int is_realtime(AVFormatContext *s)
     if(   !strcmp(s->iformat->name, "rtp")
        || !strcmp(s->iformat->name, "rtsp")
        || !strcmp(s->iformat->name, "sdp")
+	   || !strcmp(s->iformat->name, "http")  //TODO see about determining http being realtime or not -James
     )
         return 1;
 
