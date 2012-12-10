@@ -199,7 +199,10 @@ ProcampControls::ProcampControls()
 {
 	for (size_t i=0;i<e_no_procamp_items;i++)
 	{
-		m_ProcAmpValues[i]=ProcAmp_Defaults[i];
+		//TODO move the defaults to a restore defaults implementation
+		//m_ProcAmpValues[i]=ProcAmp_Defaults[i];
+		//This will obtain the value that was written to the matrix (handles reopening dialog to correct values)
+		m_ProcAmpValues[i]=g_Controller->Get_ProcAmp((ProcAmp_enum)i);
 		m_UpdatingEdit[i]=false;
 		m_UpdatingSlider[i]=false;
 	}
@@ -298,7 +301,8 @@ long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPara
 				HWND hWndScroller=(HWND)lParam;
 				for (size_t i=0;i<e_no_procamp_items;i++)
 				{
-					if ((s_ProcampResourceTable_TrackerBar[i]!=-1)&&(hWndScroller==GetDlgItem(m_hDlg, s_ProcampResourceTable_TrackerBar[i])))
+					if ((!m_UpdatingSlider[i]) &&
+						(s_ProcampResourceTable_TrackerBar[i]!=-1)&&(hWndScroller==GetDlgItem(m_hDlg, s_ProcampResourceTable_TrackerBar[i])))
 					{
 						int position=SendMessage(hWndScroller,TBM_GETPOS,0,0);
 						DebugOutput("setting[%d]= %d\n",i,position);
