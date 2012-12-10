@@ -65,7 +65,7 @@ BEGIN
     PUSHBUTTON      "...",IDC_BROWSE,113,19,20,14
 END
 
-IDD_PROCAMP_DIALOG DIALOGEX 0, 0, 244, 127
+IDD_PROCAMP_DIALOG DIALOGEX 0, 0, 441, 149
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Property Page"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
@@ -76,6 +76,25 @@ BEGIN
     CONTROL         "",IDC_SliderContrast,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,43,100,15
     EDITTEXT        IDC_EditContrast,63,43,40,14,ES_AUTOHSCROLL
     LTEXT           "Contrast",IDC_LabelContrast,20,45,29,8
+    LTEXT           "Hue",IDC_LabelHue,26,67,24,11
+    CONTROL         "",IDC_SliderHue,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,64,100,15
+    EDITTEXT        IDC_EditHue,61,64,42,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderSaturation,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,86,100,15
+    EDITTEXT        IDC_EditSaturation,63,86,40,14,ES_AUTOHSCROLL
+    LTEXT           "Saturation",IDC_LabelSaturation,19,88,34,8
+    LTEXT           "U Offset",IDC_LabelU_Offset,221,24,34,11
+    CONTROL         "",IDC_SliderU_Offset,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,21,100,15
+    EDITTEXT        IDC_EditU_Offset,260,21,40,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderV_Offset,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,43,100,15
+    EDITTEXT        IDC_EditV_Offset,262,43,40,14,ES_AUTOHSCROLL
+    LTEXT           "V Offset",IDC_LabelV_Offset,222,46,28,8
+    LTEXT           "U Gain",IDC_LabelU_Gain,225,67,24,11
+    CONTROL         "",IDC_SliderU_Gain,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,64,100,15
+    EDITTEXT        IDC_EditU_Gain,260,64,42,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderV_Gain,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,86,100,15
+    EDITTEXT        IDC_EditV_Gain,262,86,40,14,ES_AUTOHSCROLL
+    LTEXT           "V Gain",IDC_LabelV_Gain,226,88,21,8
+    PUSHBUTTON      "Restore Defaults",IDC_RestoreDefaults,183,115,63,14
 END
 
 
@@ -98,9 +117,9 @@ BEGIN
     IDD_PROCAMP_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 237
+        RIGHTMARGIN, 435
         TOPMARGIN, 7
-        BOTTOMMARGIN, 120
+        BOTTOMMARGIN, 142
     END
 END
 #endif    // APSTUDIO_INVOKED

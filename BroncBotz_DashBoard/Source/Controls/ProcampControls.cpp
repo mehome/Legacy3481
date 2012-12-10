@@ -64,8 +64,12 @@ static size_t s_ProcampResourceTable_TrackerBar[]=
 {
 	IDC_SliderBrightness,
 	IDC_SliderContrast,
-	-1,-1,
-	-1,-1,-1,-1,
+	IDC_SliderHue,
+	IDC_SliderSaturation,
+	IDC_SliderU_Offset,
+	IDC_SliderV_Offset,
+	IDC_SliderU_Gain,
+	IDC_SliderV_Gain,
 	-1
 };
 
@@ -73,13 +77,18 @@ static size_t s_ProcampResourceTable_Edit[]=
 {
 	IDC_EditBrightness,
 	IDC_EditContrast,
-	-1,-1,
-	-1,-1,-1,-1,
+	IDC_EditHue,
+	IDC_EditSaturation,
+	IDC_EditU_Offset,
+	IDC_EditV_Offset,
+	IDC_EditU_Gain,
+	IDC_EditV_Gain,
 	-1
 };
 
 const int c_MaxTrackbarRange=100;
 const int c_HalfTrackbarMaxRange=c_MaxTrackbarRange>>1;
+const double c_HueToSliderPosScalar=(double)c_MaxTrackbarRange/360.0; 
 
 static int GetTrackerBarPos(double Input,ProcAmp_enum setting)
 {
@@ -97,6 +106,9 @@ static int GetTrackerBarPos(double Input,ProcAmp_enum setting)
 		case e_procamp_u_gain:
 		case e_procamp_v_gain:
 			Position = (int)(Input * 0.25 * (double)c_MaxTrackbarRange);
+			break;
+		case e_procamp_hue:
+			Position= (int)((Input + 180.0) * c_HueToSliderPosScalar);
 			break;
 	}
 	return Position;
@@ -124,6 +136,9 @@ static double GetTrackerBarValue (int Position,ProcAmp_enum setting)
 	case e_procamp_v_gain:
 		Value=(ScaledPosition) * 4.0;  
 		break;
+	case e_procamp_hue:
+		Value= (ScaledPosition - 0.5) * 360.0;
+		break;
 	}
 	return Value;
 }
@@ -145,6 +160,9 @@ static bool Edit_CheckBounds (double Value,ProcAmp_enum setting)
 	case e_procamp_u_gain:
 	case e_procamp_v_gain:
 		ret=((Value>=0.0)&&(Value<=4.0));
+		break;
+	case e_procamp_hue:
+		ret=((Value>=-180.0)&&(Value<=180.0));
 		break;
 	}
 	return ret;
@@ -170,6 +188,10 @@ static void GetFormattedStringForValue(double Input,std::wstring &Output,ProcAmp
 		swprintf(Buffer,L"%.1f",Input*100.0);
 		Output=Buffer;
 		break;
+	case e_procamp_hue:
+		swprintf(Buffer,L"%.1f",Input);
+		Output=Buffer;
+		break;
 	}
 }
 
@@ -191,6 +213,9 @@ static double GetValueForFormattedString(wchar_t Input[],ProcAmp_enum setting)
 	case e_procamp_v_gain:
 		ret=_wtof(Input) / 100.0;
 		break;
+	case e_procamp_hue:
+		ret=_wtof(Input);
+		break;
 	}
 	return ret;
 }
@@ -199,8 +224,6 @@ ProcampControls::ProcampControls()
 {
 	for (size_t i=0;i<e_no_procamp_items;i++)
 	{
-		//TODO move the defaults to a restore defaults implementation
-		//m_ProcAmpValues[i]=ProcAmp_Defaults[i];
 		//This will obtain the value that was written to the matrix (handles reopening dialog to correct values)
 		m_ProcAmpValues[i]=g_Controller->Get_ProcAmp((ProcAmp_enum)i);
 		m_UpdatingEdit[i]=false;
@@ -294,6 +317,20 @@ long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPara
 						}
 					}
 				}
+				else if (notifycode==BN_CLICKED) 
+				{
+					if (buttonid==IDC_RestoreDefaults)
+					{
+						for (size_t i=0;i<e_no_procamp_items;i++)
+						{
+							m_ProcAmpValues[i]=ProcAmp_Defaults[i];
+							UpdateText((ProcAmp_enum)i,true);
+							UpdateSlider((ProcAmp_enum)i,true);
+							g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
+						}
+					}
+				}
+
 			}			
 			break;
 		case WM_HSCROLL:
