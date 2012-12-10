@@ -197,6 +197,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\ProcampControls.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration

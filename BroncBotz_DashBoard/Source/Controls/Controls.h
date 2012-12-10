@@ -19,3 +19,32 @@ extern "C"
 	CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selection,HWND pParent);
 };
 
+// No C library depreciation warnings
+#pragma warning ( disable : 4995 )
+#pragma warning ( disable : 4996 )
+
+void DebugOutput(const char *format, ... );
+
+#define TBM_GETPOS              (WM_USER)
+#define TBM_SETPOS              (WM_USER+5)
+
+class DialogBase : public MessageBase_Interface
+{
+    public:
+        DialogBase();
+        virtual ~DialogBase(void);
+
+		// Runs the Dialog.
+        virtual bool Run(HWND pParent);
+		void OnEndDialog(void);
+
+	protected:
+		virtual size_t GetDialogResource() const =0;
+		virtual LPARAM GetInstance() const =0;
+		virtual const wchar_t * const GetTitlePrefix() const =0;
+		virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
+		HWND        m_hDlg;                     // HWND of Dialog.
+    private:
+        int OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam );
+		bool m_IsClosing;
+};
