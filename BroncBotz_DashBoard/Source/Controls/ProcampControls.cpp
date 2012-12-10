@@ -26,6 +26,7 @@ class ProcampControls : public DialogBase
 		double m_OldSlider_ProcAmpValues[e_no_procamp_items];   //flood control for sliders
 		//Avoid recursion on messages
 		bool m_UpdatingEdit[e_no_procamp_items],m_UpdatingSlider[e_no_procamp_items];
+		std::string m_BLS_Filename; //keep note of the formed name for exit
 };
 
 DialogBase *CreateProcampDialog() {return new ProcampControls;}
@@ -220,12 +221,25 @@ static double GetValueForFormattedString(wchar_t Input[],ProcAmp_enum setting)
 	return ret;
 }
 
-const char * const csz_Filename="ProcAmp.ini";
+const char * const csz_Filename="ProcAmp_";
+static void GetProcampFilename(HWND pParent,std::string &Output)
+{
+	Output=csz_Filename;
+	wchar_t Buffer[128];
+	GetWindowText(pParent,Buffer,128);
+	{
+		wchar2char(Buffer);
+		Output+=wchar2char_pchar;
+		Output+=".ini";
+	}
+}
 
-void ProcAmp_Initialize()
+
+void ProcAmp_Initialize(HWND pParent)
 {
 	using namespace std;
-	string InFile = csz_Filename;
+	string InFile;
+	GetProcampFilename(pParent,InFile);
 	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 	if (in.is_open())
 	{
@@ -255,38 +269,13 @@ ProcampControls::ProcampControls()
 		m_UpdatingEdit[i]=false;
 		m_UpdatingSlider[i]=false;
 	}
-	//Now to load procamp values from .ini (if it exists)
-	using namespace std;
-	string InFile = csz_Filename;
-	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
-	if (in.is_open())
-	{
-		const size_t NoEnties=e_no_procamp_items;
-		string StringEntry[e_no_procamp_items<<1];
-		{
-			char Buffer[1024];
-			for (size_t i=0;i<NoEnties;i++)
-			{
-				in>>StringEntry[i<<1];
-				in.getline(Buffer,1024);
-				StringEntry[(i<<1)+1]=Buffer;
-			}
-		}
-		in.close();
-		for (size_t i=0;i<8;i++)
-		{
-			m_ProcAmpValues[i]=atof(StringEntry[(i<<1)+1].c_str());
-		}
-	}
 }
 
 ProcampControls::~ProcampControls()
 {
 	using namespace std;
 	g_pProcamp=NULL;
-	string OutFile = csz_Filename;
-	string output;
-
+	string OutFile=m_BLS_Filename;
 	ofstream out(OutFile.c_str(), std::ios::out );
 	//this is unrolled to look pretty... :)
 	out << "Brightness= " << m_ProcAmpValues[0] << endl;
@@ -333,6 +322,32 @@ void ProcampControls::UpdateSlider(ProcAmp_enum setting, bool ForceUpdate)
 bool ProcampControls::Run(HWND pParent)
 {
 	bool ret=__super::Run(pParent);
+	//Now to load procamp values from .ini (if it exists)
+	using namespace std;
+	string InFile;
+	GetProcampFilename(GetParent(m_hDlg),InFile);
+	m_BLS_Filename=InFile;  //keep copy for exit
+	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
+	if (in.is_open())
+	{
+		const size_t NoEnties=e_no_procamp_items;
+		string StringEntry[e_no_procamp_items<<1];
+		{
+			char Buffer[1024];
+			for (size_t i=0;i<NoEnties;i++)
+			{
+				in>>StringEntry[i<<1];
+				in.getline(Buffer,1024);
+				StringEntry[(i<<1)+1]=Buffer;
+			}
+		}
+		in.close();
+		for (size_t i=0;i<8;i++)
+		{
+			m_ProcAmpValues[i]=atof(StringEntry[(i<<1)+1].c_str());
+		}
+	}
+
 	for (int i=0;i<e_no_procamp_items;i++)
 	{
 		UpdateSlider((ProcAmp_enum)i,true);
