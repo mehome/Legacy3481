@@ -2733,7 +2733,7 @@ static int is_realtime(AVFormatContext *s)
     if(   !strcmp(s->iformat->name, "rtp")
        || !strcmp(s->iformat->name, "rtsp")
        || !strcmp(s->iformat->name, "sdp")
-	   || !strcmp(s->iformat->name, "http")  //TODO see about determining http being realtime or not -James
+	   || !strnicmp(s->filename, "http", 4)  //TODO see about determining http being realtime or not -James
     )
         return 1;
 
