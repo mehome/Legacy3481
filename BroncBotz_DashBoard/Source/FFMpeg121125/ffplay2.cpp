@@ -1724,6 +1724,7 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
 	//always dispatch
     {
 		FrameWork::Bitmaps::bitmap_bgra_u8 bitmap(src_frame->width,src_frame->height);
+		bitmap.set_interleaved(src_frame->interlaced_frame!=0);
 		AVPicture pict = { { 0 } };
 		pict.data[0] = (uint8_t *) bitmap();
 		pict.data[1] = 0;

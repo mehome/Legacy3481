@@ -3,34 +3,34 @@
 // Constructor
 template< typename pixel_type > __forceinline
 bitmap<pixel_type>::bitmap( const int xres, const int yres, const int align, const int stride )
-	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false )
+	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false ), m_IsInterleaved(false)
 {	// Allocate
 	resize( xres, yres, align, stride );
 }
 
 template< typename pixel_type > __forceinline
 bitmap<pixel_type>::bitmap( pixel_type* pImage, const int xres, const int yres, const int stride )
-	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false )
+	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false ), m_IsInterleaved(false)
 {	// Allocate
 	reference( pImage, xres, yres, stride );
 }
 
 template< typename pixel_type > __forceinline
 bitmap<pixel_type>::bitmap( const pixel_type* pImage, const int xres, const int yres, const int stride )
-	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false )
+	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false ), m_IsInterleaved(false)
 {	// Allocate
 	reference( pImage, xres, yres, stride );
 }
 
 template< typename pixel_type > __forceinline
 bitmap<pixel_type>::bitmap( void )
-	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false )
+	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false ), m_IsInterleaved(false)
 {
 }
 
 template< typename pixel_type > __forceinline
 bitmap<pixel_type>::bitmap( const bitmap& from )
-	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false )
+	: m_pData( NULL ), m_xres( 0 ), m_yres( 0 ) , m_stride_in_bytes( 0 ), m_owned( false ), m_IsInterleaved(false)
 {	resize( from.xres(), from.yres() );
 	operator= ( from );
 }

@@ -67,7 +67,7 @@ struct bitmap
 		__forceinline int xres_in_bytes( void ) const;
 		__forceinline int yres( void ) const;
 
-		// Are we the same size as anotber bitmap
+		// Are we the same size as another bitmap
 		template< typename other_bitmap >
 		__forceinline bool is_same_size_as( const other_bitmap &with ) const { return ((xres()==with.xres())&&(yres()==with.yres())); }
 
@@ -76,6 +76,10 @@ struct bitmap
 
 		// Is the memory owned ?
 		const bool is_owned( void ) const { return m_owned; }
+
+		// Is this interleaved
+		const bool is_interleaved( void ) const { return m_IsInterleaved; }
+		void set_interleaved( bool IsInterleaved ) { m_IsInterleaved=IsInterleaved; }
 
 		// Get the stride
 		__forceinline int stride( void ) const;
@@ -117,6 +121,9 @@ private:// Data
 
 		// The resolution
 		int m_xres, m_yres, m_stride_in_bytes;
+		// For now we'll tag these frames, but if we integrate fc3 and pass message video I'll take this back out
+		//  [12/11/2012 James]
+		bool m_IsInterleaved; 
 
 		// Is the memory owned ?
 		bool m_owned;

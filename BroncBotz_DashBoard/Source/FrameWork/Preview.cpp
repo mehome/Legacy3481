@@ -613,7 +613,7 @@ void Preview::operator() ( const void* )
 	}
 }
 
-void Preview::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
+void Preview::process_frame_internal(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 {
 	m_LastUsingProcessSlot=(m_LastUsingProcessSlot+1) % Preview_NoVideoBuffers;
 	if (m_VideoBuffers[m_LastUsingProcessSlot]->GetBufferState()!=Buffer::eAvailable)
@@ -645,4 +645,20 @@ void Preview::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 		printf("Preview::process_frame failed to find available buffer\n");
 		DebugOutput("Preview::process_frame failed to find available buffer\n");
 	}
+}
+
+
+void Preview::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
+{
+	using namespace FrameWork::Bitmaps;
+	bitmap_bgra_u8 DestBuffer((*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
+	if (pBuffer->is_interleaved())
+	{
+		DestBuffer.reference_even_lines(*pBuffer);
+		process_frame_internal(&DestBuffer);
+		DestBuffer.reference_odd_lines(*pBuffer);
+		process_frame_internal(&DestBuffer);
+	}
+	else
+		process_frame_internal(&DestBuffer);
 }

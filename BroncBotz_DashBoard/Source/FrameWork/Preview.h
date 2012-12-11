@@ -118,6 +118,7 @@ protected:
 	IDirectDraw7 *GetCurrentDisplayDevice( void ) const;
 
 private:
+	virtual void process_frame_internal(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer);
 	// My worker thread function that does something useful w/ a buffer after it's been filled
 	friend FrameWork::Threads::thread<Preview>;
 	void operator() ( const void* );
