@@ -197,6 +197,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\FileControls.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ProcampControls.cpp"
 				>
 			</File>

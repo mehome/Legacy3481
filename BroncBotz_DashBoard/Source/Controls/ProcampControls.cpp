@@ -384,7 +384,7 @@ long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPara
 								if (Edit_CheckBounds(value,(ProcAmp_enum)i))
 								{
 									m_ProcAmpValues[i]=value;
-									DebugOutput("Edit[%d]= %.3f\n",i,value);
+									//DebugOutput("Edit[%d]= %.3f\n",i,value);
 									g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
 									UpdateSlider((ProcAmp_enum)i); //implicitly checks for flood control
 								}
@@ -420,7 +420,7 @@ long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPara
 						(s_ProcampResourceTable_TrackerBar[i]!=-1)&&(hWndScroller==GetDlgItem(m_hDlg, s_ProcampResourceTable_TrackerBar[i])))
 					{
 						int position=SendMessage(hWndScroller,TBM_GETPOS,0,0);
-						DebugOutput("setting[%d]= %d\n",i,position);
+						//DebugOutput("setting[%d]= %d\n",i,position);
 						m_ProcAmpValues[i]=GetTrackerBarValue(position,(ProcAmp_enum)i);
 						g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
 						UpdateText((ProcAmp_enum)i); //implicitly checks for flood control
