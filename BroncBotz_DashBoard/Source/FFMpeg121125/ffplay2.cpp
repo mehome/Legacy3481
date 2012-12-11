@@ -224,6 +224,7 @@ typedef struct VideoState {
     SDL_Thread *video_tid;
     SDL_Thread *refresh_tid;
     AVInputFormat *iformat;
+	int stopped; // used to avoid crash on repeating dispatch
     int no_background;
     int abort_request;
     int force_refresh;
@@ -2032,8 +2033,13 @@ static int video_thread(void *arg)
 			#ifndef _LIB
             SDL_Delay(10);
 			#else
-			SDL_Delay(33);
-			ret = dispatch_picture(is, frame, pts, pkt.pos, serial);
+			if (!is->stopped)
+			{
+				SDL_Delay(33);
+				ret = dispatch_picture(is, frame, pts, pkt.pos, serial);
+			}
+			else
+				SDL_Delay(10);
 			#endif
 		}
 
@@ -4117,6 +4123,7 @@ int FFPlay_Controller::Run (void)
 {
 	StartStreaming();
 	VideoState * is=(VideoState *)m_VideoStream;
+	is->stopped=0;
 	if (is->paused)
 		toggle_pause(is);
 	#ifdef __Test_SDL_VideoPreview__
@@ -4128,6 +4135,7 @@ int FFPlay_Controller::Run (void)
 int FFPlay_Controller::Stop (void)
 {
 	VideoState * is=(VideoState *)m_VideoStream;
+	is->stopped=1;
 	if (!is->paused)
 		toggle_pause(is);
 	else
@@ -4143,6 +4151,7 @@ int FFPlay_Controller::Stop (void)
 int FFPlay_Controller::Pause (void)
 {
 	VideoState * is=(VideoState *)m_VideoStream;
+	is->stopped=0;
 	toggle_pause(is);
 	return 0;
 }
