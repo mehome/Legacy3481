@@ -2027,7 +2027,14 @@ static int video_thread(void *arg)
         AVRational tb;
 #endif
         while (is->paused && !is->videoq.abort_request)
+		{
+			#ifndef _LIB
             SDL_Delay(10);
+			#else
+			SDL_Delay(33);
+			ret = dispatch_picture(is, frame, pts, pkt.pos, serial);
+			#endif
+		}
 
         avcodec_get_frame_defaults(frame);
         av_free_packet(&pkt);
