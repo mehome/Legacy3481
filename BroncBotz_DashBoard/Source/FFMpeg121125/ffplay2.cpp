@@ -1791,14 +1791,21 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
 			double delay = compute_target_delay(is->frame_last_duration, is);
 
 			double time= av_gettime()/1000000.0;
-			if ((time > is->frame_timer + delay) && (delay > 0))
-			{
+			//Having delay means that our frames are not ahead of time
+			if (delay > 0)
 				is->frame_timer += delay * FFMAX(1, floor((time-is->frame_timer) / delay));
+
+			//At this point the frame timer and timer can be used to determine sync
+			const double frame_timer=is->frame_timer;
+			if (time < frame_timer)
+			{
+				double diff=frame_timer - time;
+				//FrameWork::DebugOutput("%.1f= %.3f - %.3f time=%.3f\n",diff*1000.0,delay,frame_timer,time);
+				if (diff>0.002)
+					Sleep((DWORD)(diff*1000.0)); 
 			}
 
-			double diff=delay - (time-is->frame_timer);
-			if (diff>0.002)
-				Sleep((DWORD)(diff*1000.0)); 
+			//FrameWork::DebugOutput("p=%.3f a=%.3f diff=%.3f\n",frame_timer,time,(is->frame_timer) - time);
 
 			//ShowTimeDelta("dispatch_picture",false);
 			update_video_pts(is, pts, pos, serial);
