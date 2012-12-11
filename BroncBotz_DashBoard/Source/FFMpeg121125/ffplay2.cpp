@@ -1769,55 +1769,53 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
 			//yuck... the conversion copy
 			bitmap=bitmap_ycbcr;
 		}
-		//Don't let the queue grow
+		//Don't let the queue grow by skipping the processing when it is too large
 		if (is->videoq.nb_packets< is->realtime ? 2 : 8 )
 			is->Preview->process_frame(&bitmap);
 
-		//FrameWork::DebugOutput("vq=%d              \r",is->videoq.nb_packets);
-
-		//VideoPicture vp;
-		//vp.pts = pts;
-		//vp.pos = pos;
-		//vp.skip = 0;
-		//vp.serial = serial;
-
-		// compute nominal last_duration
-		double last_duration = pts - is->frame_last_pts;
-		if (last_duration > 0 && last_duration < 10.0) {
-			/* if duration of the last frame was sane, update last_duration in video state */
-			is->frame_last_duration = last_duration;
-		}
-		double delay = compute_target_delay(is->frame_last_duration, is);
-
-		double time= av_gettime()/1000000.0;
-		if ((time > is->frame_timer + delay) && (delay > 0))
+		//For files... we use a timing mechanism to determine the amount to sleep... I have two different solutions the first shows the way it works in the video refresh where it
+		//works with the pts values to determine the delay, and the other uses a constant frame rate from the av_stream info... the big difference between these are noticeable where
+		//dropped frames would have occurred, and in one case the frame rate wasn't really what the PTS timing was showing.  The first choice is more accurate.
+		//  [12/10/2012 James]
+		if (!is->realtime)
 		{
-			is->frame_timer += delay * FFMAX(1, floor((time-is->frame_timer) / delay));
-		}
+			#if 1
+			// compute nominal last_duration
+			double last_duration = pts - is->frame_last_pts;
+			if (last_duration > 0 && last_duration < 10.0) {
+				/* if duration of the last frame was sane, update last_duration in video state */
+				is->frame_last_duration = last_duration;
+			}
+			double delay = compute_target_delay(is->frame_last_duration, is);
 
-		//double diff=delay - (time-is->frame_timer);
-		double TimeDelta;
-		{
-			using namespace FrameWork;
-			static time_type LastTime=(0.0);
-			time_type currenttime=time_type::get_current_time();
-			time_type delta = currenttime-LastTime;
-			TimeDelta=(double)delta;
-			LastTime=currenttime;
-		}
-		if ((is->frame_last_duration-TimeDelta)<0.002)
-			TimeDelta=0.0;
-		double diff=is->frame_last_duration - TimeDelta;
-		FrameWork::DebugOutput("%f\n",TimeDelta);
+			double time= av_gettime()/1000000.0;
+			if ((time > is->frame_timer + delay) && (delay > 0))
+			{
+				is->frame_timer += delay * FFMAX(1, floor((time-is->frame_timer) / delay));
+			}
 
-		if (diff>0.0)
-		{
-			//FrameWork::DebugOutput("%f\n",diff);
-			Sleep((DWORD)(diff*1000.0)); //TODO figure out the timing
-		}
+			double diff=delay - (time-is->frame_timer);
+			if (diff>0.002)
+				Sleep((DWORD)(diff*1000.0)); 
 
-		//ShowTimeDelta("dispatch_picture",false);
-		update_video_pts(is, pts, pos, serial);
+			//ShowTimeDelta("dispatch_picture",false);
+			update_video_pts(is, pts, pos, serial);
+
+			#else
+			//double diff=delay - (time-is->frame_timer);
+			double TimeDelta;
+			TimeDelta=get_external_clock(is);
+			double diff=(1.0/av_q2d(is->video_st->r_frame_rate)) - TimeDelta;
+			//FrameWork::DebugOutput("%f\n",TimeDelta);
+
+			if (diff>0.0)
+			{
+				//FrameWork::DebugOutput("%f\n",diff);
+				Sleep((DWORD)(diff*1000.0)); 
+			}
+			update_external_clock_pts(is,pts);
+			#endif
+		}
     }
     return 0;
 }
