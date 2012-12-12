@@ -16,7 +16,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	case DLL_THREAD_DETACH:
 		break;		
 	case DLL_PROCESS_DETACH:
-		//Module::Surface::g_h_module = NULL;
 		break;
 	}
 
