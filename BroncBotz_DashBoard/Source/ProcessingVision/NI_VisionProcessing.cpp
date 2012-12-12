@@ -150,13 +150,15 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 	VisionErrChk(imaqExtractColorPlanes(image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
 
-	int krows = 3;
-	int kcols = 3;
+	int krows = 5;
+	int kcols = 5;
 
 	// simple averaging convolution
-	float kernel2[] = {1,1,1,
-				   	   1,1,1,
-					   1,1,1};
+	float kernel[] = {1,1,1,1,1,
+				   	  1,1,1,1,1,
+					  1,1,1,1,1,
+					  1,1,1,1,1,
+					  1,1,1,1,1};
 
 	VisionErrChk(imaqConvolve2(Plane1, Plane1, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
 	VisionErrChk(imaqConvolve2(Plane2, Plane2, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
