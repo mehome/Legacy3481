@@ -40,6 +40,17 @@ class DialogBase : public MessageBase_Interface
 		void OnEndDialog(void);
 
 	protected:
+		//This method probably belongs to file controls, but I can see other dialogs wanting to use it
+		BOOL getopenfile(wchar_t *dest,wchar_t *filename,const wchar_t *defpath,const wchar_t *defext,const wchar_t *inputprompt,const wchar_t *filter,BOOL musthave);
+		//Easier to use version here
+		/// \ret true if a file was picked (successful)
+		bool getopenfilename(
+			const wchar_t *inputprompt,			///What the file requester shows in the window title
+			std::wstring &Output,				///The full path and filename of file selected
+			BOOL musthave,						///For reading existing files this should be true... for writing new files this should be false
+			const wchar_t *defaultPath=NULL,	///This may be ignored as windows will remember where you were for you
+			const wchar_t *defaultExt=NULL);
+
 		virtual size_t GetDialogResource() const =0;
 		virtual LPARAM GetInstance() const =0;
 		virtual const wchar_t * const GetTitlePrefix() const =0;

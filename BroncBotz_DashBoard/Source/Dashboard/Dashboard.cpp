@@ -917,8 +917,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	props.aux_startup_file_Args=AuxArgs;
 
 	DDraw_Preview TheApp(props);
-
+	//Note: ensure the CWD is maintained on exit... the file requester can change where it goes
+	wchar_t CWD[MAX_PATH];
+	GetCurrentDirectory(MAX_PATH,CWD);
 	TheApp.RunApp();
+	SetCurrentDirectory(CWD);
 	bool SaveOnExit=true;
 	//TODO Hack bandaid... fixme
 	if (g_WindowInfo.rcNormalPosition.left + g_WindowInfo.rcNormalPosition.top + g_WindowInfo.rcNormalPosition.right + g_WindowInfo.rcNormalPosition.bottom == 0)

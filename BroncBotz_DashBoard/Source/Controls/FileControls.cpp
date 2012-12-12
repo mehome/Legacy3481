@@ -115,9 +115,16 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 						g_Controller->Run();
 						break;
 					case IDC_BROWSE:
-						break;
-					case IDC_SCRUB:
-						DebugOutput("Inside Scrub\n");
+						{
+							std::wstring Output;
+							if (getopenfilename(L"Choose file for playback",Output,true))
+							{
+								HWND hwndEdit=GetDlgItem(m_hDlg,IDC_FILENAME);
+								SetWindowText(hwndEdit,Output.c_str());
+								DebugOutput("Switch to=%ls\n",Output.c_str());
+								g_Controller->SwitchFilename(Output.c_str());
+							}
+						}
 						break;
 					}
 				}

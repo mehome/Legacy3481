@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <CommDlg.h>
 #include "Controls.h"
 #include "Resource.h"
 
@@ -89,6 +90,45 @@ bool DialogBase::Run(HWND pParent)
 		ShowWindow(m_hDlg, SW_SHOW);
 	}
 	return (bResult_);
+}
+
+BOOL DialogBase::getopenfile(wchar_t *dest,wchar_t *filename,const wchar_t *defpath,const wchar_t *defext,const wchar_t *inputprompt,const wchar_t *filter,BOOL musthave) 
+{
+	OPENFILENAME ofn;
+	BOOL bResult;
+
+	//Clear out and fill in an OPENFILENAME structure in preparation
+	//for creating a common dialog box to open a file.
+	memset(&ofn,0,sizeof(OPENFILENAME));
+	ofn.lStructSize	= sizeof(OPENFILENAME);
+	ofn.hwndOwner	= m_hDlg;
+	ofn.hInstance	= NULL;  //ignored
+	ofn.lpstrFilter	= filter;
+	ofn.nFilterIndex	= 0;
+	dest[0]	= '\0';
+	ofn.lpstrFile	= dest;
+	ofn.nMaxFile	= MAX_PATH;
+	ofn.lpstrFileTitle = filename;
+	ofn.nMaxFileTitle	= MAX_PATH;
+	ofn.lpstrInitialDir = defpath;
+	ofn.lpstrDefExt	= defext;
+	ofn.lpstrTitle	= inputprompt;
+	if (musthave) ofn.Flags=OFN_FILEMUSTEXIST|OFN_HIDEREADONLY;
+	else ofn.Flags=OFN_HIDEREADONLY;
+
+	return (bResult=GetOpenFileName(&ofn));
+}
+
+
+bool DialogBase::getopenfilename(const wchar_t *inputprompt,std::wstring &Output,BOOL musthave,const wchar_t *defaultPath,const wchar_t *defaultExt) 
+{
+	wchar_t PathBuffer[MAX_PATH]; //full path
+	wchar_t FileBuffer[MAX_PATH];
+	//No filters
+	BOOL bResult=getopenfile(PathBuffer,FileBuffer,defaultPath,defaultExt,inputprompt,NULL,musthave);
+	//DebugOutput("%ls name=%ls",PathBuffer,FileBuffer);
+	Output=PathBuffer;
+	return bResult!=0;
 }
 
   /***********************************************************************************************************************/
