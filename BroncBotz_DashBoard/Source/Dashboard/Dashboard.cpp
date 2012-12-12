@@ -90,6 +90,7 @@ const wchar_t * const cwsz_DefaultSmartFile=L"C:\\WindRiver\\WPILib\\SmartDashbo
 const wchar_t * const cwsz_PlugInFile=L"ProcessingVision.dll";
 const wchar_t * const cwsz_ClassName=L"SunAwtFrame";
 const wchar_t * const cwsz_WindowName=L"SmartDashboard - ";
+std::wstring g_IP_Address=L"none";
 
 class DDraw_Preview 
 {
@@ -601,6 +602,17 @@ void DDraw_Preview::StopStreaming()
 
 void DDraw_Preview::CloseResources()
 {
+	{
+		//See if the filename has changed... so that we can save it on exit
+		Dashboard_Controller_Interface *dci=m_FrameGrabber.GetDashboard_Controller_Interface();
+		if (dci)
+		{
+			std::wstring NewName;
+			dci->GetFileName(NewName);
+			if (NewName[0]!=0)
+				g_IP_Address=NewName;
+		}
+	}
 	StopStreaming();
 	delete m_DD_StreamOut;
 	m_DD_StreamOut=NULL;
@@ -829,7 +841,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	wstring AuxArgs=L"none";
 	wstring ClassName=cwsz_ClassName;
 	wstring WindowName=cwsz_WindowName;
-	wstring IP_Address=L"none";
 	wstring StreamProfile=L"default";
 
 	string sz_FileName="Video1.ini";
@@ -857,7 +868,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			}
 			in.close();
 			AssignInput(Title,StringEntry[1].c_str());
-			AssignInput(IP_Address,StringEntry[3].c_str());
+			AssignInput(g_IP_Address,StringEntry[3].c_str());
 			AssignInput(StreamProfile,StringEntry[5].c_str());
 			int left=atoi(StringEntry[7].c_str());
 			int top=atoi(StringEntry[9].c_str());
@@ -891,7 +902,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	#endif
 
 	props.source_name=Title;
-	props.IP_Address=IP_Address;
+	props.IP_Address=g_IP_Address;
 	props.ReaderFormat=FrameGrabber::eFFMPeg_Reader;
 	if  ((wcsicmp(StreamProfile.c_str(),L"mjpg")==0) || (wcsicmp(StreamProfile.c_str(),L"mjpeg")==0))
 		props.ReaderFormat=FrameGrabber::eHttpReader;
@@ -922,7 +933,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 		AssignOutput(output,Title.c_str());
 		out << "title= " << output << endl;
-		AssignOutput(output,IP_Address.c_str());
+		AssignOutput(output,g_IP_Address.c_str());
 		out << "IP_Address= " << output << endl;
 		AssignOutput(output,StreamProfile.c_str());
 		out << "StreamProfile= " << output << endl;

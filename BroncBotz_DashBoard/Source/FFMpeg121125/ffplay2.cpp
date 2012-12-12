@@ -3912,10 +3912,15 @@ size_t FrameGrabber_FFMpeg::split_arguments(const std::string& str, std::vector<
 	return arguments.size();
 }
 
-FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL),m_TestPattern(Preview,IPAddress)
+void FrameGrabber_FFMpeg::SetFileName(const wchar_t *IPAddress)
 {
 	if (IPAddress[0]!=0)
 		FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
+	else
+	{
+		assert(false);  //User submitted nothing?  recovery... keep last file
+		return;
+	}
 
 	#if 0
 	input_filename="rtsp://FRC:FRC@10.28.1.11/axis-media/media.amp";
@@ -3925,10 +3930,6 @@ FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview
 		m_URL=wchar2char_pchar;
 	}
 	#endif
-
-	//If we have no IPAddress we have no work to do
-	if(IPAddress[0]==0)
-		return;
 
 	//Now to evaluate if it is a number... we'll want to have some intelligent way to deal with the correct URL but for now just hard code the m1011's H264's URL
 	if ((m_URL.c_str()[0]>='0')&&(m_URL.c_str()[0]<='9'))
@@ -3940,6 +3941,15 @@ FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview
 		m_URL=Buffer;
 	}
 	input_filename=m_URL.c_str();
+}
+
+FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL),m_TestPattern(Preview,IPAddress)
+{
+	//If we have no IPAddress we have no work to do
+	if(IPAddress[0]==0)
+		return;
+
+	SetFileName(IPAddress);
 
 	int flags;
 	//VideoState *is;
@@ -4139,6 +4149,20 @@ int FFPlay_Controller::Run (void)
 	return 0;
 	#endif
 }
+
+void FFPlay_Controller::SwitchFilename(const wchar_t FileToUse[])
+{
+	StopStreaming();
+	SetFileName(FileToUse);
+	StartStreaming();
+}
+
+void FFPlay_Controller::GetFileName(std::wstring &Output) const
+{
+	char2wchar(m_URL.c_str());
+	Output=char2wchar_pwchar;
+}
+
 int FFPlay_Controller::Stop (void)
 {
 	VideoState * is=(VideoState *)m_VideoStream;
@@ -4155,6 +4179,7 @@ int FFPlay_Controller::Stop (void)
 	}
 	return 0;
 }
+
 int FFPlay_Controller::Pause (void)
 {
 	VideoState * is=(VideoState *)m_VideoStream;

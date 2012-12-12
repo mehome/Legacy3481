@@ -12,12 +12,16 @@ class FileControls : public DialogBase
 	public:
 		FileControls();
 		~FileControls();
+		virtual bool Run(HWND pParent);
+		//only to be called from the dispatcher
+		long Edit_Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	protected:
 		virtual size_t GetDialogResource() const {return IDD_FILE_DIALOG;}
 		virtual LPARAM GetInstance() const {return (LPARAM) this;}
 		virtual const wchar_t * const GetTitlePrefix() const  {return L"File controls for ";}
 		virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	private:
+		WNDPROC m_wpOrigEditProc;
 		int m_ScrubValue;
 };
 
@@ -31,6 +35,56 @@ DialogBase *CreateFileControlsDialog() {return new FileControls;}
 
 FileControls::FileControls() : m_ScrubValue(0)
 {
+}
+
+long FileControls::Edit_Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_CHAR:
+			//DebugOutput("WM_CHAR=%d\n",wParam);
+			if (wParam==13)
+			{
+				//We've entered a filename kill focus by setting it to parent window
+				SetFocus(GetParent(w_ptr));
+				wchar_t Buffer[MAX_PATH<<1];
+				GetWindowText(w_ptr,Buffer,MAX_PATH<<1);
+				DebugOutput("Switch to=%ls\n",Buffer);
+				g_Controller->SwitchFilename(Buffer);
+			}
+
+			break;
+	}
+	return CallWindowProc(m_wpOrigEditProc, w_ptr, uMsg, wParam, lParam); 
+}
+
+LRESULT APIENTRY EditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
+{ 
+	//note: this should ALWAYS work
+	FileControls *BaseClass=(FileControls*)GetWindowLongPtr(hwnd,GWLP_USERDATA);		
+	long ret=TRUE;
+	if (BaseClass) 
+		ret=BaseClass->Edit_Dispatcher(hwnd,uMsg,wParam,lParam);
+	else
+		assert(false);
+	return ret;
+} 
+
+bool FileControls::Run(HWND pParent)
+{
+	bool ret=__super::Run(pParent);
+	//http://msdn.microsoft.com/en-us/library/ms633570%28VS.85%29.aspx#subclassing_window
+	//In this section we want to retrieve when the carriage return key is pressed within our edit control
+	//Retrieve handle to edit control
+	HWND hwndEdit=GetDlgItem(m_hDlg,IDC_FILENAME);
+	//subclass the edit control
+	m_wpOrigEditProc=(WNDPROC) SetWindowLongPtr(hwndEdit,GWL_WNDPROC,(LONG)EditSubclassProc);
+	SetWindowLongPtr(hwndEdit,GWLP_USERDATA, (LONG_PTR)this);
+	//One more thing to do with the edit control... set it to its current file
+	std::wstring FileName;
+	g_Controller->GetFileName(FileName);
+	SetWindowText(hwndEdit,FileName.c_str());
+	return ret;
 }
 
 FileControls::~FileControls()
@@ -79,6 +133,15 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					break;
 				}
 			}
+			break;
+		case WM_DESTROY:
+			{
+				HWND hwndEdit=GetDlgItem(m_hDlg,IDC_FILENAME);
+				//restore the original edit procedure call for this control
+				SetWindowLongPtr(hwndEdit, GWL_WNDPROC, (LONG) m_wpOrigEditProc); 
+			}
+
+			return __super::Dispatcher(w_ptr,uMsg,wParam,lParam);
 			break;
 		default:
 			return __super::Dispatcher(w_ptr,uMsg,wParam,lParam);

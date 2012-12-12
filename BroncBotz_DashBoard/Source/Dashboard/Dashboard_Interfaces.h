@@ -34,6 +34,8 @@ public:
 	virtual int Pause (void)=0;										// pause filter graph
 	virtual int Seek (double, double,  bool scrubbing =false)=0;		// seek to start/stop positions (in seconds)
 	virtual int SetRate (int)=0;										// set the play speed  (as percentage of normal)
+	virtual void SwitchFilename(const wchar_t FileToUse[])=0;
+	virtual void GetFileName(std::wstring &Output) const=0;
 
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value)=0;
 	virtual double Get_ProcAmp(ProcAmp_enum ProcSetting) const=0;
