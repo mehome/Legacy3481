@@ -194,7 +194,7 @@ bool FFPlayTest::CommandLineInterface()
 				{
 					//m_MasterClock->pause();
 					//m_Streamer->Pause();
-					m_Streamer->Seek(time,0,true);
+					m_Streamer->Seek(time);
 				}
 			}
 			else if (!_strnicmp( input_line, "test", 4))
