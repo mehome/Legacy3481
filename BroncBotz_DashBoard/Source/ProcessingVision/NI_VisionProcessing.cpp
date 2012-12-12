@@ -76,8 +76,7 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame)
 	if(pImageArray != NULL)
 		memcpy((void*)Frame->Memory, pImageArray, Frame->Stride * 4 * Frame->YRes);
 
-	// TODO: use particleList data to overlay
-	//Test... make a green box in the center of the frame
+	// make a green box in the center of the frame
 	size_t CenterY=Frame->YRes / 2;
 	size_t CenterX=Frame->XRes / 2;
 	size_t LineWidthInBytes=Frame->Stride * 4;
@@ -143,23 +142,18 @@ int ProcessImage(Image *image, ParticleList &particleList)
 #endif
 
 
-#if 0
-	// separate planes, and do low pass.
+#if 0 // use only for really noisy camera images.
+	// separate planes
 	Image *Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
 	Image *Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
 	Image *Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
 
 	VisionErrChk(imaqExtractColorPlanes(image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
 
-	int krows = 5;
-	int kcols = 5;
+	int krows = 3;
+	int kcols = 3;
 
-	float kernel[] = {1,1,1,1,1,
-					  1,2,2,2,1,
-					  1,2,1,2,1,
-					  1,2,2,2,1,
-					  1,1,1,1,1};
-
+	// simple averaging convolution
 	float kernel2[] = {1,1,1,
 				   	   1,1,1,
 					   1,1,1};
@@ -168,22 +162,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	VisionErrChk(imaqConvolve2(Plane2, Plane2, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
 	VisionErrChk(imaqConvolve2(Plane3, Plane3, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
 
-//#define DISPLAY_WINDOW 0
-//	// Display the image
-//	imaqMoveWindow(DISPLAY_WINDOW, imaqMakePoint(0,0));
-//	imaqSetWindowPalette(DISPLAY_WINDOW, /*IMAQ_PALETTE_BINARY*/ IMAQ_PALETTE_GRAY, NULL, 0);
-//	imaqDisplayImage(Plane1, DISPLAY_WINDOW, TRUE);
-//
-//	// Display the image
-//	imaqMoveWindow(DISPLAY_WINDOW + 1, imaqMakePoint(700,0));
-//	imaqSetWindowPalette(DISPLAY_WINDOW + 1, /*IMAQ_PALETTE_BINARY*/ IMAQ_PALETTE_GRAY, NULL, 0);
-//	imaqDisplayImage(Plane2, DISPLAY_WINDOW + 1, TRUE);
-//
-//	// Display the image
-//	imaqMoveWindow(DISPLAY_WINDOW + 2, imaqMakePoint(0,600));
-//	imaqSetWindowPalette(DISPLAY_WINDOW + 2, /*IMAQ_PALETTE_BINARY*/ IMAQ_PALETTE_GRAY, NULL, 0);
-//	imaqDisplayImage(Plane3, DISPLAY_WINDOW + 2, TRUE);
-
+	// recombine planes
 	VisionErrChk(imaqReplaceColorPlanes(image, image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
 
 	imaqDispose(Plane1);
@@ -193,20 +172,14 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 	// copy image
 	// image  - used for particle operations - gets converted to 8 bit (binary).
-	// image2 - used for edge detection
-	// image3 - copy of original - used for overlays
+	// image2 - used for edge detection, and overlays
 	imaqGetImageInfo(image, &info);
 	Image *image2 = imaqCreateImage(info.imageType, ImageBorder);
 	imaqDuplicate(image2, image);
 
-	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
-	imaqDuplicate(image3, image);
-
 	VisionErrChk(ColorThreshold(image, redMin, redMax, grnMin, grnMax, bluMin, bluMax, IMAQ_RGB));
 
 	VisionErrChk(imaqFillHoles(image, image, true));
-
-#if 1
 
 	//-------------------------------------------------------------------//
 	//                Advanced Morphology: Remove Objects                //
@@ -260,7 +233,6 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 		VisionErrChk(FindParticleCorners(image2, particleList));
 
-#if 1
 		// overlay some useful info
 		for(int i = 0; i < particleList.numParticles; i++)
 		{
@@ -323,14 +295,11 @@ int ProcessImage(Image *image, ParticleList &particleList)
 				imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
 			}
 		}
-#endif
 	}
-#endif
 	// copy the end result 
 	//imaqMask(image3, image2, image);
 	imaqDuplicate(image, image2);
 	imaqDispose(image2);
-	imaqDispose(image3);
 
 Error:
 	int error = imaqGetLastError();
