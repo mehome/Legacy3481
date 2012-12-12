@@ -1802,7 +1802,10 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
 				double diff=frame_timer - time;
 				//FrameWork::DebugOutput("%.1f= %.3f - %.3f time=%.3f\n",diff*1000.0,delay,frame_timer,time);
 				if (diff>0.002)
-					Sleep((DWORD)(diff*1000.0)); 
+					if (diff<0.100)
+						Sleep((DWORD)(diff*1000.0)); 
+					else
+						is->frame_timer=time;
 			}
 
 			//FrameWork::DebugOutput("p=%.3f a=%.3f diff=%.3f\n",frame_timer,time,(is->frame_timer) - time);
