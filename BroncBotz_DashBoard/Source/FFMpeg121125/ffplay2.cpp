@@ -4140,6 +4140,7 @@ int FFPlay_Controller::Run (void)
 {
 	StartStreaming();
 	VideoState * is=(VideoState *)m_VideoStream;
+	if (is->realtime) return 0;
 	is->stopped=0;
 	if (is->paused)
 		toggle_pause(is);
@@ -4166,12 +4167,14 @@ void FFPlay_Controller::GetFileName(std::wstring &Output) const
 int FFPlay_Controller::Stop (void)
 {
 	VideoState * is=(VideoState *)m_VideoStream;
+	if (is->realtime) return 0;
 	is->stopped=1;
 	if (!is->paused)
 		toggle_pause(is);
 	else
 	{
-		stream_seek(is,0,0,0);
+		int seek_by_bytes=(::seek_by_bytes || is->ic->duration <= 0) ? 1:0;
+		stream_seek(is,0,0,seek_by_bytes);
 		//TODO this is a hack will need to have real seeking
 		toggle_pause(is);
 		Sleep(60);
@@ -4183,14 +4186,39 @@ int FFPlay_Controller::Stop (void)
 int FFPlay_Controller::Pause (void)
 {
 	VideoState * is=(VideoState *)m_VideoStream;
+	if (is->realtime) return 0;
 	is->stopped=0;
 	toggle_pause(is);
 	return 0;
 }
-int FFPlay_Controller::Seek (double, double,  bool scrubbing )
+
+void FFPlay_Controller::Seek (double fraction)
 {
-	return 0;
+	VideoState * cur_stream=(VideoState *)m_VideoStream;
+	if (cur_stream->realtime) return;
+	cur_stream->stopped=0;
+	{
+		int64_t ts;
+		int ns, hh, mm, ss;
+		int tns, thh, tmm, tss;
+		tns  = (int)(cur_stream->ic->duration / 1000000LL);
+		thh  = tns / 3600;
+		tmm  = (tns % 3600) / 60;
+		tss  = (tns % 60);
+		ns   = (int)(fraction * tns);
+		hh   = ns / 3600;
+		mm   = (ns % 3600) / 60;
+		ss   = (ns % 60);
+		fprintf(stderr, "Seek to %2.0f%% (%2d:%02d:%02d) of total duration (%2d:%02d:%02d)       \n", fraction*100,
+			hh, mm, ss, thh, tmm, tss);
+		ts = (int64_t)(fraction * cur_stream->ic->duration);
+		if (cur_stream->ic->start_time != AV_NOPTS_VALUE)
+			ts += cur_stream->ic->start_time;
+		stream_seek(cur_stream, ts, 0, 0);
+	}
+	cur_stream->stopped=1;
 }
+
 int FFPlay_Controller::SetRate (int)
 {
 	return 0;

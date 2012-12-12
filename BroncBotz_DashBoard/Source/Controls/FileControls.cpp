@@ -136,7 +136,8 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				if (hWndScroller==GetDlgItem(m_hDlg, IDC_SCRUB))
 				{
 					int position=SendMessage(hWndScroller,TBM_GETPOS,0,0);
-					DebugOutput("Position= %d\n",position);
+					//DebugOutput("Position= %d\n",position);
+					g_Controller->Seek((double)position/100.0);
 					break;
 				}
 			}

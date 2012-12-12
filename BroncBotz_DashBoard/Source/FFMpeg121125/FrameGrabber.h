@@ -186,7 +186,7 @@ protected:
 	int Run (void);											// run the filter graph
 	int Stop (void);										// stop filter graph
 	int Pause (void);										// pause filter graph
-	int Seek (double, double,  bool scrubbing =false);		// seek to start/stop positions (in seconds)
+	void Seek (double fraction);	
 	int SetRate (int);										// set the play speed  (as percentage of normal)
 	void SwitchFilename(const wchar_t FileToUse[]);
 	void GetFileName(std::wstring &Output) const;
