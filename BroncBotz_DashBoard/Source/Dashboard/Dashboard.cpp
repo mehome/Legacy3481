@@ -685,6 +685,11 @@ void DDraw_Preview::OpenResources()
 			//of the error codes below.
 			HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
 			IsSmartDashboardStarted=true;
+			//I need about 500ms for LabView to setup before trying to attach myself as a child... this is really a non-issue for smart dashboard
+			//however, if teams have other dashboards that give issues (i.e. need more than 500ms) then we could look into having this as a paramter
+			//in the .ini file
+			//  [12/13/2012 JamesK]
+			Sleep(500);
 		}
 	}
 	if ((m_Props.WindowName.c_str()[0]!=0)&&(m_Props.window_type!=PrevProps::eStandAlone))
@@ -849,7 +854,18 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	{
 		wchar2char(lpCmdLine);
 		sz_FileName=wchar2char_pchar;
+		DebugOutput("Reading %s\n",sz_FileName);
 	}
+	//For release build... we need to restore our working directory read .ini from driver station
+	#ifndef _DEBUG
+	{
+		wchar_t Buffer[MAX_PATH];
+		GetModuleFileName(hInstance,Buffer,MAX_PATH);
+		wchar_t *LastSlash=wcsrchr(Buffer,'\\');
+		*LastSlash=0;
+		SetCurrentDirectory(Buffer);
+	}
+	#endif
 	{
 		string InFile = sz_FileName.c_str();
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
