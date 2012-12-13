@@ -126,6 +126,11 @@ private:
 class FrameGrabber_FFMpeg : public FrameGrabber_Interface
 {
 public:
+	enum IpURLConversion
+	{
+		eIpURL_H264,
+		eIpURL_MJPEG
+	};
 	FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"");
 
 	//allow late binding of the output (hence start streaming exists for this delay)
@@ -135,7 +140,7 @@ public:
 
 	virtual ~FrameGrabber_FFMpeg();
 protected:
-	void SetFileName(const wchar_t *IPAddress);
+	void SetFileName(const wchar_t *IPAddress,IpURLConversion format=eIpURL_H264);
 
 	void *m_VideoStream;
 private:
@@ -175,7 +180,8 @@ class FFPlay_Controller : public FrameGrabber_FFMpeg,
 						  public Dashboard_Controller_Interface
 {
 public:
-	FFPlay_Controller(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : FrameGrabber_FFMpeg(Preview,IPAddress)
+	FFPlay_Controller(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"",IpURLConversion IP_Format=eIpURL_H264) : 
+	  FrameGrabber_FFMpeg(Preview,IPAddress),m_IP_Format(IP_Format)
 	{
 	}
 
@@ -192,4 +198,6 @@ protected:
 	void GetFileName(std::wstring &Output) const;
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);
 	virtual double Get_ProcAmp(ProcAmp_enum ProcSetting) const;
+private:
+	IpURLConversion m_IP_Format;
 };

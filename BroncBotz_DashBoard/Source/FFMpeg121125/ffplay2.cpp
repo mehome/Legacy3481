@@ -3915,7 +3915,7 @@ size_t FrameGrabber_FFMpeg::split_arguments(const std::string& str, std::vector<
 	return arguments.size();
 }
 
-void FrameGrabber_FFMpeg::SetFileName(const wchar_t *IPAddress)
+void FrameGrabber_FFMpeg::SetFileName(const wchar_t *IPAddress,IpURLConversion format)
 {
 	if (IPAddress[0]!=0)
 		FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
@@ -3939,7 +3939,14 @@ void FrameGrabber_FFMpeg::SetFileName(const wchar_t *IPAddress)
 	{
 		char Buffer[1024];
 		//this is lazy but effective... TODO parse numbers remove leading zero's as this will cause it to fail
-		sprintf_s(Buffer,1024,"rtsp://FRC:FRC@%s/axis-media/media.amp",m_URL.c_str());
+		switch (format)
+		{
+			case eIpURL_MJPEG:
+				sprintf_s(Buffer,1024,"http://FRC:FRC@%s/mjpg/video.mjpg",m_URL.c_str());
+				break;
+			default:
+				sprintf_s(Buffer,1024,"rtsp://FRC:FRC@%s/axis-media/media.amp",m_URL.c_str());
+		}
 		audio_disable=1;
 		m_URL=Buffer;
 	}
@@ -4114,7 +4121,8 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 				break;
 			case eFFMPeg_Reader:
 			case eHttpReader:
-				m_VideoStream=new FFPlay_Controller(Preview,IPToUse.c_str());
+				m_VideoStream=new FFPlay_Controller(Preview,IPToUse.c_str(),
+					format==eHttpReader?FrameGrabber_FFMpeg::eIpURL_MJPEG:FrameGrabber_FFMpeg::eIpURL_H264);
 				break;
 			case eHttpReader2:
 				m_VideoStream=new FrameGrabber_HttpStream(Preview,IPToUse.c_str());
@@ -4157,7 +4165,7 @@ int FFPlay_Controller::Run (void)
 void FFPlay_Controller::SwitchFilename(const wchar_t FileToUse[])
 {
 	StopStreaming();
-	SetFileName(FileToUse);
+	SetFileName(FileToUse,m_IP_Format);
 	StartStreaming();
 }
 
