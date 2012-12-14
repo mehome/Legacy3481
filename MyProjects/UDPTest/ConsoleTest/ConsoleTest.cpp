@@ -80,6 +80,83 @@
 
 #pragma comment( lib, "Ws2_32" )
 
+
+class UDP_Client
+{
+	public:
+		UDP_Client(char *servIP= "10.28.1.2",unsigned short echoServPort=1130) : m_Error(false)
+		{
+			WORD wVersionRequested;          // Version of Winsock to load 
+			WSADATA wsaData;                 // Winsock implementation details 
+
+			try
+			{
+				/* Winsock DLL and library initialization  */
+				wVersionRequested = MAKEWORD(2, 0);   /* Request Winsock v2.0 */
+				if (WSAStartup(wVersionRequested, &wsaData) != 0) /* Load Winsock DLL */
+					throw 0;
+				/* 1. Create a socket. */
+				/* Create a best-effort datagram socket using UDP */
+				if ((m_Sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+					throw 1;
+
+				/* Construct the server address structure */
+				memset(&m_DestServer, 0, sizeof(m_DestServer));    /* Zero out structure */
+				m_DestServer.sin_family = AF_INET;                 /* Internet address family */
+				m_DestServer.sin_addr.s_addr = inet_addr(servIP);  /* Server IP address */
+				m_DestServer.sin_port   = htons(echoServPort);     /* Server port */
+
+			}
+			catch (int ErrorCode)
+			{
+				const char *ErrorMsg=NULL;
+				switch (ErrorCode)
+				{
+				case 0:
+					ErrorMsg="WSAStartup() failed";
+					break;
+				case 1:
+					ErrorMsg="socket() failed";
+					break;
+				};
+				if (ErrorMsg)
+					printf("ErrorMsg=%s\n",ErrorMsg);
+				m_Error=true;
+
+			}
+		}
+
+		void operator() (double X,double Y)
+		{
+			if (m_Error) return;
+			// 2. Send (sendto()) the message to the server. 
+			// Send the buffer
+			char queryBuffer[16];
+			DWORD *buffer=(DWORD *)queryBuffer;
+			buffer[0]=0xabacab; //a sync 
+			buffer[1]= (DWORD)(X * 10000000.0);
+			buffer[2]= (DWORD)(Y * 10000000.0);
+			buffer[3]=buffer[1]+buffer[2];
+			int cbSent_ = sendto(m_Sock, queryBuffer, 16, 0, (struct sockaddr *)	&m_DestServer, sizeof(m_DestServer));
+			if (cbSent_ < 0)
+				printf("sendto failed with error code %d\n",cbSent_);
+		}
+
+		~UDP_Client()
+		{
+			// 5. Close the socket. 
+			// Winsock requires a special function for sockets 
+			closesocket(m_Sock);    // Close client socket 
+			WSACleanup();  // Cleanup Winsock 
+		}
+	private:
+		int m_Sock;
+		struct sockaddr_in m_DestServer; // Echo server address 
+
+		bool m_Error;
+};
+
+
 #define ECHOMAX 255     /* Longest string to echo */
 #define ECHO_PORT   7    /* Default standard port number for echo   */
 
@@ -91,6 +168,12 @@ void DieWithError(std::string errorMessage);  /* Fatal Error handling function  
 /********************************************************************/
 int main(int argc, char *argv[])
 {
+	{
+		UDP_Client test;
+		test(1.0,1.1);
+		Sleep(1000);
+	}
+	return 0;
     int sock;                        /* Socket descriptor */
     struct sockaddr_in echoServAddr; /* Echo server address */
     struct sockaddr_in fromAddr;     /* Source address of echo */
@@ -117,17 +200,21 @@ int main(int argc, char *argv[])
     servIP = argv[1];           /* first arg: server IP address (dotted quad)*/
     echoString = argv[2];       /* second arg: string to echo */
 	#else
-	servIP = "10.28.1.121";
+	servIP = "10.28.1.2";
 	echoString = "Test";
 	#endif
 
     if ((echoStringLen = strlen(echoString) + 1) > ECHOMAX)  /* Check input length */
         DieWithError("Echo word too long");
 
-    if (argc == 4)
+	#if 0
+	if (argc == 4)
         echoServPort = atoi(argv[3]);  /* Use given port, if any */
     else
         echoServPort = ECHO_PORT;  /* otherwise, use the default port number */
+	#else
+		echoServPort = 1130;
+	#endif
 
 #ifdef WINSOCK_EXAMPLE
     /* Winsock DLL and library initialization  */
@@ -154,11 +241,13 @@ int main(int argc, char *argv[])
 
 /* 2. Send (sendto()) the message to the server. */
     /* Send the string, including the null terminator, to the server */
-    char queryBuffer[] = "\xFF\xFF\xFF\xFF\x69";
+    //char queryBuffer[] = "\xFF\xFF\xFF\xFF\x69";
+	char queryBuffer[] = "Test";
     if (sendto(sock, queryBuffer, strlen(queryBuffer), 0, (struct sockaddr *)
                &echoServAddr, sizeof(echoServAddr)) != echoStringLen)
         DieWithError("sendto() sent a different number of bytes than expected");
 
+#if 0
 /* 3. Receive (recvfrom()) the server's response. */
     fromSize = sizeof(fromAddr);
     if ((respStringLen = recvfrom(sock, echoBuffer, ECHOMAX, 0, (struct sockaddr *) &fromAddr,
@@ -177,11 +266,12 @@ int main(int argc, char *argv[])
         printf("Received an unterminated string\n");
     else
         printf("Received: %s\n", echoBuffer);    /* Print the echoed arg */
-
+#endif
 /* 4. Repeat the send and receive as required. (each of which will be seen by the server as a separate communication) */
 /* Step 4 does not happen in the case of a UDP echo client */
 
 
+	Sleep(1000);
 /* 5. Close the socket. */
 #ifdef WINSOCK_EXAMPLE
     /* Winsock requires a special function for sockets */
