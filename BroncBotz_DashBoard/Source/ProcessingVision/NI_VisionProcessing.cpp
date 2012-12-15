@@ -30,6 +30,8 @@ struct ParticleData
 	int bound_bottom;
 	int bound_width;
 	int bound_height;
+	float aspect;
+	float area;
 	LineSegment lines[4];
 	PointFloat Intersections[4];
 };
@@ -46,9 +48,9 @@ struct ParticleList
 	ParticleData *particleData;
 };
 
-int ProcessImage(Image *image, ParticleList &particleList);
+int ProcessImage(Image *image, ParticleList &particleList, double &x, double &y);
 
-bool CheckAspect(ParticleList particleList, int ParticleNum, float min, float max);
+bool CheckAspect(float aspect, float min, float max);
 int ColorThreshold(Image* image, int min1, int max1, int min2, int max2, int min3, int max3, ColorMode colorMode);
 int ParticleFilter(Image* image, MeasurementType FilterMeasureTypes[], float plower[], float pUpper[], int pCalibrated[],
 							  int pExclude[], int rejectMatches, int connectivity);
@@ -59,7 +61,7 @@ int FindEdge(Image* image, ROI* roi, RakeDirection pDirection, EdgePolaritySearc
 				  StraightEdgeSearchMode pSearchMode, ParticleData* particleData, int lineIndex, int particleNumber);
 
 
-Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame)
+Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target)
 {
 	ImageType imageType = IMAQ_IMAGE_RGB;   
 	int ImageBorder = 7;
@@ -70,7 +72,7 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame)
 	imaqArrayToImage(image, (void*)Frame->Memory, Frame->XRes, Frame->YRes);
 
 	// do the actual processing
-	ProcessImage(image, particleList);
+	ProcessImage(image, particleList, x_target, y_target);
 
 	// Return our processed image back to our outgoing frame.
 	void *pImageArray = imaqImageToArray(image, IMAQ_NO_RECT, NULL, NULL);
@@ -108,23 +110,23 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame)
 #define USE_SIZE_FILTER
 #define USE_CONVEXHULL
 #define REJECT_BORDER_OBJS
-//#define USE_PARTICLE_FILTER	// don't use this...
-//#define USE_FIND_CORNERS
+#define USE_PARTICLE_FILTER	
+#define USE_FIND_CORNERS
 
 
-int ProcessImage(Image *image, ParticleList &particleList)
+int ProcessImage(Image *image, ParticleList &particleList, double &x_target, double &y_target)
 {
 	int success = 1;
 	int ImageBorder = 7;
 
 #if 1
 	// grey
-	int redMin = 100;	// 110
-	int redMax = 200;	// 200
-	int grnMin = 100;	// 110
-	int grnMax = 210;	// 220
-	int bluMin = 100;	// 110
-	int bluMax = 210;	// 220
+	int redMin = 100;	
+	int redMax = 200;	
+	int grnMin = 100;	
+	int grnMax = 210;	
+	int bluMin = 100;	
+	int bluMax = 210;	
 #endif
 #if 0
 	// red
@@ -226,17 +228,22 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 #ifdef USE_PARTICLE_FILTER
 	// particle filter parameters
-	MeasurementType FilterMeasureTypes[2] = {IMAQ_MT_BOUNDING_RECT_HEIGHT, IMAQ_MT_BOUNDING_RECT_WIDTH};
-	float plower[2] = {100, 90};	// i.e., height bounds: 40 - 400, width bounds 30 - 400
-	float pUpper[2] = {400,400};
-	int pCalibrated[2] = {0,0};
-	int pExclude[2] = {0,0};
+	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
+	float plower[] = {20, 20};	
+	float pUpper[] = {200, 200};
+	int pCalibrated[] = {0,0};
+	int pExclude[] = {0,0};
 
 	VisionErrChk(ParticleFilter(image, FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE));
 #endif
 
 	// Counts the number of particles in the image.
 	VisionErrChk(imaqCountParticles(image, TRUE, &particleList.numParticles));
+
+	// we want the qualifying target highest on the screen.
+	// (most valuable target)
+	int min_y = info.yRes + 1;
+	int index;
 
 #ifdef SHOW_OVERLAYS 
 	if(particleList.numParticles > 0)
@@ -259,15 +266,18 @@ int ProcessImage(Image *image, ParticleList &particleList)
 			Point P1;
 			Point P2;
 			Rect rect;
-
-			float aspectMin = 0.75f;
-			float aspectMax = 2.2f;
+			float area_thresh = 0.8f;
 
 			// reject if aspect is too far out.
-			if(CheckAspect(particleList, i, aspectMin, aspectMax))
+			if(CheckAspect(particleList.particleData[i].aspect, 0.8f, 1.33333333f))
 				continue;
 
-			// write some text to show aiming point (for fist item)
+			// reject if area ratio is too low
+			float bound_area = (float)particleList.particleData[i].bound_width * particleList.particleData[i].bound_height;
+			if( bound_area > 0 && (particleList.particleData[i].area / bound_area < area_thresh) )
+				continue;
+
+			// write some text to show aiming point 
 			Point TextPoint;
 			TextPoint.x = particleList.particleData[i].center.x;
 			TextPoint.y = particleList.particleData[i].center.y + 20;
@@ -284,6 +294,23 @@ int ProcessImage(Image *image, ParticleList &particleList)
 			textOps.fontColor = IMAQ_WHITE;
 			int fu;
 			imaqDrawTextOnImage(image2, image2, TextPoint, Text, &textOps, &fu); 
+
+			// show size of bounding box
+			//TextPoint.y += 16;
+			//sprintf_s(Text, 256, "%d, %d", particleList.particleData[i].bound_width, particleList.particleData[i].bound_height);
+			//imaqDrawTextOnImage(image2, image2, TextPoint, Text, &textOps, &fu); 
+
+			// center x, y
+			//TextPoint.y += 16;
+			//sprintf_s(Text, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
+			//imaqDrawTextOnImage(image2, image2, TextPoint, Text, &textOps, &fu); 
+
+			// track highest center x
+			if( particleList.particleData[i].center.y < min_y )
+			{
+				min_y = particleList.particleData[i].center.y;
+				index = i;
+			}
 
 			// draw a line from target CoM to center of screen
 			P1.x = particleList.particleData[i].center.x;
@@ -339,6 +366,18 @@ int ProcessImage(Image *image, ParticleList &particleList)
 #endif
 
 Error:
+	// Get return for x, y target values;
+	if( min_y < info.yRes + 1 )
+	{
+		x_target = (double)particleList.particleData[index].AimSys.x;
+		y_target = (double)particleList.particleData[index].AimSys.y;
+	}
+	else
+	{
+		x_target = 0.0;
+		y_target = 0.0;
+	}
+
 	// copy the end result 
 #ifdef USE_MASKING
 	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
@@ -355,11 +394,10 @@ Error:
 }
 
 
-bool CheckAspect(ParticleList particleList, int ParticleNum, float min, float max)
+bool CheckAspect(float aspect, float min, float max)
 {
 	// reject if aspect is too far out.
-	float aspect = (float)particleList.particleData[ParticleNum].bound_width / (float)particleList.particleData[ParticleNum].bound_height;
-	return (aspect < 0.8 || aspect > 2.2);
+	return (aspect < min || aspect > max);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -387,12 +425,17 @@ int FindParticleCorners(Image* image, ParticleList particleList)
 	ROI *roi2;
 	ROI *roi3;
 
+	float area_thresh = 0.8f;
+
 	for( i=0; i < particleList.numParticles; i++ )
 	{
 		// reject if aspect is too far out.
-		float aspectMin = 0.75f;
-		float aspectMax = 2.2f;
-		if(CheckAspect(particleList, i, aspectMin, aspectMax))
+		if(CheckAspect(particleList.particleData[i].aspect, 0.8f, 1.33333333f))
+			continue;
+
+		// reject if area ratio is too low
+		float bound_area = (float)particleList.particleData[i].bound_width * particleList.particleData[i].bound_height;
+		if( bound_area > 0 && (particleList.particleData[i].area / bound_area < area_thresh) )
 			continue;
 
 		// Creates a new, empty region of interest.
@@ -705,6 +748,11 @@ int GetParticles(Image* image, int connectivity, ParticleList particleList)
 		particleList.particleData[i].bound_width = (int)measurementValue;
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_HEIGHT, &measurementValue));
 		particleList.particleData[i].bound_height = (int)measurementValue;
+
+		particleList.particleData[i].aspect = (float)particleList.particleData[i].bound_width / particleList.particleData[i].bound_height;
+
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &measurementValue));
+		particleList.particleData[i].area = (float)measurementValue;
 	}
 
 Error:

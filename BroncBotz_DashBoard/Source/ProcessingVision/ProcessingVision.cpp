@@ -52,7 +52,10 @@ class SineWaveMaker
 extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *Frame)
 {
 #ifndef __UseSampleExample__
-	Frame = NI_VisionProcessing(Frame);
+	double x_target, y_target;
+	Frame = NI_VisionProcessing(Frame, x_target, y_target);
+	//DebugOutput("X=%.2f,Y=%.2f\n",x_target,y_target);
+	(*g_UDP_Output)(x_target,y_target);
 #else
 
 	//Test... make a green box in the center of the frame
