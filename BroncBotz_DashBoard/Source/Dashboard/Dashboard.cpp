@@ -115,6 +115,7 @@ const wchar_t * const cwsz_PlugInFile=L"ProcessingVision.dll";
 const wchar_t * const cwsz_ClassName=L"SunAwtFrame";
 const wchar_t * const cwsz_WindowName=L"SmartDashboard - ";
 std::wstring g_IP_Address=L"none";
+std::wstring g_Robot_IP_Address=L"none";
 
 class DDraw_Preview 
 {
@@ -692,11 +693,13 @@ void DDraw_Preview::OpenResources()
 
 	m_ProcessingVision.LoadPlugIn(m_Props.plugin_file.c_str());
 	{
-		wchar2char(g_IP_Address.c_str());
-		//m_ProcessingVision.Callback_Initialize(wchar2char_pchar);
-		//TODO strip the string for the IP address... hard code for now
-		//We may need to have a dedicated IP for robot or just parse the camera and assume it is 2
-		m_ProcessingVision.Callback_Initialize("10.28.1.2");
+		char *IpToUse=NULL;
+		if (g_Robot_IP_Address.c_str()[0]!=0)
+		{
+			wchar2char(g_Robot_IP_Address.c_str());
+			IpToUse=wchar2char_pchar;
+		}
+		m_ProcessingVision.Callback_Initialize(IpToUse);
 	}
 	LONG XRes=m_DefaultWindow.left, YRes=m_DefaultWindow.top, XPos=m_DefaultWindow.right, YPos=m_DefaultWindow.bottom;
 	const wchar_t *source_name=m_Props.source_name.c_str();
@@ -902,7 +905,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=14;
+			const size_t NoEnties=15;
 			string StringEntry[NoEnties<<1];
 			{
 				char Buffer[1024];
@@ -916,22 +919,23 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			in.close();
 			AssignInput(Title,StringEntry[1].c_str());
 			AssignInput(g_IP_Address,StringEntry[3].c_str());
-			AssignInput(StreamProfile,StringEntry[5].c_str());
-			int left=atoi(StringEntry[7].c_str());
-			int top=atoi(StringEntry[9].c_str());
-			int right=atoi(StringEntry[11].c_str());
-			int bottom=atoi(StringEntry[13].c_str());
+			AssignInput(g_Robot_IP_Address,StringEntry[5].c_str());
+			AssignInput(StreamProfile,StringEntry[7].c_str());
+			int left=atoi(StringEntry[9].c_str());
+			int top=atoi(StringEntry[11].c_str());
+			int right=atoi(StringEntry[13].c_str());
+			int bottom=atoi(StringEntry[15].c_str());
 			props.XRes=right-left;
 			props.YRes=bottom-top;
 			props.XPos=left;
 			props.YPos=top;
-			AssignInput(SmartDashboard,StringEntry[15].c_str());
-			AssignInput(ClassName,StringEntry[17].c_str());
-			AssignInput(WindowName,StringEntry[19].c_str());
-			g_IsPopup=atoi(StringEntry[21].c_str())==0?false:true;
-			AssignInput(Plugin,StringEntry[23].c_str());
-			AssignInput(AuxStart,StringEntry[25].c_str());
-			AssignInput(AuxArgs,StringEntry[27].c_str());
+			AssignInput(SmartDashboard,StringEntry[17].c_str());
+			AssignInput(ClassName,StringEntry[19].c_str());
+			AssignInput(WindowName,StringEntry[21].c_str());
+			g_IsPopup=atoi(StringEntry[23].c_str())==0?false:true;
+			AssignInput(Plugin,StringEntry[25].c_str());
+			AssignInput(AuxStart,StringEntry[27].c_str());
+			AssignInput(AuxArgs,StringEntry[29].c_str());
 		}
 		else
 		{
@@ -985,6 +989,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		out << "title= " << output << endl;
 		AssignOutput(output,g_IP_Address.c_str());
 		out << "IP_Address= " << output << endl;
+		AssignOutput(output,g_Robot_IP_Address.c_str());
+		out << "Robot_IP_Address= " << output << endl;
 		AssignOutput(output,StreamProfile.c_str());
 		out << "StreamProfile= " << output << endl;
 

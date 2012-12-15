@@ -55,7 +55,8 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *F
 	double x_target, y_target;
 	Frame = NI_VisionProcessing(Frame, x_target, y_target);
 	//DebugOutput("X=%.2f,Y=%.2f\n",x_target,y_target);
-	(*g_UDP_Output)(x_target,y_target);
+	if (g_UDP_Output)
+		(*g_UDP_Output)(x_target,y_target);
 #else
 
 	//Test... make a green box in the center of the frame
@@ -74,7 +75,8 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *F
 	double X,Y;
 	g_TestSample(X,Y);
 	//DebugOutput("X=%.2f,Y=%.2f\n",X,Y);
-	(*g_UDP_Output)(X,Y);
+	if (g_UDP_Output)
+		(*g_UDP_Output)(X,Y);
 #endif
 
 	return Frame;
