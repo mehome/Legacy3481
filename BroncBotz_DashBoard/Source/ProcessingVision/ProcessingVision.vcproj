@@ -223,6 +223,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\UDP_Client.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

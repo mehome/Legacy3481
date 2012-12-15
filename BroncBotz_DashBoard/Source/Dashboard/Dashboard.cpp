@@ -32,8 +32,12 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 {
 	public:
 		ProcessingVision(FrameWork::Outstream_Interface *Preview=NULL) : m_DriverProc(NULL),m_PlugIn(NULL),m_Outstream(Preview) {}
+		void Callback_Initialize(char *IPAddress) {if (m_PlugIn) (*m_fpInitialize)(IPAddress);}
+		void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
 		~ProcessingVision()
 		{
+			//Note: we can move this earlier if necessary
+			Callback_Shutdown();
 			FlushPlugin();
 		}
 
@@ -42,11 +46,24 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		{
 			FlushPlugin();  //ensure its not already loaded
 			m_PlugIn=LoadLibrary(Plugin);
+
 			if (m_PlugIn)
 			{
-				m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_RGB32");
-				if (!m_DriverProc)
+				try
+				{
+				
+					m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_RGB32");
+					if (!m_fpShutdown) throw 1;
+					m_fpInitialize=(function_Initialize) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Initialize");
+					if (!m_fpInitialize) throw 2;
+					m_fpShutdown=(function_void) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
+					if (!m_fpShutdown) throw 3;
+				}
+				catch (int ErrorCode)
+				{
+					FrameWork::DebugOutput("ProcessingVision Plugin failed error code=%d",ErrorCode);
 					FlushPlugin();
+				}
 			}
 		}
 		void StartStreaming() {m_IsStreaming=true;}
@@ -71,6 +88,13 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 	private:
 		typedef Bitmap_Frame * (*DriverProc_t)(Bitmap_Frame *Frame);
 		DriverProc_t m_DriverProc;
+
+		typedef void (*function_Initialize) (char *IPAddress);
+		function_Initialize m_fpInitialize;
+
+		typedef void (*function_void) ();
+		function_void m_fpShutdown;
+
 		void FlushPlugin()
 		{
 			if (m_PlugIn)
@@ -667,6 +691,13 @@ void DDraw_Preview::OpenResources()
 	CloseResources(); //just ensure all resources are closed
 
 	m_ProcessingVision.LoadPlugIn(m_Props.plugin_file.c_str());
+	{
+		wchar2char(g_IP_Address.c_str());
+		//m_ProcessingVision.Callback_Initialize(wchar2char_pchar);
+		//TODO strip the string for the IP address... hard code for now
+		//We may need to have a dedicated IP for robot or just parse the camera and assume it is 2
+		m_ProcessingVision.Callback_Initialize("10.28.1.2");
+	}
 	LONG XRes=m_DefaultWindow.left, YRes=m_DefaultWindow.top, XPos=m_DefaultWindow.right, YPos=m_DefaultWindow.bottom;
 	const wchar_t *source_name=m_Props.source_name.c_str();
 
