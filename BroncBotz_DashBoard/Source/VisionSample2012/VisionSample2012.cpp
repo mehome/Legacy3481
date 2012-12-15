@@ -108,11 +108,11 @@ class coodinate_manager : public UDP_Listener_Interface
 			if (pkt_size==16)
 			{
 				typedef unsigned long DWORD;
-				DWORD *ptr=(DWORD *)pkt;
+				long *ptr=(long *)pkt;
 				DWORD sync=_byteswap_ulong(ptr[0] );
-				DWORD XInt=_byteswap_ulong(ptr[1]);
-				DWORD YInt=_byteswap_ulong(ptr[2]);
-				DWORD checksum=_byteswap_ulong(ptr[3]);
+				long XInt=(long)_byteswap_ulong(ptr[1]);
+				long YInt=(long)_byteswap_ulong(ptr[2]);
+				long checksum=(long)_byteswap_ulong(ptr[3]);
 				if (sync==0xabacab)
 				{
 					if (checksum==XInt+YInt)
