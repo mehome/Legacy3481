@@ -23,6 +23,7 @@ struct LineSegment
 struct ParticleData
 {
 	Point center;
+	PointFloat AimSys;
 	int bound_left;
 	int bound_top;
 	int bound_right;
@@ -97,39 +98,33 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame)
 	return Frame;
 }
 
+//#define USE_MASKING
+//#define USE_MASKING2
+#define SHOW_OVERLAYS
+
+//#define USE_BLURRING
+
+#define FILL_HOLES
+#define USE_SIZE_FILTER
+#define USE_CONVEXHULL
+#define REJECT_BORDER_OBJS
+//#define USE_PARTICLE_FILTER	// don't use this...
+//#define USE_FIND_CORNERS
+
+
 int ProcessImage(Image *image, ParticleList &particleList)
 {
 	int success = 1;
-
 	int ImageBorder = 7;
-	ImageInfo info;
 
-#if 0
-	// blue
-	int redMin = 20; // -30
-	int redMax = 80; // -20
-	int grnMin = 50; // -30
-	int grnMax = 100; // - 25
-	int bluMin = 90; // -40
-	int bluMax = 175;
-#endif
 #if 1
 	// grey
-	int redMin = 150;	
-	int redMax = 200;	
-	int grnMin = 130;	
-	int grnMax = 180;	
-	int bluMin = 120;	
-	int bluMax = 170;	
-#endif
-#if 0
-	// dark blue
-	int redMin = 20;
-	int redMax = 75;
-	int grnMin = 20;
-	int grnMax = 75;
-	int bluMin = 0;
-	int bluMax = 175;
+	int redMin = 100;	// 110
+	int redMax = 200;	// 200
+	int grnMin = 100;	// 110
+	int grnMax = 210;	// 220
+	int bluMin = 100;	// 110
+	int bluMax = 210;	// 220
 #endif
 #if 0
 	// red
@@ -140,9 +135,18 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	int bluMin = 20;
 	int bluMax = 75;
 #endif
+#if 0
+	// blue
+	int redMin = 20; // -30
+	int redMax = 80; // -20
+	int grnMin = 50; // -30
+	int grnMax = 100; // - 25
+	int bluMin = 90; // -40
+	int bluMax = 175;
+#endif
 
 
-#if 0 // use only for really noisy camera images.
+#ifdef USE_BLURRING // use only for really noisy camera images.
 	// separate planes
 	Image *Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
 	Image *Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
@@ -175,19 +179,24 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	// copy image
 	// image  - used for particle operations - gets converted to 8 bit (binary).
 	// image2 - used for edge detection, and overlays
+	ImageInfo info;
 	imaqGetImageInfo(image, &info);
 	Image *image2 = imaqCreateImage(info.imageType, ImageBorder);
 	imaqDuplicate(image2, image);
 
+	// color threshold
 	VisionErrChk(ColorThreshold(image, redMin, redMax, grnMin, grnMax, bluMin, bluMax, IMAQ_RGB));
 
+#ifdef FILL_HOLES
 	VisionErrChk(imaqFillHoles(image, image, true));
-
+#endif
 	//-------------------------------------------------------------------//
 	//                Advanced Morphology: Remove Objects                //
 	//-------------------------------------------------------------------//
-
-	int pKernel[] = {1,1,1,1,1,1,1,1,1};	// 3x3 kernel 
+#ifdef USE_SIZE_FILTER
+	int pKernel[] = {1,1,1,
+					 1,1,1,
+					 1,1,1};	// 3x3 kernel 
 	StructuringElement structElem;
 	structElem.matrixCols = 3;
 	structElem.matrixRows = 3;
@@ -198,21 +207,24 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(image, image, TRUE, erosions, IMAQ_KEEP_LARGE, &structElem));
-
+#endif
 	//-------------------------------------------------------------------//
 	//                  Advanced Morphology: Convex Hull                 //
 	//-------------------------------------------------------------------//
-
+#ifdef USE_CONVEXHULL
 	// Computes the convex envelope for each labeled particle in the source image.
 	VisionErrChk(imaqConvexHull(image, image, FALSE));	// Connectivity 4??? set to true to make con 8.
-
+#endif
 	//-------------------------------------------------------------------//
 	//             Advanced Morphology: Remove Border Objects            //
 	//-------------------------------------------------------------------//
 
+#ifdef REJECT_BORDER_OBJS
 	// Eliminates particles touching the border of the image.
 	VisionErrChk(imaqRejectBorder(image, image, TRUE));
+#endif
 
+#ifdef USE_PARTICLE_FILTER
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[2] = {IMAQ_MT_BOUNDING_RECT_HEIGHT, IMAQ_MT_BOUNDING_RECT_WIDTH};
 	float plower[2] = {100, 90};	// i.e., height bounds: 40 - 400, width bounds 30 - 400
@@ -220,20 +232,26 @@ int ProcessImage(Image *image, ParticleList &particleList)
 	int pCalibrated[2] = {0,0};
 	int pExclude[2] = {0,0};
 
-	VisionErrChk(ParticleFilter(image, FilterMeasureTypes, plower, pUpper, 
-		pCalibrated, pExclude, FALSE, TRUE));
-
+	VisionErrChk(ParticleFilter(image, FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE));
+#endif
 
 	// Counts the number of particles in the image.
 	VisionErrChk(imaqCountParticles(image, TRUE, &particleList.numParticles));
 
+#ifdef SHOW_OVERLAYS 
 	if(particleList.numParticles > 0)
 	{
 		particleList.particleData = new ParticleData[particleList.numParticles];
 
 		VisionErrChk(GetParticles(image, TRUE, particleList));
 
+#ifdef USE_FIND_CORNERS
 		VisionErrChk(FindParticleCorners(image2, particleList));
+#endif
+
+#ifdef USE_MASKING2
+		imaqMask(image2, image2, image);	// mask image onto image2, result is image3
+#endif
 
 		// overlay some useful info
 		for(int i = 0; i < particleList.numParticles; i++)
@@ -248,6 +266,24 @@ int ProcessImage(Image *image, ParticleList &particleList)
 			// reject if aspect is too far out.
 			if(CheckAspect(particleList, i, aspectMin, aspectMax))
 				continue;
+
+			// write some text to show aiming point (for fist item)
+			Point TextPoint;
+			TextPoint.x = particleList.particleData[i].center.x;
+			TextPoint.y = particleList.particleData[i].center.y + 20;
+			char Text[256];
+			sprintf_s(Text, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
+			DrawTextOptions textOps;
+			strcpy_s(textOps.fontName, 32, "Arial");
+			textOps.fontSize = 12;
+			textOps.bold = false;
+			textOps.italic = false;
+			textOps.underline = false;
+			textOps.strikeout = false;
+			textOps.textAlignment = IMAQ_CENTER;
+			textOps.fontColor = IMAQ_WHITE;
+			int fu;
+			imaqDrawTextOnImage(image2, image2, TextPoint, Text, &textOps, &fu); 
 
 			// draw a line from target CoM to center of screen
 			P1.x = particleList.particleData[i].center.x;
@@ -279,6 +315,7 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 			imaqDrawShapeOnImage(image2, image2, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
 
+#ifdef USE_FIND_CORNERS
 			// corner points
 			for(int j = 0; j < 4; j++)
 			{
@@ -296,14 +333,23 @@ int ProcessImage(Image *image, ParticleList &particleList)
 
 				imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
 			}
+#endif
 		}
 	}
-	// copy the end result 
-	//imaqMask(image3, image2, image);
-	imaqDuplicate(image, image2);
-	imaqDispose(image2);
+#endif
 
 Error:
+	// copy the end result 
+#ifdef USE_MASKING
+	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
+	imaqMask(image3, image2, image);	// mask image onto image2, result is image3
+	imaqDuplicate(image, image3);		// copy image 3 out.
+	imaqDispose(image3);				// don't need it now.
+#else
+	imaqDuplicate(image, image2);
+#endif
+	imaqDispose(image2);
+
 	int error = imaqGetLastError();
 	return success;
 }
@@ -622,6 +668,11 @@ int GetParticles(Image* image, int connectivity, ParticleList particleList)
 {
 	int success = 1;
 	int i;
+	ImageInfo info;
+	imaqGetImageInfo(image, &info);
+	const float XRes = (float)info.xRes;
+	const float YRes = (float)info.yRes;
+	const float Aspect = XRes / YRes;
 
 	//-------------------------------------------------------------------//
 	//                         Particle Analysis                         //
@@ -636,6 +687,11 @@ int GetParticles(Image* image, int connectivity, ParticleList particleList)
 		particleList.particleData[i].center.x = (int)measurementValue;
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_CENTER_OF_MASS_Y, &measurementValue));
 		particleList.particleData[i].center.y = (int)measurementValue;
+
+		// convert to aiming system coords
+		particleList.particleData[i].AimSys.x = (float)((particleList.particleData[i].center.x - (XRes/2.0)) / (XRes/2.0)) * Aspect;
+		particleList.particleData[i].AimSys.y = (float)-((particleList.particleData[i].center.y - (YRes/2.0)) / (YRes/2.0));
+
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_LEFT, &measurementValue));
 		particleList.particleData[i].bound_left = (int)measurementValue;
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_TOP, &measurementValue));
@@ -644,6 +700,7 @@ int GetParticles(Image* image, int connectivity, ParticleList particleList)
 		particleList.particleData[i].bound_right = (int)measurementValue;
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_BOTTOM, &measurementValue));
 		particleList.particleData[i].bound_bottom = (int)measurementValue;
+		
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_WIDTH, &measurementValue));
 		particleList.particleData[i].bound_width = (int)measurementValue;
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_HEIGHT, &measurementValue));
