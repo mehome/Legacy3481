@@ -111,7 +111,10 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 #define USE_CONVEXHULL
 #define REJECT_BORDER_OBJS
 #define USE_PARTICLE_FILTER	
-#define USE_FIND_CORNERS
+//TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
+// Let's keep checked in disabled as long as this remains true... Note: this appears to work just as well without it
+//  [12/15/2012 James]
+#undef USE_FIND_CORNERS
 
 
 int ProcessImage(Image *image, ParticleList &particleList, double &x_target, double &y_target)
