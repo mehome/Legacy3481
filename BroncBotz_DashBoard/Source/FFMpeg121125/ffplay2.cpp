@@ -10,6 +10,7 @@
 #endif
 
 #undef __ShowFrameInfo__
+#undef __ShowProcessingDelta__
 
 /*
  * Copyright (c) 2003 Fabrice Bellard
@@ -1771,15 +1772,31 @@ static int dispatch_picture(VideoState *is, AVFrame *src_frame, double pts1, int
 			//yuck... the conversion copy
 			bitmap=bitmap_ycbcr;
 		}
-		//Don't let the queue grow by skipping the processing when it is too large
-		if (is->videoq.nb_packets< is->realtime ? 2 : 8 )
-			is->Preview->process_frame(&bitmap);
+
+		const int Playback_MaxQueue=8;
+		{
+			#ifdef __ShowProcessingDelta__
+			using namespace FrameWork;
+			time_type StartTime=time_type::get_current_time();
+			#endif
+			//Don't let the queue grow by skipping the processing when it is too large
+			if (is->videoq.nb_packets < (is->realtime ? 2 : Playback_MaxQueue) )
+				is->Preview->process_frame(&bitmap);
+
+			#ifdef __ShowProcessingDelta__
+			DebugOutput("%d time delta=%.1f\n",is->videoq.nb_packets,(double)(time_type::get_current_time()-StartTime) * 1000.0);
+			#endif
+		}
 
 		//For files... we use a timing mechanism to determine the amount to sleep... I have two different solutions the first shows the way it works in the video refresh where it
 		//works with the pts values to determine the delay, and the other uses a constant frame rate from the av_stream info... the big difference between these are noticeable where
 		//dropped frames would have occurred, and in one case the frame rate wasn't really what the PTS timing was showing.  The first choice is more accurate.
 		//  [12/10/2012 James]
-		if (!is->realtime)
+
+		//Note the nb_packets<Playback_MaxQueue... it is possible for queue to be large (eg. 80 fames) to fall behind... yet it will still sleep in this loop causing no frames to be sent... 
+		//this check will ensure that it goes as fast as possible to get the queue back down below max... this must also be the same value as the queue so that it doesn't play the frames
+		//too fast
+		if ((!is->realtime) && (is->videoq.nb_packets<Playback_MaxQueue))
 		{
 			#if 1
 			// compute nominal last_duration
@@ -2866,7 +2883,13 @@ static int read_thread(void *arg)
     if (st_index[AVMEDIA_TYPE_VIDEO] >= 0) {
         ret = stream_component_open(is, st_index[AVMEDIA_TYPE_VIDEO]);
     }
+
+	//This is to be removed as it is used for the SDL preview display
+	//  [12/15/2012 James]
+	#ifndef _LIB
     is->refresh_tid = SDL_CreateThread(refresh_thread, is);
+	#endif
+
     if (is->show_mode == VideoState::SHOW_MODE_NONE)
         is->show_mode = ret >= 0 ? VideoState::SHOW_MODE_VIDEO : VideoState::SHOW_MODE_RDFT;
 
