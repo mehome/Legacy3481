@@ -850,6 +850,12 @@ size_t split_arguments(const std::string& str, std::vector<std::string>& argumen
 
 void AssignInput(wstring &output,const char *input)
 {
+	if (strlen(input) == 0)
+	{	// can't do anything with this.
+		DebugOutput("Input arg for %s is empty\n", output);
+		output=L"";
+		return;
+	}
 	std::vector<std::string> Args;
 	split_arguments(std::string(input),Args);
 	//just use the first argument found

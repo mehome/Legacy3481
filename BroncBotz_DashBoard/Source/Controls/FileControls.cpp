@@ -50,7 +50,8 @@ long FileControls::Edit_Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPa
 				wchar_t Buffer[MAX_PATH<<1];
 				GetWindowText(w_ptr,Buffer,MAX_PATH<<1);
 				DebugOutput("Switch to=%ls\n",Buffer);
-				g_Controller->SwitchFilename(Buffer);
+				if (g_Controller)
+					g_Controller->SwitchFilename(Buffer);
 			}
 
 			break;
@@ -82,8 +83,11 @@ bool FileControls::Run(HWND pParent)
 	SetWindowLongPtr(hwndEdit,GWLP_USERDATA, (LONG_PTR)this);
 	//One more thing to do with the edit control... set it to its current file
 	std::wstring FileName;
-	g_Controller->GetFileName(FileName);
-	SetWindowText(hwndEdit,FileName.c_str());
+	if (g_Controller)
+	{
+		g_Controller->GetFileName(FileName);
+		SetWindowText(hwndEdit,FileName.c_str());
+	}
 	return ret;
 }
 
@@ -106,13 +110,16 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					switch (buttonid) 
 					{
 					case IDC_PAUSE:
-						g_Controller->Pause();
+						if(g_Controller)
+							g_Controller->Pause();
 						break;
 					case IDC_STOP:
-						g_Controller->Stop();
+						if(g_Controller)
+							g_Controller->Stop();
 						break;
 					case IDC_PLAY:
-						g_Controller->Run();
+						if(g_Controller)
+							g_Controller->Run();
 						break;
 					case IDC_BROWSE:
 						{
@@ -122,7 +129,8 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 								HWND hwndEdit=GetDlgItem(m_hDlg,IDC_FILENAME);
 								SetWindowText(hwndEdit,Output.c_str());
 								DebugOutput("Switch to=%ls\n",Output.c_str());
-								g_Controller->SwitchFilename(Output.c_str());
+								if(g_Controller)
+									g_Controller->SwitchFilename(Output.c_str());
 							}
 						}
 						break;
@@ -137,7 +145,8 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				{
 					int position=SendMessage(hWndScroller,TBM_GETPOS,0,0);
 					//DebugOutput("Position= %d\n",position);
-					g_Controller->Seek((double)position/100.0);
+					if(g_Controller)
+						g_Controller->Seek((double)position/100.0);
 					break;
 				}
 			}
