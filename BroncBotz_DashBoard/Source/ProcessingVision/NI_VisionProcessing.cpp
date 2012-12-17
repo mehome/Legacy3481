@@ -100,22 +100,22 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	return Frame;
 }
 
-//#define USE_MASKING
-//#define USE_MASKING2
+#undef USE_MASKING
+#undef USE_MASKING2
 #define SHOW_OVERLAYS
 
-//#define USE_BLURRING
+#undef USE_BLURRING
 
 #define FILL_HOLES
 #define USE_SIZE_FILTER
-#define USE_CONVEXHULL
+#undef USE_CONVEXHULL	// expensive, and not really needed.
 #define REJECT_BORDER_OBJS
 #define USE_PARTICLE_FILTER	
 //TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
 // Let's keep checked in disabled as long as this remains true... Note: this appears to work just as well without it
 //  [12/15/2012 James]
 #undef USE_FIND_CORNERS
-
+#undef SHOW_FIND_CORNERS
 
 int ProcessImage(Image *image, ParticleList &particleList, double &x_target, double &y_target)
 {
@@ -195,6 +195,7 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 #ifdef FILL_HOLES
 	VisionErrChk(imaqFillHoles(image, image, true));
 #endif
+
 	//-------------------------------------------------------------------//
 	//                Advanced Morphology: Remove Objects                //
 	//-------------------------------------------------------------------//
@@ -212,13 +213,6 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(image, image, TRUE, erosions, IMAQ_KEEP_LARGE, &structElem));
-#endif
-	//-------------------------------------------------------------------//
-	//                  Advanced Morphology: Convex Hull                 //
-	//-------------------------------------------------------------------//
-#ifdef USE_CONVEXHULL
-	// Computes the convex envelope for each labeled particle in the source image.
-	VisionErrChk(imaqConvexHull(image, image, FALSE));	// Connectivity 4??? set to true to make con 8.
 #endif
 	//-------------------------------------------------------------------//
 	//             Advanced Morphology: Remove Border Objects            //
@@ -240,8 +234,13 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 	VisionErrChk(ParticleFilter(image, FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE));
 #endif
 
-	// Counts the number of particles in the image.
-	VisionErrChk(imaqCountParticles(image, TRUE, &particleList.numParticles));
+	//-------------------------------------------------------------------//
+	//                  Advanced Morphology: Convex Hull                 //
+	//-------------------------------------------------------------------//
+#ifdef USE_CONVEXHULL
+	// Computes the convex envelope for each labeled particle in the source image.
+	VisionErrChk(imaqConvexHull(image, image, FALSE));	// Connectivity 4??? set to true to make con 8.
+#endif
 
 	// we want the qualifying target highest on the screen.
 	// (most valuable target)
@@ -249,6 +248,9 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 	int index;
 
 #ifdef SHOW_OVERLAYS 
+	// Counts the number of particles in the image.
+	VisionErrChk(imaqCountParticles(image, TRUE, &particleList.numParticles));
+
 	if(particleList.numParticles > 0)
 	{
 		particleList.particleData = new ParticleData[particleList.numParticles];
@@ -345,7 +347,8 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 
 			imaqDrawShapeOnImage(image2, image2, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
 
-#ifdef USE_FIND_CORNERS
+#ifdef USE_FIND_CORNERS 
+#ifdef SHOW_FIND_CORNERS
 			// corner points
 			for(int j = 0; j < 4; j++)
 			{
@@ -363,6 +366,7 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 
 				imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
 			}
+#endif
 #endif
 		}
 	}
@@ -416,8 +420,6 @@ bool CheckAspect(float aspect, float min, float max)
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#define DRAW_ROI
-
 int FindParticleCorners(Image* image, ParticleList particleList)
 {
 	int success = 1;
@@ -455,7 +457,7 @@ int FindParticleCorners(Image* image, ParticleList particleList)
 
 		VisionErrChk(imaqAddRectContour(roi, rect));
 
-#ifdef DRAW_ROI
+#ifdef SHOW_FIND_CORNERS
 		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 #endif
 
@@ -478,7 +480,7 @@ int FindParticleCorners(Image* image, ParticleList particleList)
 
 		VisionErrChk(imaqAddRectContour(roi1, rect));
 
-#ifdef DRAW_ROI
+#ifdef SHOW_FIND_CORNERS
 		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 #endif
 
@@ -501,7 +503,7 @@ int FindParticleCorners(Image* image, ParticleList particleList)
 
 		VisionErrChk(imaqAddRectContour(roi2, rect));
 
-#ifdef DRAW_ROI
+#ifdef SHOW_FIND_CORNERS
 		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 #endif
 
@@ -524,7 +526,7 @@ int FindParticleCorners(Image* image, ParticleList particleList)
 
 		VisionErrChk(imaqAddRectContour(roi3, rect));
 
-#ifdef DRAW_ROI
+#ifdef SHOW_FIND_CORNERS
 		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 #endif
 
