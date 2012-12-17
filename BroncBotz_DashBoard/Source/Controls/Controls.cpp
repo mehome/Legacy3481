@@ -152,7 +152,8 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_Initialize (Dashboard_Co
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_StartedStreaming(HWND pParent)
 {
-	ProcAmp_Initialize(pParent);
+	if (g_Controller)
+		ProcAmp_Initialize(pParent);
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
