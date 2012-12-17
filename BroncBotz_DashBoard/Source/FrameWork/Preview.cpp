@@ -609,6 +609,8 @@ void Preview::operator() ( const void* )
 				m_LastBufferProcessed=BufferToProcess;
 				m_CurrentFrameIndex=NextIndex; //advance the index
 			}
+			else
+				Sleep(16);  //avoid busy wait (this logic happens if no frames have been coming in)
 		}
 	}
 }
