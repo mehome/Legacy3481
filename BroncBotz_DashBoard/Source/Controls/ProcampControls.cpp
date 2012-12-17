@@ -255,9 +255,9 @@ void ProcAmp_Initialize(HWND pParent)
 			}
 		}
 		in.close();
+		assert(g_Controller);
 		for (size_t i=0;i<8;i++)
-			if(g_Controller)
-				g_Controller->Set_ProcAmp((ProcAmp_enum)i,atof(StringEntry[(i<<1)+1].c_str()));
+			g_Controller->Set_ProcAmp((ProcAmp_enum)i,atof(StringEntry[(i<<1)+1].c_str()));
 	}
 }
 
@@ -266,8 +266,8 @@ ProcampControls::ProcampControls()
 	for (size_t i=0;i<e_no_procamp_items;i++)
 	{
 		//This will obtain the value that was written to the matrix (handles reopening dialog to correct values)
-		if(g_Controller)
-			m_ProcAmpValues[i]=g_Controller->Get_ProcAmp((ProcAmp_enum)i);
+		assert(g_Controller);
+		m_ProcAmpValues[i]=g_Controller->Get_ProcAmp((ProcAmp_enum)i);
 		m_UpdatingEdit[i]=false;
 		m_UpdatingSlider[i]=false;
 	}
@@ -387,8 +387,8 @@ long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPara
 								{
 									m_ProcAmpValues[i]=value;
 									//DebugOutput("Edit[%d]= %.3f\n",i,value);
-									if(g_Controller)
-										g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
+									assert(g_Controller);
+									g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
 									UpdateSlider((ProcAmp_enum)i); //implicitly checks for flood control
 								}
 							}
@@ -407,8 +407,8 @@ long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPara
 							m_ProcAmpValues[i]=ProcAmp_Defaults[i];
 							UpdateText((ProcAmp_enum)i,true);
 							UpdateSlider((ProcAmp_enum)i,true);
-							if(g_Controller)
-								g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
+							assert(g_Controller);
+							g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
 						}
 					}
 				}
@@ -426,8 +426,8 @@ long ProcampControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lPara
 						int position=SendMessage(hWndScroller,TBM_GETPOS,0,0);
 						//DebugOutput("setting[%d]= %d\n",i,position);
 						m_ProcAmpValues[i]=GetTrackerBarValue(position,(ProcAmp_enum)i);
-						if(g_Controller)
-							g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
+						assert(g_Controller);
+						g_Controller->Set_ProcAmp((ProcAmp_enum)i,m_ProcAmpValues[i]);
 						UpdateText((ProcAmp_enum)i); //implicitly checks for flood control
 						break;
 					}
