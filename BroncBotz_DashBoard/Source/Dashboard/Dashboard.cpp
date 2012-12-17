@@ -945,6 +945,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		}
 		else
 		{
+			g_IP_Address=L"";
 			props.XRes=320;
 			props.YRes=240;
 			props.XPos=20;
