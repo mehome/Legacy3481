@@ -92,8 +92,6 @@ extern "C"
 #include "SDL/include/SDL.h"
 #include "SDL/include/SDL_thread.h"
 
-#include "cmdutils.h"
-
 #include <assert.h>
 #ifndef _LIB
 #pragma comment (lib , "lib/avcodec.lib")
@@ -322,8 +320,6 @@ static const char *input_filename;
 static const char *window_title;
 static int fs_screen_width;
 static int fs_screen_height;
-static int screen_width  = 0;
-static int screen_height = 0;
 static int audio_disable;
 static int video_disable;
 static int wanted_stream[AVMEDIA_TYPE_NB] = {0,-1,-1,0,-1};
@@ -579,7 +575,6 @@ static void do_exit(VideoState *is)
         stream_close(is);
     }
     av_lockmgr_register(NULL);
-    uninit_opts();
     avformat_network_deinit();
     if (show_status)
         printf("\n");
@@ -845,7 +840,8 @@ static int queue_picture(VideoState *is, AVFrame *src_frame, double pts1, int64_
         pict.linesize[1] = vp->bmp->pitches[2];
         pict.linesize[2] = vp->bmp->pitches[1];
 
-        sws_flags = (int)av_get_int(sws_opts, "sws_flags", NULL);
+        //sws_flags = (int)av_get_int(sws_opts, "sws_flags", NULL);
+		sws_flags = 0;
         is->img_convert_ctx = sws_getCachedContext(is->img_convert_ctx,
             vp->width, vp->height, (AVPixelFormat)src_frame->format, vp->width, vp->height,
             AV_PIX_FMT_YUV420P, sws_flags, NULL, NULL, NULL);
@@ -1587,7 +1583,8 @@ static int stream_component_open(VideoState *is, int stream_index)
     if(codec->capabilities & CODEC_CAP_DR1)
         avctx->flags |= CODEC_FLAG_EMU_EDGE;
 
-    opts = filter_codec_opts(codec_opts, avctx->codec_id, ic, ic->streams[stream_index], codec);
+    //opts = filter_codec_opts(codec_opts, avctx->codec_id, ic, ic->streams[stream_index], codec);
+	opts = NULL;
     if (!av_dict_get(opts, "threads", NULL, 0))
         av_dict_set(&opts, "threads", "auto", 0);
     if (avcodec_open2(avctx, codec, &opts) < 0)
@@ -1750,6 +1747,16 @@ static int is_realtime(AVFormatContext *s)
     return 0;
 }
 
+static void print_error(const char *filename, int err)
+{
+	char errbuf[128];
+	const char *errbuf_ptr = errbuf;
+
+	if (av_strerror(err, errbuf, sizeof(errbuf)) < 0)
+		errbuf_ptr = strerror(AVUNERROR(err));
+	av_log(NULL, AV_LOG_ERROR, "%s: %s\n", filename, errbuf_ptr);
+}
+
 /* this thread gets the stream from the disk or the network */
 static int read_thread(void *arg)
 {
@@ -1760,7 +1767,7 @@ static int read_thread(void *arg)
     AVPacket pkt1, *pkt = &pkt1;
     int eof = 0;
     int pkt_in_play_range = 0;
-    AVDictionaryEntry *t;
+    //AVDictionaryEntry *t;
     AVDictionary **opts;
     int orig_nb_streams;
     SDL_mutex *wait_mutex = SDL_CreateMutex();
@@ -1773,23 +1780,25 @@ static int read_thread(void *arg)
     ic = avformat_alloc_context();
     ic->interrupt_callback.callback = decode_interrupt_cb;
     ic->interrupt_callback.opaque = is;
-    err = avformat_open_input(&ic, is->filename, is->iformat, &format_opts);
+    //err = avformat_open_input(&ic, is->filename, is->iformat, &format_opts);
+	err = avformat_open_input(&ic, is->filename, is->iformat, NULL);
     if (err < 0) {
         print_error(is->filename, err);
         ret = -1;
         goto fail;
     }
-    if ((t = av_dict_get(format_opts, "", NULL, AV_DICT_IGNORE_SUFFIX))) {
-        av_log(NULL, AV_LOG_ERROR, "Option %s not found.\n", t->key);
-        ret = AVERROR_OPTION_NOT_FOUND;
-        goto fail;
-    }
+    //if ((t = av_dict_get(format_opts, "", NULL, AV_DICT_IGNORE_SUFFIX))) {
+    //    av_log(NULL, AV_LOG_ERROR, "Option %s not found.\n", t->key);
+    //    ret = AVERROR_OPTION_NOT_FOUND;
+    //    goto fail;
+    //}
     is->ic = ic;
 
     if (genpts)
         ic->flags |= AVFMT_FLAG_GENPTS;
 
-    opts = setup_find_stream_info_opts(ic, codec_opts);
+    //opts = setup_find_stream_info_opts(ic, codec_opts);
+	opts=NULL;
     orig_nb_streams = ic->nb_streams;
 
     err = avformat_find_stream_info(ic, opts);
@@ -1798,9 +1807,9 @@ static int read_thread(void *arg)
         ret = -1;
         goto fail;
     }
-    for (i = 0; i < orig_nb_streams; i++)
-        av_dict_free(&opts[i]);
-    av_freep(&opts);
+    //for (i = 0; i < orig_nb_streams; i++)
+    //    av_dict_free(&opts[i]);
+    //av_freep(&opts);
 
     if (ic->pb)
         ic->pb->eof_reached = 0; // FIXME hack, ffplay maybe should not use url_feof() to test for the end
@@ -2146,24 +2155,6 @@ static void step_to_next_frame(VideoState *is)
     is->step = 1;
 }
 
-static int opt_frame_size(void *optctx, const char *opt, const char *arg)
-{
-    av_log(NULL, AV_LOG_WARNING, "Option -s is deprecated, use -video_size.\n");
-    return opt_default(NULL, "video_size", arg);
-}
-
-static int opt_width(void *optctx, const char *opt, const char *arg)
-{
-    screen_width = (int)parse_number_or_die(opt, arg, OPT_INT64, 1, INT_MAX);
-    return 0;
-}
-
-static int opt_height(void *optctx, const char *opt, const char *arg)
-{
-    screen_height = (int)parse_number_or_die(opt, arg, OPT_INT64, 1, INT_MAX);
-    return 0;
-}
-
 static int opt_format(void *optctx, const char *opt, const char *arg)
 {
     file_iformat = av_find_input_format(arg);
@@ -2172,12 +2163,6 @@ static int opt_format(void *optctx, const char *opt, const char *arg)
         return AVERROR(EINVAL);
     }
     return 0;
-}
-
-static int opt_frame_pix_fmt(void *optctx, const char *opt, const char *arg)
-{
-    av_log(NULL, AV_LOG_WARNING, "Option -pix_fmt is deprecated, use -pixel_format.\n");
-    return opt_default(NULL, "pixel_format", arg);
 }
 
 static int opt_sync(void *optctx, const char *opt, const char *arg)
@@ -2195,39 +2180,6 @@ static int opt_sync(void *optctx, const char *opt, const char *arg)
     return 0;
 }
 
-static int opt_seek(void *optctx, const char *opt, const char *arg)
-{
-    start_time = parse_time_or_die(opt, arg, 1);
-    return 0;
-}
-
-static int opt_duration(void *optctx, const char *opt, const char *arg)
-{
-    duration = parse_time_or_die(opt, arg, 1);
-    return 0;
-}
-
-static int opt_show_mode(void *optctx, const char *opt, const char *arg)
-{
-    show_mode = !strcmp(arg, "video") ? VideoState::SHOW_MODE_VIDEO :
-                !strcmp(arg, "waves") ? VideoState::SHOW_MODE_WAVES :
-                !strcmp(arg, "rdft" ) ? VideoState::SHOW_MODE_RDFT  :
-				(VideoState::ShowMode)((int)parse_number_or_die(opt, arg, OPT_INT, 0, VideoState::SHOW_MODE_NB-1));
-    return 0;
-}
-
-static void opt_input_file(void *optctx, const char *filename)
-{
-    if (input_filename) {
-        fprintf(stderr, "Argument '%s' provided as input filename, but '%s' was already specified.\n",
-                filename, input_filename);
-        exit(1);
-    }
-    if (!strcmp(filename, "-"))
-        filename = "pipe:";
-    input_filename = filename;
-}
-
 static int opt_codec(void *o, const char *opt, const char *arg)
 {
     switch(opt[strlen(opt)-1]){
@@ -2239,83 +2191,6 @@ static int opt_codec(void *o, const char *opt, const char *arg)
 }
 
 static int dummy;
-
-static const OptionDef options[] = {
-#include "cmdutils_common_opts.h"
-    { "x", HAS_ARG, { opt_width }, "force displayed width", "width" },
-    { "y", HAS_ARG, { opt_height }, "force displayed height", "height" },
-    { "s", HAS_ARG | OPT_VIDEO, { opt_frame_size }, "set frame size (WxH or abbreviation)", "size" },
-    { "fs", OPT_BOOL, { &is_full_screen }, "force full screen" },
-    { "an", OPT_BOOL, { &audio_disable }, "disable audio" },
-    { "vn", OPT_BOOL, { &video_disable }, "disable video" },
-    { "ast", OPT_INT | HAS_ARG | OPT_EXPERT, { &wanted_stream[AVMEDIA_TYPE_AUDIO] }, "select desired audio stream", "stream_number" },
-    { "vst", OPT_INT | HAS_ARG | OPT_EXPERT, { &wanted_stream[AVMEDIA_TYPE_VIDEO] }, "select desired video stream", "stream_number" },
-    { "sst", OPT_INT | HAS_ARG | OPT_EXPERT, { &wanted_stream[AVMEDIA_TYPE_SUBTITLE] }, "select desired subtitle stream", "stream_number" },
-    { "ss", HAS_ARG, { opt_seek }, "seek to a given position in seconds", "pos" },
-    { "t", HAS_ARG, { opt_duration }, "play  \"duration\" seconds of audio/video", "duration" },
-    { "bytes", OPT_INT | HAS_ARG, { &seek_by_bytes }, "seek by bytes 0=off 1=on -1=auto", "val" },
-    { "nodisp", OPT_BOOL, { &display_disable }, "disable graphical display" },
-    { "f", HAS_ARG, { opt_format }, "force format", "fmt" },
-    { "pix_fmt", HAS_ARG | OPT_EXPERT | OPT_VIDEO, { opt_frame_pix_fmt }, "set pixel format", "format" },
-    { "stats", OPT_BOOL | OPT_EXPERT, { &show_status }, "show status", "" },
-    { "bug", OPT_INT | HAS_ARG | OPT_EXPERT, { &workaround_bugs }, "workaround bugs", "" },
-    { "fast", OPT_BOOL | OPT_EXPERT, { &fast }, "non spec compliant optimizations", "" },
-    { "genpts", OPT_BOOL | OPT_EXPERT, { &genpts }, "generate pts", "" },
-    { "drp", OPT_INT | HAS_ARG | OPT_EXPERT, { &decoder_reorder_pts }, "let decoder reorder pts 0=off 1=on -1=auto", ""},
-    { "lowres", OPT_INT | HAS_ARG | OPT_EXPERT, { &lowres }, "", "" },
-    { "skiploop", OPT_INT | HAS_ARG | OPT_EXPERT, { &skip_loop_filter }, "", "" },
-    { "skipframe", OPT_INT | HAS_ARG | OPT_EXPERT, { &skip_frame }, "", "" },
-    { "skipidct", OPT_INT | HAS_ARG | OPT_EXPERT, { &skip_idct }, "", "" },
-    { "idct", OPT_INT | HAS_ARG | OPT_EXPERT, { &idct }, "set idct algo",  "algo" },
-    { "ec", OPT_INT | HAS_ARG | OPT_EXPERT, { &error_concealment }, "set error concealment options",  "bit_mask" },
-    { "sync", HAS_ARG | OPT_EXPERT, { opt_sync }, "set audio-video sync. type (type=audio/video/ext)", "type" },
-    { "autoexit", OPT_BOOL | OPT_EXPERT, { &autoexit }, "exit at the end", "" },
-    { "exitonkeydown", OPT_BOOL | OPT_EXPERT, { &exit_on_keydown }, "exit on key down", "" },
-    { "exitonmousedown", OPT_BOOL | OPT_EXPERT, { &exit_on_mousedown }, "exit on mouse down", "" },
-    { "loop", OPT_INT | HAS_ARG | OPT_EXPERT, { &loop }, "set number of times the playback shall be looped", "loop count" },
-    { "framedrop", OPT_BOOL | OPT_EXPERT, { &framedrop }, "drop frames when cpu is too slow", "" },
-    { "infbuf", OPT_BOOL | OPT_EXPERT, { &infinite_buffer }, "don't limit the input buffer size (useful with realtime streams)", "" },
-    { "window_title", OPT_STRING | HAS_ARG, { &window_title }, "set window title", "window title" },
-    { "rdftspeed", OPT_INT | HAS_ARG| OPT_AUDIO | OPT_EXPERT, { &rdftspeed }, "rdft speed", "msecs" },
-    { "showmode", HAS_ARG, { opt_show_mode}, "select show mode (0 = video, 1 = waves, 2 = RDFT)", "mode" },
-    { "default", HAS_ARG | OPT_AUDIO | OPT_VIDEO | OPT_EXPERT, { opt_default }, "generic catch all option", "" },
-    { "i", OPT_BOOL, { &dummy}, "read specified file", "input_file"},
-    { "codec", HAS_ARG, { opt_codec}, "force decoder", "decoder" },
-    { NULL, },
-};
-
-static void show_usage(void)
-{
-    av_log(NULL, AV_LOG_INFO, "Simple media player\n");
-    av_log(NULL, AV_LOG_INFO, "usage: %s [options] input_file\n", program_name);
-    av_log(NULL, AV_LOG_INFO, "\n");
-}
-
-void show_help_default(const char *opt, const char *arg)
-{
-    av_log_set_callback(log_callback_help);
-    show_usage();
-    show_help_options(options, "Main options:", 0, OPT_EXPERT, 0);
-    show_help_options(options, "Advanced options:", OPT_EXPERT, 0, 0);
-    printf("\n");
-    show_help_children(avcodec_get_class(), AV_OPT_FLAG_DECODING_PARAM);
-    show_help_children(avformat_get_class(), AV_OPT_FLAG_DECODING_PARAM);
-    show_help_children(sws_get_class(), AV_OPT_FLAG_ENCODING_PARAM);
-    printf("\nWhile playing:\n"
-           "q, ESC              quit\n"
-           "f                   toggle full screen\n"
-           "p, SPC              pause\n"
-           "a                   cycle audio channel\n"
-           "v                   cycle video channel\n"
-           "t                   cycle subtitle channel\n"
-           "w                   show audio waves\n"
-           "s                   activate frame-step mode\n"
-           "left/right          seek backward/forward 10 seconds\n"
-           "down/up             seek backward/forward 1 minute\n"
-           "page down/page up   seek backward/forward 10 minutes\n"
-           "mouse click         seek to percentage in file corresponding to fraction of width\n"
-           );
-}
 
 static int lockmgr(void **mtx, enum AVLockOp op)
 {
@@ -2348,361 +2223,6 @@ static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
 #endif
 }
 
-  /***************************************************************************************************************/
- /*													FrameGrabber_HTTP											*/
-/***************************************************************************************************************/
-
-FrameGrabber_HttpStream::FrameGrabber_HttpStream(FrameWork::Outstream_Interface* Preview, const wchar_t* IPAddress)
-	: m_Error(true), m_pOutstream(Preview), m_pRecvThread(NULL), m_pProcThread(NULL), m_PortNum(INTERNET_DEFAULT_HTTP_PORT), m_AuthScheme(0),
-	  m_hSession(NULL), m_hConnection(NULL), m_hRequest(NULL), m_RecvBufferSize(0), m_ParserOffset(0),
-	  m_pCodecCtx(NULL), m_pSwsContext(NULL)
-{
-	// TODO: I don't know if IPAddress should be the full URL to the MJPEG stream
-
-	av_log_set_callback(ffm_logger);
-	avcodec_register_all();
-	av_register_all();
-	avformat_network_init();
-	if (av_lockmgr_register(lockmgr))
-	{
-		fprintf(stderr, "Could not initialize lock manager!\n");
-		do_exit(NULL);
-	}
-
-	if (!crack_url(IPAddress, m_HostName, m_Resource, m_PortNum, &m_UserName, &m_Password))
-		return;
-
-	m_hSession = WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_NO_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-	if (!m_hSession)
-		return;
-
-	m_Error = false;
-}
-
-FrameGrabber_HttpStream::~FrameGrabber_HttpStream(void)
-{
-	StopStreaming();
-
-	if (m_hSession)
-		WinHttpCloseHandle(m_hSession);
-
-	av_lockmgr_register(NULL);
-	avformat_network_deinit();
-}
-
-void FrameGrabber_HttpStream::SetOutstream_Interface(FrameWork::Outstream_Interface* Preview)
-{
-	m_pOutstream = Preview;
-}
-
-bool FrameGrabber_HttpStream::StartStreaming(void)
-{
-	AVCodec* pCodec = avcodec_find_decoder(AV_CODEC_ID_MJPEG);
-	if (pCodec)
-	{
-		m_pCodecCtx = avcodec_alloc_context3(pCodec);
-		if (m_pCodecCtx)
-			avcodec_open2(m_pCodecCtx, pCodec, NULL);
-	}
-
-	m_hConnection = WinHttpConnect(m_hSession, m_HostName.c_str(), static_cast<INTERNET_PORT>(m_PortNum), 0);
-	if (m_hConnection)
-	{
-		m_hRequest = WinHttpOpenRequest(m_hConnection, NULL, m_Resource.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
-		if (m_hRequest)
-		{
-			bool sendRequest = true;
-
-			size_t numSends = 0;
-			while (sendRequest)
-			{
-				sendRequest = false;
-				numSends++;
-
-				if (m_AuthScheme != 0)
-					WinHttpSetCredentials(m_hRequest, WINHTTP_AUTH_TARGET_SERVER, m_AuthScheme, m_UserName.c_str(), m_Password.c_str(), NULL);
-
-				if (WinHttpSendRequest(m_hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, NULL, 0, 0, NULL) != FALSE)
-				{
-					if (WinHttpReceiveResponse(m_hRequest, NULL) != FALSE)
-					{
-						DWORD statusCode;
-						if (get_http_header(m_hRequest, WINHTTP_QUERY_STATUS_CODE, statusCode))
-						{
-							if (statusCode == HTTP_STATUS_OK)
-							{
-								std::wstring contentType;
-								if (get_http_header(m_hRequest, WINHTTP_QUERY_CONTENT_TYPE, contentType))
-								{
-									const wchar_t boundaryTokenStart[] = L"boundary=";
-									const size_t boundaryTokenStartLength = wcslen(boundaryTokenStart);
-
-									size_t boundaryOffset = contentType.find(boundaryTokenStart);
-									if (boundaryOffset != std::wstring::npos)
-									{
-										const std::wstring boundaryToken = contentType.substr(boundaryOffset + boundaryTokenStartLength);
-										if (boundaryToken.length() != 0)
-										{
-											const std::wstring boundaryPrefix = L"--";
-											bool addPrefix = (boundaryToken.compare(0, boundaryPrefix.length(), boundaryPrefix) != 0);
-
-											m_BoundaryToken =
-												(addPrefix ? boundaryPrefix : std::wstring())
-												+ boundaryToken
-												+ std::wstring(L"\r\n");
-
-											m_pRecvThread = new thread_t(this, ReceivingThread);
-										}
-									}
-								}
-							}
-							else if (statusCode == HTTP_STATUS_DENIED)
-							{
-								DWORD supportedSchemes, firstScheme, authTarget;
-								if (WinHttpQueryAuthSchemes(m_hRequest, &supportedSchemes, &firstScheme, &authTarget) != FALSE)
-								{
-									if (supportedSchemes & WINHTTP_AUTH_SCHEME_NEGOTIATE)
-										m_AuthScheme = WINHTTP_AUTH_SCHEME_NEGOTIATE;
-									else if (supportedSchemes & WINHTTP_AUTH_SCHEME_NTLM)
-										m_AuthScheme = WINHTTP_AUTH_SCHEME_NTLM;
-									else if (supportedSchemes & WINHTTP_AUTH_SCHEME_PASSPORT)
-										m_AuthScheme = WINHTTP_AUTH_SCHEME_PASSPORT;
-									else if (supportedSchemes & WINHTTP_AUTH_SCHEME_DIGEST)
-										m_AuthScheme = WINHTTP_AUTH_SCHEME_DIGEST;
-									else if (supportedSchemes & WINHTTP_AUTH_SCHEME_BASIC)
-										m_AuthScheme = WINHTTP_AUTH_SCHEME_BASIC;
-									else
-										m_AuthScheme = 0;
-								}
-
-								if (numSends == 1)
-									sendRequest = (m_AuthScheme != 0 && (m_UserName.length() > 0 || m_Password.length() > 0));
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if (m_pRecvThread)
-		m_pProcThread = new thread_t(this, ProcessingThread);
-	else
-		StopStreaming();
-
-	return m_pRecvThread && m_pProcThread;
-}
-
-void FrameGrabber_HttpStream::StopStreaming(void)
-{
-	if (m_pRecvThread)
-	{
-		delete m_pRecvThread;
-		m_pRecvThread = NULL;
-	}
-
-	if (m_pProcThread)
-	{
-		delete m_pProcThread;
-		m_pProcThread = NULL;
-	}
-
-	if (m_hRequest)
-	{
-		WinHttpCloseHandle(m_hRequest);
-		m_hRequest = NULL;
-	}
-
-	if (m_hConnection)
-	{
-		WinHttpCloseHandle(m_hConnection);
-		m_hConnection = NULL;
-	}
-
-	if (m_pSwsContext)
-	{
-		sws_freeContext(m_pSwsContext);
-		m_pSwsContext = NULL;
-	}
-
-	if (m_pCodecCtx)
-	{
-		if (avcodec_is_open(m_pCodecCtx))
-			avcodec_close(m_pCodecCtx);
-
-		av_free(m_pCodecCtx);
-		m_pCodecCtx = NULL;
-	}
-
-	while (!m_ProcessingQueue.empty())
-	{
-		PreProcessedData data = m_ProcessingQueue.front();
-		m_ProcessingQueue.pop();
-		delete[] data.second;
-	}
-
-	if (m_RecvBuffer.capacity() > 0)
-	{
-		std::vector<BYTE> v;
-		m_RecvBuffer.swap(v);
-	}
-
-	m_BoundaryToken  = L"";
-	m_RecvBufferSize = 0;
-	m_ParserOffset   = 0;
-}
-
-bool FrameGrabber_HttpStream::ReceiveData(void)
-{
-	DWORD numBytesAvail;
-	if (WinHttpQueryDataAvailable(m_hRequest, &numBytesAvail) == FALSE || numBytesAvail == 0)
-		return false;
-
-	if (m_RecvBufferSize + numBytesAvail > m_RecvBuffer.size())
-		m_RecvBuffer.resize(m_RecvBufferSize + numBytesAvail);
-
-	DWORD numBytesRecv = 0;
-	if (WinHttpReadData(m_hRequest, &m_RecvBuffer[m_RecvBufferSize], numBytesAvail, &numBytesRecv) == FALSE)
-		return false;
-
-	assert(numBytesAvail == numBytesRecv);
-	m_RecvBufferSize += numBytesRecv;
-
-	size_t i = m_ParserOffset;
-	while (i < m_RecvBufferSize)
-	{
-		size_t j = 0;
-		while (i < m_RecvBufferSize && j < m_BoundaryToken.length())
-		{
-			if (m_RecvBuffer[i] != m_BoundaryToken[j])
-				break;
-
-			i++;
-			j++;
-		}
-
-		if (j < m_BoundaryToken.length())
-		{
-			i++;
-			continue;
-		}
-		else
-		{
-			size_t dataSize = i;
-			if (dataSize > 1 && m_RecvBuffer[dataSize - 2] == L'\r' && m_RecvBuffer[dataSize - 1] == L'\n')
-				dataSize -= 2;
-
-			if (dataSize > 0)
-			{
-				PreProcessedData data;
-				data.first  = dataSize;
-				data.second = new BYTE[data.first];
-
-				memcpy(data.second, &m_RecvBuffer[0], data.first);
-
-				m_ProcessingQueue_CS.lock();
-				m_ProcessingQueue.push(data);
-				m_ProcessingQueue_CS.unlock();
-			}
-
-			m_RecvBuffer.erase(m_RecvBuffer.begin(), m_RecvBuffer.begin() + i);
-			m_RecvBufferSize -= i;
-			i = 0;
-		}
-	}
-
-	m_ParserOffset = i;
-	return true;
-}
-
-bool FrameGrabber_HttpStream::ProcessData(void)
-{
-	const std::wstring httpHeaderEndToken = L"\r\n\r\n";
-
-	std::queue<PreProcessedData> queue;
-	{
-		FrameWork::auto_lock lock(m_ProcessingQueue_CS);
-		while (!m_ProcessingQueue.empty())
-		{
-			queue.push(m_ProcessingQueue.front());
-			m_ProcessingQueue.pop();
-		}
-	}
-
-	if (!m_pOutstream)
-		return false;
-
-	while (!queue.empty())
-	{
-		PreProcessedData data = queue.front();
-		queue.pop();
-
-		size_t i = 0;
-		while (i < data.first)
-		{
-			size_t j = 0;
-			while (i < data.first && j < httpHeaderEndToken.length())
-			{
-				if (data.second[i] != httpHeaderEndToken[j])
-					break;
-
-				i++;
-				j++;
-			}
-
-			if (j == httpHeaderEndToken.length())
-			{
-				if (m_pCodecCtx && avcodec_is_open(m_pCodecCtx))
-				{
-					AVPacket packet;
-					av_init_packet(&packet);
-					packet.data = data.second + i;
-					packet.size = data.first - i;
-
-					AVFrame frame;
-					avcodec_get_frame_defaults(&frame);
-
-					int gotPicture;
-					if (avcodec_decode_video2(m_pCodecCtx, &frame, &gotPicture, &packet) > 0 && gotPicture != 0)
-					{
-						AVPicture pic;
-						if (avpicture_alloc(&pic, AV_PIX_FMT_BGRA, frame.width, frame.height) == 0)
-						{
-							m_pSwsContext = sws_getCachedContext(m_pSwsContext, frame.width, frame.height, (AVPixelFormat)frame.format, frame.width, frame.height, AV_PIX_FMT_BGRA, SWS_BICUBIC, NULL, NULL, NULL);
-							assert(m_pSwsContext);
-
-							sws_scale(m_pSwsContext, frame.data, frame.linesize, 0, frame.height, pic.data, pic.linesize);
-
-							FrameWork::Bitmaps::bitmap_bgra_u8 bmp;
-							bmp.reference_in_bytes((FrameWork::Bitmaps::bitmap_bgra_u8::pixel_type*)pic.data[0], frame.width, frame.height, pic.linesize[0]);
-
-							if (m_pOutstream)
-								m_pOutstream->process_frame(&bmp);
-
-							avpicture_free(&pic);
-						}
-					}
-				}
-
-				break;
-			}
-
-			i++;
-		}
-	}
-
-	return true;
-}
-
-void FrameGrabber_HttpStream::operator()(const ThreadType& type)
-{
-	if (type == ReceivingThread)
-		ReceiveData();
-	else if (type == ProcessingThread)
-		ProcessData();
-
-	Sleep(1);
-}
 
   /***************************************************************************************************************/
  /*												FrameGrabber_FFMpeg												*/
@@ -2832,7 +2352,6 @@ FrameGrabber_FFMpeg::~FrameGrabber_FFMpeg()
 		return;
 
 	av_lockmgr_register(NULL);
-	uninit_opts();
 	avformat_network_deinit();
 	if (show_status)
 		printf("\n");
@@ -2914,7 +2433,7 @@ FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t
 					format==eHttpReader?FrameGrabber_FFMpeg::eIpURL_MJPEG:FrameGrabber_FFMpeg::eIpURL_H264);
 				break;
 			case eHttpReader2:
-				m_VideoStream=new FrameGrabber_HttpStream(Preview,IPToUse.c_str());
+				assert(false);
 				break;
 		}
 
