@@ -13,7 +13,7 @@ class FC3Out_Update : public FrameWork::Outstream_Interface
 protected:
 	virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 	{
-		#if 1
+		#if 0
 		static size_t counter=0;
 		printf ("\r %d received           ",counter++);
 		#endif
