@@ -1235,25 +1235,6 @@ static int subtitle_thread(void *arg)
     return 0;
 }
 
-/* copy samples for viewing in editor window */
-static void update_sample_display(VideoState *is, short *samples, int samples_size)
-{
-    int size, len;
-
-    size = samples_size / sizeof(short);
-    while (size > 0) {
-        len = SAMPLE_ARRAY_SIZE - is->sample_array_index;
-        if (len > size)
-            len = size;
-        memcpy(is->sample_array + is->sample_array_index, samples, len * sizeof(short));
-        samples += len;
-        is->sample_array_index += len;
-        if (is->sample_array_index >= SAMPLE_ARRAY_SIZE)
-            is->sample_array_index = 0;
-        size -= len;
-    }
-}
-
 /* return the wanted number of samples to get better sync if sync_type is video
  * or external master clock */
 static int synchronize_audio(VideoState *is, int nb_samples)
@@ -1460,15 +1441,15 @@ static void sdl_audio_callback(void *opaque, Uint8 *stream, int len)
     while (len > 0) {
         if (is->audio_buf_index >= (int)is->audio_buf_size) {
            audio_size = audio_decode_frame(is, &pts);
-           if (audio_size < 0) {
+           if (audio_size < 0) 
+		   {
                 /* if error, just output silence */
                is->audio_buf      = is->silence_buf;
                is->audio_buf_size = sizeof(is->silence_buf) / frame_size * frame_size;
-           } else {
-               if (is->show_mode != VideoState::SHOW_MODE_VIDEO)
-                   update_sample_display(is, (int16_t *)is->audio_buf, audio_size);
+           } 
+		   else
                is->audio_buf_size = audio_size;
-           }
+
            is->audio_buf_index = 0;
         }
         len1 = is->audio_buf_size - is->audio_buf_index;
