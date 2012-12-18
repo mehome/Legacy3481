@@ -28,6 +28,7 @@ enum ProcAmp_enum
 class Dashboard_Controller_Interface
 {
 public:
+	virtual ~Dashboard_Controller_Interface() {}
 	virtual void Flush()=0;
 	virtual int Run (void)=0;					
 	virtual int Stop (void)=0;					
