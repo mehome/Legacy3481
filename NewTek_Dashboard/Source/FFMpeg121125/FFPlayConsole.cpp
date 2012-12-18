@@ -1,16 +1,32 @@
 #include "stdafx.h"
 #include "../FrameWork/FrameWork.h"
+#include "../FrameWork/Communication3/FrameWork.Communication3.h"
 #include "FrameGrabber.h"
 
 #include "../FileSelectionLib/Common.h"
 
-class DebugOut_Update : public FrameWork::Outstream_Interface
+const wchar_t * const cwsz_VideoName=L"switcher|input|12:frame";
+const wchar_t * const cwsz_AudioName=L"mixer|input|10:frame";
+
+class FC3Out_Update : public FrameWork::Outstream_Interface
 {
 protected:
 	virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 	{
+		#if 1
 		static size_t counter=0;
 		printf ("\r %d received           ",counter++);
+		#endif
+
+		using namespace FC3::video;
+		int XRes=pBuffer->xres();
+		int YRes=pBuffer->yres();
+		//TODO change this
+		bool IsProgressive=!pBuffer->is_interleaved();
+
+		message msg(message::data_format_bgra_4444_u8,XRes,YRes);
+		msg.bgra()=*pBuffer; //copy contents
+		msg.send(cwsz_VideoName);
 	}
 };
 
@@ -27,7 +43,7 @@ private:
 	void CloseResources();
 	void OpenResources();
 
-	DebugOut_Update m_TestOutDebug;
+	FC3Out_Update m_TestOutDebug;
 	Dashboard_Controller_Interface *m_Streamer;
 };
 

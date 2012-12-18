@@ -7,6 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FFMpegPlayCPP", "FFMpegPlay
 	ProjectSection(ProjectDependencies) = postProject
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623} = {40C81C1D-8ABD-4282-8298-3750EEC0B623}
 		{D98B8E35-8E9D-4F89-BF20-6EF428710DCC} = {D98B8E35-8E9D-4F89-BF20-6EF428710DCC}
+		{E7513EB0-6C0B-43BD-81EB-958300BBF613} = {E7513EB0-6C0B-43BD-81EB-958300BBF613}
 		{455B6FC3-BCD0-4927-B561-55F896A96185} = {455B6FC3-BCD0-4927-B561-55F896A96185}
 	EndProjectSection
 EndProject
@@ -17,6 +18,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcAmp", "..\ProcAmp\ProcAmp.vcproj", "{40C81C1D-8ABD-4282-8298-3750EEC0B623}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XML", "..\FrameWork\XML\XML.vcproj", "{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Communication3", "..\FrameWork\Communication3\Communication3.vcproj", "{E7513EB0-6C0B-43BD-81EB-958300BBF613}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,6 +67,12 @@ Global
 		{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}.Release|Win32.ActiveCfg = Release|Win32
 		{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}.Release|Win32.Build.0 = Release|Win32
 		{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}.Release|x64.ActiveCfg = Release|Win32
+		{E7513EB0-6C0B-43BD-81EB-958300BBF613}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E7513EB0-6C0B-43BD-81EB-958300BBF613}.Debug|Win32.Build.0 = Debug|Win32
+		{E7513EB0-6C0B-43BD-81EB-958300BBF613}.Debug|x64.ActiveCfg = Debug|Win32
+		{E7513EB0-6C0B-43BD-81EB-958300BBF613}.Release|Win32.ActiveCfg = Release|Win32
+		{E7513EB0-6C0B-43BD-81EB-958300BBF613}.Release|Win32.Build.0 = Release|Win32
+		{E7513EB0-6C0B-43BD-81EB-958300BBF613}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
