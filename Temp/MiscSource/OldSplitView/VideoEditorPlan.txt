@@ -1,0 +1,248 @@
+#####################
+# Video Editor Plan #
+#####################
+
+*** NOTE:  Since I am behind, I have marked sections that I think are a little less important and
+	can be pushed back until after NAB with *asterix*, based on my progress at that point.
+
+Be sure ContentInstance is handeling its new list properly.
+
+Monday, 4-9
+--------------
+	Properly grab Preferences for TimeLine and Projectless CI
+	Create AVI sources
+	Create a source that has alpha for an overlay
+	Create any other types for the Show
+
+Tuesday 4-10
+--------------	
+	Preview for Audio ONLY or other disabled TimeLine Crouton
+	TimeLineLayout
+		YOU ARE HERE BAR
+		Snap to Selected
+		Maintain selection across Tabs and Snap to Selected
+		Razor/Merge operations
+		Easy Ripple Operations (Deleting, Ripple Move Back)
+		Inserting from Multiple FileButtons Ripple Operation
+		Ripple Inserting a Block
+
+Wednesday 4-10
+--------------
+	Undo/Redo Interface
+	*** Undo/Redo User Interface (Panel so that user can select past operations by name)
+	Creation of a Sub-Project (Has Alpha support in the Mid-sections??)
+		Selected areas Collapse into sub project
+		Open collapsed project in a separate editor
+		Un-Collapse Sub Project
+
+Weekend
+-------------
+	TimeLine Layout
+		Current / Selected Time
+		Snap time to selected croutons
+		Razor at selected Time
+		Cut/Copy/Paste Buffer
+		
+		Paste clips at selected time
+
+Goal 4-16
+-------------
+	Rendering
+
+Goal 4-23
+-------------
+	PlugIn Panel basics
+		Mini Zoomed TimeLine
+		Tab per stream
+		Errors;
+		Plug In specific controls Interface;
+
+	PlugIn Panel Advanced
+		Get all Plugins with their own UI interface
+		BE able to add filters and Utilities to appropriate clips w/ DnD
+
+
+
+
+
+
+
+
+Video Editor
+{
+	Data Structures - Rick
+	{
+		Varying Source Type Plugins;
+		Global Preferences
+		TimeLine Project preferences
+		Completing InOut interfaces;
+		Stream Level Offsets;
+		Preview ScreenObjects;
+		Be sure all BaseLoad Saving works;
+		Crouton level ColorCoding and Naming;
+		Creating a Sub-Project from a list of TLE's;
+		Undo/Redo Support;
+		Plugin Context Menu Support;
+			Opens a Properties;
+		Reverseable ContentInstances;
+	}
+	TimeLine Layout - Rick
+	{
+		Razor / Merge;
+		Current Time;
+		Selected Time;
+		Markered Areas of Time;
+		Showing Rendered / Invalidated Areas;
+		Cut / Copy / Paste Selected Time;
+		Tranistions Snap edges;
+		Dragging the A or B end of a transition Properly
+		Color Coding & Naming Tracks;
+		Show Icons, Clip Name, Colors, Active Regions, Other Effects for Markers;
+		Be able to collapse Croutons per Track;
+		Film Strip edges of active regions;
+		Snap TimeLine to Selected;
+		HotKey and Scripting Support;
+		Audio, Compositing, and Effect Animated Variables;
+		Exterior Audio Crouton Support;
+		Interior Audio Crouton Support
+			Breaking the Crouton off and placing it back on;
+		Setting the PROJECT's Active Region in the TimeLine;
+		Adding/Showing Markers to Project;
+		Ripple Operations;
+		Multiple Insertion Operations;
+	}
+	StoryBoard Layout - James
+	{
+		Active Region Support;
+		StoryBoard Croutons;
+			Display / Edit In/Out Points;
+			Crouton Markers
+				Active Regions
+				Using Audio
+				Special Effects
+				Errors
+			Dropping onto Icons to replace
+		Hotkeys for selection etc.;
+		Scripting support;
+		Multiple View Modes;
+		BaseLoadSave;
+		NonRipple, Insertion, Non-Insertion Modes;
+		Show-Hide Crouton types;
+	}
+	InOut Panel - James
+	{
+		InOut points;
+			Styles outer, center, inner;
+		Length/Scaling;
+		Offset;
+		Clip Name;
+		MoneyShot;
+		Multiple Streams;
+		Enable/Disable;
+		Adding/Showing Markers to Clips;
+		Plug in Panel - Rick
+			Mini TimeLine;
+			Tab per stream
+			Errors;
+			Local Effects;
+			Rubber Banding;
+			Plug In specific controls;
+	}
+	Integrated Control - James
+	{
+		Tabs;
+		Splitter Window;
+		Cut, Copy, Paste;
+		Sub Projects;
+		Project Preference Editing;
+		Inserting a Blank Track;
+		Hot Key Support;
+		Scripting Support;
+		File Load/Saving;
+		Integrated Selection;
+		Setting the PROJECT's Active Region in the TimeLine;
+		Drop Down Commands;
+		Show / Hide Properties Panel;
+		Deck Control;
+	}
+	Rendering - Rick
+	{
+		Be able to have clips withing 2 seconds either way of a given point;
+		WORK this out w/ Andrew;
+		Rendering to Files;
+	}
+}
+
+Items to Fix Up (Rick)
+----------------------
+Use Slip and Slide rather than dragging with ALT key pressed (How will InOut Panel work with this?)
+Remove the Active Regions class completely (How will James handle all of this ??)
+
+Completed for Next Label
+------------------------
+
+
+	Scripting, ContextMenu,  and HotKey support
+		All Data Structure Scripting, ContextMenu,  and HotKey support
+		All Crouton Scripting, ContextMenu,  and Hotkey Support
+		All TimeLine_Layout scripting, ContextMenu,  and HotKey Support
+		(All SB Scripting, ContextMenu,  and Hotkey Support)
+		(All InOut Panel Scripting, ContextMenu,  and Hotkey Support)
+		(All Main UI Scripting, ContextMenu,  and Hotkey Support)
+
+	Help James Complete external UI & Other Touchups
+		Play Previewing a clip or scrubbing project in a Panel
+		Show / Hide the UI's child InOut Panel
+		Be able to create / close other panels with Context Menu 
+
+
+	*******************************************************************************
+	** I think this is less important and would be a good deal of work, may be pushed back
+	Animated Croutons
+		Overlays and Audio ContentInstances have animated fade
+		Animated Variables Interface
+		TimeLine_Croutons for these CI's have an animated interface window
+	*******************************************************************************
+
+	Resolving missing items
+
+	Drop replace croutons
+
+	Be able to play clips backwards 
+			(with a check box, scale, or reversed In/Out points), be sure to limit properly
+
+	Automatic clip offsets in the preferences panel
+
+	User defined Bins
+
+	All BaseLoad Save working 
+			Can drop in a save ContentInstance lsd
+			If a source OR plugin is not available???
+
+	User deleting file being used errors  (AND OR call the File locked.)
+		ContentSource watch for deletion of files
+		All streams watch for deletion of source
+		All streams try catch errors with missing files and remove FileProperties
+
+	AV-Files linked on the Same track
+		Dragging Edges of either one
+		Deleting either Disables the stream
+		Linked files with Offset on the same track
+		Selecting the Video Clip also selects the Audio-Clip
+		Dragging The Video Track moves a linked Audio Track
+		Dragging the Audio Clip off the track disables the stream (watch for CTRL) and creates a new CI
+		Dragging the AudioClip back On Re-enables the Stream, Deletes the Audio CI, etc.
+
+	TimeLine Layout
+		*** Inserting Blank Tracks
+		*** Removing empty tracks (collapsing entire TimeLine)
+		*** Collapsing Tracks (Multiple View Mode)
+		*** ColorCoding Tracks
+		*** Naming Tracks
+		*** Re-Ordering Tracks
+		*** Select/De-Select all on track
+		*** Project active Rendering Region
+		*** Project Active Rendering Region has color codes for rendered/invalidated
+		*** Markers
+		*** Create a new crouton and add it when START dragging if CTRL key held
+		*** Razor-delete (Cut buffer) (with ripple) time selection overlap of selected clips

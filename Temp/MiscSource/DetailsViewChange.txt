@@ -1,0 +1,15 @@
+DetailsView_ColumnLayout::DVCL_ForceVerifyColumns()
+Line 324 have it call an overloaded RowCollection to get a column name given a detailsview element
+
+The overloaded StoryBoard_Layout or VideoEditor_LayoutSB (rowcollection) will need to get the ci by casting to
+a BaseSB_DetailsView_Element... 
+
+Have it call a new function which gets the crouton... and then type subtract BasicSB_DVElem_NumItems and num of ci local 
+assets.. if it is negative it can return the info to indicate so
+
+row collection will insert the File specifier from this as needed.
+
+
+In storyboard crouton base... when it asks to get an element DVR_GetDetailsViewElement(columnname) it need to call the predecessor
+of filebutton... with the File specifier taken off.
+

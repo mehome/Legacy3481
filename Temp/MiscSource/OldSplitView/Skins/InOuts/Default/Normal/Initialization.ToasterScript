@@ -1,0 +1,13 @@
+// Initialization ToasterScript for InOuts2 skin
+
+LoadRegionBitmap("IOpropMask.tga")	// The mask bitmap that will be used
+LoadLayerBitmap("IOpropOff.tga",0)	// Off image, the base layer bitmap, this is where alpha channel is pulled from
+LoadLayerBitmap("IOpropOn.tga",1)		// On image
+LoadLayerBitmap("IOpropOffro.tga",2)	// OffRollOver image
+LoadLayerBitmap("IOpropONro.tga",3)		// OnRollOver image (maybe same as On image)
+
+
+// -------------- Set Stretchy skin data...
+SetStretchyRegion(13,254,189,0,c)		// close
+SetStretchyRegion(0,0,0,0,m)
+

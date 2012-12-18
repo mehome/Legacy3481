@@ -1,0 +1,233 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: StoryBoard - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x409 /fo"Debug/Script1.res" /d "_DEBUG" "V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\Script1.rc"" 
+Creating temporary file "C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP2EA.tmp" with contents
+[
+/nologo /G6 /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "../../Controls/Include/" /I "../Additional/Toaster2/Include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "STORYBOARD_EXPORTS" /Fp"Debug/StoryBoard.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\InOuts_Control.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StdAfx.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Crouton.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_CurCopyPaste.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoardPath.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoardView.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\VideoPreviewWindow.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP2EA.tmp" 
+Creating temporary file "C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP2EB.tmp" with contents
+[
+DDraw.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:yes /pdb:"../../Debug/StoryBoard.pdb" /debug /machine:I386 /out:"../../Debug/StoryBoard.Toast" /implib:"../../Debug/StoryBoard.lib" /pdbtype:sept /libpath:"../../Debug" /libpath:"../../Additional/Toaster/Lib/i386" /libpath:"../../Additional/RTVLib" /libpath:"../../Additional/AVICodec" 
+".\Debug\InOuts_Control.obj"
+".\Debug\StdAfx.obj"
+".\Debug\StoryBoard.obj"
+".\Debug\StoryBoard_Crouton.obj"
+".\Debug\StoryBoard_CurCopyPaste.obj"
+".\Debug\StoryBoard_Item.obj"
+".\Debug\StoryBoardPath.obj"
+".\Debug\StoryBoardView.obj"
+".\Debug\VideoPreviewWindow.obj"
+".\Debug\Script1.res"
+]
+Creating command line "link.exe @C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP2EB.tmp"
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+InOuts_Control.cpp
+!!! WARNING !!! : VTNT2 SDK is being compiled with exception handling disabled. This is inadvisable for an official release.
+     . ControlUtilities : Importing Functions
+     . CommonDialog Utilities : Importing Functions
+     . Video Streaming : Importing Functions
+     . ToasterVision : Importing Functions
+     . TBar : Importing Functions
+     . Switcher : Importing Functions
+     . Switcher2 : Importing Functions
+     . DDR : Importing Functions
+     . AssetManagement : Importing Functions
+     . FileManagement : Importing Functions
+     . FileSelector : Importing Functions
+     . ColorChooser : Importing Functions
+     . AudioMixer : Importing Functions
+     . ScopeDLL : Importing Functions
+     . DeckControlDLL : Importing Functions
+     . CG : Importing Functions
+     * StoryBoard : Exporting Functions
+     . Desktop2 : Importing Functions
+     . Desktop : Importing Functions
+     . ProcAmp : Importing Functions
+     . CrossKeyer : Importing Functions
+     . DDREngine : Importing Functions
+     . SBEngine : Importing Functions
+     . External App. : Importing Functions
+     . RealTimeMojo. : Importing Functions
+     . EditorMojo. : Importing Functions
+     . Scripting : Importing Functions
+     . SwitcherClient : Importing Functions
+     . BOB : Importing Functions
+     . Record : Importing Functions
+     . DesktopLaunch : Importing Functions
+     . Preferences : Importing Functions
+     . VideoEditor_Data : Importing Functions
+     . VideoEditor_Layout : Importing Functions
+     . VideoEditor_StoryBoard : Importing Functions
+     . VideoEditor_TimeLine : Importing Functions
+     . VideoEditor : Importing Functions
+     . ExtraControls : Importing Functions
+     . WindowsMediaUtilities : Importing Functions
+     . IconBuilder : Importing Functions
+     . RenderTree : Importing Functions
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(166) : error C2039: 'GetAlias' : is not a member of 'StoryBoard_Crouton'
+        v:\toast\t[2] source code\controls\storyboard\storyboard_crouton.h(27) : see declaration of 'StoryBoard_Crouton'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(266) : error C2065: 'ItemChanged' : undeclared identifier
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(782) : error C2065: '_throw' : undeclared identifier
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(782) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(804) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(814) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(823) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(832) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(842) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(850) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(859) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(869) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(877) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(886) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(896) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(904) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(916) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(929) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(937) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(949) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(962) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(969) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(978) : error C2143: syntax error : missing ';' before 'string'
+v:\toast\t[2] source code\controls\storyboard\inouts_control.cpp(988) : error C2143: syntax error : missing ';' before 'string'
+StdAfx.cpp
+StoryBoard.cpp
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard.cpp(751) : error C2065: 'ItemChanged' : undeclared identifier
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard.cpp(946) : error C2664: 'bool __cdecl NewTek_Delete(class StoryBoard *& )' : cannot convert parameter 1 from 'class StoryBoard *const ' to 'class StoryBoard *& '
+        A reference that is not to 'const' cannot be bound to a non-lvalue
+StoryBoard_Crouton.cpp
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Crouton.cpp(121) : error C2065: 'FileButton_EdgeWidth' : undeclared identifier
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Crouton.cpp(371) : error C2065: 'RenameAlias' : undeclared identifier
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Crouton.cpp(498) : error C2065: 'ItemChanged' : undeclared identifier
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Crouton.cpp(548) : error C2065: 'GetAlias' : undeclared identifier
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Crouton.cpp(644) : error C2039: 'GetAlias' : is not a member of 'FileButton'
+        v:\toast\t[2] source code\controls\filemanagement\filebutton.h(19) : see declaration of 'FileButton'
+StoryBoard_CurCopyPaste.cpp
+StoryBoard_Item.cpp
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(279) : error C2039: 'PutString' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(280) : error C2039: 'PutString' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(283) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(286) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(288) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(289) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(290) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(291) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(292) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(293) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(294) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(295) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(296) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(297) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(298) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(299) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(300) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(301) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(302) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(303) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(310) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(314) : error C2039: 'SavePlugin' : is not a member of 'StoryBoard_Item'
+        v:\toast\t[2] source code\controls\storyboard\storyboard_item.h(16) : see declaration of 'StoryBoard_Item'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(318) : error C2039: 'SavePlugin' : is not a member of 'StoryBoard_Item'
+        v:\toast\t[2] source code\controls\storyboard\storyboard_item.h(16) : see declaration of 'StoryBoard_Item'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(322) : error C2039: 'PutData' : is not a member of 'Stream_Out'
+        v:\toast\t[2] source code\controls\include\io_interface.h(17) : see declaration of 'Stream_Out'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(336) : error C2039: 'GetString' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(340) : error C2039: 'GetString' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(345) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(348) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(350) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(351) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(352) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(353) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(354) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(355) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(356) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(357) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(358) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(359) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(360) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(361) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(362) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(363) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(364) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(365) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(369) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(381) : error C2039: 'LoadPlugin' : is not a member of 'StoryBoard_Item'
+        v:\toast\t[2] source code\controls\storyboard\storyboard_item.h(16) : see declaration of 'StoryBoard_Item'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(385) : error C2039: 'GetData' : is not a member of 'Stream_In'
+        v:\toast\t[2] source code\controls\include\io_interface.h(7) : see declaration of 'Stream_In'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(489) : error C2065: 'IsRTV' : undeclared identifier
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoard_Item.cpp(489) : error C2065: 'RTVLIB_UNKNOWN' : undeclared identifier
+StoryBoardPath.cpp
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoardPath.cpp(223) : error C2039: 'GetTextItem' : is not a member of 'FileButton'
+        v:\toast\t[2] source code\controls\filemanagement\filebutton.h(19) : see declaration of 'FileButton'
+StoryBoardView.cpp
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoardView.cpp(295) : error C2039: 'GetTextItem' : is not a member of 'FileButton'
+        v:\toast\t[2] source code\controls\filemanagement\filebutton.h(19) : see declaration of 'FileButton'
+V:\Toast\T[2] SOURCE CODE\Controls\StoryBoard\StoryBoardView.cpp(423) : error C2039: 'GetAlias' : is not a member of 'FileButton'
+        v:\toast\t[2] source code\controls\filemanagement\filebutton.h(19) : see declaration of 'FileButton'
+VideoPreviewWindow.cpp
+cl.exe terminated at user request.
+
+</pre>
+</body>
+</html>

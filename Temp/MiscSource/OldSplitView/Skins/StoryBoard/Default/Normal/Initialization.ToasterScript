@@ -1,0 +1,70 @@
+//VideoEditor skins... these are a copy from Advanced settings and are temporary
+
+LoadRegionBitmap("Mask.gif")	// The mask bitmap that will be used
+				// Load first four layers, which must be...
+LoadLayerBitmap("Off.gif",0)	// Off image, the base layer bitmap, this is where alpha channel is pulled from
+LoadLayerBitmap("On.gif",1)	// On image
+LoadLayerBitmap("OffRO.gif",2)	// OffRollOver image
+LoadLayerBitmap("On.gif",3)	// OnRollOver image (maybe same as On image)
+
+
+LoadScrollBarBitmapV("VerticleSlider.tga", 0)
+LoadScrollBarBitmapV("VerticleSlider_Ro.tga", 1)
+LoadScrollBarBitmapV("VerticleSlider_Ro.tga", 2)
+LoadScrollBarBitmapV("VerticleSlider_Ro.tga", 3)
+
+LoadScrollBarBitmapH("Divider.tga", 0)
+LoadScrollBarBitmapH("DividerOn.tga", 1)
+LoadScrollBarBitmapH("DividerOn.tga", 2)
+LoadScrollBarBitmapH("DividerOn.tga", 3)
+
+// -------------- Set Stretchy skin data...
+//SetStretchyRegion(73,98,157,0,c)		// close
+//SetStretchyRegion(133,60,0,0,c)		// close
+
+SetStretchyRegion(38,243,31,0,ul)
+SetStretchyRegion(34,230,31,0,u)
+SetStretchyRegion(34,237,31,h,u)
+SetStretchyRegion(34,224,31,h,u)
+SetStretchyRegion(34,221,18,0,ur)
+
+SetStretchyRegion(95,195,157,0,l)
+//SetStretchyRegion(73,128,157,0,m)
+SetStretchyRegion(73,163,157,h,m)
+SetStretchyRegion(73,87,90,0,r)
+
+SetStretchyRegion(25,52,52,h,0)
+SetStretchyRegion(133,0,3,h,0)
+
+SetStretchyRegion(255,0,157,v,l)
+SetStretchyRegion(73,52,157,hv,0)
+SetStretchyRegion(212,209,0,v,0)
+SetStretchyRegion(25,73,76,v,0)
+SetStretchyRegion(109,0,157,v,r)
+
+//SetStretchyRegion(255,60,52,h,m)
+//SetStretchyRegion(255,114,52,0,dr)
+
+SetStretchyRegion(73,184,157,0,dl)
+SetStretchyRegion(73,0,157,h,d)
+SetStretchyRegion(73,198,157,0,dr)
+
+// ----------------- Set sizes
+SetMinSizeX(400)
+SetMinSizeY(300)
+
+
+/*
+SetMaxSizeX(0)
+SetMaxSizeY(0)
+SetPrefSizeY(400)
+SetPrefSizeY(500)
+*/
+
+CreateShortCut	(	"Delete"			// The keyboard combination
+			code(Delete)	// The code to execute
+			"MouseOver"
+		)
+
+///////////////////////////////////////////// END ///////////////////////////
+

@@ -1,0 +1,240 @@
+// Desktop MenuBar Initialization - ToasterScript
+// argon skin
+
+// ----------- Load Layers...
+LoadRegionBitmap("MenuBar_Mask.gif")		// The mask bitmap that will be used
+LoadLayerBitmap ("MenuBar_Off.tga",0)		// Off image, the base layer bitmap
+LoadLayerBitmap ("MenuBar_On.gif",1)		// On image
+LoadLayerBitmap ("MenuBar_Off_Ro.gif",2)	// OffRollOver image
+LoadLayerBitmap ("MenuBar_On.gif",3)		// OnRollOver image
+
+// ----------- Set stretchy skin data...
+SetStretchyRegion(138,109,122,0,0)
+SetStretchyRegion(233,128,122,h,0)
+SetStretchyRegion(0,255,0,h,0)
+
+// ----------- Setup the default position and sizes
+SetPrefSizeX(GetScreenWidth())
+SetMinSizeX(GetScreenWidth())
+SetWindowPosition(0,0)
+
+// ----------- Tooltips
+CreateToolTip(255,255,0,"Lock the Taskbar to be visible at all times")
+
+// ----------- Menu items
+AddMenuItem	(	"Capture",						// The menu name
+				code( Launch("RecordPanel","Record Panel") ),	// The script to execute
+				"",								// The menu tooltip name
+				170,170,230,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"External Control",										// The menu name
+				code( Launch("ExternalSourceUI","External Control") ),	// The script to execute
+				"",								// The menu tooltip name
+				170,170,230,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"Switcher",						// The menu name
+				code( Launch("Switcher2","Switcher") ),	// The script to execute
+				"",								// The menu tooltip name
+				170,170,230,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"Audio Mixer",					// The menu name
+				code( Launch("AudioMixer","Audio Mixer") ),	// The script to execute
+				"",								// The menu tooltip name
+				170,170,230,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"BOB",							// The menu name
+				code( Launch("BobWindow", "Bob")),	// The script to execute
+				"",								// The menu tooltip name
+				170,170,230,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"Oz Control",							// The menu name
+				code( Launch("OzControl", "Oz")),	// The script to execute
+				"",								// The menu tooltip name
+				170,170,210,					// The unselected color
+				220,220,190,					// The selected color
+				"Verdena",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"StoryBoard Editor",			// The menu name
+				code( Launch("VideoEditor", "StoryBoard Editor")),	// The script to execute
+				"",								// The menu tooltip name
+				170,170,210,					// The unselected color
+				220,220,190,					// The selected color
+				"Verdena",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"TimeLine Editor",						// The menu name
+				code( Launch("InOuts2_Control", "TimeLine Editor")),	// The script to execute
+				"",								// The menu tooltip name
+				170,170,210,					// The unselected color
+				220,220,190,					// The selected color
+				"Verdena",						// The font to use
+				18								// The font size	
+			)
+
+AddMenuBreak()
+
+AddMenuItem	(	"Character Generator",			// The menu name
+				code( Launch("CGToaster", "CG Titler") ),	// The script to execute
+				"",								// The menu tooltip name
+				170,230,170,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"DR15 Digital Disk Recorder",	// The menu name
+				code( Launch("DDR_Window", "DDR") ),	// The script to execute
+				"",								// The menu tooltip name
+				170,230,170,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"DX1301 Proc Amp",				// The menu name
+				code( Launch("ProcAmp", "Proc Amp") ),		// The script to execute
+				"",								// The menu tooltip name
+				170,230,170,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"Background Generator",				// The menu name
+				code( Launch("BackgroundGenerator", "Background Generator") ),		// The script to execute
+				"",								// The menu tooltip name
+				170,230,170,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuBreak()
+
+AddMenuItem	(	"File Bin",								// The menu name
+				code( Launch("StretchyFileBin", "File Bin") ),		// The script to execute
+				"",										// The menu tooltip name
+				230,230,170,							// The unselected color
+				220,220,190,							// The selected color
+				"MS Sans Serif",								// The font to use
+				23										// The font size	
+			)
+
+AddMenuItem	(	" ",									// The menu name
+				code( ),								// The script to execute
+				"",										// The menu tooltip name
+				230,230,170,							// The unselected color
+				220,220,190,							// The selected color
+				"MS Sans Serif",								// The font to use
+				16										// The font size	
+			)
+
+AddMenuItem	(	"AuraVT",									// The menu name
+				code( Launch("ExternalApplication_Aura", "Aura VT") ),	// The script to execute
+				"",											// The menu tooltip name
+				230,230,140,								// The unselected color
+				220,220,170,								// The selected color
+				"MS Sans Serif",									// The font to use
+				23											// The font size	
+			)
+
+AddMenuBreak()
+
+AddMenuItem	(	"ToasterVision",			// The menu name
+				code( Launch("ToasterVision", "TVision") ),// The script to execute
+				"",								// The menu tooltip name
+				170,230,230,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+
+AddMenuItem	(	"Waveform/VectorScope",				// The menu name
+				code( Launch("WaveformVectorScope", "Waveform") ),	// The script to execute
+				"",								// The menu tooltip name
+				170,230,230,					// The unselected color
+				220,220,190,							// The selected color
+				"MS Sans Serif",								// The font to use
+				23										// The font size	
+			)
+
+AddMenuBreak()
+
+AddMenuItem	(	"Keyer",								// The menu name
+				code( Launch("KeyerControl", "Pacifica Keyer") ),			// The script to execute
+				"",								// The menu tooltip name
+				230,170,230,					// The unselected color
+				220,220,190,							// The selected color
+				"MS Sans Serif",								// The font to use
+				23										// The font size	
+			)
+
+AddMenuItem	(	"Cross-Keyer",					// The menu name
+				code( Launch("CrossKeyer", "Cross Keyer") ),			// The script to execute
+				"",								// The menu tooltip name
+				230,170,230,					// The unselected color
+				220,220,190,							// The selected color
+				"MS Sans Serif",								// The font to use
+				23										// The font size	
+			)
+
+AddMenuItem	(	"Color Picker",						// The menu name
+				code( Launch("ColorChooser", "Color Picker") ),		// The script to execute
+				"",								// The menu tooltip name
+				230,170,230,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				18								// The font size	
+			)
+
+AddMenuBreak()
+
+AddMenuItem	(	"Preferences",					// The menu name
+				code( Launch("Preferences", "Preferences") ),		// The script to execute
+				"",								// The menu tooltip name
+				130,130,220,					// The unselected color
+				160,160,250,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)
+			
+AddMenuItem	(	" ",									// The menu name
+				code( ),								// The script to execute
+				"",										// The menu tooltip name
+				230,230,170,							// The unselected color
+				220,220,190,							// The selected color
+				"MS Sans Serif",								// The font to use
+				16										// The font size	
+			)
+
+AddMenuItem	(	"Exit",						// The menu name
+				code( ExitVideoToaster() ),		// The script to execute
+				"",								// The menu tooltip name
+				220,170,170,					// The unselected color
+				220,220,190,					// The selected color
+				"MS Sans Serif",						// The font to use
+				23								// The font size	
+			)

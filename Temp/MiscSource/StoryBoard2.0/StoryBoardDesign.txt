@@ -1,0 +1,197 @@
+--------------------------------------------------------------------------------------------------------------------
+How to Handle Insertion
+=======================
+
+There are 4 types of events I'm currently working with:
+1. Clips C
+2. Transitions T
+3. Overlay O
+4. Audio A
+
+Note: of the Overlay type... I've went ahead and added OverlayAudio, and Utility... for the most part they follow
+the rules of Overlay.
+
+
+There are 3 parts to the insertion
+1.  The list of elements before the insertion
+2.  The list of elements to be inserted
+3.  The list of elements after the insertion
+
+And so we have 3 iterations contained in the DropItemsHere():
+
+In the first iteration... our goal is to contruct a tList of croutons, and during this construction go ahead and
+renumber the SBpositions for all croutons that are still valid (!=-1).  After the iteration is complete we use the 
+tList to pull the starting point, and SBposition. 
+We also need to ensure our previous clips are numbered (See NumOrderPrev).
+Now we are ready for the second iteration.
+
+The second iteration will first set up the previous clip... we use the tlist to find the previous clip.  We'll have a
+startingpointofinsertion variable, which keeps track of the total adjustment to ripple in the 3rd iteration.  Now 
+inside the loop we make new TimelineElements... to make new time line element we have to provide a valid starting 
+point and SBposition... and so this is where we use the ComputeStartingPoint()  keep track of the previous element... 
+which requires a syntax to ignore elements that arn't compatible to the next clip (See Below).  The compute starting 
+point will properly set the time.  Note we are also incrementing the SBposition.  Finally we get the final starting
+point and subtract this from startingpointofinsertion to figure out adjustment.
+
+So to start the final iteration we first need to number our first clip (There's more to this).  We then go in and 
+adjust all the starting points by the adjustment value as well as renumber all the valid clips.
+
+--------------------------------------------------------------------------------------------------------------------
+
+How to Compute Starting point:
+Given the table below the second event represents what is inserted, and the first clip represents the event previous
+of what is inserted sometimes this means we keep scanning back for a match or NULL.
+
+There are currently 8 possible computations
+CC start + duration
+CT max(start,start+duration-transduration)
+TC start
+TT start + duration
+
+AA start + duration
+CA start
+
+OO start
+CO start
+
+And so a nice function to run this syntax
+time ComputeStartingPoint(PrevElement,Element)
+
+Here is all valid previous elements... given an element:
+C-C,T
+T-C,T
+A-A,C
+O-C
+
+--------------------------------------------------------------------------------------------------------------------
+
+How to OrderNumber events previous of the inserted clip(s)
+
+NumOrderPrev--FPTN-----------NULL------------------------------------Add 1----number to ins point--->
+					\GetNumber-- -1 ---find last order#--default-/
+						       \- >0-----------------     \- # --/
+													\------------/
+
+To find last order # this will be found during the construction of the tList... to number past clip to insertion
+will take the number value and increment everything to the insertion point.
+
+To find last clip... use FindLastEvent(clip). Then from that do the following:
+
+FindPrevToNumber------PrevElement!=startpoint------------------------->
+				 /  \-----NULL--------------------/
+				 |		PrevElement=startpoint & PrevElement!=clip---LastClip=Prev--\
+				 \---------<---------------<----------------------------------------/
+
+The whole idea here is we go ahead and order all croutons from the clip... and all previous croutons that have the
+same starting point... this way we overide the priority of invalid croutons which have the same starting point.
+--------------------------------------------------------------------------------------------------------------------
+
+How to OrderNumber events after the inserted clip(s)
+we start with the first element of the 3rd iteration... and the accumulating SBposition number
+
+NumOrderNext---Number++----clip--------NC!=startingpoint------------------------------------->
+			 /			\---!clip\	\---NC=startingpoint---Number++-----NC!=startingpoint/
+			 \-------------------/						/			 \--NC=startingpoint\
+														\-------------------------------/
+
+--------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+How to Refresh the StoryBoard
+=============================
+
+The key to being able to work with a TimeLine simultaneously is to have all graphical updates done using the
+Changed() message from DynamicCallback().  So within any application which manipulates the TimeLine elements of
+the timeline... we can call this do show the changes.
+
+There are 3 things involved to perform a succesful refresh
+1.  Sorting the TimeLineElements
+2.  Renaming StoryBoard Croutons
+3.  Crouton management
+
+TODO add a filter feature... to filter out certain types... this will be implemented when we get our GUI established
+to perform this.
+
+--------------------------------------------------------------------------------------------------------------------
+Sorting TimeLineElements:
+-------------------------
+
+The most importing thing to document about sorting the TimeLineElements
+is the conditional rules that determine the order. 
+
+The rules are as follows:
+ClipA comes before ClipB if:
+
+1) ClipA is numbered, and ClipB is numbered, and ClipA's number comes before ClipBs number
+2) If ClipA is not numbered or ClipB is nor numbered and ClipA starts before ClipB.
+3) If the start times are identical then sort by types.  The types priority are as follows:
+   Transition, Clip, OverlayVideo, Audio, OverlayAudio
+
+Issues:
+Audio example...  AAVVVVVVVVVVVVVVVV  
+All these are dropped using the SB, and then the user then drops a new video clip in the time line...
+the audio clips are 1hr 1mn
+
+StoryBoard's insertion numbering will order the elements like so:
+012345678 etc...
+
+But then the new video clip inserted in the time line is a -1.
+where does it go?  We know logically that it should get inserted somewhere in the video and not between the audio.
+Yet with our algorythm the following will occur:
+
+A: 0m - 1hr
+V: *** Insert here if it was inserted in the first hour of the TimeLine ***
+A 1hr - 1hr1min
+
+This might not have been what the user wanted or expected, but it is
+strictly correct. If he doesn't want to see it there, he just needs to move
+it and that position will be rembered from that point onwards !
+
+--------------------------------------------------------------------------------------------------------------------
+Renaming StoryBoard Croutons:
+-----------------------------
+
+Using the Layout manager list... we can iterate through this list and the TimeLineElement list simultaneously.
+In the simplest case... we can pull the name from the timeline element and give it to the Crouton... The Crouton
+itself can be thought as a container of the real substance... and so we "pour" the correct substance into the correct
+container.
+
+One thing we have agreed on at this point is that the Transitions which are overlays will not be displayed as a
+Crouton in fact... they shouldn't even exist as a timeline element.
+
+Advanced Feature:
+There will never be one crouton which represents more than one TimeLineElement.. however the reverse is not true...
+consider the following:
+
+A -------------------
+B      --------
+
+There are 2 TimeLineElements (A and B).  Yet the Crouton representation is as follows:
+ABA
+
+So for all croutons that are sharing the same TLE we'll need each crouton to contain a list of all the
+croutons which are sharing.   For example:
+
+A --------------------------------
+    B-----   C-----    D-----
+
+A1 B A2 C A3 D A4
+
+A list of "A1,A2,A3,A4" will be stored for A1, A2, A3, and A4.
+
+This is necessary for when I select any of the croutons which share.. they all will be selected... so the user
+will not get confused... Also when removing any of these they all should be removed from the layout.
+--------------------------------------------------------------------------------------------------------------------
+Crouton management:
+-------------------
+
+So far this has been integrated in the renaming process... we make new Croutons for any leftover TimeLine elements...
+and purge the excess... one clever performance feature to this would be allow a arbitrary number of croutons to be
+moved to a holding buffer and only when the holding buffer maxes out to finally purge the crouton... this will greatly
+minimize the number of creates and destroys.
+
+--------------------------------------------------------------------------------------------------------------------

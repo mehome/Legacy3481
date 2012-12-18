@@ -1,0 +1,21 @@
+//Split View
+
+LoadRegionBitmap("Mask.gif")	// The mask bitmap that will be used
+				// Load first four layers, which must be...
+LoadLayerBitmap("Off.gif",0)	// Off image, the base layer bitmap, this is where alpha channel is pulled from
+LoadLayerBitmap("On.gif",1)	// On image
+LoadLayerBitmap("OffRO.gif",2)	// OffRollOver image
+LoadLayerBitmap("On.gif",3)	// OnRollOver image (maybe same as On image)
+
+// -------------- Set Stretchy skin data...
+SetStretchyRegion(73,52,157,hv,0)
+SetStretchyRegion(85,255,0,hv,0)
+SetStretchyRegion(255,60,52,h,0)
+
+// ----------------- Set sizes
+SetMinSizeX(400)
+SetMinSizeY(300)
+
+
+///////////////////////////////////////////// END ///////////////////////////
+

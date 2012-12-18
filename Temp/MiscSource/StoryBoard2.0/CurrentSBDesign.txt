@@ -1,0 +1,65 @@
+--------------------------------------------------------------------------------------------------------------------
+Replacing Clips
+===============
+
+If we drag a FileButton on top of any of the sbCroutons it will delete the crouton beneath and replace it with the
+file button.  The Flyer had expert and non-expert mode... the non-expert mode prompts a warning before performing
+the operation.  There is also Inherited and non-inherited mode... inherited mode will try to inherit as many
+properties from it's predecessor as possible... i.e. Volume level settings, duration.  Ideally in inherited mode
+it will not ripple everything afterward, even if we are in ripple mode.
+
+When replacing transitions... the Flyer used insert mode... we may just keep this simple and delete like we delete 
+everything else, and that depending upon if they are in insert mode or not.
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------
+How to Handle Deletion
+======================
+
+This will Remove croutons (and there assosiated TimeLineElement data struct) from the layout
+
+From a user standpoint here are some of the methods to deletion:
+1. Select crouton(s) hit the Delete key
+2. Dragging the Croutons off the StoryBoard
+3. Right Click menu option
+4. Perform a cut (i.e. Ctrl-x)
+5. Click on a delete/cut GUI
+
+For most of these methods of deletion... we can have them call a delete function passing in the TimeLineElement as the
+parameter... from that we remove the element from the timeline... and have a separate function which handles the ripple.
+The ripple will handle one element at a time, because this is a more simpler robust way to handle it... however...
+there may be a performance issue, if you were to delete a bunch of croutons at once... on a large list of layout
+items to ripple through...  Later on if this situation happens... we can implement a type of deletion which takes a 
+tList of items to be deleted... and have them all deleted at once... and make a function which takes one pass to 
+ripple all the deleted items. We'll see...
+
+TODO: Get with Rick and see if we want to either delete the TimeLineElement from the Remove from TimeLine option, 
+or make that separate for Cut operations.
+--------------------------------------------------------------------------------------------------------------------
+Deleting transitions
+--------------------
+
+For non-insertion mode... the operation is to ripple ClipB and beyond to a positive length of the duration of the 
+transition.
+
+For Insertion mode it is a little more tricky:
+
+        cut
+-------|xx
+-------|xx
+     | | |
+	 xx|-------
+	 xx|-------
+    cut
+
+TimeA=TransDur/2;
+TimeB=TransDur-TimeA;
+
+ClipA.In+=TimeA;
+ClipB.Out-=TimeB;
+
+The whole Idea here is to not ripple any time ... and when deleteing a transition you gain TransDur time... and so we
+trim ClipA and ClipB points evenly to compensate.
+--------------------------------------------------------------------------------------------------------------------

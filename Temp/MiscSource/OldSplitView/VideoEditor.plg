@@ -1,0 +1,179 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: VideoEditor_StoryBoard - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP17E.tmp" with contents
+[
+/nologo /MTd /W3 /Gm /Gi /GR /GX /ZI /Od /I "../Additional/Toaster2/Include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "VIDEOEDITOR_STORYBOARD_EXPORTS" /Fp"Debug/VideoEditor_StoryBoard.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor_StoryBoard\StdAfx.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor_StoryBoard\StoryBoard_Crouton.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor_StoryBoard\StoryBoard_Layout.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor_StoryBoard\StoryBoard_Layout_Insertion.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor_StoryBoard\StoryBoard_Layout_Insertion2.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor_StoryBoard\VideoEditor_Layout.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor_StoryBoard\TimecodeFloat.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP17E.tmp" 
+Creating temporary file "C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP17F.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:yes /pdb:"../../Debug/VideoEditor_StoryBoard.pdb" /debug /machine:I386 /out:"../../Debug/VideoEditor_StoryBoard.toast" /implib:"../../Debug/VideoEditor_StoryBoard.lib" /pdbtype:sept /libpath:"../../Debug" /libpath:"../Additional/Toaster2/Lib/i386" /libpath:"../Additional/RTVLib" 
+".\Debug\StdAfx.obj"
+".\Debug\StoryBoard_Crouton.obj"
+".\Debug\StoryBoard_Layout.obj"
+".\Debug\StoryBoard_Layout_Insertion.obj"
+".\Debug\StoryBoard_Layout_Insertion2.obj"
+".\Debug\VideoEditor_Layout.obj"
+".\Debug\Storybord.res"
+".\Debug\TimecodeFloat.obj"
+"\Toast\T[2] SOURCE CODE\Debug\VTNTAPI.lib"
+"\Toast\T[2] SOURCE CODE\Debug\VideoEditor_Layout.lib"
+]
+Creating command line "link.exe @C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP17F.tmp"
+<h3>Output Window</h3>
+Compiling...
+StoryBoard_Crouton.cpp
+!!! WARNING !!! : VTNT2 SDK is being compiled with exception handling disabled. This is inadvisable for an official release.
+     . ControlUtilities : Importing Functions
+     . CommonDialog Utilities : Importing Functions
+     . Video Streaming : Importing Functions
+     . ToasterVision : Importing Functions
+     . TBar : Importing Functions
+     . Switcher : Importing Functions
+     . Switcher2 : Importing Functions
+     . DDR : Importing Functions
+     . AssetManagement : Importing Functions
+     . FileManagement : Importing Functions
+     . FileSelector : Importing Functions
+     . ColorChooser : Importing Functions
+     . AudioMixer : Importing Functions
+     . ScopeDLL : Importing Functions
+     . DeckControlDLL : Importing Functions
+     . CG : Importing Functions
+     . StoryBoard : Importing Functions
+     . Desktop2 : Importing Functions
+     . Desktop : Importing Functions
+     . ProcAmp : Importing Functions
+     . CrossKeyer : Importing Functions
+     . DDREngine : Importing Functions
+     . SBEngine : Importing Functions
+     . External App. : Importing Functions
+     . RealTimeMojo. : Importing Functions
+     . EditorMojo. : Importing Functions
+     . Scripting : Importing Functions
+     . SwitcherClient : Importing Functions
+     . BOB : Importing Functions
+     . Record : Importing Functions
+     . DesktopLaunch : Importing Functions
+     . Preferences : Importing Functions
+     . VideoEditor_Data : Importing Functions
+     . VideoEditor_Layout : Importing Functions
+     * VideoEditor_StoryBoard : Exporting Functions
+     . VideoEditor_TimeLine : Importing Functions
+     . VideoEditor : Importing Functions
+     . ExtraControls : Importing Functions
+     . WindowsMediaUtilities : Importing Functions
+     . IconBuilder : Importing Functions
+     . RenderTree : Importing Functions
+StdAfx.cpp
+StoryBoard_Layout.cpp
+StoryBoard_Layout_Insertion.cpp
+StoryBoard_Layout_Insertion2.cpp
+VideoEditor_Layout.cpp
+TimecodeFloat.cpp
+Linking...
+   Creating library ../../Debug/VideoEditor_StoryBoard.lib and object ../../Debug/VideoEditor_StoryBoard.exp
+<h3>
+--------------------Configuration: VideoEditor - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP183.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /Gi /GR /GX /ZI /Od /I "../Additional/Toaster2/Include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "VideoEditor_EXPORTS" /Fp"Debug/VideoEditor.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor\InOuts2.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor\SplitView.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor\StdAfx.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor\StoryBoardEditor.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor\TimeLineEditor.cpp"
+"V:\Toast\T[2] SOURCE CODE\Controls\VideoEditor\VideoEditor.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP183.tmp" 
+Creating temporary file "C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP184.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:yes /pdb:"../../Debug/VideoEditor.pdb" /debug /machine:I386 /out:"../../Debug/VideoEditor.Toast" /implib:"../../Debug/VideoEditor.lib" /pdbtype:sept /libpath:"../../Debug" /libpath:"../Additional/Toaster2/Lib/i386" /libpath:"../Additional/RTVLib" 
+".\Debug\InOuts2.obj"
+".\Debug\SplitView.obj"
+".\Debug\StdAfx.obj"
+".\Debug\StoryBoardEditor.obj"
+".\Debug\TimeLineEditor.obj"
+".\Debug\VideoEditor.obj"
+"\Toast\T[2] SOURCE CODE\Debug\VTNTAPI.lib"
+"\Toast\T[2] SOURCE CODE\Debug\VideoEditor_TimeLine.lib"
+"\Toast\T[2] SOURCE CODE\Debug\VideoEditor_StoryBoard.lib"
+"\Toast\T[2] SOURCE CODE\Debug\Preferences.lib"
+]
+Creating command line "link.exe @C:\DOCUME~1\jamesk\LOCALS~1\Temp\RSP184.tmp"
+<h3>Output Window</h3>
+Compiling...
+InOuts2.cpp
+!!! WARNING !!! : VTNT2 SDK is being compiled with exception handling disabled. This is inadvisable for an official release.
+     . ControlUtilities : Importing Functions
+     . CommonDialog Utilities : Importing Functions
+     . Video Streaming : Importing Functions
+     . ToasterVision : Importing Functions
+     . TBar : Importing Functions
+     . Switcher : Importing Functions
+     . Switcher2 : Importing Functions
+     . DDR : Importing Functions
+     . AssetManagement : Importing Functions
+     . FileManagement : Importing Functions
+     . FileSelector : Importing Functions
+     . ColorChooser : Importing Functions
+     . AudioMixer : Importing Functions
+     . ScopeDLL : Importing Functions
+     . DeckControlDLL : Importing Functions
+     . CG : Importing Functions
+     . StoryBoard : Importing Functions
+     . Desktop2 : Importing Functions
+     . Desktop : Importing Functions
+     . ProcAmp : Importing Functions
+     . CrossKeyer : Importing Functions
+     . DDREngine : Importing Functions
+     . SBEngine : Importing Functions
+     . External App. : Importing Functions
+     . RealTimeMojo. : Importing Functions
+     . EditorMojo. : Importing Functions
+     . Scripting : Importing Functions
+     . SwitcherClient : Importing Functions
+     . BOB : Importing Functions
+     . Record : Importing Functions
+     . DesktopLaunch : Importing Functions
+     . Preferences : Importing Functions
+     . VideoEditor_Data : Importing Functions
+     . VideoEditor_Layout : Importing Functions
+     . VideoEditor_StoryBoard : Importing Functions
+     . VideoEditor_TimeLine : Importing Functions
+     * VideoEditor : Exporting Functions
+     . ExtraControls : Importing Functions
+     . WindowsMediaUtilities : Importing Functions
+     . IconBuilder : Importing Functions
+     . RenderTree : Importing Functions
+Skipping... (no relevant changes detected)
+SplitView.cpp
+StdAfx.cpp
+StoryBoardEditor.cpp
+TimeLineEditor.cpp
+VideoEditor.cpp
+Linking...
+   Creating library ../../Debug/VideoEditor.lib and object ../../Debug/VideoEditor.exp
+
+
+
+<h3>Results</h3>
+VideoEditor.Toast - 0 error(s), 2 warning(s)
+</pre>
+</body>
+</html>
