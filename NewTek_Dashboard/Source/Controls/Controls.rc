@@ -1,0 +1,141 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_FILE_DIALOG DIALOGEX 0, 0, 317, 90
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Pause",IDC_PAUSE,62,50,32,14
+    PUSHBUTTON      "Stop",IDC_STOP,16,50,36,14
+    PUSHBUTTON      "Play",IDC_PLAY,104,50,34,14
+    CONTROL         "",IDC_SCRUB,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,149,50,136,15
+    EDITTEXT        IDC_FILENAME,18,19,236,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BROWSE,265,19,20,14
+END
+
+IDD_PROCAMP_DIALOG DIALOGEX 0, 0, 441, 149
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Property Page"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Brightness",IDC_LabelBrightness,16,23,34,11
+    CONTROL         "",IDC_SliderBrightness,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,21,100,15
+    EDITTEXT        IDC_EditBrightness,62,21,40,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderContrast,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,43,100,15
+    EDITTEXT        IDC_EditContrast,63,43,40,14,ES_AUTOHSCROLL
+    LTEXT           "Contrast",IDC_LabelContrast,20,45,29,8
+    LTEXT           "Hue",IDC_LabelHue,26,67,24,11
+    CONTROL         "",IDC_SliderHue,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,64,100,15
+    EDITTEXT        IDC_EditHue,61,64,42,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderSaturation,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,86,100,15
+    EDITTEXT        IDC_EditSaturation,63,86,40,14,ES_AUTOHSCROLL
+    LTEXT           "Saturation",IDC_LabelSaturation,19,88,34,8
+    LTEXT           "U Offset",IDC_LabelU_Offset,221,24,34,11
+    CONTROL         "",IDC_SliderU_Offset,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,21,100,15
+    EDITTEXT        IDC_EditU_Offset,260,21,40,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderV_Offset,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,43,100,15
+    EDITTEXT        IDC_EditV_Offset,262,43,40,14,ES_AUTOHSCROLL
+    LTEXT           "V Offset",IDC_LabelV_Offset,222,46,28,8
+    LTEXT           "U Gain",IDC_LabelU_Gain,225,67,24,11
+    CONTROL         "",IDC_SliderU_Gain,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,64,100,15
+    EDITTEXT        IDC_EditU_Gain,260,64,42,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderV_Gain,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,86,100,15
+    EDITTEXT        IDC_EditV_Gain,262,86,40,14,ES_AUTOHSCROLL
+    LTEXT           "V Gain",IDC_LabelV_Gain,226,88,21,8
+    PUSHBUTTON      "Restore Defaults",IDC_RestoreDefaults,183,115,63,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_FILE_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_PROCAMP_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 435
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 142
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
