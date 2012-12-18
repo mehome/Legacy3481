@@ -16,6 +16,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileSelectionLib_VS9", "..\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcAmp", "..\ProcAmp\ProcAmp.vcproj", "{40C81C1D-8ABD-4282-8298-3750EEC0B623}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XML", "..\FrameWork\XML\XML.vcproj", "{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -56,6 +58,12 @@ Global
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623}.Release|Win32.ActiveCfg = Release|Win32
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623}.Release|Win32.Build.0 = Release|Win32
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623}.Release|x64.ActiveCfg = Release|Win32
+		{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}.Debug|Win32.ActiveCfg = Debug|Win32
+		{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}.Debug|Win32.Build.0 = Debug|Win32
+		{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}.Debug|x64.ActiveCfg = Debug|Win32
+		{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}.Release|Win32.ActiveCfg = Release|Win32
+		{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}.Release|Win32.Build.0 = Release|Win32
+		{734B16E5-E6BC-4FF5-B5EB-3FAF4AC0EA57}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
