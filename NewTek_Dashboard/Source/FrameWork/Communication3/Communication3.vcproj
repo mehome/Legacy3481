@@ -188,10 +188,54 @@
 			</Filter>
 		</Filter>
 		<Filter
+			Name="Video / Audio"
+			>
+			<File
+				RelativePath=".\FC3_audio_video_receive.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FC3_audio_video_receive.h"
+				>
+			</File>
+		</Filter>
+		<Filter
 			Name="Audio"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\FC3_audio_message.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_audio_pull.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_audio_receive.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\FC3_audio_message.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_audio_pull.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_audio_receive.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="private"
@@ -485,6 +529,154 @@
 				</File>
 				<File
 					RelativePath=".\targetver.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Video / Audio / XML"
+			>
+			<File
+				RelativePath=".\FC3_audio_video_xml_receive.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FC3_audio_video_xml_receive.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="XML"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\FC3_xml_message.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_message_printf.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_pull.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_receive.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\FC3_xml_message.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_message_printf.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_pull.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_receive.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Utilities"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\FC3_master_clock.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_utilities.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\FC3_master_clock.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_master_clock_utils.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_utilities.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Remote"
+			>
+			<File
+				RelativePath=".\FC3_remote.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FC3_remote.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Debug"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\FC3_debug.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_debug_config.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_debug_message.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_debug_pull.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_debug_receive.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\FC3_debug.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_debug_message.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_debug_pull.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_debug_receive.cpp"
 					>
 				</File>
 			</Filter>

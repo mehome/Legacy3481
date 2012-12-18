@@ -16,14 +16,11 @@
 #include <vector>
 #include <queue>
 
-#define __DisableAudioMessages__
 
 // Bitmaps
 #include "..\FrameWork.h"
 #include "..\XML\FrameWork.XML.h"
-#ifndef __DisableAudioMessages__
 #include "..\Audio2\FrameWork.Audio2.h"
-#endif
 
 // The namespace
 namespace FrameWork
@@ -169,12 +166,10 @@ namespace FrameWork
 			#include "FC3_xml_pull.h"
 		};
 
-		#ifndef __DisableAudioMessages__
 		namespace audio_video
 		{
 			#include "FC3_audio_video_receive.h"
 		};		
-		#endif
 
 		namespace video
 		{
@@ -183,14 +178,12 @@ namespace FrameWork
 			#include "FC3_video_pull.h"
 		};
 
-		#ifndef __DisableAudioMessages__
 		namespace audio
 		{
 			#include "FC3_audio_message.h"
 			#include "FC3_audio_receive.h"
 			#include "FC3_audio_pull.h"
 		};
-		#endif
 
 		namespace debug
 		{
@@ -201,12 +194,10 @@ namespace FrameWork
 			#include "FC3_debug_pull.h"
 		};
 
-		#ifndef __DisableAudioMessages__
 		namespace audio_video_xml
 		{
 			#include "FC3_audio_video_xml_receive.h"
 		};
-		#endif
 
 		namespace utilities
 		{

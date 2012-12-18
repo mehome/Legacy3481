@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XML", "..\FrameWork\XML\XML
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Communication3", "..\FrameWork\Communication3\Communication3.vcproj", "{E7513EB0-6C0B-43BD-81EB-958300BBF613}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Audio2", "..\FrameWork\Audio2\Audio2.vcproj", "{CDFE1B27-A4DA-44CB-8153-9C54DF7C4B65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -73,6 +75,12 @@ Global
 		{E7513EB0-6C0B-43BD-81EB-958300BBF613}.Release|Win32.ActiveCfg = Release|Win32
 		{E7513EB0-6C0B-43BD-81EB-958300BBF613}.Release|Win32.Build.0 = Release|Win32
 		{E7513EB0-6C0B-43BD-81EB-958300BBF613}.Release|x64.ActiveCfg = Release|Win32
+		{CDFE1B27-A4DA-44CB-8153-9C54DF7C4B65}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CDFE1B27-A4DA-44CB-8153-9C54DF7C4B65}.Debug|Win32.Build.0 = Debug|Win32
+		{CDFE1B27-A4DA-44CB-8153-9C54DF7C4B65}.Debug|x64.ActiveCfg = Debug|Win32
+		{CDFE1B27-A4DA-44CB-8153-9C54DF7C4B65}.Release|Win32.ActiveCfg = Release|Win32
+		{CDFE1B27-A4DA-44CB-8153-9C54DF7C4B65}.Release|Win32.Build.0 = Release|Win32
+		{CDFE1B27-A4DA-44CB-8153-9C54DF7C4B65}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
