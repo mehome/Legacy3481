@@ -204,6 +204,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\profile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -235,6 +239,10 @@
 			>
 			<File
 				RelativePath=".\ProcessingVision.h"
+				>
+			</File>
+			<File
+				RelativePath=".\profile.h"
 				>
 			</File>
 			<File

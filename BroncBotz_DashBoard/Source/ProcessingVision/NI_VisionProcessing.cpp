@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ProcessingVision.h"
+#include "profile.h"
 
 #define VisionErrChk(Function) {if (!(Function)) {success = 0; /*printf("error: %d\n", imaqGetLastError());*/ goto Error;}}
 
@@ -67,6 +68,9 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	int ImageBorder = 7;
 	ParticleList particleList;
 
+	//profile prof1 = new profile;
+	//prof1.start();
+
 	// Create an IMAQ Vision image, copy our frame to it.
 	Image *image = imaqCreateImage(imageType, ImageBorder);
 	imaqArrayToImage(image, (void*)Frame->Memory, Frame->XRes, Frame->YRes);
@@ -96,6 +100,9 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	delete particleList.particleData;
 	imaqDispose(pImageArray);
 	imaqDispose(image);
+	
+	//prof1.start();
+	//prof1.display(L"vision:");
 
 	return Frame;
 }
