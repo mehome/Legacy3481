@@ -4,7 +4,7 @@
 	namespace profile_config
 	{	
 		// Display timings
-		static const int	display_avg				 = 1;	// 100
+		static const int	display_avg				 = 100;	// 100
 		static const bool	profile_enabled			 = 1;
 		static const bool	profile_audio_write_packet_time = profile_enabled && 0;	
 		static const bool	profile_video_write_packet_time = profile_enabled && 0;	

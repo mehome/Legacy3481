@@ -1,5 +1,8 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
+#include "NI_VisionProcessing.h"
+
+VisionTracker* g_pTracker = NULL;
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -9,11 +12,18 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
+		g_pTracker = new VisionTracker();
+		if( g_pTracker == NULL )
+			return FALSE;
+		break;
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
+		break;
 	case DLL_PROCESS_DETACH:
+		delete g_pTracker;
 		break;
 	}
+
 	return TRUE;
 }
 

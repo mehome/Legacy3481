@@ -1,87 +1,32 @@
 #include "stdafx.h"
 #include "ProcessingVision.h"
 #include "profile.h"
+#include "NI_VisionProcessing.h"
 
-#define VisionErrChk(Function) {if (!(Function)) {success = 0; /*printf("error: %d\n", imaqGetLastError());*/ goto Error;}}
-
-// color values for drawing
-#define COLOR_BLACK  0.0f
-#define COLOR_WHITE  255 + 255 * 256.0f + 255 * 256.0f * 256.0f
-#define COLOR_RED    255.0f
-#define COLOR_GREEN  255 * 256.0f
-#define COLOR_BLUE   255 * 256.0f * 256.0f
-#define COLOR_YELLOW 255 + 255 * 256.0f
-#define COLOR_MAGENT 255 + 255 * 256.0f * 256.0f
-#define COLOR_CYAN   255 * 256.0f + 255 * 256.0f * 256.0f
-
-struct LineSegment
-{
-	PointFloat p1;
-	PointFloat P2;
-	double angle;
-};
-
-struct ParticleData
-{
-	Point center;
-	PointFloat AimSys;
-	int bound_left;
-	int bound_top;
-	int bound_right;
-	int bound_bottom;
-	int bound_width;
-	int bound_height;
-	float aspect;
-	float area;
-	LineSegment lines[4];
-	PointFloat Intersections[4];
-};
-
-struct ParticleList
-{
-	ParticleList()
-	{
-		numParticles = 0;
-		particleData = NULL;
-	}
-
-	int numParticles;
-	ParticleData *particleData;
-};
-
-int ProcessImage(Image *image, ParticleList &particleList, double &x, double &y);
-
-bool CheckAspect(float aspect, float min, float max);
-int ColorThreshold(Image* image, int min1, int max1, int min2, int max2, int min3, int max3, ColorMode colorMode);
-int ParticleFilter(Image* image, MeasurementType FilterMeasureTypes[], float plower[], float pUpper[], int pCalibrated[],
-							  int pExclude[], int rejectMatches, int connectivity);
-int GetParticles(Image* image, int connectivity, ParticleList particleList);
-int FindParticleCorners(Image* image, ParticleList particleList);
-int FindEdge(Image* image, ROI* roi, RakeDirection pDirection, EdgePolaritySearchMode pPolarity, unsigned int pKernelSize, unsigned int pWidth,
-				  float pMinThreshold, InterpolationMethod pInterpolationType, ColumnProcessingMode pColumnProcessingMode, unsigned int pStepSize,
-				  StraightEdgeSearchMode pSearchMode, ParticleData* particleData, int lineIndex, int particleNumber);
+extern VisionTracker* g_pTracker;
 
 
 Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target)
 {
-	ImageType imageType = IMAQ_IMAGE_RGB;   
-	int ImageBorder = 7;
-	ParticleList particleList;
+	if( g_pTracker == NULL )
+		return Frame;
 
-	//profile prof1 = new profile;
-	//prof1.start();
+	g_pTracker->Profiler.start();
+	// profile times:
+	// total avg time to txfer our from to and from it (original code): 1.98 ms
+	// total avg time to txfer -- new code 1.75 ms
+	// processing time (original code): 20 ms
 
-	// Create an IMAQ Vision image, copy our frame to it.
-	Image *image = imaqCreateImage(imageType, ImageBorder);
-	imaqArrayToImage(image, (void*)Frame->Memory, Frame->XRes, Frame->YRes);
+	g_pTracker->GetFrame(Frame);
 
 	// do the actual processing
-	ProcessImage(image, particleList, x_target, y_target);
+	g_pTracker->ProcessImage(x_target, y_target);
 
 	// Return our processed image back to our outgoing frame.
-	void *pImageArray = imaqImageToArray(image, IMAQ_NO_RECT, NULL, NULL);
-	if(pImageArray != NULL)
-		memcpy((void*)Frame->Memory, pImageArray, Frame->Stride * 4 * Frame->YRes);
+	g_pTracker->RetrieveFrame(Frame);
+
+	g_pTracker->Profiler.stop();
+	g_pTracker->Profiler.display(L"vision:");
 
 	// make a green box in the center of the frame
 	size_t CenterY=Frame->YRes / 2;
@@ -96,13 +41,6 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 			*(Frame->Memory+ (x*4 + 2) + (LineWidthInBytes * y))=0;
 		}
 	}
-
-	delete particleList.particleData;
-	imaqDispose(pImageArray);
-	imaqDispose(image);
-	
-	//prof1.start();
-	//prof1.display(L"vision:");
 
 	return Frame;
 }
@@ -124,7 +62,43 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 #undef USE_FIND_CORNERS
 #undef SHOW_FIND_CORNERS
 
-int ProcessImage(Image *image, ParticleList &particleList, double &x_target, double &y_target)
+VisionTracker::VisionTracker()
+{
+	Profiler = new profile;
+	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);
+	ParticleImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
+}
+
+VisionTracker::~VisionTracker()
+{
+	imaqDispose(InputImageRGB);
+	imaqDispose(ParticleImageU8);
+}
+
+int VisionTracker::GetFrame(Bitmap_Frame *Frame)
+{
+	// Copy our frame to an NI image.
+	return imaqArrayToImage(InputImageRGB, (void*)Frame->Memory, Frame->XRes, Frame->YRes);
+}
+
+void VisionTracker::RetrieveFrame(Bitmap_Frame *Frame)
+{
+#undef ALT_FRAME
+#ifdef ALT_FRAME
+	// TODO: doesn't work - is is possible to safely convert directly into Frame->Memory???
+	_aligned_free(Frame->Memory);
+	Frame->Memory = (PBYTE)imaqImageToArray(InputImageRGB, IMAQ_NO_RECT, NULL, NULL);
+#else
+	void *pImageArray = imaqImageToArray(InputImageRGB, IMAQ_NO_RECT, NULL, NULL);
+	if(pImageArray != NULL)
+	{
+		memcpy((void*)Frame->Memory, pImageArray, Frame->Stride * 4 * Frame->YRes);
+		imaqDispose(pImageArray);
+	}
+#endif
+}
+
+int VisionTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
 	int ImageBorder = 7;
@@ -164,7 +138,7 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 	Image *Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
 	Image *Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
 
-	VisionErrChk(imaqExtractColorPlanes(image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
+	VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_RGB, Plane1, Plane2, Plane3)); 
 
 	int krows = 5;
 	int kcols = 5;
@@ -181,7 +155,7 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 	VisionErrChk(imaqConvolve2(Plane3, Plane3, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
 
 	// recombine planes
-	VisionErrChk(imaqReplaceColorPlanes(image, image, IMAQ_RGB, Plane1, Plane2, Plane3)); 
+	VisionErrChk(imaqReplaceColorPlanes(InputImageRGB, InputImageRGB, IMAQ_RGB, Plane1, Plane2, Plane3)); 
 
 	imaqDispose(Plane1);
 	imaqDispose(Plane2);
@@ -192,15 +166,15 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 	// image  - used for particle operations - gets converted to 8 bit (binary).
 	// image2 - used for edge detection, and overlays
 	ImageInfo info;
-	imaqGetImageInfo(image, &info);
+	imaqGetImageInfo(InputImageRGB, &info);
 	Image *image2 = imaqCreateImage(info.imageType, ImageBorder);
-	imaqDuplicate(image2, image);
+	imaqDuplicate(image2, InputImageRGB);	// TODO: probably unnecessary...
 
 	// color threshold
-	VisionErrChk(ColorThreshold(image, redMin, redMax, grnMin, grnMax, bluMin, bluMax, IMAQ_RGB));
+	VisionErrChk(ColorThreshold(ParticleImageU8, InputImageRGB, redMin, redMax, grnMin, grnMax, bluMin, bluMax, IMAQ_RGB));
 
 #ifdef FILL_HOLES
-	VisionErrChk(imaqFillHoles(image, image, true));
+	VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
 #endif
 
 	//-------------------------------------------------------------------//
@@ -219,7 +193,7 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 	int erosions = 2;
 
 	// Filters particles based on their size.
-	VisionErrChk(imaqSizeFilter(image, image, TRUE, erosions, IMAQ_KEEP_LARGE, &structElem));
+	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, TRUE, erosions, IMAQ_KEEP_LARGE, &structElem));
 #endif
 	//-------------------------------------------------------------------//
 	//             Advanced Morphology: Remove Border Objects            //
@@ -227,7 +201,7 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 
 #ifdef REJECT_BORDER_OBJS
 	// Eliminates particles touching the border of the image.
-	VisionErrChk(imaqRejectBorder(image, image, TRUE));
+	VisionErrChk(imaqRejectBorder(ParticleImageU8, ParticleImageU8, TRUE));
 #endif
 
 #ifdef USE_PARTICLE_FILTER
@@ -238,7 +212,7 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 	int pCalibrated[] = {0,0};
 	int pExclude[] = {0,0};
 
-	VisionErrChk(ParticleFilter(image, FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE));
+	VisionErrChk(ParticleFilter(ParticleImageU8, FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE));
 #endif
 
 	//-------------------------------------------------------------------//
@@ -246,7 +220,7 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 	//-------------------------------------------------------------------//
 #ifdef USE_CONVEXHULL
 	// Computes the convex envelope for each labeled particle in the source image.
-	VisionErrChk(imaqConvexHull(image, image, FALSE));	// Connectivity 4??? set to true to make con 8.
+	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
 #endif
 
 	// we want the qualifying target highest on the screen.
@@ -256,20 +230,20 @@ int ProcessImage(Image *image, ParticleList &particleList, double &x_target, dou
 
 #ifdef SHOW_OVERLAYS 
 	// Counts the number of particles in the image.
-	VisionErrChk(imaqCountParticles(image, TRUE, &particleList.numParticles));
+	VisionErrChk(imaqCountParticles(ParticleImageU8, TRUE, &particleList.numParticles));
 
 	if(particleList.numParticles > 0)
 	{
 		particleList.particleData = new ParticleData[particleList.numParticles];
 
-		VisionErrChk(GetParticles(image, TRUE, particleList));
+		VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
 
 #ifdef USE_FIND_CORNERS
 		VisionErrChk(FindParticleCorners(image2, particleList));
 #endif
 
 #ifdef USE_MASKING2
-		imaqMask(image2, image2, image);	// mask image onto image2, result is image3
+		imaqMask(image2, image2, ParticleImageU8);	// mask image onto image2, result is image3
 #endif
 
 		// overlay some useful info
@@ -392,6 +366,8 @@ Error:
 		y_target = 0.0;
 	}
 
+	delete particleList.particleData;
+
 	// copy the end result 
 #ifdef USE_MASKING
 	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
@@ -399,7 +375,7 @@ Error:
 	imaqDuplicate(image, image3);		// copy image 3 out.
 	imaqDispose(image3);				// don't need it now.
 #else
-	imaqDuplicate(image, image2);
+	imaqDuplicate(InputImageRGB, image2);
 #endif
 	imaqDispose(image2);
 
@@ -408,7 +384,7 @@ Error:
 }
 
 
-bool CheckAspect(float aspect, float min, float max)
+bool VisionTracker::CheckAspect(float aspect, float min, float max)
 {
 	// reject if aspect is too far out.
 	return (aspect < min || aspect > max);
@@ -427,7 +403,7 @@ bool CheckAspect(float aspect, float min, float max)
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-int FindParticleCorners(Image* image, ParticleList particleList)
+int VisionTracker::FindParticleCorners(Image* image, ParticleList particleList)
 {
 	int success = 1;
 
@@ -581,7 +557,8 @@ Error:
 //
 // Description  : Thresholds a color image.
 //
-// Parameters   : image      -  Input image
+// Parameters   : DestImage  -  Output image
+//				  SrcImage   -  Input image
 //                min1       -  Minimum range for the first plane
 //                max1       -  Maximum range for the first plane
 //                min2       -  Minimum range for the second plane
@@ -593,10 +570,9 @@ Error:
 // Return Value : success
 //
 ////////////////////////////////////////////////////////////////////////////////
-int ColorThreshold(Image* image, int min1, int max1, int min2, int max2, int min3, int max3, ColorMode colorMode)
+int VisionTracker::ColorThreshold(Image* DestImage, Image* SrcImage, int min1, int max1, int min2, int max2, int min3, int max3, ColorMode colorMode)
 {
 	int success = 1;
-	Image* thresholdImage;
 	Range plane1Range;
 	Range plane2Range;
 	Range plane3Range;
@@ -604,9 +580,6 @@ int ColorThreshold(Image* image, int min1, int max1, int min2, int max2, int min
 	//-------------------------------------------------------------------//
 	//                          Color Threshold                          //
 	//-------------------------------------------------------------------//
-
-	// Creates an 8 bit image for the thresholded image.
-	VisionErrChk(thresholdImage = imaqCreateImage(IMAQ_IMAGE_U8, 7));
 
 	// Set the threshold range for the 3 planes.
 	plane1Range.minValue = min1;
@@ -617,15 +590,9 @@ int ColorThreshold(Image* image, int min1, int max1, int min2, int max2, int min
 	plane3Range.maxValue = max3;
 
 	// Thresholds the color image.
-	VisionErrChk(imaqColorThreshold(thresholdImage, image, 1, colorMode, &plane1Range, &plane2Range, &plane3Range));
-
-	// TODO: use this to make a copy of the original
-	// Copies the threshold image in the souce image.
-	VisionErrChk(imaqDuplicate(image, thresholdImage));
+	VisionErrChk(imaqColorThreshold(DestImage, SrcImage, 1, colorMode, &plane1Range, &plane2Range, &plane3Range));
 
 Error:
-	imaqDispose(thresholdImage);
-
 	return success;
 }
 
@@ -656,7 +623,7 @@ Error:
 // Return Value : success
 //
 ////////////////////////////////////////////////////////////////////////////////
-int ParticleFilter(Image* image, MeasurementType FilterMeasureTypes[], float plower[], float pUpper[],
+int VisionTracker::ParticleFilter(Image* image, MeasurementType FilterMeasureTypes[], float plower[], float pUpper[],
 							  int pCalibrated[], int pExclude[], int rejectMatches, int connectivity)
 {
 	int success = 1;
@@ -719,7 +686,7 @@ Error:
 // Return Value : success
 //
 ////////////////////////////////////////////////////////////////////////////////
-int GetParticles(Image* image, int connectivity, ParticleList particleList)
+int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList particleList)
 {
 	int success = 1;
 	int i;
@@ -797,7 +764,7 @@ Error:
 // Return Value : success
 //
 ////////////////////////////////////////////////////////////////////////////////
-int FindEdge(Image* image, ROI* roi, RakeDirection pDirection, EdgePolaritySearchMode pPolarity, unsigned int pKernelSize, unsigned int pWidth,
+int VisionTracker::FindEdge(Image* image, ROI* roi, RakeDirection pDirection, EdgePolaritySearchMode pPolarity, unsigned int pKernelSize, unsigned int pWidth,
 						 float pMinThreshold, InterpolationMethod pInterpolationType, ColumnProcessingMode pColumnProcessingMode, unsigned int pStepSize,
 						 StraightEdgeSearchMode pSearchMode, ParticleData* particleData, int lineIndex, int particleNumber)
 {
