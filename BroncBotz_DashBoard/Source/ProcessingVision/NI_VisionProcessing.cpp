@@ -16,6 +16,8 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	// total avg time to txfer our from to and from it (original code): 1.98 ms
 	// total avg time to txfer -- new code 1.75 ms
 	// processing time (original code): 20 ms
+	// First-pass blurring: 26 ms
+	// processing time (pass 1): 15 ms,  20 ms with blurring.
 
 	g_pTracker->GetFrame(Frame);
 
@@ -23,7 +25,7 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	g_pTracker->ProcessImage(x_target, y_target);
 
 	// Return our processed image back to our outgoing frame.
-	g_pTracker->RetrieveFrame(Frame);
+	g_pTracker->ReturnFrame(Frame);
 
 	g_pTracker->Profiler.stop();
 	g_pTracker->Profiler.display(L"vision:");
@@ -64,15 +66,34 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 
 VisionTracker::VisionTracker()
 {
+	plane1Range.minValue = 100, plane1Range.maxValue = 200,	// red	- These values are grey - used in our sample video.
+	plane2Range.minValue = 100, plane2Range.maxValue = 210, // green
+	plane3Range.minValue = 100, plane3Range.maxValue = 210;	// blue
+
 	Profiler = new profile;
 	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);
+	imaqGetImageInfo(InputImageRGB, &SourceImageInfo);
+
 	ParticleImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
+
+#ifdef USE_BLURRING
+	// separate planes
+	Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
+	Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
+	Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
+#endif
 }
 
 VisionTracker::~VisionTracker()
 {
 	imaqDispose(InputImageRGB);
 	imaqDispose(ParticleImageU8);
+
+#ifdef USE_BLURRING
+	imaqDispose(Plane1);
+	imaqDispose(Plane2);
+	imaqDispose(Plane3);
+#endif
 }
 
 int VisionTracker::GetFrame(Bitmap_Frame *Frame)
@@ -81,97 +102,33 @@ int VisionTracker::GetFrame(Bitmap_Frame *Frame)
 	return imaqArrayToImage(InputImageRGB, (void*)Frame->Memory, Frame->XRes, Frame->YRes);
 }
 
-void VisionTracker::RetrieveFrame(Bitmap_Frame *Frame)
+void VisionTracker::ReturnFrame(Bitmap_Frame *Frame)
 {
-#undef ALT_FRAME
-#ifdef ALT_FRAME
-	// TODO: doesn't work - is is possible to safely convert directly into Frame->Memory???
-	_aligned_free(Frame->Memory);
-	Frame->Memory = (PBYTE)imaqImageToArray(InputImageRGB, IMAQ_NO_RECT, NULL, NULL);
-#else
 	void *pImageArray = imaqImageToArray(InputImageRGB, IMAQ_NO_RECT, NULL, NULL);
 	if(pImageArray != NULL)
 	{
 		memcpy((void*)Frame->Memory, pImageArray, Frame->Stride * 4 * Frame->YRes);
 		imaqDispose(pImageArray);
 	}
-#endif
 }
 
 int VisionTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
-	int ImageBorder = 7;
 
-#if 1
-	// grey
-	int redMin = 100;	
-	int redMax = 200;	
-	int grnMin = 100;	
-	int grnMax = 210;	
-	int bluMin = 100;	
-	int bluMax = 210;	
-#endif
-#if 0
-	// red
-	int redMin = 60;
-	int redMax = 255;
-	int grnMin = 20;
-	int grnMax = 75;
-	int bluMin = 20;
-	int bluMax = 75;
-#endif
-#if 0
-	// blue
-	int redMin = 20; // -30
-	int redMax = 80; // -20
-	int grnMin = 50; // -30
-	int grnMax = 100; // - 25
-	int bluMin = 90; // -40
-	int bluMax = 175;
-#endif
-
+#define REPLACE_VALUE 1 	// TODO - Move or get rid of define... ( just don't like magic numbers )
 
 #ifdef USE_BLURRING // use only for really noisy camera images.
-	// separate planes
-	Image *Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
-	Image *Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
-	Image *Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, ImageBorder);
-
-	VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_RGB, Plane1, Plane2, Plane3)); 
-
-	int krows = 5;
-	int kcols = 5;
-
-	// simple averaging convolution
-	float kernel[] = {1,1,1,1,1,
-				   	  1,1,1,1,1,
-					  1,1,1,1,1,
-					  1,1,1,1,1,
-					  1,1,1,1,1};
-
-	VisionErrChk(imaqConvolve2(Plane1, Plane1, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
-	VisionErrChk(imaqConvolve2(Plane2, Plane2, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
-	VisionErrChk(imaqConvolve2(Plane3, Plane3, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
-
-	// recombine planes
-	VisionErrChk(imaqReplaceColorPlanes(InputImageRGB, InputImageRGB, IMAQ_RGB, Plane1, Plane2, Plane3)); 
-
-	imaqDispose(Plane1);
-	imaqDispose(Plane2);
-	imaqDispose(Plane3);
+	Image* BlurredImage = imaqCreateImage(SourceImageInfo.imageType, IMAGE_BORDER_SIZE);
+	VisionErrChk(BlurImage(BlurredImage, InputImageRGB, IMAQ_RGB, IMAQ_RGB));
+	// color threshold
+	VisionErrChk(imaqColorThreshold(ParticleImageU8, BlurredImage, REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+	imaqDispose(BlurredImage);
+#else
+	// color threshold
+	VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
 #endif
 
-	// copy image
-	// image  - used for particle operations - gets converted to 8 bit (binary).
-	// image2 - used for edge detection, and overlays
-	ImageInfo info;
-	imaqGetImageInfo(InputImageRGB, &info);
-	Image *image2 = imaqCreateImage(info.imageType, ImageBorder);
-	imaqDuplicate(image2, InputImageRGB);	// TODO: probably unnecessary...
-
-	// color threshold
-	VisionErrChk(ColorThreshold(ParticleImageU8, InputImageRGB, redMin, redMax, grnMin, grnMax, bluMin, bluMax, IMAQ_RGB));
 
 #ifdef FILL_HOLES
 	VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
@@ -225,7 +182,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 
 	// we want the qualifying target highest on the screen.
 	// (most valuable target)
-	int min_y = info.yRes + 1;
+	int min_y = SourceImageInfo.yRes + 1;
 	int index;
 
 #ifdef SHOW_OVERLAYS 
@@ -239,11 +196,11 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 		VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
 
 #ifdef USE_FIND_CORNERS
-		VisionErrChk(FindParticleCorners(image2, particleList));
+		VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
 #endif
 
 #ifdef USE_MASKING2
-		imaqMask(image2, image2, ParticleImageU8);	// mask image onto image2, result is image3
+		imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
 #endif
 
 		// overlay some useful info
@@ -279,17 +236,17 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 			textOps.textAlignment = IMAQ_CENTER;
 			textOps.fontColor = IMAQ_WHITE;
 			int fu;
-			imaqDrawTextOnImage(image2, image2, TextPoint, Text, &textOps, &fu); 
+			imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, Text, &textOps, &fu); 
 
 			// show size of bounding box
 			//TextPoint.y += 16;
 			//sprintf_s(Text, 256, "%d, %d", particleList.particleData[i].bound_width, particleList.particleData[i].bound_height);
-			//imaqDrawTextOnImage(image2, image2, TextPoint, Text, &textOps, &fu); 
+			//imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, Text, &textOps, &fu); 
 
 			// center x, y
 			//TextPoint.y += 16;
 			//sprintf_s(Text, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
-			//imaqDrawTextOnImage(image2, image2, TextPoint, Text, &textOps, &fu); 
+			//imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, Text, &textOps, &fu); 
 
 			// track highest center x
 			if( particleList.particleData[i].center.y < min_y )
@@ -301,9 +258,9 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 			// draw a line from target CoM to center of screen
 			P1.x = particleList.particleData[i].center.x;
 			P1.y = particleList.particleData[i].center.y;
-			P2.x = info.xRes / 2;
-			P2.y = info.yRes / 2;
-			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
+			P2.x = SourceImageInfo.xRes / 2;
+			P2.y = SourceImageInfo.yRes / 2;
+			imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
 
 			// center of mass
 			P1.x = particleList.particleData[i].center.x - 6;
@@ -311,14 +268,14 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 			P2.x = particleList.particleData[i].center.x + 6;
 			P2.y = particleList.particleData[i].center.y;
 
-			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+			imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
 
 			P1.x = particleList.particleData[i].center.x;
 			P1.y = particleList.particleData[i].center.y - 6;
 			P2.x = particleList.particleData[i].center.x;
 			P2.y = particleList.particleData[i].center.y + 6;
 
-			imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+			imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
 
 			// bounding box
 			rect.top = particleList.particleData[i].bound_top;
@@ -326,7 +283,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 			rect.height = particleList.particleData[i].bound_height;
 			rect.width = particleList.particleData[i].bound_width;
 
-			imaqDrawShapeOnImage(image2, image2, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+			imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
 
 #ifdef USE_FIND_CORNERS 
 #ifdef SHOW_FIND_CORNERS
@@ -338,14 +295,14 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 				P2.x = (int)particleList.particleData[i].Intersections[j].x + 6;
 				P2.y = (int)particleList.particleData[i].Intersections[j].y;
 
-				imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
 
 				P1.x = (int)particleList.particleData[i].Intersections[j].x;
 				P1.y = (int)particleList.particleData[i].Intersections[j].y - 6;
 				P2.x = (int)particleList.particleData[i].Intersections[j].x;
 				P2.y = (int)particleList.particleData[i].Intersections[j].y + 6;
 
-				imaqDrawLineOnImage(image2, image2, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
 			}
 #endif
 #endif
@@ -355,7 +312,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 
 Error:
 	// Get return for x, y target values;
-	if( min_y < info.yRes + 1 )
+	if( min_y < SourceImageInfo.yRes + 1 )
 	{
 		x_target = (double)particleList.particleData[index].AimSys.x;
 		y_target = (double)particleList.particleData[index].AimSys.y;
@@ -368,21 +325,49 @@ Error:
 
 	delete particleList.particleData;
 
-	// copy the end result 
-#ifdef USE_MASKING
-	Image *image3 = imaqCreateImage(info.imageType, ImageBorder);
-	imaqMask(image3, image2, image);	// mask image onto image2, result is image3
+	// copy the end result	// TODO: this is totally messed up
+#ifdef USE_MASKING		
+	Image *image3 = imaqCreateImage(SourceImageInfo.imageType, IMAGE_BORDER_SIZE);
+	imaqMask(image3, InputImageRGB, image);	// mask image onto image2, result is image3
 	imaqDuplicate(image, image3);		// copy image 3 out.
 	imaqDispose(image3);				// don't need it now.
-#else
-	imaqDuplicate(InputImageRGB, image2);
 #endif
-	imaqDispose(image2);
 
 	int error = imaqGetLastError();
 	return success;
 }
 
+
+int VisionTracker::BlurImage(Image* DestImage, Image* SrcImage, ColorMode_enum DestColorMOde, ColorMode_enum SrcColorMode)
+{
+	int success = 1;
+
+	VisionErrChk(imaqExtractColorPlanes(SrcImage, SrcColorMode, Plane1, Plane2, Plane3)); 
+
+	int krows = 5;
+	int kcols = 5;
+
+	// 3x3 kernal adds 4 ms
+	// 5x5 kernel adds 6 ms
+
+	// simple averaging convolution
+	float kernel[] = {1,1,1,1,1,
+			 		  1,1,1,1,1,
+					  1,1,1,1,1,
+					  1,1,1,1,1,
+					  1,1,1,1,1};
+
+	VisionErrChk(imaqConvolve2(Plane1, Plane1, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+	VisionErrChk(imaqConvolve2(Plane2, Plane2, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+	VisionErrChk(imaqConvolve2(Plane3, Plane3, kernel, krows, kcols, 0, NULL, IMAQ_ROUNDING_MODE_OPTIMIZE)); 
+
+	// recombine planes
+	VisionErrChk(imaqReplaceColorPlanes(DestImage, SrcImage, DestColorMOde, Plane1, Plane2, Plane3)); 
+
+Error:
+
+	return success;
+}
 
 bool VisionTracker::CheckAspect(float aspect, float min, float max)
 {
@@ -548,51 +533,6 @@ int VisionTracker::FindParticleCorners(Image* image, ParticleList particleList)
 
 Error:
 
-	return success;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// Function Name: ColorThreshold
-//
-// Description  : Thresholds a color image.
-//
-// Parameters   : DestImage  -  Output image
-//				  SrcImage   -  Input image
-//                min1       -  Minimum range for the first plane
-//                max1       -  Maximum range for the first plane
-//                min2       -  Minimum range for the second plane
-//                max2       -  Maximum range for the second plane
-//                min3       -  Minimum range for the third plane
-//                max3       -  Maximum range for the third plane
-//                colorMode  -  Color space in which to perform the threshold
-//
-// Return Value : success
-//
-////////////////////////////////////////////////////////////////////////////////
-int VisionTracker::ColorThreshold(Image* DestImage, Image* SrcImage, int min1, int max1, int min2, int max2, int min3, int max3, ColorMode colorMode)
-{
-	int success = 1;
-	Range plane1Range;
-	Range plane2Range;
-	Range plane3Range;
-
-	//-------------------------------------------------------------------//
-	//                          Color Threshold                          //
-	//-------------------------------------------------------------------//
-
-	// Set the threshold range for the 3 planes.
-	plane1Range.minValue = min1;
-	plane1Range.maxValue = max1;
-	plane2Range.minValue = min2;
-	plane2Range.maxValue = max2;
-	plane3Range.minValue = min3;
-	plane3Range.maxValue = max3;
-
-	// Thresholds the color image.
-	VisionErrChk(imaqColorThreshold(DestImage, SrcImage, 1, colorMode, &plane1Range, &plane2Range, &plane3Range));
-
-Error:
 	return success;
 }
 

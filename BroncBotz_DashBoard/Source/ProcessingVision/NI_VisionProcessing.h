@@ -59,18 +59,29 @@ public:
 
 	int ProcessImage(double &x, double &y);
 	int GetFrame(Bitmap_Frame *Frame);
-	void RetrieveFrame(Bitmap_Frame *Frame);
+	void ReturnFrame(Bitmap_Frame *Frame);
 
 	profile Profiler;
 
 private:
-	Image *InputImageRGB;
-	Image *ParticleImageU8;
+	Image *InputImageRGB;		// our input image
+	ImageInfo SourceImageInfo;	// info about our input image
+	Image *ParticleImageU8;		// 8 bit image - particle processing
 
-	ParticleList particleList;
+	// separate planes for splitting color images
+	Image *Plane1;
+	Image *Plane2;
+	Image *Plane3;
 
+	// Color thresholding values // TODO: add UI to set these
+	Range plane1Range;
+	Range plane2Range;
+	Range plane3Range;
+
+	ParticleList particleList;	// our results data structure
+
+	int BlurImage(Image* DestImage, Image* SrcImage, ColorMode_enum DestColorMOde, ColorMode_enum SrcColorMode);
 	bool CheckAspect(float aspect, float min, float max);
-	int ColorThreshold(Image* DestImage, Image* SrcImage, int min1, int max1, int min2, int max2, int min3, int max3, ColorMode colorMode);
 	int ParticleFilter(Image* image, MeasurementType FilterMeasureTypes[], float plower[], float pUpper[], int pCalibrated[],
 		int pExclude[], int rejectMatches, int connectivity);
 	int GetParticles(Image* image, int connectivity, ParticleList particleList);
