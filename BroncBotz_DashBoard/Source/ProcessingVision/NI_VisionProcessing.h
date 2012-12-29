@@ -64,6 +64,7 @@ public:
 	profile Profiler;
 
 private:
+	// images
 	Image *InputImageRGB;		// our input image
 	ImageInfo SourceImageInfo;	// info about our input image
 	Image *ParticleImageU8;		// 8 bit image - particle processing
@@ -78,11 +79,16 @@ private:
 	Range plane2Range;
 	Range plane3Range;
 
+	// particle filter params
+	int criteriaCount;
+	ParticleFilterCriteria2* particleCriteria;
+	ParticleFilterOptions2 particleFilterOptions;
+
 	ParticleList particleList;	// our results data structure
 
 	int BlurImage(Image* DestImage, Image* SrcImage, ColorMode_enum DestColorMOde, ColorMode_enum SrcColorMode);
 	bool CheckAspect(float aspect, float min, float max);
-	int ParticleFilter(Image* image, MeasurementType FilterMeasureTypes[], float plower[], float pUpper[], int pCalibrated[],
+	void InitParticleFilter(MeasurementType FilterMeasureTypes[], float plower[], float pUpper[], int pCalibrated[],
 		int pExclude[], int rejectMatches, int connectivity);
 	int GetParticles(Image* image, int connectivity, ParticleList particleList);
 	int FindParticleCorners(Image* image, ParticleList particleList);

@@ -5,11 +5,32 @@
 
 extern VisionTracker* g_pTracker;
 
+// display opts
+#undef USE_MASKING		// only works when SHOW_OVERLAYS is defined.
+#define SHOW_OVERLAYS
+
+#define FILL_HOLES
+#define USE_SIZE_FILTER
+#define REJECT_BORDER_OBJS
+#define USE_PARTICLE_FILTER	
+//TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
+// Let's keep checked in disabled as long as this remains true... Note: this appears to work just as well without it
+//  [12/15/2012 James]
+#undef USE_FIND_CORNERS
+#undef SHOW_FIND_CORNERS
+  
+#undef USE_CONVEXHULL	// expensive, and not really needed.
+#undef USE_BLURRING
+
 
 Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target)
 {
 	if( g_pTracker == NULL )
-		return Frame;
+	{
+		g_pTracker = new VisionTracker();
+		if( g_pTracker == NULL)
+			return Frame;
+	}
 
 	g_pTracker->Profiler.start();
 	// profile times:
@@ -47,33 +68,16 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	return Frame;
 }
 
-#undef USE_MASKING
-#undef USE_MASKING2
-#define SHOW_OVERLAYS
-
-#undef USE_BLURRING
-
-#define FILL_HOLES
-#define USE_SIZE_FILTER
-#undef USE_CONVEXHULL	// expensive, and not really needed.
-#define REJECT_BORDER_OBJS
-#define USE_PARTICLE_FILTER	
-//TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
-// Let's keep checked in disabled as long as this remains true... Note: this appears to work just as well without it
-//  [12/15/2012 James]
-#undef USE_FIND_CORNERS
-#undef SHOW_FIND_CORNERS
-
 VisionTracker::VisionTracker()
-{
+	: criteriaCount( 0 ),
+	  particleCriteria( NULL )
+{	
 	plane1Range.minValue = 100, plane1Range.maxValue = 200,	// red	- These values are grey - used in our sample video.
 	plane2Range.minValue = 100, plane2Range.maxValue = 210, // green
 	plane3Range.minValue = 100, plane3Range.maxValue = 210;	// blue
 
 	Profiler = new profile;
 	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);
-	imaqGetImageInfo(InputImageRGB, &SourceImageInfo);
-
 	ParticleImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 
 #ifdef USE_BLURRING
@@ -82,12 +86,25 @@ VisionTracker::VisionTracker()
 	Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 #endif
+
+	// particle filter parameters
+	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
+	float plower[] = {20, 20};	
+	float pUpper[] = {200, 200};
+	int pCalibrated[] = {0,0};
+	int pExclude[] = {0,0};
+
+	criteriaCount = sizeof(FilterMeasureTypes) / sizeof(FilterMeasureTypes[0]);
+
+	InitParticleFilter(FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE);
 }
 
 VisionTracker::~VisionTracker()
 {
 	imaqDispose(InputImageRGB);
 	imaqDispose(ParticleImageU8);
+
+	delete[] particleCriteria;
 
 #ifdef USE_BLURRING
 	imaqDispose(Plane1);
@@ -98,8 +115,12 @@ VisionTracker::~VisionTracker()
 
 int VisionTracker::GetFrame(Bitmap_Frame *Frame)
 {
+	int success = 1;
+
 	// Copy our frame to an NI image.
-	return imaqArrayToImage(InputImageRGB, (void*)Frame->Memory, Frame->XRes, Frame->YRes);
+	success = imaqArrayToImage(InputImageRGB, (void*)Frame->Memory, Frame->XRes, Frame->YRes);
+	imaqGetImageInfo(InputImageRGB, &SourceImageInfo);
+	return success;
 }
 
 void VisionTracker::ReturnFrame(Bitmap_Frame *Frame)
@@ -116,6 +137,10 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
 
+	//-----------------------------------------------------------------//
+	//  Color threshold and optional noise filter                      //
+	//-----------------------------------------------------------------//
+
 #define REPLACE_VALUE 1 	// TODO - Move or get rid of define... ( just don't like magic numbers )
 
 #ifdef USE_BLURRING // use only for really noisy camera images.
@@ -129,14 +154,13 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
 #endif
 
+	//-------------------------------------------------------------------//
+	//     Advanced Morphology: particle filtering functions             //
+	//-------------------------------------------------------------------//
 
 #ifdef FILL_HOLES
 	VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
 #endif
-
-	//-------------------------------------------------------------------//
-	//                Advanced Morphology: Remove Objects                //
-	//-------------------------------------------------------------------//
 #ifdef USE_SIZE_FILTER
 	int pKernel[] = {1,1,1,
 					 1,1,1,
@@ -152,29 +176,14 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, TRUE, erosions, IMAQ_KEEP_LARGE, &structElem));
 #endif
-	//-------------------------------------------------------------------//
-	//             Advanced Morphology: Remove Border Objects            //
-	//-------------------------------------------------------------------//
-
 #ifdef REJECT_BORDER_OBJS
 	// Eliminates particles touching the border of the image.
 	VisionErrChk(imaqRejectBorder(ParticleImageU8, ParticleImageU8, TRUE));
 #endif
-
 #ifdef USE_PARTICLE_FILTER
-	// particle filter parameters
-	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
-	float plower[] = {20, 20};	
-	float pUpper[] = {200, 200};
-	int pCalibrated[] = {0,0};
-	int pExclude[] = {0,0};
-
-	VisionErrChk(ParticleFilter(ParticleImageU8, FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE));
+	// Filters particles based on their morphological measurements.
+	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &particleList.numParticles));
 #endif
-
-	//-------------------------------------------------------------------//
-	//                  Advanced Morphology: Convex Hull                 //
-	//-------------------------------------------------------------------//
 #ifdef USE_CONVEXHULL
 	// Computes the convex envelope for each labeled particle in the source image.
 	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
@@ -183,10 +192,10 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	// we want the qualifying target highest on the screen.
 	// (most valuable target)
 	int min_y = SourceImageInfo.yRes + 1;
-	int index;
+	int index = 0;
 
 #ifdef SHOW_OVERLAYS 
-	// Counts the number of particles in the image.
+	// Counts the number of particles in the image (not necessarily redundent in the case where we use convex hull).
 	VisionErrChk(imaqCountParticles(ParticleImageU8, TRUE, &particleList.numParticles));
 
 	if(particleList.numParticles > 0)
@@ -199,7 +208,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 		VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
 #endif
 
-#ifdef USE_MASKING2
+#ifdef USE_MASKING
 		imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
 #endif
 
@@ -324,14 +333,6 @@ Error:
 	}
 
 	delete particleList.particleData;
-
-	// copy the end result	// TODO: this is totally messed up
-#ifdef USE_MASKING		
-	Image *image3 = imaqCreateImage(SourceImageInfo.imageType, IMAGE_BORDER_SIZE);
-	imaqMask(image3, InputImageRGB, image);	// mask image onto image2, result is image3
-	imaqDuplicate(image, image3);		// copy image 3 out.
-	imaqDispose(image3);				// don't need it now.
-#endif
 
 	int error = imaqGetLastError();
 	return success;
@@ -539,12 +540,11 @@ Error:
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Function Name: ParticleFilter
+// Function Name: InitParticleFilter
 //
-// Description  : Filters particles based on their morphological measurements.
+// Description  : Sets up particle filters
 //
-// Parameters   : image          -  Input image
-//                FilterMeasureTypes     -  Morphological measurement that the function
+// Parameters   : FilterMeasureTypes     -  Morphological measurement that the function
 //                                  uses for filtering.
 //                plower         -  Lower bound of the criteria range.
 //                pUpper         -  Upper bound of the criteria range.
@@ -560,24 +560,18 @@ Error:
 //                                  Set this parameter to 0 to use connectivity-4
 //                                  to determine whether particles are touching.
 //
-// Return Value : success
-//
 ////////////////////////////////////////////////////////////////////////////////
-int VisionTracker::ParticleFilter(Image* image, MeasurementType FilterMeasureTypes[], float plower[], float pUpper[],
+void VisionTracker::InitParticleFilter(MeasurementType FilterMeasureTypes[], float plower[], float pUpper[],
 							  int pCalibrated[], int pExclude[], int rejectMatches, int connectivity)
 {
-	int success = 1;
 	int i;
-	ParticleFilterOptions2 particleFilterOptions;
-	int numParticles;
-
 
 	//-------------------------------------------------------------------//
 	//                          Particle Filter                          //
 	//-------------------------------------------------------------------//
 
-	int criteriaCount = sizeof(FilterMeasureTypes) / sizeof(FilterMeasureTypes[0]);
-	ParticleFilterCriteria2* particleCriteria = new ParticleFilterCriteria2[criteriaCount];
+	delete[] particleCriteria;	// remove any old data
+	particleCriteria = new ParticleFilterCriteria2[criteriaCount];
 
 	if (criteriaCount > 0)
 	{
@@ -595,15 +589,7 @@ int VisionTracker::ParticleFilter(Image* image, MeasurementType FilterMeasureTyp
 		particleFilterOptions.rejectBorder = 0;
 		particleFilterOptions.fillHoles = TRUE;
 		particleFilterOptions.connectivity8 = connectivity;
-
-		// Filters particles based on their morphological measurements.
-		VisionErrChk(imaqParticleFilter4(image, image, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
 	}
-
-Error:
-	delete[] particleCriteria;
-
-	return success;
 }
 
 
