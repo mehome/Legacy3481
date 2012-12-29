@@ -1,5 +1,10 @@
-
 #include "stdafx.h"
+
+//Can only build release with static environment
+#ifndef _DEBUG
+#define __BuildStaticFFMpeg__
+#endif
+
 #include "Dashboard_Interfaces.h"
 #include <ddraw.h>
 #include <atlbase.h>
@@ -11,6 +16,7 @@
 #include "../FFMpeg121125/FrameGrabber.h"
 #pragma comment (lib,"shell32")
 #pragma comment (lib,"winhttp.lib")
+#ifndef __BuildStaticFFMpeg__
 #pragma comment (lib,"../FFMpeg121125/lib/avcodec.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/avdevice.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/avfilter.lib")
@@ -19,6 +25,17 @@
 //#pragma comment (lib , "lib/postproc.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/swresample.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/swscale.lib")
+#else
+#pragma comment (lib,"../FFMpeg121125/lib/libavcodec.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libavdevice.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libavfilter.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libavformat.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libavutil.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libswresample.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libswscale.lib")
+#pragma comment( lib, "Ws2_32" )
+#endif
+
 #pragma comment (lib , "../FFMpeg121125/SDL/lib/x86/SDL.lib")
 #pragma comment (lib , "../FFMpeg121125/SDL/lib/x86/SDLmain.lib")
 
