@@ -2406,6 +2406,12 @@ static int lockmgr(void **mtx, enum AVLockOp op)
 static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
 {
 #ifndef NDEBUG
+	if (level==AV_LOG_DEBUG)
+	{
+		char Temp[2048];
+		vsprintf_s(Temp, 2048, fmt, vl);
+		printf(Temp);
+	}
 	if (level > av_log_get_level() || strstr(fmt, "%td"))
 		return;
 
