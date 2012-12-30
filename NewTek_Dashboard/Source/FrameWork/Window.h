@@ -11,7 +11,7 @@ struct Window : public MessageBase
 						const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL );
 
 				// Destructor
-				~Window( void );
+				virtual ~Window( void );
 
 				// Cast to an HWND
 				operator HWND( void );
