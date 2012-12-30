@@ -1,5 +1,10 @@
-
 #include "stdafx.h"
+
+//Can only build release with static environment
+#ifndef _DEBUG
+#define __BuildStaticFFMpeg__
+#endif
+
 #include "Dashboard_Interfaces.h"
 #include <ddraw.h>
 #include <atlbase.h>
@@ -11,6 +16,7 @@
 #include "../FFMpeg121125/FrameGrabber.h"
 #pragma comment (lib,"shell32")
 #pragma comment (lib,"winhttp.lib")
+#ifndef __BuildStaticFFMpeg__
 #pragma comment (lib,"../FFMpeg121125/lib/avcodec.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/avdevice.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/avfilter.lib")
@@ -19,6 +25,17 @@
 //#pragma comment (lib , "lib/postproc.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/swresample.lib")
 #pragma comment (lib , "../FFMpeg121125/lib/swscale.lib")
+#else
+#pragma comment (lib,"../FFMpeg121125/lib/libavcodec.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libavdevice.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libavfilter.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libavformat.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libavutil.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libswresample.lib")
+#pragma comment (lib , "../FFMpeg121125/lib/libswscale.lib")
+#pragma comment( lib, "Ws2_32" )
+#endif
+
 #pragma comment (lib , "../FFMpeg121125/SDL/lib/x86/SDL.lib")
 #pragma comment (lib , "../FFMpeg121125/SDL/lib/x86/SDLmain.lib")
 
@@ -53,7 +70,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 				{
 				
 					m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_RGB32");
-					if (!m_fpShutdown) throw 1;
+					if (!m_DriverProc) throw 1;
 					m_fpInitialize=(function_Initialize) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Initialize");
 					if (!m_fpInitialize) throw 2;
 					m_fpShutdown=(function_void) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
@@ -61,6 +78,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 				}
 				catch (int ErrorCode)
 				{
+					m_DriverProc=NULL;  //this will avoid crashing if others fail
 					FrameWork::DebugOutput("ProcessingVision Plugin failed error code=%d",ErrorCode);
 					FlushPlugin();
 				}
