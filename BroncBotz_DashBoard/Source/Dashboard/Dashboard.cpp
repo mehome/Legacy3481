@@ -70,7 +70,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 				{
 				
 					m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_RGB32");
-					if (!m_fpShutdown) throw 1;
+					if (!m_DriverProc) throw 1;
 					m_fpInitialize=(function_Initialize) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Initialize");
 					if (!m_fpInitialize) throw 2;
 					m_fpShutdown=(function_void) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
@@ -78,6 +78,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 				}
 				catch (int ErrorCode)
 				{
+					m_DriverProc=NULL;  //this will avoid crashing if others fail
 					FrameWork::DebugOutput("ProcessingVision Plugin failed error code=%d",ErrorCode);
 					FlushPlugin();
 				}
