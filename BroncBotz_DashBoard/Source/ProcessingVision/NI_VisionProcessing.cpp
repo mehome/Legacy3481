@@ -136,6 +136,7 @@ void VisionTracker::ReturnFrame(Bitmap_Frame *Frame)
 int VisionTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
+	particleList.particleData = NULL;
 
 	//-----------------------------------------------------------------//
 	//  Color threshold and optional noise filter                      //
@@ -228,7 +229,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 			float bound_area = (float)particleList.particleData[i].bound_width * particleList.particleData[i].bound_height;
 			if( bound_area > 0 && (particleList.particleData[i].area / bound_area < area_thresh) )
 				continue;
-
+#if 1
 			// write some text to show aiming point 
 			Point TextPoint;
 			TextPoint.x = particleList.particleData[i].center.x;
@@ -293,7 +294,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 			rect.width = particleList.particleData[i].bound_width;
 
 			imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
-
+#endif
 #ifdef USE_FIND_CORNERS 
 #ifdef SHOW_FIND_CORNERS
 			// corner points
@@ -615,22 +616,22 @@ void VisionTracker::InitParticleFilter(MeasurementType FilterMeasureTypes[], flo
 int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList particleList)
 {
 	int success = 1;
-	int i;
-	ImageInfo info;
-	imaqGetImageInfo(image, &info);
-	const float XRes = (float)info.xRes;
-	const float YRes = (float)info.yRes;
+
+	const float XRes = (float)SourceImageInfo.xRes;
+	const float YRes = (float)SourceImageInfo.yRes;
 	const float Aspect = XRes / YRes;
 
 	//-------------------------------------------------------------------//
 	//                         Particle Analysis                         //
 	//-------------------------------------------------------------------//
 
-	for (i = 0 ; i < particleList.numParticles ; i++)
+	for (int i = 0 ; i < particleList.numParticles ; i++)
 	{
 		double measurementValue;
 
 		// Computes the requested pixel measurements about the particle.
+		
+		// center of particle
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_CENTER_OF_MASS_X, &measurementValue));
 		particleList.particleData[i].center.x = (int)measurementValue;
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_CENTER_OF_MASS_Y, &measurementValue));
@@ -640,6 +641,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList par
 		particleList.particleData[i].AimSys.x = (float)((particleList.particleData[i].center.x - (XRes/2.0)) / (XRes/2.0)) * Aspect;
 		particleList.particleData[i].AimSys.y = (float)-((particleList.particleData[i].center.y - (YRes/2.0)) / (YRes/2.0));
 
+		// bounding box
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_LEFT, &measurementValue));
 		particleList.particleData[i].bound_left = (int)measurementValue;
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_TOP, &measurementValue));
@@ -649,13 +651,14 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList par
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_BOTTOM, &measurementValue));
 		particleList.particleData[i].bound_bottom = (int)measurementValue;
 		
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_WIDTH, &measurementValue));
-		particleList.particleData[i].bound_width = (int)measurementValue;
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_HEIGHT, &measurementValue));
-		particleList.particleData[i].bound_height = (int)measurementValue;
+		// bounding box size
+		particleList.particleData[i].bound_width = particleList.particleData[i].bound_right - particleList.particleData[i].bound_left;
+		particleList.particleData[i].bound_height = particleList.particleData[i].bound_bottom - particleList.particleData[i].bound_top;
 
+		// aspect
 		particleList.particleData[i].aspect = (float)particleList.particleData[i].bound_width / particleList.particleData[i].bound_height;
 
+		// particle area
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &measurementValue));
 		particleList.particleData[i].area = (float)measurementValue;
 	}
