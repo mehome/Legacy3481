@@ -19,6 +19,8 @@
 
 #define IMAGE_BORDER_SIZE 7
 
+#define THRESHOLD_IMAGE_REPLACE_VALUE 1 	
+
 struct LineSegment
 {
 	PointFloat p1;
@@ -70,7 +72,46 @@ public:
 
 	profile Profiler;
 
+	// settings accessors
+	// display opts
+	void SetUseMasking( bool bMasking )    { if( m_bShowOverlays ) m_bUseMasking = bMasking; }
+	void SetShowOverlays( bool bOverlays ) { m_bShowOverlays = bOverlays; }
+	void SetShowAiming( bool bAimingText ) { m_bShowAimingText = bAimingText; }
+	void SetShowBounds( bool bBoundsText ) { m_bShowBoundsText = bBoundsText; }
+
+	// particle processing opts
+	void SetRejectBorderObjs( bool bRejctBorder ) { m_bRejectBorderParticles = bRejctBorder; }
+	void SetUseConvexHull( bool bUseConvex )	  { m_bUseConvexHull = bUseConvex; }
+
+	void SetUseNoiseFilter( bool bNoiseFilter ) { m_bUseNoiseFilter = bNoiseFilter; }
+	void SetShowFilteredImage( bool bShowFiltered ) { m_bShowFiltered = bShowFiltered; }
+
+	// corner and and edge
+	void SetFindCorners( bool bFindCorners ) { m_bUseFindCorners = bFindCorners; }
+	void SetShowCorners( bool bShowCorners ) { if( m_bUseFindCorners ) m_bShowFindCorners = bShowCorners; }
+
 private:
+	// option switches
+	// display opts
+	bool m_bUseMasking;		// dependent on show overlays
+	bool m_bShowOverlays;	
+	bool m_bShowAimingText;	
+	bool m_bShowBoundsText;	
+
+	// particle processing opts
+	bool m_bRejectBorderParticles;	
+	bool m_bUseConvexHull;			
+
+	bool m_bUseNoiseFilter;		
+	bool m_bShowFiltered;
+
+	// corner and and edge
+	//TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
+	// Let's keep checked in disabled as long as this remains true... Note: this appears to work just as well without it
+	//  [12/15/2012 James]
+	bool m_bUseFindCorners;		
+	bool m_bShowFindCorners;	// dependent on find corners
+
 	// images
 	Image *InputImageRGB;		// our input image
 	ImageInfo SourceImageInfo;	// info about our input image

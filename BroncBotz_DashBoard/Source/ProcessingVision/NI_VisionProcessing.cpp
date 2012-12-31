@@ -5,24 +5,6 @@
 
 extern VisionTracker* g_pTracker;
 
-// display opts
-#undef USE_MASKING		// only works when SHOW_OVERLAYS is defined.
-#define SHOW_OVERLAYS
-#define SHOW_AIMING_TEXT
-#undef SHOW_BOUNDING_TEXT
-
-#define REJECT_BORDER_OBJS
-
-//TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
-// Let's keep checked in disabled as long as this remains true... Note: this appears to work just as well without it
-//  [12/15/2012 James]
-#undef USE_FIND_CORNERS		
-#undef SHOW_FIND_CORNERS
-  
-#undef USE_CONVEXHULL	// expensive, and not really needed.
-#undef USE_BLURRING
-
-
 Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target)
 {
 	if( g_pTracker == NULL )
@@ -31,6 +13,11 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 		if( g_pTracker == NULL)
 			return Frame;
 	}
+
+	// quick tweaks 
+	g_pTracker->SetUseMasking(false);
+	g_pTracker->SetUseNoiseFilter(false);
+	g_pTracker->SetShowFilteredImage(false);
 
 	g_pTracker->Profiler.start();
 
@@ -45,26 +32,15 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	g_pTracker->Profiler.stop();
 	g_pTracker->Profiler.display(L"vision:");
 
-	// make a green box in the center of the frame
-	size_t CenterY=Frame->YRes / 2;
-	size_t CenterX=Frame->XRes / 2;
-	size_t LineWidthInBytes=Frame->Stride * 4;
-	for (size_t y=CenterY-5;y<CenterY+5;y++)
-	{
-		for (size_t x=CenterX-5; x<CenterX+5; x++)
-		{
-			*(Frame->Memory+ (x*4 + 0) + (LineWidthInBytes * y))=0;
-			*(Frame->Memory+ (x*4 + 1) + (LineWidthInBytes * y))=255;
-			*(Frame->Memory+ (x*4 + 2) + (LineWidthInBytes * y))=0;
-		}
-	}
-
 	return Frame;
 }
 
 VisionTracker::VisionTracker()
-	: criteriaCount( 0 ),
-	  particleCriteria( NULL )
+	: criteriaCount( 0 ), particleCriteria( NULL ),
+	  m_bUseMasking( false ), m_bShowOverlays( true ), m_bShowFiltered( false ),
+	  m_bShowAimingText( true ), m_bShowBoundsText( false ),
+	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ), m_bUseNoiseFilter( false ),
+	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
 {	
 	plane1Range.minValue = 100, plane1Range.maxValue = 200,	// red	- These values are grey - used in our sample video.
 	plane2Range.minValue = 100, plane2Range.maxValue = 210, // green
@@ -74,12 +50,10 @@ VisionTracker::VisionTracker()
 	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);
 	ParticleImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 
-#ifdef USE_BLURRING
-	// separate planes
+	// separate planes (for noise filter)
 	Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
-#endif
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
@@ -145,11 +119,9 @@ VisionTracker::~VisionTracker()
 
 	imaqDispose(roi);
 
-#ifdef USE_BLURRING
 	imaqDispose(Plane1);
 	imaqDispose(Plane2);
 	imaqDispose(Plane3);
-#endif
 }
 
 int VisionTracker::GetFrame(Bitmap_Frame *Frame)
@@ -180,18 +152,29 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	//  Color threshold and optional noise filter                      //
 	//-----------------------------------------------------------------//
 
-#define REPLACE_VALUE 1 	// TODO - Move or get rid of define... ( just don't like magic numbers )
-
-#ifdef USE_BLURRING // use only for really noisy camera images.
-	Image* BlurredImage = imaqCreateImage(SourceImageInfo.imageType, IMAGE_BORDER_SIZE);
-	VisionErrChk(BlurImage(BlurredImage, InputImageRGB, IMAQ_RGB, IMAQ_RGB));
-	// color threshold
-	VisionErrChk(imaqColorThreshold(ParticleImageU8, BlurredImage, REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
-	imaqDispose(BlurredImage);
-#else
-	// color threshold
-	VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
-#endif
+	// use only for really noisy camera images.
+	if( m_bUseNoiseFilter )
+	{
+		if( m_bShowFiltered )
+		{
+			VisionErrChk(BlurImage(InputImageRGB, InputImageRGB, IMAQ_RGB, IMAQ_RGB));
+			// color threshold
+			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+		}
+		else
+		{
+			Image* BlurredImage = imaqCreateImage(SourceImageInfo.imageType, IMAGE_BORDER_SIZE);
+			VisionErrChk(BlurImage(BlurredImage, InputImageRGB, IMAQ_RGB, IMAQ_RGB));
+			// color threshold
+			VisionErrChk(imaqColorThreshold(ParticleImageU8, BlurredImage, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+			imaqDispose(BlurredImage);
+		}
+	}
+	else
+	{
+		// color threshold
+		VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+	}
 
 	//-------------------------------------------------------------------//
 	//     Advanced Morphology: particle filtering functions             //
@@ -215,130 +198,137 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, TRUE, erosions, IMAQ_KEEP_LARGE, &structElem));
 
-#ifdef REJECT_BORDER_OBJS
 	// Eliminates particles touching the border of the image.
-	VisionErrChk(imaqRejectBorder(ParticleImageU8, ParticleImageU8, TRUE));
-#endif
+	if( m_bRejectBorderParticles )
+		VisionErrChk(imaqRejectBorder(ParticleImageU8, ParticleImageU8, TRUE));
+
 	int numParticles = 0;
 
 	// Filters particles based on their morphological measurements.
 	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
 
-#ifdef USE_CONVEXHULL
 	// Computes the convex envelope for each labeled particle in the source image.
-	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
-#endif
+	if( m_bUseConvexHull )
+		VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
 
 	// we want the qualifying target highest on the screen.
 	// (most valuable target)
 	int min_y = SourceImageInfo.yRes + 1;
 	int index = 0;
 
-#ifdef SHOW_OVERLAYS 
-
-	VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
-
-	if(particleList.numParticles > 0)
+	if( m_bShowOverlays )
 	{
-#ifdef USE_FIND_CORNERS
-		VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
-#endif
+		VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
 
-#ifdef USE_MASKING
-		imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
-#endif
-
-		// overlay some useful info
-		for(int i = 0; i < particleList.numParticles; i++)
+		if(particleList.numParticles > 0)
 		{
-			Point P1;
-			Point P2;
-			Rect rect;
+			if( m_bUseFindCorners )
+				VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
 
-			// track highest center x
-			if( particleList.particleData[i].center.y < min_y )
+			if( m_bUseMasking )
+				imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
+
+			// overlay some useful info
+			for(int i = 0; i < particleList.numParticles; i++)
 			{
-				min_y = particleList.particleData[i].center.y;
-				index = i;
-			}
+				Point P1;
+				Point P2;
+				Rect rect;
 
-			// write some text to show aiming point 
-			Point TextPoint;
-			int fu;
+				// track highest center x
+				if( particleList.particleData[i].center.y < min_y )
+				{
+					min_y = particleList.particleData[i].center.y;
+					index = i;
+				}
 
-#ifdef SHOW_AIMING_TEXT
-			TextPoint.x = particleList.particleData[i].center.x;
-			TextPoint.y = particleList.particleData[i].center.y + 20;
-			sprintf_s(TextBuffer, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
-			imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
-			TextPoint.y += 16;
-#endif
+				// write some text to show aiming point 
+				Point TextPoint;
+				int fu;
 
-#ifdef SHOW_BOUNDING_TEXT
-			// show size of bounding box
-			sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].bound_width, particleList.particleData[i].bound_height);
-			imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+				if( m_bShowAimingText )
+				{
+					TextPoint.x = particleList.particleData[i].center.x;
+					TextPoint.y = particleList.particleData[i].center.y + 20;
+					sprintf_s(TextBuffer, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
+					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+					TextPoint.y += 16;
+				}
 
-			// center x, y
-			TextPoint.y += 16;
-			sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
-			imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
-#endif
-#if 1
-			// draw a line from target CoM to center of screen
-			P1.x = particleList.particleData[i].center.x;
-			P1.y = particleList.particleData[i].center.y;
-			P2.x = SourceImageInfo.xRes / 2;
-			P2.y = SourceImageInfo.yRes / 2;
-			imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
+				if( m_bShowBoundsText )
+				{
+					// show size of bounding box
+					sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].bound_width, particleList.particleData[i].bound_height);
+					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
 
-			// center of mass
-			P1.x = particleList.particleData[i].center.x - 6;
-			P1.y = particleList.particleData[i].center.y;
-			P2.x = particleList.particleData[i].center.x + 6;
-			P2.y = particleList.particleData[i].center.y;
+					// center x, y
+					TextPoint.y += 16;
+					sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
+					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
 
-			imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+				}
 
-			P1.x = particleList.particleData[i].center.x;
-			P1.y = particleList.particleData[i].center.y - 6;
-			P2.x = particleList.particleData[i].center.x;
-			P2.y = particleList.particleData[i].center.y + 6;
+				// draw a line from target CoM to center of screen
+				P1.x = particleList.particleData[i].center.x;
+				P1.y = particleList.particleData[i].center.y;
+				P2.x = SourceImageInfo.xRes / 2;
+				P2.y = SourceImageInfo.yRes / 2;
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
 
-			imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+				// small crosshair at center of mass
+				P1.x = particleList.particleData[i].center.x - 6;
+				P1.y = particleList.particleData[i].center.y;
+				P2.x = particleList.particleData[i].center.x + 6;
+				P2.y = particleList.particleData[i].center.y;
 
-			// bounding box
-			rect.top = particleList.particleData[i].bound_top;
-			rect.left = particleList.particleData[i].bound_left;
-			rect.height = particleList.particleData[i].bound_height;
-			rect.width = particleList.particleData[i].bound_width;
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
 
-			imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
-#endif
-#ifdef USE_FIND_CORNERS 
-#ifdef SHOW_FIND_CORNERS
-			// corner points
-			for(int j = 0; j < 4; j++)
-			{
-				P1.x = (int)particleList.particleData[i].Intersections[j].x - 6;
-				P1.y = (int)particleList.particleData[i].Intersections[j].y;
-				P2.x = (int)particleList.particleData[i].Intersections[j].x + 6;
-				P2.y = (int)particleList.particleData[i].Intersections[j].y;
+				P1.x = particleList.particleData[i].center.x;
+				P1.y = particleList.particleData[i].center.y - 6;
+				P2.x = particleList.particleData[i].center.x;
+				P2.y = particleList.particleData[i].center.y + 6;
 
-				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
 
-				P1.x = (int)particleList.particleData[i].Intersections[j].x;
-				P1.y = (int)particleList.particleData[i].Intersections[j].y - 6;
-				P2.x = (int)particleList.particleData[i].Intersections[j].x;
-				P2.y = (int)particleList.particleData[i].Intersections[j].y + 6;
+				// bounding box
+				rect.top = particleList.particleData[i].bound_top;
+				rect.left = particleList.particleData[i].bound_left;
+				rect.height = particleList.particleData[i].bound_height;
+				rect.width = particleList.particleData[i].bound_width;
 
-				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
-			}
-#endif
-#endif
-		}
-	}
-#endif
+				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+
+				// center box
+				rect.top = SourceImageInfo.yRes / 2 - 5;
+				rect.left = SourceImageInfo.xRes / 2 - 5;
+				rect.height = 10;
+				rect.width = 10; 
+
+				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_PAINT_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+				
+				if( m_bUseFindCorners && m_bShowFindCorners )
+				{
+					// corner points
+					for(int j = 0; j < 4; j++)
+					{
+						P1.x = (int)particleList.particleData[i].Intersections[j].x - 6;
+						P1.y = (int)particleList.particleData[i].Intersections[j].y;
+						P2.x = (int)particleList.particleData[i].Intersections[j].x + 6;
+						P2.y = (int)particleList.particleData[i].Intersections[j].y;
+
+						imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
+
+						P1.x = (int)particleList.particleData[i].Intersections[j].x;
+						P1.y = (int)particleList.particleData[i].Intersections[j].y - 6;
+						P2.x = (int)particleList.particleData[i].Intersections[j].x;
+						P2.y = (int)particleList.particleData[i].Intersections[j].y + 6;
+
+						imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
+					}
+				}
+			}	// particle loop
+		}	// num particles > 0
+	}	// show overlays
 
 Error:
 	// Get return for x, y target values;
@@ -581,14 +571,13 @@ int VisionTracker::FindParticleCorners(Image* image, ParticleList& particleList)
 		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
 		rect.width = particleList.particleData[i].bound_width/4;
 
-#ifdef SHOW_FIND_CORNERS
-		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
-#endif
-
 		cid = imaqAddRectContour(roi, rect);
 		VisionErrChk(cid);
 
 		VisionErrChk(FindEdge(image, roi, IMAQ_LEFT_TO_RIGHT, particleList.particleData[i].bound_height/8, particleList.particleData[i], 0));
+
+		if( m_bShowFindCorners )
+			imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 
 		// remove the contour
 		VisionErrChk(imaqRemoveContour(roi, cid));
@@ -599,14 +588,13 @@ int VisionTracker::FindParticleCorners(Image* image, ParticleList& particleList)
 		rect.height = particleList.particleData[i].bound_height/4;
 		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
 
-#ifdef SHOW_FIND_CORNERS
-		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
-#endif
-
 		cid = imaqAddRectContour(roi, rect);
 		VisionErrChk(cid);
 
 		VisionErrChk(FindEdge(image, roi, IMAQ_TOP_TO_BOTTOM, particleList.particleData[i].bound_width/8, particleList.particleData[i], 1));
+
+		if( m_bShowFindCorners )
+			imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 
 		// remove the contour
 		VisionErrChk(imaqRemoveContour(roi, cid));
@@ -617,14 +605,13 @@ int VisionTracker::FindParticleCorners(Image* image, ParticleList& particleList)
 		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
 		rect.width = particleList.particleData[i].bound_width/4;
 
-#ifdef SHOW_FIND_CORNERS
-		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
-#endif
-
 		cid = imaqAddRectContour(roi, rect);
 		VisionErrChk(cid);
 
 		VisionErrChk(FindEdge(image, roi, IMAQ_RIGHT_TO_LEFT, particleList.particleData[i].bound_height/8, particleList.particleData[i], 2));
+
+		if( m_bShowFindCorners )
+			imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 
 		// remove the contour
 		VisionErrChk(imaqRemoveContour(roi, cid));
@@ -635,14 +622,13 @@ int VisionTracker::FindParticleCorners(Image* image, ParticleList& particleList)
 		rect.height = particleList.particleData[i].bound_height/4;
 		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
 
-#ifdef SHOW_FIND_CORNERS
-		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
-#endif
-
 		cid = imaqAddRectContour(roi, rect);
 		VisionErrChk(cid);
 
 		VisionErrChk(FindEdge(image, roi, IMAQ_BOTTOM_TO_TOP, particleList.particleData[i].bound_width/8, particleList.particleData[i], 3));
+
+		if( m_bShowFindCorners )
+			imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 
 		// remove the contour
 		VisionErrChk(imaqRemoveContour(roi, cid));
