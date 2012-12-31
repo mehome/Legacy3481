@@ -11,14 +11,12 @@ extern VisionTracker* g_pTracker;
 #define SHOW_AIMING_TEXT
 #undef SHOW_BOUNDING_TEXT
 
-#define FILL_HOLES
-#define USE_SIZE_FILTER
 #define REJECT_BORDER_OBJS
-#define USE_PARTICLE_FILTER	
+
 //TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
 // Let's keep checked in disabled as long as this remains true... Note: this appears to work just as well without it
 //  [12/15/2012 James]
-#undef USE_FIND_CORNERS		// TODO: see if we can use separate threads to do edge finding.
+#undef USE_FIND_CORNERS		
 #undef SHOW_FIND_CORNERS
   
 #undef USE_CONVEXHULL	// expensive, and not really needed.
@@ -35,12 +33,6 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	}
 
 	g_pTracker->Profiler.start();
-	// profile times:
-	// total avg time to txfer our from to and from it (original code): 1.98 ms
-	// total avg time to txfer -- new code 1.75 ms
-	// processing time (original code): 20 ms
-	// First-pass blurring: 26 ms
-	// processing time (pass 1): 15 ms,  20 ms with blurring.
 
 	g_pTracker->GetFrame(Frame);
 
@@ -171,7 +163,7 @@ int VisionTracker::GetFrame(Bitmap_Frame *Frame)
 }
 
 void VisionTracker::ReturnFrame(Bitmap_Frame *Frame)
-{
+{	// copy NI image back to our frame.
 	void *pImageArray = imaqImageToArray(InputImageRGB, IMAQ_NO_RECT, NULL, NULL);
 	if(pImageArray != NULL)
 	{
@@ -205,10 +197,10 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	//     Advanced Morphology: particle filtering functions             //
 	//-------------------------------------------------------------------//
 
-#ifdef FILL_HOLES
+	// fill holes
 	VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
-#endif
-#ifdef USE_SIZE_FILTER
+
+	// filter small particles
 	int pKernel[] = {1,1,1,
 					 1,1,1,
 					 1,1,1};	// 3x3 kernel 
@@ -222,16 +214,16 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, TRUE, erosions, IMAQ_KEEP_LARGE, &structElem));
-#endif
+
 #ifdef REJECT_BORDER_OBJS
 	// Eliminates particles touching the border of the image.
 	VisionErrChk(imaqRejectBorder(ParticleImageU8, ParticleImageU8, TRUE));
 #endif
 	int numParticles = 0;
-#ifdef USE_PARTICLE_FILTER
+
 	// Filters particles based on their morphological measurements.
 	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
-#endif
+
 #ifdef USE_CONVEXHULL
 	// Computes the convex envelope for each labeled particle in the source image.
 	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
@@ -400,134 +392,6 @@ Error:
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Function Name: FindParticleCorners
-//
-// Description  : Locates and returns corner points of (assumed rectagular) particle.
-//
-// Parameters   : image			- Input image
-//				: partleList	- particle data array. 
-//
-// Return Value : success
-//
-////////////////////////////////////////////////////////////////////////////////
-
-int VisionTracker::FindParticleCorners(Image* image, ParticleList& particleList)
-{
-	int success = 1;
-
-	float area_threshold = 0.8f;
-
-	for(int i=0; i < particleList.numParticles; i++ )
-	{
-		Rect rect;
-		ContourID cid;
-
-		// left side
-		rect.top = particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10;
-		rect.left = particleList.particleData[i].bound_left - 8;
-		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
-		rect.width = particleList.particleData[i].bound_width/4;
-
-		cid = imaqAddRectContour(roi, rect);
-		VisionErrChk(cid);
-
-#ifdef SHOW_FIND_CORNERS
-		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
-#endif
-
-		VisionErrChk(FindEdge(image, roi, IMAQ_LEFT_TO_RIGHT, particleList.particleData[i].bound_height/8, particleList.particleData[i], 0));
-
-		// remove the contour
-		VisionErrChk(imaqRemoveContour(roi, cid));
-
-		// top side
-		rect.top = particleList.particleData[i].bound_top - 8;
-		rect.left = particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10;
-		rect.height = particleList.particleData[i].bound_height/4;
-		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
-
-		cid = imaqAddRectContour(roi, rect);
-		VisionErrChk(cid);
-
-#ifdef SHOW_FIND_CORNERS
-		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
-#endif
-
-		VisionErrChk(FindEdge(image, roi, IMAQ_TOP_TO_BOTTOM, particleList.particleData[i].bound_width/8, particleList.particleData[i], 1));
-
-		// remove the contour
-		VisionErrChk(imaqRemoveContour(roi, cid));
-
-		// right side
-		rect.top = particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10;
-		rect.left = particleList.particleData[i].bound_right - particleList.particleData[i].bound_width/4 + 8;
-		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
-		rect.width = particleList.particleData[i].bound_width/4;
-
-		cid = imaqAddRectContour(roi, rect);
-		VisionErrChk(cid);
-
-#ifdef SHOW_FIND_CORNERS
-		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
-#endif
-
-		VisionErrChk(FindEdge(image, roi, IMAQ_RIGHT_TO_LEFT, particleList.particleData[i].bound_height/8, particleList.particleData[i], 2));
-
-		// remove the contour
-		VisionErrChk(imaqRemoveContour(roi, cid));
-
-		// bottom side
-		rect.top = particleList.particleData[i].bound_bottom - particleList.particleData[i].bound_height/4 + 8;
-		rect.left = particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10;
-		rect.height = particleList.particleData[i].bound_height/4;
-		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
-
-		cid = imaqAddRectContour(roi, rect);
-		VisionErrChk(cid);
-
-#ifdef SHOW_FIND_CORNERS
-		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
-#endif
-
-		VisionErrChk(FindEdge(image, roi, IMAQ_BOTTOM_TO_TOP, particleList.particleData[i].bound_width/8, particleList.particleData[i], 3));
-
-		// remove the contour
-		VisionErrChk(imaqRemoveContour(roi, cid));
-
-		// get intersection points.
-		VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[0].p1,
-			particleList.particleData[i].lines[0].P2,
-			particleList.particleData[i].lines[1].p1,
-			particleList.particleData[i].lines[1].P2,
-			&particleList.particleData[i].Intersections[0]))
-
-		VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[1].p1,
-			particleList.particleData[i].lines[1].P2,
-			particleList.particleData[i].lines[2].p1,
-			particleList.particleData[i].lines[2].P2,
-			&particleList.particleData[i].Intersections[1]))
-
-		VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[2].p1,
-			particleList.particleData[i].lines[2].P2,
-			particleList.particleData[i].lines[3].p1,
-			particleList.particleData[i].lines[3].P2,
-			&particleList.particleData[i].Intersections[2]))
-
-		VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[3].p1,
-			particleList.particleData[i].lines[3].P2,
-			particleList.particleData[i].lines[0].p1,
-			particleList.particleData[i].lines[0].P2,
-			&particleList.particleData[i].Intersections[3]))
-	}
-
-Error:
-
-	return success;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-//
 // Function Name: InitParticleFilter
 //
 // Description  : Sets up particle filters
@@ -586,7 +450,7 @@ void VisionTracker::InitParticleFilter(MeasurementType FilterMeasureTypes[], flo
 // Function Name: GetParticles
 //
 // Description  : Computes the number of particles detected in a binary image and
-//                a 2D array of requested measurements about the particle.
+//                extracts requested measurements about the particle.
 //
 // Parameters   : image                      -  Input image
 //                connectivity               -  Set this parameter to 1 to use
@@ -686,6 +550,135 @@ Error:
 	return success;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function Name: FindParticleCorners
+//
+// Description  : Locates and returns corner points of (assumed rectagular) particle.
+//
+// Parameters   : image			- Input image
+//				: partleList	- particle data array. 
+//
+// Return Value : success
+//
+////////////////////////////////////////////////////////////////////////////////
+
+int VisionTracker::FindParticleCorners(Image* image, ParticleList& particleList)
+{
+	int success = 1;
+
+	float area_threshold = 0.8f;
+
+	for(int i=0; i < particleList.numParticles; i++ )
+	{
+		Rect rect;
+		ContourID cid;
+
+		// left side
+		rect.top = particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10;
+		rect.left = particleList.particleData[i].bound_left - 8;
+		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
+		rect.width = particleList.particleData[i].bound_width/4;
+
+#ifdef SHOW_FIND_CORNERS
+		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+#endif
+
+		cid = imaqAddRectContour(roi, rect);
+		VisionErrChk(cid);
+
+		VisionErrChk(FindEdge(image, roi, IMAQ_LEFT_TO_RIGHT, particleList.particleData[i].bound_height/8, particleList.particleData[i], 0));
+
+		// remove the contour
+		VisionErrChk(imaqRemoveContour(roi, cid));
+
+		// top side
+		rect.top = particleList.particleData[i].bound_top - 8;
+		rect.left = particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10;
+		rect.height = particleList.particleData[i].bound_height/4;
+		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
+
+#ifdef SHOW_FIND_CORNERS
+		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+#endif
+
+		cid = imaqAddRectContour(roi, rect);
+		VisionErrChk(cid);
+
+		VisionErrChk(FindEdge(image, roi, IMAQ_TOP_TO_BOTTOM, particleList.particleData[i].bound_width/8, particleList.particleData[i], 1));
+
+		// remove the contour
+		VisionErrChk(imaqRemoveContour(roi, cid));
+
+		// right side
+		rect.top = particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10;
+		rect.left = particleList.particleData[i].bound_right - particleList.particleData[i].bound_width/4 + 8;
+		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
+		rect.width = particleList.particleData[i].bound_width/4;
+
+#ifdef SHOW_FIND_CORNERS
+		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+#endif
+
+		cid = imaqAddRectContour(roi, rect);
+		VisionErrChk(cid);
+
+		VisionErrChk(FindEdge(image, roi, IMAQ_RIGHT_TO_LEFT, particleList.particleData[i].bound_height/8, particleList.particleData[i], 2));
+
+		// remove the contour
+		VisionErrChk(imaqRemoveContour(roi, cid));
+
+		// bottom side
+		rect.top = particleList.particleData[i].bound_bottom - particleList.particleData[i].bound_height/4 + 8;
+		rect.left = particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10;
+		rect.height = particleList.particleData[i].bound_height/4;
+		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
+
+#ifdef SHOW_FIND_CORNERS
+		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+#endif
+
+		cid = imaqAddRectContour(roi, rect);
+		VisionErrChk(cid);
+
+		VisionErrChk(FindEdge(image, roi, IMAQ_BOTTOM_TO_TOP, particleList.particleData[i].bound_width/8, particleList.particleData[i], 3));
+
+		// remove the contour
+		VisionErrChk(imaqRemoveContour(roi, cid));
+
+		// get intersection points.
+		VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[0].p1,
+			particleList.particleData[i].lines[0].P2,
+			particleList.particleData[i].lines[1].p1,
+			particleList.particleData[i].lines[1].P2,
+			&particleList.particleData[i].Intersections[0]))
+
+			VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[1].p1,
+			particleList.particleData[i].lines[1].P2,
+			particleList.particleData[i].lines[2].p1,
+			particleList.particleData[i].lines[2].P2,
+			&particleList.particleData[i].Intersections[1]))
+
+			VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[2].p1,
+			particleList.particleData[i].lines[2].P2,
+			particleList.particleData[i].lines[3].p1,
+			particleList.particleData[i].lines[3].P2,
+			&particleList.particleData[i].Intersections[2]))
+
+			VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[3].p1,
+			particleList.particleData[i].lines[3].P2,
+			particleList.particleData[i].lines[0].p1,
+			particleList.particleData[i].lines[0].P2,
+			&particleList.particleData[i].Intersections[3]))
+	}
+
+Error:
+
+	return success;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Function Name: FindEdge
@@ -718,10 +711,7 @@ int VisionTracker::FindEdge(Image* image, ROI* roi, RakeDirection pDirection, un
 	// Locates a straight edge in the rectangular search area.
 	VisionErrChk(findEdgeReport = imaqFindEdge2(image, roi, NULL, NULL, &findEdgeOptions, &straightEdgeOptions));
 
-	// ////////////////////////////////////////
 	// Store the results in the data structure.
-	// ////////////////////////////////////////
-
 	if (findEdgeReport->numStraightEdges > 0)
 	{
 		particleData.lines[lineIndex].p1.x = findEdgeReport->straightEdges->straightEdgeCoordinates.start.x;

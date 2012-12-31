@@ -3,6 +3,8 @@
 #include "profile.h"
 #include "ProcessingVision.h"
 
+#pragma warning(disable:4800)
+
 #define VisionErrChk(Function) {if (!(Function)) {success = 0; FrameWork::DebugOutput("error: %d\n", imaqGetLastError()); goto Error;}}
 
 // color values for drawing
