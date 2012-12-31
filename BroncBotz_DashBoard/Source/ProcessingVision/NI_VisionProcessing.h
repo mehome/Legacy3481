@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "../FrameWork/FrameWork.h"
 #include "profile.h"
 #include "ProcessingVision.h"
@@ -33,8 +34,6 @@ struct ParticleData
 	int bound_bottom;
 	int bound_width;
 	int bound_height;
-	float aspect;
-	float area;
 	LineSegment lines[4];
 	PointFloat Intersections[4];
 };
@@ -44,11 +43,17 @@ struct ParticleList
 	ParticleList()
 	{
 		numParticles = 0;
-		particleData = NULL;
+		particleData.clear();
+		area_threshold = 0.8f;
+		aspectMin = 0.8f;
+		aspectMax = 1.33333333f;
 	}
 
 	int numParticles;
-	ParticleData *particleData;
+	float area_threshold;	// particles must fill this much of their bounding box to qualify.
+	float aspectMin;		// particle bounding box must be in this range of aspect ratios.
+	float aspectMax;
+	std::vector<ParticleData>particleData;
 };
 
 class VisionTracker
@@ -84,15 +89,24 @@ private:
 	ParticleFilterCriteria2* particleCriteria;
 	ParticleFilterOptions2 particleFilterOptions;
 
+	// Edge finding options
+	EdgeOptions2 edgeOptions;
+	FindEdgeOptions2 findEdgeOptions;
+	StraightEdgeOptions straightEdgeOptions;
+
 	ParticleList particleList;	// our results data structure
 
+	// text drawing
+	char TextBuffer[256];
+	DrawTextOptions textOps;
+
+	// Edge / corner finding
+	ROI *roi;
+
 	int BlurImage(Image* DestImage, Image* SrcImage, ColorMode_enum DestColorMOde, ColorMode_enum SrcColorMode);
-	bool CheckAspect(float aspect, float min, float max);
 	void InitParticleFilter(MeasurementType FilterMeasureTypes[], float plower[], float pUpper[], int pCalibrated[],
 		int pExclude[], int rejectMatches, int connectivity);
-	int GetParticles(Image* image, int connectivity, ParticleList particleList);
-	int FindParticleCorners(Image* image, ParticleList particleList);
-	int FindEdge(Image* image, ROI* roi, RakeDirection pDirection, EdgePolaritySearchMode pPolarity, unsigned int pKernelSize, unsigned int pWidth,
-		float pMinThreshold, InterpolationMethod pInterpolationType, ColumnProcessingMode pColumnProcessingMode, unsigned int pStepSize,
-		StraightEdgeSearchMode pSearchMode, ParticleData* particleData, int lineIndex, int particleNumber);
+	int GetParticles(Image* image, int connectivity, ParticleList& particleList);
+	int FindParticleCorners(Image* image, ParticleList& particleList);
+	int FindEdge(Image* image, ROI* roi, RakeDirection pDirection, unsigned int pStepSize, ParticleData& particleData, int lineIndex);
 };

@@ -13,6 +13,7 @@
 
 #include "nivision.h"
 #include "nimachinevision.h"
+#include <vector>
 
 // TODO: reference additional headers your program requires here
 

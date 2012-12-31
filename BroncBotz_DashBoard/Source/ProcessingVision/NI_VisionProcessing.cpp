@@ -8,6 +8,8 @@ extern VisionTracker* g_pTracker;
 // display opts
 #undef USE_MASKING		// only works when SHOW_OVERLAYS is defined.
 #define SHOW_OVERLAYS
+#define SHOW_AIMING_TEXT
+#undef SHOW_BOUNDING_TEXT
 
 #define FILL_HOLES
 #define USE_SIZE_FILTER
@@ -16,7 +18,7 @@ extern VisionTracker* g_pTracker;
 //TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
 // Let's keep checked in disabled as long as this remains true... Note: this appears to work just as well without it
 //  [12/15/2012 James]
-#undef USE_FIND_CORNERS
+#undef USE_FIND_CORNERS		// TODO: see if we can use separate threads to do edge finding.
 #undef SHOW_FIND_CORNERS
   
 #undef USE_CONVEXHULL	// expensive, and not really needed.
@@ -97,6 +99,49 @@ VisionTracker::VisionTracker()
 	criteriaCount = sizeof(FilterMeasureTypes) / sizeof(FilterMeasureTypes[0]);
 
 	InitParticleFilter(FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE);
+
+	// text drawing setup
+	strcpy_s(textOps.fontName, 32, "Arial");
+	textOps.fontSize = 12;
+	textOps.bold = false;
+	textOps.italic = false;
+	textOps.underline = false;
+	textOps.strikeout = false;
+	textOps.textAlignment = IMAQ_CENTER;
+	textOps.fontColor = IMAQ_WHITE;
+
+	// Edge / corner finding
+	roi = imaqCreateROI();
+
+	// Edge finding options
+	edgeOptions.polarity = IMAQ_SEARCH_FOR_RISING_EDGES;
+	edgeOptions.kernelSize = 3;
+	edgeOptions.width = 1;
+	edgeOptions.minThreshold = 25;
+	edgeOptions.interpolationType = IMAQ_BILINEAR_FIXED;
+	edgeOptions.columnProcessingMode = IMAQ_AVERAGE_COLUMNS;
+
+	findEdgeOptions.showSearchArea = TRUE;
+	findEdgeOptions.showSearchLines = TRUE;
+	findEdgeOptions.showEdgesFound = TRUE;
+	findEdgeOptions.showResult = TRUE;
+	findEdgeOptions.searchAreaColor = IMAQ_RGB_GREEN;
+	findEdgeOptions.searchLinesColor = IMAQ_RGB_BLUE;
+	findEdgeOptions.searchEdgesColor = IMAQ_RGB_YELLOW;
+	findEdgeOptions.resultColor = IMAQ_RGB_RED;
+	findEdgeOptions.overlayGroupName = NULL;
+	findEdgeOptions.edgeOptions = edgeOptions;
+
+	straightEdgeOptions.numLines = 1;
+	straightEdgeOptions.searchMode = IMAQ_USE_FIRST_RAKE_EDGES;
+	straightEdgeOptions.minScore = 10;
+	straightEdgeOptions.maxScore = 1000;
+	straightEdgeOptions.orientation = 0;
+	straightEdgeOptions.angleRange = 45;
+	straightEdgeOptions.angleTolerance = 1;
+	straightEdgeOptions.minSignalToNoiseRatio = 0;
+	straightEdgeOptions.minCoverage = 25;
+	straightEdgeOptions.houghIterations = 5;
 }
 
 VisionTracker::~VisionTracker()
@@ -105,6 +150,8 @@ VisionTracker::~VisionTracker()
 	imaqDispose(ParticleImageU8);
 
 	delete[] particleCriteria;
+
+	imaqDispose(roi);
 
 #ifdef USE_BLURRING
 	imaqDispose(Plane1);
@@ -136,7 +183,6 @@ void VisionTracker::ReturnFrame(Bitmap_Frame *Frame)
 int VisionTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
-	particleList.particleData = NULL;
 
 	//-----------------------------------------------------------------//
 	//  Color threshold and optional noise filter                      //
@@ -181,9 +227,10 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	// Eliminates particles touching the border of the image.
 	VisionErrChk(imaqRejectBorder(ParticleImageU8, ParticleImageU8, TRUE));
 #endif
+	int numParticles = 0;
 #ifdef USE_PARTICLE_FILTER
 	// Filters particles based on their morphological measurements.
-	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &particleList.numParticles));
+	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
 #endif
 #ifdef USE_CONVEXHULL
 	// Computes the convex envelope for each labeled particle in the source image.
@@ -196,15 +243,11 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	int index = 0;
 
 #ifdef SHOW_OVERLAYS 
-	// Counts the number of particles in the image (not necessarily redundent in the case where we use convex hull).
-	VisionErrChk(imaqCountParticles(ParticleImageU8, TRUE, &particleList.numParticles));
+
+	VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
 
 	if(particleList.numParticles > 0)
 	{
-		particleList.particleData = new ParticleData[particleList.numParticles];
-
-		VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
-
 #ifdef USE_FIND_CORNERS
 		VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
 #endif
@@ -219,44 +262,6 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 			Point P1;
 			Point P2;
 			Rect rect;
-			float area_thresh = 0.8f;
-
-			// reject if aspect is too far out.
-			if(CheckAspect(particleList.particleData[i].aspect, 0.8f, 1.33333333f))
-				continue;
-
-			// reject if area ratio is too low
-			float bound_area = (float)particleList.particleData[i].bound_width * particleList.particleData[i].bound_height;
-			if( bound_area > 0 && (particleList.particleData[i].area / bound_area < area_thresh) )
-				continue;
-#if 1
-			// write some text to show aiming point 
-			Point TextPoint;
-			TextPoint.x = particleList.particleData[i].center.x;
-			TextPoint.y = particleList.particleData[i].center.y + 20;
-			char Text[256];
-			sprintf_s(Text, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
-			DrawTextOptions textOps;
-			strcpy_s(textOps.fontName, 32, "Arial");
-			textOps.fontSize = 12;
-			textOps.bold = false;
-			textOps.italic = false;
-			textOps.underline = false;
-			textOps.strikeout = false;
-			textOps.textAlignment = IMAQ_CENTER;
-			textOps.fontColor = IMAQ_WHITE;
-			int fu;
-			imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, Text, &textOps, &fu); 
-
-			// show size of bounding box
-			//TextPoint.y += 16;
-			//sprintf_s(Text, 256, "%d, %d", particleList.particleData[i].bound_width, particleList.particleData[i].bound_height);
-			//imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, Text, &textOps, &fu); 
-
-			// center x, y
-			//TextPoint.y += 16;
-			//sprintf_s(Text, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
-			//imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, Text, &textOps, &fu); 
 
 			// track highest center x
 			if( particleList.particleData[i].center.y < min_y )
@@ -265,6 +270,29 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 				index = i;
 			}
 
+			// write some text to show aiming point 
+			Point TextPoint;
+			int fu;
+
+#ifdef SHOW_AIMING_TEXT
+			TextPoint.x = particleList.particleData[i].center.x;
+			TextPoint.y = particleList.particleData[i].center.y + 20;
+			sprintf_s(TextBuffer, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
+			imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+			TextPoint.y += 16;
+#endif
+
+#ifdef SHOW_BOUNDING_TEXT
+			// show size of bounding box
+			sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].bound_width, particleList.particleData[i].bound_height);
+			imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+
+			// center x, y
+			TextPoint.y += 16;
+			sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
+			imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+#endif
+#if 1
 			// draw a line from target CoM to center of screen
 			P1.x = particleList.particleData[i].center.x;
 			P1.y = particleList.particleData[i].center.y;
@@ -333,8 +361,6 @@ Error:
 		y_target = 0.0;
 	}
 
-	delete particleList.particleData;
-
 	int error = imaqGetLastError();
 	return success;
 }
@@ -371,11 +397,6 @@ Error:
 	return success;
 }
 
-bool VisionTracker::CheckAspect(float aspect, float min, float max)
-{
-	// reject if aspect is too far out.
-	return (aspect < min || aspect > max);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -390,122 +411,88 @@ bool VisionTracker::CheckAspect(float aspect, float min, float max)
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-int VisionTracker::FindParticleCorners(Image* image, ParticleList particleList)
+int VisionTracker::FindParticleCorners(Image* image, ParticleList& particleList)
 {
 	int success = 1;
 
-	int i;
-	ROI *roi;
-	ROI *roi1;
-	ROI *roi2;
-	ROI *roi3;
+	float area_threshold = 0.8f;
 
-	float area_thresh = 0.8f;
-
-	for( i=0; i < particleList.numParticles; i++ )
+	for(int i=0; i < particleList.numParticles; i++ )
 	{
-		// reject if aspect is too far out.
-		if(CheckAspect(particleList.particleData[i].aspect, 0.8f, 1.33333333f))
-			continue;
-
-		// reject if area ratio is too low
-		float bound_area = (float)particleList.particleData[i].bound_width * particleList.particleData[i].bound_height;
-		if( bound_area > 0 && (particleList.particleData[i].area / bound_area < area_thresh) )
-			continue;
-
-		// Creates a new, empty region of interest.
-		VisionErrChk(roi = imaqCreateROI());
-
 		Rect rect;
+		ContourID cid;
 
-		// Creates a new rectangle ROI contour and adds the rectangle to the provided ROI.
 		// left side
 		rect.top = particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10;
 		rect.left = particleList.particleData[i].bound_left - 8;
 		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
 		rect.width = particleList.particleData[i].bound_width/4;
 
-		VisionErrChk(imaqAddRectContour(roi, rect));
+		cid = imaqAddRectContour(roi, rect);
+		VisionErrChk(cid);
 
 #ifdef SHOW_FIND_CORNERS
 		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 #endif
 
-		VisionErrChk(FindEdge(image, roi, IMAQ_LEFT_TO_RIGHT, 
-			IMAQ_SEARCH_FOR_RISING_EDGES, 3, 1, 25, IMAQ_BILINEAR_FIXED, 
-			IMAQ_AVERAGE_COLUMNS, particleList.particleData[i].bound_height/8, IMAQ_USE_FIRST_RAKE_EDGES, particleList.particleData, 0, i));
+		VisionErrChk(FindEdge(image, roi, IMAQ_LEFT_TO_RIGHT, particleList.particleData[i].bound_height/8, particleList.particleData[i], 0));
 
-		// Cleans up resources associated with the object
-		imaqDispose(roi);
+		// remove the contour
+		VisionErrChk(imaqRemoveContour(roi, cid));
 
-		// Creates a new, empty region of interest.
-		VisionErrChk(roi1 = imaqCreateROI());
-
-		// Creates a new rectangle ROI contour and adds the rectangle to the provided ROI.
 		// top side
 		rect.top = particleList.particleData[i].bound_top - 8;
 		rect.left = particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10;
 		rect.height = particleList.particleData[i].bound_height/4;
 		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
 
-		VisionErrChk(imaqAddRectContour(roi1, rect));
+		cid = imaqAddRectContour(roi, rect);
+		VisionErrChk(cid);
 
 #ifdef SHOW_FIND_CORNERS
 		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 #endif
 
-		VisionErrChk(FindEdge(image, roi1, IMAQ_TOP_TO_BOTTOM, 
-			IMAQ_SEARCH_FOR_RISING_EDGES, 3, 1, 25, IMAQ_BILINEAR_FIXED, 
-			IMAQ_AVERAGE_COLUMNS, particleList.particleData[i].bound_width/8, IMAQ_USE_FIRST_RAKE_EDGES, particleList.particleData, 1, i));
+		VisionErrChk(FindEdge(image, roi, IMAQ_TOP_TO_BOTTOM, particleList.particleData[i].bound_width/8, particleList.particleData[i], 1));
 
-		// Cleans up resources associated with the object
-		imaqDispose(roi1);
+		// remove the contour
+		VisionErrChk(imaqRemoveContour(roi, cid));
 
-		// Creates a new, empty region of interest.
-		VisionErrChk(roi2 = imaqCreateROI());
-
-		// Creates a new rectangle ROI contour and adds the rectangle to the provided ROI.
 		// right side
 		rect.top = particleList.particleData[i].bound_top - particleList.particleData[i].bound_height/10;
 		rect.left = particleList.particleData[i].bound_right - particleList.particleData[i].bound_width/4 + 8;
 		rect.height = particleList.particleData[i].bound_height + particleList.particleData[i].bound_height/5;
 		rect.width = particleList.particleData[i].bound_width/4;
 
-		VisionErrChk(imaqAddRectContour(roi2, rect));
+		cid = imaqAddRectContour(roi, rect);
+		VisionErrChk(cid);
 
 #ifdef SHOW_FIND_CORNERS
 		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 #endif
 
-		VisionErrChk(FindEdge(image, roi2, IMAQ_RIGHT_TO_LEFT, 
-			IMAQ_SEARCH_FOR_RISING_EDGES, 3, 1, 25, IMAQ_BILINEAR_FIXED, 
-			IMAQ_AVERAGE_COLUMNS, particleList.particleData[i].bound_height/8, IMAQ_USE_FIRST_RAKE_EDGES, particleList.particleData, 2, i));
+		VisionErrChk(FindEdge(image, roi, IMAQ_RIGHT_TO_LEFT, particleList.particleData[i].bound_height/8, particleList.particleData[i], 2));
 
-		// Cleans up resources associated with the object
-		imaqDispose(roi2);
+		// remove the contour
+		VisionErrChk(imaqRemoveContour(roi, cid));
 
-		// Creates a new, empty region of interest.
-		VisionErrChk(roi3 = imaqCreateROI());
-
-		// Creates a new rectangle ROI contour and adds the rectangle to the provided ROI.
 		// bottom side
 		rect.top = particleList.particleData[i].bound_bottom - particleList.particleData[i].bound_height/4 + 8;
 		rect.left = particleList.particleData[i].bound_left - particleList.particleData[i].bound_width/10;
 		rect.height = particleList.particleData[i].bound_height/4;
 		rect.width = particleList.particleData[i].bound_width + particleList.particleData[i].bound_width/5;
 
-		VisionErrChk(imaqAddRectContour(roi3, rect));
+		cid = imaqAddRectContour(roi, rect);
+		VisionErrChk(cid);
 
 #ifdef SHOW_FIND_CORNERS
 		imaqDrawShapeOnImage(image, image, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
 #endif
 
-		VisionErrChk(FindEdge(image, roi3, IMAQ_BOTTOM_TO_TOP, 
-			IMAQ_SEARCH_FOR_RISING_EDGES, 3, 1, 25, IMAQ_BILINEAR_FIXED, 
-			IMAQ_AVERAGE_COLUMNS, particleList.particleData[i].bound_width/8, IMAQ_USE_FIRST_RAKE_EDGES, particleList.particleData, 3, i));
+		VisionErrChk(FindEdge(image, roi, IMAQ_BOTTOM_TO_TOP, particleList.particleData[i].bound_width/8, particleList.particleData[i], 3));
 
-		// Cleans up resources associated with the object
-		imaqDispose(roi3);
+		// remove the contour
+		VisionErrChk(imaqRemoveContour(roi, cid));
 
 		// get intersection points.
 		VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[0].p1,
@@ -514,19 +501,19 @@ int VisionTracker::FindParticleCorners(Image* image, ParticleList particleList)
 			particleList.particleData[i].lines[1].P2,
 			&particleList.particleData[i].Intersections[0]))
 
-			VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[1].p1,
+		VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[1].p1,
 			particleList.particleData[i].lines[1].P2,
 			particleList.particleData[i].lines[2].p1,
 			particleList.particleData[i].lines[2].P2,
 			&particleList.particleData[i].Intersections[1]))
 
-			VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[2].p1,
+		VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[2].p1,
 			particleList.particleData[i].lines[2].P2,
 			particleList.particleData[i].lines[3].p1,
 			particleList.particleData[i].lines[3].P2,
 			&particleList.particleData[i].Intersections[2]))
 
-			VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[3].p1,
+		VisionErrChk(imaqGetIntersection(particleList.particleData[i].lines[3].p1,
 			particleList.particleData[i].lines[3].P2,
 			particleList.particleData[i].lines[0].p1,
 			particleList.particleData[i].lines[0].P2,
@@ -608,12 +595,12 @@ void VisionTracker::InitParticleFilter(MeasurementType FilterMeasureTypes[], flo
 //                                              Set this parameter to 0 to use
 //                                              connectivity-4 to determine
 //                                              whether particles are touching.
-//				  particleData*				 -  Array of ParticleData values.
+//				  particleData&				 -  Array of ParticleData values.
 //
 // Return Value : success
 //
 ////////////////////////////////////////////////////////////////////////////////
-int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList particleList)
+int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& particleList)
 {
 	int success = 1;
 
@@ -621,46 +608,77 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList par
 	const float YRes = (float)SourceImageInfo.yRes;
 	const float Aspect = XRes / YRes;
 
+	// remove any old values
+	particleList.particleData.clear();
+	particleList.numParticles = 0;
+
 	//-------------------------------------------------------------------//
 	//                         Particle Analysis                         //
 	//-------------------------------------------------------------------//
 
-	for (int i = 0 ; i < particleList.numParticles ; i++)
+	// Counts the number of particles in the image
+	int numParticles;
+	VisionErrChk(imaqCountParticles(ParticleImageU8, TRUE, &numParticles));
+
+	for (int i = 0 ; i < numParticles ; i++)
 	{
-		double measurementValue;
+		double bound_left;
+		double bound_right;
+		double bound_top;
+		double bound_bottom;
+		double area;
+		double center_x;
+		double center_y;
 
 		// Computes the requested pixel measurements about the particle.
-		
-		// center of particle
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_CENTER_OF_MASS_X, &measurementValue));
-		particleList.particleData[i].center.x = (int)measurementValue;
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_CENTER_OF_MASS_Y, &measurementValue));
-		particleList.particleData[i].center.y = (int)measurementValue;
-
-		// convert to aiming system coords
-		particleList.particleData[i].AimSys.x = (float)((particleList.particleData[i].center.x - (XRes/2.0)) / (XRes/2.0)) * Aspect;
-		particleList.particleData[i].AimSys.y = (float)-((particleList.particleData[i].center.y - (YRes/2.0)) / (YRes/2.0));
 
 		// bounding box
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_LEFT, &measurementValue));
-		particleList.particleData[i].bound_left = (int)measurementValue;
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_TOP, &measurementValue));
-		particleList.particleData[i].bound_top = (int)measurementValue;
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_RIGHT, &measurementValue));
-		particleList.particleData[i].bound_right = (int)measurementValue;
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_BOTTOM, &measurementValue));
-		particleList.particleData[i].bound_bottom = (int)measurementValue;
-		
-		// bounding box size
-		particleList.particleData[i].bound_width = particleList.particleData[i].bound_right - particleList.particleData[i].bound_left;
-		particleList.particleData[i].bound_height = particleList.particleData[i].bound_bottom - particleList.particleData[i].bound_top;
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_LEFT, &bound_left));
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_TOP, &bound_top));
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_RIGHT, &bound_right));
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_BOTTOM, &bound_bottom));
 
-		// aspect
-		particleList.particleData[i].aspect = (float)particleList.particleData[i].bound_width / particleList.particleData[i].bound_height;
+		double bound_width = bound_right - bound_left;
+		double bound_height = bound_bottom - bound_top;
+		double aspect = bound_width / bound_height;
+		double bound_area = bound_width * bound_height;
+
+		// if aspect is not in range, skip it.
+		if( aspect < particleList.aspectMin || aspect > particleList.aspectMax)
+			continue;
 
 		// particle area
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &measurementValue));
-		particleList.particleData[i].area = (float)measurementValue;
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &area));
+
+		// if particle area doesn't fill bounding area enough skip it.
+		if( bound_area > 0 && (area / bound_area < particleList.area_threshold) )
+			continue;
+
+		// all good, fill the values and add new entry to the list.
+		ParticleData newParticle;
+		particleList.numParticles++;
+
+		newParticle.bound_left = (int)bound_left;
+		newParticle.bound_top = (int)bound_top;
+		newParticle.bound_right = (int)bound_right;
+		newParticle.bound_bottom = (int)bound_bottom;
+
+		// bounding box size
+		newParticle.bound_width = (int)bound_width;
+		newParticle.bound_height = (int)bound_height;
+
+		// center of particle
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_CENTER_OF_MASS_X, &center_x));
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_CENTER_OF_MASS_Y, &center_y));
+
+		newParticle.center.x = (int)center_x;
+		newParticle.center.y = (int)center_y;
+
+		// convert to aiming system coords
+		newParticle.AimSys.x = (float)((center_x - (XRes/2.0)) / (XRes/2.0)) * Aspect;
+		newParticle.AimSys.y = (float)((center_y - (YRes/2.0)) / (YRes/2.0));
+
+		particleList.particleData.push_back(newParticle);
 	}
 
 Error:
@@ -677,68 +695,25 @@ Error:
 // Parameters   : image                  -  Input image
 //                roi                    -  Region of interest
 //                pDirection             -
-//                pPolarity              -
-//                pKernelSize            -
-//                pWidth                 -
-//                pMinThreshold          -
-//                pInterpolationType     -
-//                pColumnProcessingMode  -
 //                pStepSize              -  Number of pixels that separates two
 //                                          consecutive search lines.
-//                pSearchMode            -
 //                particleData           -  Internal Data structure
 //                lineIndex              -  index for line information (one each side)
-//				  particleNumber		 -  the particle we are processing.
 //
 // Return Value : success
 //
 ////////////////////////////////////////////////////////////////////////////////
-int VisionTracker::FindEdge(Image* image, ROI* roi, RakeDirection pDirection, EdgePolaritySearchMode pPolarity, unsigned int pKernelSize, unsigned int pWidth,
-						 float pMinThreshold, InterpolationMethod pInterpolationType, ColumnProcessingMode pColumnProcessingMode, unsigned int pStepSize,
-						 StraightEdgeSearchMode pSearchMode, ParticleData* particleData, int lineIndex, int particleNumber)
+int VisionTracker::FindEdge(Image* image, ROI* roi, RakeDirection pDirection, unsigned int pStepSize, ParticleData& particleData, int lineIndex)
 {
 	int success = TRUE;
-	EdgeOptions2 edgeOptions;
-	FindEdgeOptions2 findEdgeOptions;
-	StraightEdgeOptions straightEdgeOptions;
 	FindEdgeReport* findEdgeReport = NULL;
-	unsigned int visionInfo;
-
 
 	//-------------------------------------------------------------------//
 	//                         Find Straight Edge                        //
 	//-------------------------------------------------------------------//
 
-	edgeOptions.polarity = pPolarity;
-	edgeOptions.kernelSize = pKernelSize;
-	edgeOptions.width = pWidth;
-	edgeOptions.minThreshold = pMinThreshold;
-	edgeOptions.interpolationType = pInterpolationType;
-	edgeOptions.columnProcessingMode = pColumnProcessingMode;
-
 	findEdgeOptions.direction = pDirection;
-	findEdgeOptions.showSearchArea = TRUE;
-	findEdgeOptions.showSearchLines = TRUE;
-	findEdgeOptions.showEdgesFound = TRUE;
-	findEdgeOptions.showResult = TRUE;
-	findEdgeOptions.searchAreaColor = IMAQ_RGB_GREEN;
-	findEdgeOptions.searchLinesColor = IMAQ_RGB_BLUE;
-	findEdgeOptions.searchEdgesColor = IMAQ_RGB_YELLOW;
-	findEdgeOptions.resultColor = IMAQ_RGB_RED;
-	findEdgeOptions.overlayGroupName = NULL;
-	findEdgeOptions.edgeOptions = edgeOptions;
-
-	straightEdgeOptions.numLines = 1;
-	straightEdgeOptions.searchMode = pSearchMode;
-	straightEdgeOptions.minScore = 10;
-	straightEdgeOptions.maxScore = 1000;
-	straightEdgeOptions.orientation = 0;
-	straightEdgeOptions.angleRange = 45;
-	straightEdgeOptions.angleTolerance = 1;
 	straightEdgeOptions.stepSize = pStepSize;
-	straightEdgeOptions.minSignalToNoiseRatio = 0;
-	straightEdgeOptions.minCoverage = 25;
-	straightEdgeOptions.houghIterations = 5;
 
 	// Locates a straight edge in the rectangular search area.
 	VisionErrChk(findEdgeReport = imaqFindEdge2(image, roi, NULL, NULL, &findEdgeOptions, &straightEdgeOptions));
@@ -747,16 +722,13 @@ int VisionTracker::FindEdge(Image* image, ROI* roi, RakeDirection pDirection, Ed
 	// Store the results in the data structure.
 	// ////////////////////////////////////////
 
-	// Check if the image is calibrated.
-	VisionErrChk(imaqGetVisionInfoTypes(image, &visionInfo));
-
 	if (findEdgeReport->numStraightEdges > 0)
 	{
-		particleData[particleNumber].lines[lineIndex].p1.x = findEdgeReport->straightEdges->straightEdgeCoordinates.start.x;
-		particleData[particleNumber].lines[lineIndex].p1.y = findEdgeReport->straightEdges->straightEdgeCoordinates.start.y;
-		particleData[particleNumber].lines[lineIndex].P2.x = findEdgeReport->straightEdges->straightEdgeCoordinates.end.x;
-		particleData[particleNumber].lines[lineIndex].P2.y = findEdgeReport->straightEdges->straightEdgeCoordinates.end.y;
-		particleData[particleNumber].lines[lineIndex].angle = findEdgeReport->straightEdges->angle;
+		particleData.lines[lineIndex].p1.x = findEdgeReport->straightEdges->straightEdgeCoordinates.start.x;
+		particleData.lines[lineIndex].p1.y = findEdgeReport->straightEdges->straightEdgeCoordinates.start.y;
+		particleData.lines[lineIndex].P2.x = findEdgeReport->straightEdges->straightEdgeCoordinates.end.x;
+		particleData.lines[lineIndex].P2.y = findEdgeReport->straightEdges->straightEdgeCoordinates.end.y;
+		particleData.lines[lineIndex].angle = findEdgeReport->straightEdges->angle;
 	}
 
 Error:
