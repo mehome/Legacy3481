@@ -214,11 +214,11 @@ enum AV_Sync
     eAV_SYNC_EXTERNAL_CLOCK // synchronize to an external clock 
 };
 
-struct FF_Play_Reader 
+struct FF_Play_Reader_Internal
 {
 	public:
-		FF_Play_Reader();
-		virtual ~FF_Play_Reader();
+		FF_Play_Reader_Internal();
+		virtual ~FF_Play_Reader_Internal();
 
 		//For now keep this separate in case the constructor needs to be light
 		bool init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream);
@@ -279,15 +279,21 @@ struct FF_Play_Reader
 		int stream_component_open(int stream_index);	// open a given stream. Return 0 if OK 
 		void stream_component_close(int stream_index);
 
+	protected:
+		//this is called if the reading of the file indicates a video stream
+		virtual void CreateVideoStream() {}
+		virtual void DestroyVideoStream() {}
+		virtual void CreateSubtitleStream() {}
+		virtual void DestroySubtitleStream() {}
+		int m_abort_request;
 	private:
 		FrameWork::Outstream_Interface *m_Preview;  //Temp for now
 		Processing::FX::procamp::Procamp_Manager *m_procamp;
-		SDL_Thread *m_read_tid;
-		SDL_Thread *m_video_tid;
+		//SDL_Thread *m_read_tid;
+		//SDL_Thread *m_video_tid;
 		AVInputFormat *m_iformat;
 		int m_stopped; // used to avoid crash on repeating dispatch
 		int m_no_background;
-		int m_abort_request;
 		int m_paused;
 		int m_last_paused;
 		int m_que_attachments_req;
@@ -353,7 +359,7 @@ struct FF_Play_Reader
 		FFTSample *m_rdft_data;
 		int m_xpos;
 
-		SDL_Thread *m_subtitle_tid;
+		//SDL_Thread *m_subtitle_tid;
 		int m_subtitle_stream;
 		int m_subtitle_stream_changed;
 		AVStream *m_subtitle_st;
@@ -621,13 +627,13 @@ static inline int compute_mod(int a, int b)
     return a < 0 ? a%b + b : a%b;
 }
 
-void FF_Play_Reader::stream_close()
+void FF_Play_Reader_Internal::stream_close()
 {
     VideoPicture *vp;
     int i;
     /* XXX: use a special url_shutdown call to abort parse cleanly */
     m_abort_request = 1;
-    SDL_WaitThread(m_read_tid, NULL);
+    //SDL_WaitThread(m_read_tid, NULL);
     packet_queue_destroy(&m_videoq);
     packet_queue_destroy(&m_audioq);
     packet_queue_destroy(&m_subtitleq);
@@ -653,9 +659,9 @@ void FF_Play_Reader::stream_close()
     //av_free(is);
 }
 
-FF_Play_Reader::FF_Play_Reader() : m_Preview(NULL),m_procamp(NULL),
+FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(NULL),
 	//TODO replace SDL threads
-	m_read_tid(NULL),m_video_tid(NULL),
+	//m_read_tid(NULL),m_video_tid(NULL),
 	m_iformat(NULL),m_stopped(0),m_no_background(0),m_abort_request(0),m_paused(0),m_last_paused(0),m_que_attachments_req(0),m_seek_req(0),m_seek_flags(0),
 	m_seek_pos(0),m_seek_rel(0),m_read_pause_return(0),m_ic(NULL),m_realtime(0),m_audio_stream(0),m_av_sync_type(0),m_external_clock(0.0),m_external_clock_drift(0.0),
 	m_external_clock_time(0),m_external_clock_speed(0.0),m_audio_clock(0.0),m_audio_diff_cum(0.0),m_audio_diff_avg_coef(0.0),m_audio_diff_threshold(0.0),
@@ -666,7 +672,7 @@ FF_Play_Reader::FF_Play_Reader() : m_Preview(NULL),m_procamp(NULL),
 	show_mode(eSHOW_MODE_VIDEO),
 	m_sample_array_index(0),m_last_i_start(0),m_rdft(NULL),m_rdft_bits(0),m_rdft_data(NULL),m_xpos(0),
 	//TODO replace SDL threads
-	m_subtitle_tid(NULL),
+	//m_subtitle_tid(NULL),
 	m_subtitle_stream(0),m_subtitle_stream_changed(0),m_subtitle_st(NULL),m_subpq_size(0), m_subpq_rindex(0), m_subpq_windex(0),
 	//Use our own critical sections for these
 	m_subpq_mutex(NULL),m_subpq_cond(NULL),
@@ -704,11 +710,11 @@ FF_Play_Reader::FF_Play_Reader() : m_Preview(NULL),m_procamp(NULL),
 	for (size_t i = 0; i < SUBPICTURE_QUEUE_SIZE; i++) 
 		memset(&m_subpq[i],0,sizeof(SubPicture));
 	//cannot do this it will not destruct properly
-	//memset(this,0,sizeof(FF_Play_Reader));
+	//memset(this,0,sizeof(FF_Play_Reader_Internal));
 	m_procamp=new Processing::FX::procamp::Procamp_Manager;
 }
 
-FF_Play_Reader::~FF_Play_Reader()
+FF_Play_Reader_Internal::~FF_Play_Reader_Internal()
 {
     stream_close();
     av_lockmgr_register(NULL);
@@ -722,7 +728,7 @@ FF_Play_Reader::~FF_Play_Reader()
 	m_procamp=NULL;
 }
 
-double FF_Play_Reader::get_audio_clock() const
+double FF_Play_Reader_Internal::get_audio_clock() const
 {
 	double ret=m_audio_current_pts_drift + av_gettime() / 1000000.0;
     if (m_paused) 
@@ -730,7 +736,7 @@ double FF_Play_Reader::get_audio_clock() const
     return ret;
 }
 
-double FF_Play_Reader::get_video_clock() const
+double FF_Play_Reader_Internal::get_video_clock() const
 {
 	double ret=m_video_current_pts_drift + av_gettime() / 1000000.0;
     if (m_paused) 
@@ -739,7 +745,7 @@ double FF_Play_Reader::get_video_clock() const
 }
 
 
-double FF_Play_Reader::get_external_clock() const
+double FF_Play_Reader_Internal::get_external_clock() const
 {
 	double time = av_gettime() / 1000000.0;
 	double ret=m_external_clock_drift + time - (time - m_external_clock_time / 1000000.0) * (1.0 - m_external_clock_speed);
@@ -748,7 +754,7 @@ double FF_Play_Reader::get_external_clock() const
 	return ret;
 }
 
-AV_Sync FF_Play_Reader::get_master_sync_type() const
+AV_Sync FF_Play_Reader_Internal::get_master_sync_type() const
 {
 	AV_Sync ret=eAV_SYNC_EXTERNAL_CLOCK;
     if (m_av_sync_type == eAV_SYNC_VIDEO_MASTER) 
@@ -762,7 +768,7 @@ AV_Sync FF_Play_Reader::get_master_sync_type() const
 }
 
 
-double FF_Play_Reader::get_master_clock() const
+double FF_Play_Reader_Internal::get_master_clock() const
 {
     double val;
 
@@ -780,26 +786,26 @@ double FF_Play_Reader::get_master_clock() const
     return val;
 }
 
-void FF_Play_Reader::update_external_clock_pts( double pts)
+void FF_Play_Reader_Internal::update_external_clock_pts( double pts)
 {
    m_external_clock_time = av_gettime();
    m_external_clock = pts;
    m_external_clock_drift = pts - m_external_clock_time / 1000000.0;
 }
 
-void FF_Play_Reader::check_external_clock_sync(double pts) 
+void FF_Play_Reader_Internal::check_external_clock_sync(double pts) 
 {
     if (fabs(get_external_clock() - pts) > c_av_nosync_threshold) 
         update_external_clock_pts(pts);
 }
 
-void FF_Play_Reader::update_external_clock_speed(double speed) 
+void FF_Play_Reader_Internal::update_external_clock_speed(double speed) 
 {
     update_external_clock_pts( get_external_clock());
     m_external_clock_speed = speed;
 }
 
-void FF_Play_Reader::check_external_clock_speed()
+void FF_Play_Reader_Internal::check_external_clock_speed()
 {
 	if (m_video_stream >= 0 && m_videoq.nb_packets <= MIN_FRAMES / 2 ||  m_audio_stream >= 0 && m_audioq.nb_packets <= MIN_FRAMES / 2) 
 		update_external_clock_speed( FFMAX(EXTERNAL_CLOCK_SPEED_MIN, m_external_clock_speed - EXTERNAL_CLOCK_SPEED_STEP));
@@ -814,7 +820,7 @@ void FF_Play_Reader::check_external_clock_speed()
 }
 
 
-void FF_Play_Reader::stream_seek(int64_t pos, int64_t rel, int seek_by_bytes)
+void FF_Play_Reader_Internal::stream_seek(int64_t pos, int64_t rel, int seek_by_bytes)
 {
     if (!m_seek_req) {
         m_seek_pos = pos;
@@ -826,7 +832,7 @@ void FF_Play_Reader::stream_seek(int64_t pos, int64_t rel, int seek_by_bytes)
     }
 }
 
-void FF_Play_Reader::stream_toggle_pause()
+void FF_Play_Reader_Internal::stream_toggle_pause()
 {
     if (m_paused) 
 	{
@@ -840,7 +846,7 @@ void FF_Play_Reader::stream_toggle_pause()
     m_paused = !m_paused;
 }
 
-double FF_Play_Reader::compute_target_delay(double delay) const
+double FF_Play_Reader_Internal::compute_target_delay(double delay) const
 {
     double sync_threshold, diff;
 
@@ -869,7 +875,7 @@ double FF_Play_Reader::compute_target_delay(double delay) const
     return delay;
 }
 
-void FF_Play_Reader::update_video_pts(double pts, int64_t pos, int serial) 
+void FF_Play_Reader_Internal::update_video_pts(double pts, int64_t pos, int serial) 
 {
     double time = av_gettime() / 1000000.0;
     /* update current video pts */
@@ -881,7 +887,7 @@ void FF_Play_Reader::update_video_pts(double pts, int64_t pos, int serial)
         check_external_clock_sync(m_video_current_pts);
 }
 
-int FF_Play_Reader::queue_picture(AVFrame *src_frame, double pts1, int64_t pos, int serial)
+int FF_Play_Reader_Internal::queue_picture(AVFrame *src_frame, double pts1, int64_t pos, int serial)
 {
     VideoPicture *vp;
     double frame_delay, pts = pts1;
@@ -1005,7 +1011,7 @@ int FF_Play_Reader::queue_picture(AVFrame *src_frame, double pts1, int64_t pos, 
     return 0;
 }
 
-int FF_Play_Reader::dispatch_picture(AVFrame *src_frame, double pts1, int64_t pos, int serial)
+int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, int64_t pos, int serial)
 {
 	#if 0
 	{
@@ -1163,7 +1169,7 @@ int FF_Play_Reader::dispatch_picture(AVFrame *src_frame, double pts1, int64_t po
     return 0;
 }
 
-int FF_Play_Reader::get_video_frame(AVFrame *frame, int64_t *pts, AVPacket *pkt, int *serial)
+int FF_Play_Reader_Internal::get_video_frame(AVFrame *frame, int64_t *pts, AVPacket *pkt, int *serial)
 {
     int got_picture, i;
 
@@ -1246,7 +1252,7 @@ int FF_Play_Reader::get_video_frame(AVFrame *frame, int64_t *pts, AVPacket *pkt,
     return 0;
 }
 
-int FF_Play_Reader::video_thread()
+int FF_Play_Reader_Internal::video_thread()
 {
     AVPacket pkt = { 0 };
     AVFrame *frame = avcodec_alloc_frame();
@@ -1306,11 +1312,11 @@ int FF_Play_Reader::video_thread()
 //TODO nuke once we switch to our threads
 static int video_thread(void *arg)
 {
-	FF_Play_Reader *is = (FF_Play_Reader *)arg;
+	FF_Play_Reader_Internal *is = (FF_Play_Reader_Internal *)arg;
 	return is->video_thread();
 }
 
-int FF_Play_Reader::subtitle_thread()
+int FF_Play_Reader_Internal::subtitle_thread()
 {
     SubPicture *sp;
     AVPacket pkt1, *pkt = &pkt1;
@@ -1381,11 +1387,11 @@ int FF_Play_Reader::subtitle_thread()
 
 static int subtitle_thread(void *arg)
 {
-	FF_Play_Reader *is = (FF_Play_Reader *)arg;
+	FF_Play_Reader_Internal *is = (FF_Play_Reader_Internal *)arg;
 	return is->subtitle_thread();
 }
 
-int FF_Play_Reader::synchronize_audio(int nb_samples)
+int FF_Play_Reader_Internal::synchronize_audio(int nb_samples)
 {
     int wanted_nb_samples = nb_samples;
 
@@ -1430,7 +1436,7 @@ int FF_Play_Reader::synchronize_audio(int nb_samples)
 }
 
 
-int FF_Play_Reader::audio_decode_frame(double *pts_ptr)
+int FF_Play_Reader_Internal::audio_decode_frame(double *pts_ptr)
 {
     AVPacket *pkt_temp = &m_audio_pkt_temp;
     AVPacket *pkt = &m_audio_pkt;
@@ -1591,7 +1597,7 @@ int FF_Play_Reader::audio_decode_frame(double *pts_ptr)
     }
 }
 
-void FF_Play_Reader::sdl_audio_callback(Uint8 *stream, int len)
+void FF_Play_Reader_Internal::sdl_audio_callback(Uint8 *stream, int len)
 {
     int audio_size, len1;
     int bytes_per_sec;
@@ -1635,7 +1641,7 @@ void FF_Play_Reader::sdl_audio_callback(Uint8 *stream, int len)
 
 void sdl_audio_callback(void *opaque,Uint8 *stream, int len)
 {
-	FF_Play_Reader *is = (FF_Play_Reader *)opaque;
+	FF_Play_Reader_Internal *is = (FF_Play_Reader_Internal *)opaque;
 	is->sdl_audio_callback(stream,len);
 }
 
@@ -1693,7 +1699,7 @@ static int audio_open(void *opaque, int64_t wanted_channel_layout, int wanted_nb
     return spec.size;
 }
 
-int FF_Play_Reader::stream_component_open(int stream_index)
+int FF_Play_Reader_Internal::stream_component_open(int stream_index)
 {
     AVFormatContext *ic = m_ic;
     AVCodecContext *avctx;
@@ -1783,14 +1789,16 @@ int FF_Play_Reader::stream_component_open(int stream_index)
         m_video_st = ic->streams[stream_index];
 
         packet_queue_start(&m_videoq);
-		m_video_tid = SDL_CreateThread(::video_thread, this);
+		//m_video_tid = SDL_CreateThread(::video_thread, this);
+		CreateVideoStream();
         break;
     case AVMEDIA_TYPE_SUBTITLE:
         m_subtitle_stream = stream_index;
         m_subtitle_st = ic->streams[stream_index];
         packet_queue_start(&m_subtitleq);
 
-		m_subtitle_tid = SDL_CreateThread(::subtitle_thread, this);
+		//m_subtitle_tid = SDL_CreateThread(::subtitle_thread, this);
+		CreateSubtitleStream();
         break;
     default:
         break;
@@ -1798,7 +1806,7 @@ int FF_Play_Reader::stream_component_open(int stream_index)
     return 0;
 }
 
-void FF_Play_Reader::stream_component_close(int stream_index)
+void FF_Play_Reader_Internal::stream_component_close(int stream_index)
 {
     AVFormatContext *ic = m_ic;
     AVCodecContext *avctx;
@@ -1839,7 +1847,8 @@ void FF_Play_Reader::stream_component_close(int stream_index)
         SDL_CondSignal(m_pictq_cond);
         SDL_UnlockMutex(m_pictq_mutex);
 
-        SDL_WaitThread(m_video_tid, NULL);
+        //SDL_WaitThread(m_video_tid, NULL);
+		DestroyVideoStream();
 
         packet_queue_flush(&m_videoq);
         break;
@@ -1854,7 +1863,8 @@ void FF_Play_Reader::stream_component_close(int stream_index)
         SDL_CondSignal(m_subpq_cond);
         SDL_UnlockMutex(m_subpq_mutex);
 
-        SDL_WaitThread(m_subtitle_tid, NULL);
+        //SDL_WaitThread(m_subtitle_tid, NULL);
+		DestroySubtitleStream();
 
         packet_queue_flush(&m_subtitleq);
         break;
@@ -1882,14 +1892,14 @@ void FF_Play_Reader::stream_component_close(int stream_index)
     }
 }
 
-int FF_Play_Reader::decode_interrupt_cb() const
+int FF_Play_Reader_Internal::decode_interrupt_cb() const
 {
 	return m_abort_request;
 }
 
 static int decode_interrupt_cb(void *ctx)
 {
-    FF_Play_Reader *is = (FF_Play_Reader *)ctx;
+    FF_Play_Reader_Internal *is = (FF_Play_Reader_Internal *)ctx;
     return is->decode_interrupt_cb();
 }
 
@@ -1920,7 +1930,7 @@ static void print_error(const char *filename, int err)
 	av_log(NULL, AV_LOG_ERROR, "%s: %s\n", filename, errbuf_ptr);
 }
 
-int FF_Play_Reader::read_thread()
+int FF_Play_Reader_Internal::read_thread()
 {
     AVFormatContext *ic = NULL;
     int err, i, ret;
@@ -2024,9 +2034,6 @@ int FF_Play_Reader::read_thread()
         av_dump_format(ic, 0, m_filename, 0);
 		#endif
 
-	//TODO this should be phased out
-    //m_show_mode = show_mode;
-
     // open the streams 
     if (st_index[AVMEDIA_TYPE_AUDIO] >= 0) 
         stream_component_open(st_index[AVMEDIA_TYPE_AUDIO]);
@@ -2034,10 +2041,6 @@ int FF_Play_Reader::read_thread()
     ret = -1;
     if (st_index[AVMEDIA_TYPE_VIDEO] >= 0) 
         ret = stream_component_open(st_index[AVMEDIA_TYPE_VIDEO]);
-    
-
-    //if (m_show_mode == VideoState::SHOW_MODE_NONE)
-    //    m_show_mode = ret >= 0 ? VideoState::SHOW_MODE_VIDEO : VideoState::SHOW_MODE_RDFT;
 
     if (st_index[AVMEDIA_TYPE_SUBTITLE] >= 0) 
         stream_component_open( st_index[AVMEDIA_TYPE_SUBTITLE]);
@@ -2213,11 +2216,11 @@ int FF_Play_Reader::read_thread()
 
 static int read_thread(void *arg)
 {
-	FF_Play_Reader *is = (FF_Play_Reader *)arg;
+	FF_Play_Reader_Internal *is = (FF_Play_Reader_Internal *)arg;
 	return is->read_thread();
 }
 
-bool FF_Play_Reader::init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream)
+bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream)
 {
     av_strlcpy(m_filename, filename, sizeof(m_filename));
     m_iformat = iformat;
@@ -2244,28 +2247,15 @@ bool FF_Play_Reader::init(const char *filename, AVInputFormat *iformat,FrameWork
 	m_av_sync_type = g_av_sync_type;
 	assert(Outstream);
 	m_Preview=Outstream;
-	m_read_tid     = SDL_CreateThread(::read_thread, this);
+	//m_read_tid     = SDL_CreateThread(::read_thread, this);
 	bool ret=true;
-    if (!m_read_tid) 
-		ret=false;
+	//if (!m_read_tid) 
+		//ret=false;
     return ret;
 }
 
-static FF_Play_Reader *stream_open(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream)
-{
-	FF_Play_Reader *is=NULL;
 
-	//is = (VideoState *)av_mallocz(sizeof(VideoState));
-	is = new FF_Play_Reader; //Note: will init vars implicitly in constructor
-	if ((is)&&(!is->init(filename,iformat,Outstream)))
-	{
-		delete is;
-		is=NULL;
-	}
-	return is;
-}
-
-void FF_Play_Reader::stream_cycle_channel(int codec_type)
+void FF_Play_Reader_Internal::stream_cycle_channel(int codec_type)
 {
     AVFormatContext *ic = m_ic;
     int start_index, stream_index;
@@ -2331,13 +2321,13 @@ void FF_Play_Reader::stream_cycle_channel(int codec_type)
 }
 
 
-void FF_Play_Reader::toggle_pause()
+void FF_Play_Reader_Internal::toggle_pause()
 {
     stream_toggle_pause();
     m_step = 0;
 }
 
-void FF_Play_Reader::step_to_next_frame()
+void FF_Play_Reader_Internal::step_to_next_frame()
 {
     /* if the stream is paused unpause it, then step */
     if (m_paused)
@@ -2421,6 +2411,122 @@ static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
 #endif
 }
 
+  /***************************************************************************************************************/
+ /*												FF_Play_Reader													*/
+/***************************************************************************************************************/
+
+struct FF_Play_Reader : public FF_Play_Reader_Internal
+{
+	public:
+		FF_Play_Reader();
+		bool StartStreaming();
+		void StopStreaming();
+	protected:
+		virtual void CreateVideoStream();
+		virtual void DestroyVideoStream();
+		virtual void CreateSubtitleStream();
+		virtual void DestroySubtitleStream();
+	private:
+		enum ThreadList
+		{
+			eReaderThread,
+			eVideoThread,
+			eSubtitleThread
+		};
+		/// This is the thread callback
+		friend FrameWork::Threads::thread<FF_Play_Reader,ThreadList>;
+		void operator() ( ThreadList WhichThread );
+
+		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pReaderThread;
+		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pVideoThread;
+		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pSubtitleThread;
+		bool m_IsStreaming;
+};
+
+FF_Play_Reader::FF_Play_Reader() : m_pReaderThread(NULL),m_pVideoThread(NULL),m_IsStreaming(false)
+{
+
+}
+
+void FF_Play_Reader::CreateVideoStream()
+{
+	assert(!m_pVideoThread);
+	m_pVideoThread = new FrameWork::Threads::thread<FF_Play_Reader,ThreadList>(this,eVideoThread);
+	m_pVideoThread->set_thread_name( "FF_Play_Reader Video Thread" );
+}
+
+void FF_Play_Reader::DestroyVideoStream()
+{
+	assert(m_pVideoThread);
+	delete m_pVideoThread;
+	m_pVideoThread=NULL;
+}
+
+void FF_Play_Reader::CreateSubtitleStream()
+{
+	assert(!m_pSubtitleThread);
+	m_pSubtitleThread = new FrameWork::Threads::thread<FF_Play_Reader,ThreadList>(this,eSubtitleThread);
+	m_pSubtitleThread->set_thread_name( "FF_Play_Reader Subtitle Thread" );
+}
+
+void FF_Play_Reader::DestroySubtitleStream()
+{
+	assert(m_pSubtitleThread);
+	delete m_pSubtitleThread;
+	m_pSubtitleThread=NULL;
+}
+
+bool FF_Play_Reader::StartStreaming()
+{
+	if (!m_IsStreaming)
+	{
+		m_IsStreaming=true;
+		m_pReaderThread = new FrameWork::Threads::thread<FF_Play_Reader,ThreadList>(this,eReaderThread);
+		m_pReaderThread->set_thread_name( "FF_Play_Reader Reader Thread" );
+	}
+	return true;
+}
+
+void FF_Play_Reader::StopStreaming()
+{
+	if (m_IsStreaming)
+	{
+		m_IsStreaming=false;
+		if (m_pReaderThread)
+		{
+			m_abort_request=1;  //similar to a terminate event (we may leave this intact)
+			delete m_pReaderThread;
+			m_pReaderThread=NULL;
+		}
+	}
+}
+
+void FF_Play_Reader::operator() ( ThreadList WhichThread )
+{
+	switch (WhichThread)
+	{
+		case eReaderThread:
+			read_thread();
+			break;
+		case  eVideoThread:
+			video_thread();
+			break;
+	}
+}
+
+static FF_Play_Reader *stream_open(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream)
+{
+	FF_Play_Reader *is=NULL;
+
+	//is = (VideoState *)av_mallocz(sizeof(VideoState));
+	is = new FF_Play_Reader; //Note: will init vars implicitly in constructor
+	if ((is)&&(!is->init(filename,iformat,Outstream)))
+	{
+		delete is;
+		is=NULL;
+	}
+	return is;
+}
 
   /***************************************************************************************************************/
  /*												FrameGrabber_FFMpeg												*/
@@ -2570,10 +2676,12 @@ bool FrameGrabber_FFMpeg::StartStreaming()
 	if (m_URL[0]==0)
 		return m_TestPattern.StartStreaming();
 
-	m_VideoStream = stream_open(input_filename, file_iformat, m_Outstream);
+	FF_Play_Reader *reader= stream_open(input_filename, file_iformat, m_Outstream);
+	m_VideoStream = reader;
 	if (!m_VideoStream) 
 		fprintf(stderr, "Failed to initialize VideoState!\n");
-
+	else
+		reader->StartStreaming();
 	return m_VideoStream!=NULL;
 }
 
@@ -2583,6 +2691,7 @@ void FrameGrabber_FFMpeg::StopStreaming()
 	if (!m_VideoStream) return;
 
 	FF_Play_Reader *is=(FF_Play_Reader *)m_VideoStream;
+	is->StopStreaming();
 	delete is;
 
 	m_VideoStream=NULL;
