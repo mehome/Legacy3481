@@ -289,8 +289,6 @@ struct FF_Play_Reader_Internal
 	private:
 		FrameWork::Outstream_Interface *m_Preview;  //Temp for now
 		Processing::FX::procamp::Procamp_Manager *m_procamp;
-		//SDL_Thread *m_read_tid;
-		//SDL_Thread *m_video_tid;
 		AVInputFormat *m_iformat;
 		int m_stopped; // used to avoid crash on repeating dispatch
 		int m_no_background;
@@ -359,7 +357,6 @@ struct FF_Play_Reader_Internal
 		FFTSample *m_rdft_data;
 		int m_xpos;
 
-		//SDL_Thread *m_subtitle_tid;
 		int m_subtitle_stream;
 		int m_subtitle_stream_changed;
 		AVStream *m_subtitle_st;
@@ -633,7 +630,7 @@ void FF_Play_Reader_Internal::stream_close()
     int i;
     /* XXX: use a special url_shutdown call to abort parse cleanly */
     m_abort_request = 1;
-    //SDL_WaitThread(m_read_tid, NULL);
+	//We could potentially destroy read thread here
     packet_queue_destroy(&m_videoq);
     packet_queue_destroy(&m_audioq);
     packet_queue_destroy(&m_subtitleq);
@@ -660,8 +657,6 @@ void FF_Play_Reader_Internal::stream_close()
 }
 
 FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(NULL),
-	//TODO replace SDL threads
-	//m_read_tid(NULL),m_video_tid(NULL),
 	m_iformat(NULL),m_stopped(0),m_no_background(0),m_abort_request(0),m_paused(0),m_last_paused(0),m_que_attachments_req(0),m_seek_req(0),m_seek_flags(0),
 	m_seek_pos(0),m_seek_rel(0),m_read_pause_return(0),m_ic(NULL),m_realtime(0),m_audio_stream(0),m_av_sync_type(0),m_external_clock(0.0),m_external_clock_drift(0.0),
 	m_external_clock_time(0),m_external_clock_speed(0.0),m_audio_clock(0.0),m_audio_diff_cum(0.0),m_audio_diff_avg_coef(0.0),m_audio_diff_threshold(0.0),
@@ -671,8 +666,6 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	//Nuke this
 	show_mode(eSHOW_MODE_VIDEO),
 	m_sample_array_index(0),m_last_i_start(0),m_rdft(NULL),m_rdft_bits(0),m_rdft_data(NULL),m_xpos(0),
-	//TODO replace SDL threads
-	//m_subtitle_tid(NULL),
 	m_subtitle_stream(0),m_subtitle_stream_changed(0),m_subtitle_st(NULL),m_subpq_size(0), m_subpq_rindex(0), m_subpq_windex(0),
 	//Use our own critical sections for these
 	m_subpq_mutex(NULL),m_subpq_cond(NULL),
@@ -1789,7 +1782,6 @@ int FF_Play_Reader_Internal::stream_component_open(int stream_index)
         m_video_st = ic->streams[stream_index];
 
         packet_queue_start(&m_videoq);
-		//m_video_tid = SDL_CreateThread(::video_thread, this);
 		CreateVideoStream();
         break;
     case AVMEDIA_TYPE_SUBTITLE:
@@ -1797,7 +1789,6 @@ int FF_Play_Reader_Internal::stream_component_open(int stream_index)
         m_subtitle_st = ic->streams[stream_index];
         packet_queue_start(&m_subtitleq);
 
-		//m_subtitle_tid = SDL_CreateThread(::subtitle_thread, this);
 		CreateSubtitleStream();
         break;
     default:
@@ -1847,9 +1838,7 @@ void FF_Play_Reader_Internal::stream_component_close(int stream_index)
         SDL_CondSignal(m_pictq_cond);
         SDL_UnlockMutex(m_pictq_mutex);
 
-        //SDL_WaitThread(m_video_tid, NULL);
 		DestroyVideoStream();
-
         packet_queue_flush(&m_videoq);
         break;
     case AVMEDIA_TYPE_SUBTITLE:
@@ -1863,9 +1852,7 @@ void FF_Play_Reader_Internal::stream_component_close(int stream_index)
         SDL_CondSignal(m_subpq_cond);
         SDL_UnlockMutex(m_subpq_mutex);
 
-        //SDL_WaitThread(m_subtitle_tid, NULL);
 		DestroySubtitleStream();
-
         packet_queue_flush(&m_subtitleq);
         break;
     default:
@@ -2247,11 +2234,7 @@ bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,
 	m_av_sync_type = g_av_sync_type;
 	assert(Outstream);
 	m_Preview=Outstream;
-	//m_read_tid     = SDL_CreateThread(::read_thread, this);
-	bool ret=true;
-	//if (!m_read_tid) 
-		//ret=false;
-    return ret;
+    return true;
 }
 
 
