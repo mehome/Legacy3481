@@ -5,7 +5,7 @@
 
 #include "Preview.h"
 
-#define IS_DDRAW_AVAILABLE
+#undef IS_DDRAW_AVAILABLE
 typedef HRESULT (WINAPI *DirectDrawEnumerateExA_t)(LPDDENUMCALLBACKEXA, LPVOID, DWORD);
 typedef HRESULT (WINAPI *DirectDrawCreateEx_t)(GUID FAR*, LPVOID*, REFIID, IUnknown FAR*);
 
