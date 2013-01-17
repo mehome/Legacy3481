@@ -912,7 +912,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	{
 		wchar2char(lpCmdLine);
 		sz_FileName=wchar2char_pchar;
-		DebugOutput("Reading %s\n",sz_FileName);
+		//TODO figure out why this line crashes
+		//DebugOutput("Reading %s\n",sz_FileName);
 	}
 	//For release build... we need to restore our working directory read .ini from driver station
 	#ifndef _DEBUG
