@@ -13,30 +13,19 @@
 #undef __ShowFrameInfo__
 #undef __ShowProcessingDelta__
 
-/*
- * Copyright (c) 2003 Fabrice Bellard
- *
- * This file is part of FFmpeg.
- *
- * FFmpeg is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * FFmpeg is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with FFmpeg; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- */
+//TODO support audio for non-SDL
+#define __DisableAudio__
 
-/**
- * @file
- * simple media player based on the FFmpeg libraries
- */
+//This is a transitional change to eventually be removed
+//  [1/17/2013 JamesK]
+#undef __UseSDL__
+
+#ifndef __UseSDL__
+#if defined(__Test_Queue_Picture__) || !defined(__DisableAudio__)
+#define __UseSDL__
+#endif
+#endif
+
 
 #ifndef __STDC_CONSTANT_MACROS
 #define __STDC_CONSTANT_MACROS 1
@@ -89,8 +78,9 @@ extern "C"
 #include "include/libswresample/swresample.h"
 }
 
+#ifdef __UseSDL__
 #include "SDL/include/SDL.h"
-#include "SDL/include/SDL_thread.h"
+#endif
 
 #include <assert.h>
 #ifndef _LIB
@@ -102,8 +92,77 @@ extern "C"
 //#pragma comment (lib , "lib/postproc.lib")
 #pragma comment (lib , "lib/swresample.lib")
 #pragma comment (lib , "lib/swscale.lib")
+
+#ifdef __UseSDL__
 #pragma comment (lib , "SDL/lib/x86/SDL.lib")
-#pragma comment (lib , "SDL/lib/x86/SDLmain.lib")
+#endif
+
+#endif
+
+#ifndef __UseSDL__
+class SDL_mutex : public FrameWork::critical_section
+{
+};
+
+class SDL_cond : public FrameWork::event
+{
+};
+
+SDL_mutex *SDL_CreateMutex()
+{
+	return new SDL_mutex;
+}
+SDL_cond *SDL_CreateCond()
+{
+	return new SDL_cond;
+}
+
+void SDL_DestroyMutex(SDL_mutex *mutex)
+{
+	delete mutex;
+}
+void SDL_DestroyCond(SDL_cond *cond)
+{
+	delete cond;
+}
+
+__inline void SDL_LockMutex(SDL_mutex *mutex)
+{
+	mutex->lock();
+}
+
+__inline void SDL_UnlockMutex(SDL_mutex *mutex)
+{
+	mutex->unlock();
+}
+
+__inline void SDL_CondSignal(SDL_cond *cond)
+{
+	cond->set();
+}
+
+__inline bool SDL_CondWait(SDL_cond *cond,SDL_mutex *mutex,DWORD Time = INFINITE)
+{
+	using namespace FrameWork;
+	mutex->unlock();
+	bool ret=cond->wait(Time);
+	mutex->lock();
+	return ret;
+}
+
+__inline bool SDL_CondWaitTimeout(SDL_cond *cond,SDL_mutex *mutex,size_t TimeOut_ms)
+{
+	return SDL_CondWait(cond,mutex,(DWORD)TimeOut_ms);
+}
+
+__inline void SDL_Delay(DWORD Time_ms)
+{
+	Sleep(Time_ms);
+};
+
+//pacify, no work to do
+__inline void SDL_Quit() {}
+
 #endif
 
 //Not defined in visual studio so we'll make a simple one here
@@ -178,6 +237,7 @@ struct PacketQueue
 const int c_video_picture_queue_size=4;
 #define SUBPICTURE_QUEUE_SIZE 4
 
+#ifdef __Test_Queue_Picture__
 struct VideoPicture 
 {
     double pts;             // presentation timestamp for this picture
@@ -190,8 +250,8 @@ struct VideoPicture
     int allocated;
     int reallocate;
     int serial;
-
 };
+#endif
 
 struct SubPicture 
 {
@@ -246,8 +306,12 @@ struct FF_Play_Reader_Internal
 		//These are to be moved to protected once we are weened off of SDL
 		int video_thread();
 		int subtitle_thread();
+
+		#ifndef __DisableAudio__
 		//This is similar to legacy ffmpeg where it will fill in a buffer, but there is a reading packet queue to be considerate for
 		void sdl_audio_callback(Uint8 *stream, int len);	// prepare a new audio buffer 
+		#endif
+
 		int decode_interrupt_cb() const;
 		int read_thread();   // this thread gets the stream from the disk or the network 
 
@@ -380,12 +444,13 @@ struct FF_Play_Reader_Internal
 		double m_video_current_pts;       // current displayed pts (different from video_clock if frame fifos are used)
 		double m_video_current_pts_drift; // video_current_pts - time (av_gettime) at which we updated video_current_pts - used to have running video pts
 		int64_t m_video_current_pos;      // current displayed file pos
+		#ifdef __Test_Queue_Picture__
 		VideoPicture m_pictq[c_video_picture_queue_size];
+		#endif
 		int m_pictq_size, m_pictq_rindex, m_pictq_windex;
 		SDL_mutex *m_pictq_mutex;
 		SDL_cond *m_pictq_cond;
 		struct SwsContext *m_img_convert_ctx;
-		SDL_Rect m_last_display_rect;
 
 		char m_filename[1024];
 		int m_width, m_height, m_xleft, m_ytop;
@@ -444,8 +509,6 @@ static AVPacket flush_pkt;
 #define FF_ALLOC_EVENT   (SDL_USEREVENT)
 #define FF_REFRESH_EVENT (SDL_USEREVENT + 1)
 #define FF_QUIT_EVENT    (SDL_USEREVENT + 2)
-
-static SDL_Surface *screen;
 
 static int packet_queue_put(PacketQueue *q, AVPacket *pkt);
 
@@ -626,8 +689,14 @@ static inline int compute_mod(int a, int b)
 
 void FF_Play_Reader_Internal::stream_close()
 {
+	#ifdef __Test_Queue_Picture__
     VideoPicture *vp;
+	#endif
+
+	#ifdef __Test_Queue_Picture__
     int i;
+	#endif
+
     /* XXX: use a special url_shutdown call to abort parse cleanly */
     m_abort_request = 1;
 	//We could potentially destroy read thread here
@@ -635,6 +704,7 @@ void FF_Play_Reader_Internal::stream_close()
     packet_queue_destroy(&m_audioq);
     packet_queue_destroy(&m_subtitleq);
 
+	#ifdef __Test_Queue_Picture__
     /* free all pictures */
     for (i = 0; i < c_video_picture_queue_size; i++) 
 	{
@@ -645,6 +715,8 @@ void FF_Play_Reader_Internal::stream_close()
             vp->bmp = NULL;
         }
     }
+	#endif
+
     SDL_DestroyMutex(m_pictq_mutex);
     SDL_DestroyCond(m_pictq_cond);
     SDL_DestroyMutex(m_subpq_mutex);
@@ -690,16 +762,17 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	memset(&m_audio_pkt,0,sizeof(AVPacket));
 	memset(&m_audio_src,0,sizeof(AudioParams));
 	memset(&m_audio_tgt,0,sizeof(AudioParams));
-	//TODO nuke
-	memset(&m_last_display_rect,0,sizeof(SDL_Rect));
 
 	for (size_t i = 0; i < SAMPLE_ARRAY_SIZE; i++) 
 		m_sample_array[i]=0;
 	for (size_t i = 0; i < SDL_AUDIO_BUFFER_SIZE; i++) 
 		m_silence_buf[i]=0;
 
+	#ifdef __Test_Queue_Picture__
 	for (size_t i = 0; i < c_video_picture_queue_size; i++) 
 		memset(&m_pictq[i],0,sizeof(VideoPicture));
+	#endif
+
 	for (size_t i = 0; i < SUBPICTURE_QUEUE_SIZE; i++) 
 		memset(&m_subpq[i],0,sizeof(SubPicture));
 	//cannot do this it will not destruct properly
@@ -880,6 +953,7 @@ void FF_Play_Reader_Internal::update_video_pts(double pts, int64_t pos, int seri
         check_external_clock_sync(m_video_current_pts);
 }
 
+#ifdef __Test_Queue_Picture__
 int FF_Play_Reader_Internal::queue_picture(AVFrame *src_frame, double pts1, int64_t pos, int serial)
 {
     VideoPicture *vp;
@@ -1003,6 +1077,7 @@ int FF_Play_Reader_Internal::queue_picture(AVFrame *src_frame, double pts1, int6
     }
     return 0;
 }
+#endif
 
 int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, int64_t pos, int serial)
 {
@@ -1164,7 +1239,11 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 
 int FF_Play_Reader_Internal::get_video_frame(AVFrame *frame, int64_t *pts, AVPacket *pkt, int *serial)
 {
-    int got_picture, i;
+    int got_picture;
+
+	#ifdef __Test_Queue_Picture__
+	int i;
+	#endif
 
     if (packet_queue_get(&m_videoq, pkt, 1, serial) < 0)
         return -1;
@@ -1174,13 +1253,16 @@ int FF_Play_Reader_Internal::get_video_frame(AVFrame *frame, int64_t *pts, AVPac
         avcodec_flush_buffers(m_video_st->codec);
 
         SDL_LockMutex(m_pictq_mutex);
+
+		#ifdef __Test_Queue_Picture__
         // Make sure there are no long delay timers (ideally we should just flush the que but thats harder)
         for (i = 0; i < c_video_picture_queue_size; i++) 
             m_pictq[i].skip = 1;
-        
+
         while (m_pictq_size && !m_videoq.abort_request) 
             SDL_CondWait(m_pictq_cond, m_pictq_mutex);
-        
+		#endif
+
         m_video_current_pos = -1;
         m_frame_last_pts = (double)AV_NOPTS_VALUE;
         m_frame_last_duration = 0;
@@ -1590,6 +1672,7 @@ int FF_Play_Reader_Internal::audio_decode_frame(double *pts_ptr)
     }
 }
 
+#ifndef __DisableAudio__
 void FF_Play_Reader_Internal::sdl_audio_callback(Uint8 *stream, int len)
 {
     int audio_size, len1;
@@ -1692,6 +1775,8 @@ static int audio_open(void *opaque, int64_t wanted_channel_layout, int wanted_nb
     return spec.size;
 }
 
+#endif
+
 int FF_Play_Reader_Internal::stream_component_open(int stream_index)
 {
     AVFormatContext *ic = m_ic;
@@ -1746,6 +1831,7 @@ int FF_Play_Reader_Internal::stream_component_open(int stream_index)
         return AVERROR_OPTION_NOT_FOUND;
     }
 
+	#ifndef __DisableAudio__
     /* prepare audio output */
     if (avctx->codec_type == AVMEDIA_TYPE_AUDIO) 
 	{
@@ -1755,6 +1841,7 @@ int FF_Play_Reader_Internal::stream_component_open(int stream_index)
         m_audio_hw_buf_size = audio_hw_buf_size;
         m_audio_tgt = m_audio_src;
     }
+	#endif
 
     ic->streams[stream_index]->discard = AVDISCARD_DEFAULT;
     switch (avctx->codec_type) 
@@ -1775,7 +1862,9 @@ int FF_Play_Reader_Internal::stream_component_open(int stream_index)
         memset(&m_audio_pkt, 0, sizeof(m_audio_pkt));
         memset(&m_audio_pkt_temp, 0, sizeof(m_audio_pkt_temp));
         packet_queue_start(&m_audioq);
+		#ifndef __DisableAudio__
         SDL_PauseAudio(0);
+		#endif
         break;
     case AVMEDIA_TYPE_VIDEO:
         m_video_stream = stream_index;
@@ -1811,7 +1900,9 @@ void FF_Play_Reader_Internal::stream_component_close(int stream_index)
     case AVMEDIA_TYPE_AUDIO:
         packet_queue_abort(&m_audioq);
 
+		#ifndef __DisableAudio__
         SDL_CloseAudio();
+		#endif
 
         packet_queue_flush(&m_audioq);
         av_free_packet(&m_audio_pkt);
@@ -2189,14 +2280,6 @@ int FF_Play_Reader_Internal::read_thread()
     if (m_ic) 
         avformat_close_input(&m_ic);
 
-    if (ret != 0) 
-	{
-        SDL_Event event;
-
-        event.type = FF_QUIT_EVENT;
-        event.user.data1 = this;
-        SDL_PushEvent(&event);
-    }
     SDL_DestroyMutex(wait_mutex);
     return 0;
 }
@@ -2357,6 +2440,7 @@ static int opt_codec(void *o, const char *opt, const char *arg)
 
 static int dummy;
 
+#ifdef __UseSDL__
 static int lockmgr(void **mtx, enum AVLockOp op)
 {
    switch(op) {
@@ -2375,6 +2459,37 @@ static int lockmgr(void **mtx, enum AVLockOp op)
    }
    return 1;
 }
+#else
+static FrameWork::critical_section s_cs_lockmgr;
+
+static int lockmgr(void** mutex, enum AVLockOp op)
+{
+	switch (op)
+	{
+	case AV_LOCK_CREATE:
+		assert(!*mutex);
+		*mutex = &s_cs_lockmgr;
+		break;
+
+	case AV_LOCK_OBTAIN:
+		assert(*mutex == &s_cs_lockmgr);
+		s_cs_lockmgr.lock();
+		break;
+
+	case AV_LOCK_RELEASE:
+		assert(*mutex == &s_cs_lockmgr);
+		s_cs_lockmgr.unlock();
+		break;
+
+	case AV_LOCK_DESTROY:
+		assert(*mutex == &s_cs_lockmgr);
+		*mutex = NULL;
+		break;
+	}
+
+	return 0;
+}
+#endif
 
 static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
 {
@@ -2591,7 +2706,10 @@ FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview
 
 	SetFileName(IPAddress);
 
+	#ifdef __UseSDL__
 	int flags;
+	#endif
+
 	//VideoState *is;
 	char dummy_videodriver[] = "SDL_VIDEODRIVER=dummy";
 
@@ -2603,6 +2721,7 @@ FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview
 	av_register_all();
 	avformat_network_init();
 
+	#ifdef __UseSDL__
 	flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
 	if (audio_disable)
 		flags &= ~SDL_INIT_AUDIO;
@@ -2619,6 +2738,7 @@ FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview
 	SDL_EventState(SDL_ACTIVEEVENT, SDL_IGNORE);
 	SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
 	SDL_EventState(SDL_USEREVENT, SDL_IGNORE);
+	#endif
 
 	if (av_lockmgr_register(lockmgr)) {
 		fprintf(stderr, "Could not initialize lock manager!\n");
