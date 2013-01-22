@@ -5,15 +5,6 @@
 
 UDP_Client_Interface *g_UDP_Output=NULL;
 
-static void DebugOutput(const char *format, ... )
-{	char Temp[2048];
-	va_list marker;
-	va_start(marker,format);
-	vsprintf(Temp,format,marker);
-	OutputDebugStringA(Temp);
-	va_end(marker);		
-}
-
 //Give something cool to look at
 class SineWaveMaker
 {
