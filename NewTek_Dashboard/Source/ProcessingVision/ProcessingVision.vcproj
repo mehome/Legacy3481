@@ -204,6 +204,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\profile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -234,7 +238,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\NI_VisionProcessing.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ProcessingVision.h"
+				>
+			</File>
+			<File
+				RelativePath=".\profile.h"
 				>
 			</File>
 			<File
