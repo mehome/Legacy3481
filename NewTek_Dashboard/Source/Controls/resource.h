@@ -6,6 +6,7 @@
 #define IDD_FILE_DIALOG                 101
 #define IDD_PROPPAGE_SMALL              102
 #define IDD_PROCAMP_DIALOG              102
+#define IDD_VISION_DIALOG               103
 #define IDC_PAUSE                       1001
 #define IDC_STOP                        1002
 #define IDC_PLAY                        1003
@@ -43,7 +44,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        102
+#define _APS_NEXT_RESOURCE_VALUE        104
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           101
