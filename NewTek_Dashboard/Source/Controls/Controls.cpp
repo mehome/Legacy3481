@@ -18,11 +18,11 @@ DLGPROC g_WinProc;
 
 DialogBase *g_pProcamp;
 DialogBase *g_pFileControls;
-//DialogBase *g_pVisionControls;  //cjt
+DialogBase *g_pVisionControls;  //cjt
 
 DialogBase *CreateProcampDialog();
 DialogBase *CreateFileControlsDialog();
-//DialogBase *CreateVisionControlsDialog();  //cjt
+DialogBase *CreateVisionControlsDialog();  //cjt
 
 void ProcAmp_Initialize(HWND pParent);
 
@@ -143,7 +143,7 @@ enum MenuSelection
 	eMenu_NoSelection,
 	eMenu_Controls,
 	eMenu_Procamp,
-//	eMenu_Vision,	//cjt
+	eMenu_Vision,	//cjt
 	eMenu_NoEntries
 };
 
@@ -167,7 +167,7 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPop
 		InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_SEPARATOR, eMenu_NoSelection, NULL);
 		InsertMenu(hPopupMenu, -1, (g_pFileControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Controls+StartingOffset, L"File Controls...");
 		InsertMenu(hPopupMenu, -1, (g_pProcamp?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Procamp+StartingOffset, L"Procamp...");
-//		InsertMenu(hPopupMenu, -1, (g_pVisionControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Vision+StartingOffset, L"Vision...");  // cjt
+		InsertMenu(hPopupMenu, -1, (g_pVisionControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Vision+StartingOffset, L"Vision...");  //cjt
 	}
 }
 
@@ -200,7 +200,7 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 				assert(false);
 			}
 			break;
-#if 0	//cjt
+#if 1	//cjt
 		case eMenu_Vision:
 			if (!g_pVisionControls)
 			{
@@ -224,6 +224,6 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_Shutdown()
 		g_pFileControls->OnEndDialog();
 	if (g_pProcamp)
 		g_pProcamp->OnEndDialog();
-//	if (g_pVisionControls)	// cjt
-//		g_pVisionControls->OnEndDialog();
+	if (g_pVisionControls)	//cjt
+		g_pVisionControls->OnEndDialog();
 }

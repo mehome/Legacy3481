@@ -3,7 +3,6 @@
 #include "stdafx.h"
 #include "Controls.h"
 #include "Resource.h"
-#if 0	// do nothing yet...
 
 extern DialogBase *g_pVisionControls;
 extern Dashboard_Controller_Interface *g_Controller;
@@ -120,4 +119,3 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 	}
 	return TRUE;
 }
-#endif
