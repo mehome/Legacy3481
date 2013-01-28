@@ -80,10 +80,10 @@ bool FFPlayTest::CommandLineInterface()
 	while (cout << "FFPlay >",cin.getline(input_line,128))
 	{
 		char		command[32];
-		char		str_1[64];
-		char		str_2[64];
-		char		str_3[64];
-		char		str_4[64];
+		char		str_1[256];
+		char		str_2[256];
+		char		str_3[256];
+		char		str_4[256];
 
 		command[0]=0;
 		str_1[0]=0;
