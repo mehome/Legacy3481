@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="ProcessingVision"
-	ProjectGUID="{C97978F2-F958-4EA9-9BAA-55DD5C3E31E2}"
-	RootNamespace="ProcessingVision"
+	Name="RinTinTin"
+	ProjectGUID="{416EB6F1-90AF-4590-B390-5AFDD3193530}"
+	RootNamespace="RinTinTin"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;PROCESSINGVISION_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;RINTINTIN_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;PROCESSINGVISION_EXPORTS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;RINTINTIN_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
@@ -177,28 +177,6 @@
 			<File
 				RelativePath=".\dllmain.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-						CompileAsManaged="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-						CompileAsManaged="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\NI_VisionProcessing.cpp"
-				>
 			</File>
 			<File
 				RelativePath=".\ProcessingVision.cpp"
@@ -206,6 +184,10 @@
 			</File>
 			<File
 				RelativePath=".\profile.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RinTinTin.cpp"
 				>
 			</File>
 			<File
@@ -239,15 +221,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\NI_VisionProcessing.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ProcessingVision.h"
 				>
 			</File>
 			<File
 				RelativePath=".\profile.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RinTinTin.h"
 				>
 			</File>
 			<File
@@ -265,10 +247,6 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
-		<File
-			RelativePath=".\ReadMe.txt"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

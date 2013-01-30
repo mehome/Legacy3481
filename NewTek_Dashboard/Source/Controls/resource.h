@@ -39,19 +39,20 @@
 #define IDC_EditV_Gain                  1029
 #define IDC_LabelV_Gain                 1030
 #define IDC_RestoreDefaults             1031
-#define IDC_RADIO1                      1032
-#define IDC_RADIO2                      1033
-#define IDC_RADIO3                      1034
-#define IDC_CHECK1                      1035
-#define IDC_CHECK2                      1036
-#define IDC_SLIDER1                     1037
-#define IDC_SLIDER2                     1038
-#define IDC_SLIDER3                     1039
-#define IDC_SLIDER4                     1040
-#define IDC_SLIDER5                     1041
-#define IDC_SLIDER6                     1042
-#define IDC_RADIO4                      1043
-#define IDC_RADIO5                      1044
+#define IDC_DisplayNormal               1032
+#define IDC_DisplayThreshold            1033
+#define IDC_DisplayMask                 1034
+#define IDC_ShowOverlay                 1035
+#define IDC_ShowAiming                  1036
+#define IDC_RHMin                       1037
+#define IDC_GSMin                       1038
+#define IDC_BLMin                       1039
+#define IDC_RHMax                       1040
+#define IDC_GSMax                       1041
+#define IDC_BLMax                       1042
+#define IDC_ThresholdRGB                1043
+#define IDC_ThresholdHSL                1044
+#define IDC_DisplayGroup                1045
 
 // Next default values for new objects
 // 
@@ -59,7 +60,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        104
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1045
+#define _APS_NEXT_CONTROL_VALUE         1046
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

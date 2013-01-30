@@ -19,10 +19,23 @@ class VisionControls : public DialogBase
 		virtual const wchar_t * const GetTitlePrefix() const  {return L"Vision controls for ";}
 		virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
 	private:
+		std::string m_BLS_Filename; //keep note of the formed name for exit
 };
 
 DialogBase *CreateVisionControlsDialog() {return new VisionControls;}
 
+const char * const csz_Filename="Vision_";
+static void GetVisionFilename(HWND pParent,std::string &Output)
+{
+	Output=csz_Filename;
+	wchar_t Buffer[128];
+	GetWindowText(pParent,Buffer,128);
+	{
+		wchar2char(Buffer);
+		Output+=wchar2char_pchar;
+		Output+=".ini";
+	}
+}
 
   /***********************************************************************************************************************/
  /*														FileControls													*/
@@ -36,9 +49,38 @@ VisionControls::VisionControls()
 bool VisionControls::Run(HWND pParent)
 {
 	bool ret=__super::Run(pParent);
-	//http://msdn.microsoft.com/en-us/library/ms633570%28VS.85%29.aspx#subclassing_window
-	//In this section we want to retrieve when the carriage return key is pressed within our edit control
-	//Retrieve handle to edit control
+#if 0
+	using namespace std;
+	string InFile;
+	GetVisionFilename(GetParent(m_hDlg),InFile);
+	m_BLS_Filename=InFile;  //keep copy for exit
+	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
+	if (in.is_open())
+	{
+		const size_t NoEnties=e_no_procamp_items;
+		string StringEntry[e_no_procamp_items<<1];
+		{
+			char Buffer[1024];
+			for (size_t i=0;i<NoEnties;i++)
+			{
+				in>>StringEntry[i<<1];
+				in.getline(Buffer,1024);
+				StringEntry[(i<<1)+1]=Buffer;
+			}
+		}
+		in.close();
+		for (size_t i=0;i<8;i++)
+		{
+			m_ProcAmpValues[i]=atof(StringEntry[(i<<1)+1].c_str());
+		}
+	}
+
+	for (int i=0;i<e_no_procamp_items;i++)
+	{
+		UpdateSlider((ProcAmp_enum)i,true);
+		UpdateText((ProcAmp_enum)i,true);
+	}
+#endif
 	return ret;
 }
 
