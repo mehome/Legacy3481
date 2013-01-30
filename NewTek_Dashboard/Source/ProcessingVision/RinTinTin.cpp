@@ -42,9 +42,9 @@ VisionTracker::VisionTracker()
 	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ), m_bUseNoiseFilter( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
 {	
-	plane1Range.minValue = 100, plane1Range.maxValue = 200,	// red	- These values are grey - used in our sample video.
-	plane2Range.minValue = 100, plane2Range.maxValue = 210, // green
-	plane3Range.minValue = 100, plane3Range.maxValue = 210;	// blue
+	plane1Range.minValue = 130, plane1Range.maxValue = 255,	// red	- Looking for white frisbees
+	plane2Range.minValue = 130, plane2Range.maxValue = 255, // green
+	plane3Range.minValue = 130, plane3Range.maxValue = 255;	// blue
 
 	Profiler = new profile;
 	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);
@@ -175,6 +175,54 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 		// color threshold
 		VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
 	}
+
+	// *****************************************************************************************************
+	//     NEW CODE - up to the point of doing the watershed.
+	// *****************************************************************************************************
+#if 0
+	//-------------------------------------------------------------------//
+	//                Advanced Morphology: Remove Objects                //
+	//-------------------------------------------------------------------//
+
+	structElem.matrixCols = 3;
+	structElem.matrixRows = 3;
+	structElem.hexa = FALSE;
+	structElem.kernel = pKernel;
+
+	// Filters particles based on their size.
+	VisionErrChk(imaqSizeFilter(image, image, FALSE, 3, 0, &structElem));
+
+	//-------------------------------------------------------------------//
+	//                  Advanced Morphology: Fill Holes                  //
+	//-------------------------------------------------------------------//
+
+	// Fills holes in particles.
+	VisionErrChk(imaqFillHoles(image, image, TRUE));
+
+	//-------------------------------------------------------------------//
+	//                  Advanced Morphology: Danielsson                  //
+	//-------------------------------------------------------------------//
+
+	// Creates a very accurate distance map based on the Danielsson distance algorithm.
+	VisionErrChk(imaqDanielssonDistance(image, image));
+
+	//-------------------------------------------------------------------//
+	//                       Lookup Table: Equalize                      //
+	//-------------------------------------------------------------------//
+	// Calculates the histogram of the image and redistributes pixel values across
+	// the desired range to maintain the same pixel value distribution.
+	VisionErrChk(imaqGetImageType(image, &imageType));
+	VisionErrChk(imaqEqualize(image, image, 0, (imageType == IMAQ_IMAGE_U8 ? 255 : 0), NULL));
+
+	//-------------------------------------------------------------------//
+	//                             Watershed                             //
+	//-------------------------------------------------------------------//
+
+	VisionErrChk(imaqWatershedTransform(image, image, TRUE, &zoneCount));
+#endif
+
+	// *****************************************************************************************************
+	// *****************************************************************************************************
 
 	//-------------------------------------------------------------------//
 	//     Advanced Morphology: particle filtering functions             //
