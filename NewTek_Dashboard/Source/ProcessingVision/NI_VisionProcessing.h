@@ -83,9 +83,6 @@ public:
 	void SetRejectBorderObjs( bool bRejctBorder ) { m_bRejectBorderParticles = bRejctBorder; }
 	void SetUseConvexHull( bool bUseConvex )	  { m_bUseConvexHull = bUseConvex; }
 
-	void SetUseNoiseFilter( bool bNoiseFilter ) { m_bUseNoiseFilter = bNoiseFilter; }
-	void SetShowFilteredImage( bool bShowFiltered ) { m_bShowFiltered = bShowFiltered; }
-
 	// corner and and edge
 	void SetFindCorners( bool bFindCorners ) { m_bUseFindCorners = bFindCorners; }
 	void SetShowCorners( bool bShowCorners ) { if( m_bUseFindCorners ) m_bShowFindCorners = bShowCorners; }
@@ -101,9 +98,6 @@ private:
 	// particle processing opts
 	bool m_bRejectBorderParticles;	
 	bool m_bUseConvexHull;			
-
-	bool m_bUseNoiseFilter;		
-	bool m_bShowFiltered;
 
 	// corner and and edge
 	//TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms

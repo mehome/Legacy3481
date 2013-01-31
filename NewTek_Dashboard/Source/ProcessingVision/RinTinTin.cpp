@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ProcessingVision.h"
 #include "profile.h"
-#include "NI_VisionProcessing.h"
+#include "RinTinTin.h"
 
 extern VisionTracker* g_pTracker;
 
@@ -15,9 +15,8 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	}
 
 	// quick tweaks 
-	g_pTracker->SetUseMasking(false);
-	g_pTracker->SetUseNoiseFilter(false);
-	g_pTracker->SetShowFilteredImage(false);
+	g_pTracker->SetUseMasking(true);
+	g_pTracker->SetUseColorThreshold(false);
 
 	g_pTracker->Profiler.start();
 
@@ -37,18 +36,24 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 
 VisionTracker::VisionTracker()
 	: criteriaCount( 0 ), particleCriteria( NULL ),
-	  m_bUseMasking( false ), m_bShowOverlays( true ), m_bShowFiltered( false ),
+	  m_bUseMasking( false ), m_bShowOverlays( true ), m_bUseColorThreshold( false ),
 	  m_bShowAimingText( true ), m_bShowBoundsText( false ),
-	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ), m_bUseNoiseFilter( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
 {	
-	plane1Range.minValue = 130, plane1Range.maxValue = 255,	// red	- Looking for white frisbees
-	plane2Range.minValue = 130, plane2Range.maxValue = 255, // green
-	plane3Range.minValue = 130, plane3Range.maxValue = 255;	// blue
+	// threshold ranges
+	if( m_bUseColorThreshold )
+	{
+		plane1Range.minValue = 130, plane1Range.maxValue = 255,	// red
+		plane2Range.minValue = 130, plane2Range.maxValue = 255, // green
+		plane3Range.minValue = 130, plane3Range.maxValue = 255;	// blue
+	}
+	else
+		plane1Range.minValue = 143, plane1Range.maxValue = 255,	// luma
 
 	Profiler = new profile;
 	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);
 	ParticleImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
+	WorkImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 
 	// separate planes (for noise filter)
 	Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
@@ -119,6 +124,7 @@ VisionTracker::~VisionTracker()
 
 	imaqDispose(roi);
 
+	imaqDispose(WorkImageU8);
 	imaqDispose(Plane1);
 	imaqDispose(Plane2);
 	imaqDispose(Plane3);
@@ -149,115 +155,108 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	int success = 1;
 
 	//-----------------------------------------------------------------//
-	//  Color threshold and optional noise filter                      //
+	//  Threshold                                                //
 	//-----------------------------------------------------------------//
 
-	// use only for really noisy camera images.
-	if( m_bUseNoiseFilter )
+	// color threshold
+	if( m_bUseColorThreshold )
 	{
-		if( m_bShowFiltered )
-		{
-			VisionErrChk(BlurImage(InputImageRGB, InputImageRGB, IMAQ_RGB, IMAQ_RGB));
-			// color threshold
-			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
-		}
-		else
-		{
-			Image* BlurredImage = imaqCreateImage(SourceImageInfo.imageType, IMAGE_BORDER_SIZE);
-			VisionErrChk(BlurImage(BlurredImage, InputImageRGB, IMAQ_RGB, IMAQ_RGB));
-			// color threshold
-			VisionErrChk(imaqColorThreshold(ParticleImageU8, BlurredImage, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
-			imaqDispose(BlurredImage);
-		}
+		VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
 	}
 	else
 	{
-		// color threshold
-		VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+		// Extracts the luminance plane
+		VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, ParticleImageU8));
+
+		// Thresholds the image.
+		VisionErrChk(imaqThreshold(ParticleImageU8, ParticleImageU8, (float)plane1Range.minValue, (float)plane1Range.maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
 	}
 
-	// *****************************************************************************************************
-	//     NEW CODE - up to the point of doing the watershed.
-	// *****************************************************************************************************
-#if 0
 	//-------------------------------------------------------------------//
 	//                Advanced Morphology: Remove Objects                //
 	//-------------------------------------------------------------------//
 
+	int pKernel[9] = {1,1,1,
+					  1,1,1,
+					  1,1,1};	// 3x3 kernal
+	StructuringElement structElem;
 	structElem.matrixCols = 3;
 	structElem.matrixRows = 3;
 	structElem.hexa = FALSE;
 	structElem.kernel = pKernel;
 
+	int erosions = 3;
+
 	// Filters particles based on their size.
-	VisionErrChk(imaqSizeFilter(image, image, FALSE, 3, 0, &structElem));
+	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, FALSE, erosions, IMAQ_KEEP_LARGE, &structElem));
 
 	//-------------------------------------------------------------------//
 	//                  Advanced Morphology: Fill Holes                  //
 	//-------------------------------------------------------------------//
 
 	// Fills holes in particles.
-	VisionErrChk(imaqFillHoles(image, image, TRUE));
+	VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, TRUE));
 
 	//-------------------------------------------------------------------//
 	//                  Advanced Morphology: Danielsson                  //
 	//-------------------------------------------------------------------//
 
 	// Creates a very accurate distance map based on the Danielsson distance algorithm.
-	VisionErrChk(imaqDanielssonDistance(image, image));
+	VisionErrChk(imaqDanielssonDistance(WorkImageU8, ParticleImageU8));
 
 	//-------------------------------------------------------------------//
 	//                       Lookup Table: Equalize                      //
 	//-------------------------------------------------------------------//
 	// Calculates the histogram of the image and redistributes pixel values across
 	// the desired range to maintain the same pixel value distribution.
-	VisionErrChk(imaqGetImageType(image, &imageType));
-	VisionErrChk(imaqEqualize(image, image, 0, (imageType == IMAQ_IMAGE_U8 ? 255 : 0), NULL));
+	VisionErrChk(imaqEqualize(WorkImageU8, WorkImageU8, 0, 255, NULL));
+
+	//-------------------------------------------------------------------//
+	//                       Lookup Table: Equalize                      //
+	//-------------------------------------------------------------------//
+	// Calculates the histogram of the image and redistributes pixel values across
+	// the desired range to maintain the same pixel value distribution.
+	VisionErrChk(imaqEqualize(WorkImageU8, WorkImageU8, 0, 255, NULL));
 
 	//-------------------------------------------------------------------//
 	//                             Watershed                             //
 	//-------------------------------------------------------------------//
 
-	VisionErrChk(imaqWatershedTransform(image, image, TRUE, &zoneCount));
-#endif
-
-	// *****************************************************************************************************
-	// *****************************************************************************************************
+	int zoneCount;
+	VisionErrChk(imaqWatershedTransform(WorkImageU8, WorkImageU8, TRUE, &zoneCount));
 
 	//-------------------------------------------------------------------//
-	//     Advanced Morphology: particle filtering functions             //
+	//                          Basic Morphology                         //
 	//-------------------------------------------------------------------//
 
-	// fill holes
-	VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
+	// Sets the structuring element.
+	int pKernel1[9] = {0,1,0,
+			  		   1,1,1,
+					   0,1,0};
+	StructuringElement structElem1;
+	structElem1.matrixCols = 3;
+	structElem1.matrixRows = 3;
+	structElem1.hexa = FALSE;
+	structElem1.kernel = pKernel1;
 
-	// filter small particles
-	int pKernel[] = {1,1,1,
-					 1,1,1,
-					 1,1,1};	// 3x3 kernel 
-	StructuringElement structElem;
-	structElem.matrixCols = 3;
-	structElem.matrixRows = 3;
-	structElem.hexa = TRUE;
-	structElem.kernel = pKernel;
+	// Applies multiple morphological transformation to the binary image.
+	for (int i = 0 ; i < 2 ; i++)
+	{
+		VisionErrChk(imaqMorphology(WorkImageU8, WorkImageU8, IMAQ_ERODE, &structElem1));
+	}
 
-	int erosions = 2;
+	//-------------------------------------------------------------------//
+	//                       Operators: Mask Image                       //
+	//-------------------------------------------------------------------//
 
-	// Filters particles based on their size.
-	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, TRUE, erosions, IMAQ_KEEP_LARGE, &structElem));
+	// Masks the image
+	VisionErrChk(imaqMask(ParticleImageU8, ParticleImageU8, WorkImageU8));
 
-	// Eliminates particles touching the border of the image.
-	if( m_bRejectBorderParticles )
-		VisionErrChk(imaqRejectBorder(ParticleImageU8, ParticleImageU8, TRUE));
-
+#if 0
 	int numParticles = 0;
 
 	// Filters particles based on their morphological measurements.
 	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
-
-	// Computes the convex envelope for each labeled particle in the source image.
-	if( m_bUseConvexHull )
-		VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
 
 	// we want the qualifying target highest on the screen.
 	// (most valuable target)
@@ -272,10 +271,10 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 		{
 			if( m_bUseFindCorners )
 				VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
-
+#endif
 			if( m_bUseMasking )
 				imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
-
+#if 0
 			// overlay some useful info
 			for(int i = 0; i < particleList.numParticles; i++)
 			{
@@ -377,8 +376,9 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 			}	// particle loop
 		}	// num particles > 0
 	}	// show overlays
-
+#endif
 Error:
+#if 0
 	// Get return for x, y target values;
 	if( min_y < SourceImageInfo.yRes + 1 )
 	{
@@ -390,7 +390,7 @@ Error:
 		x_target = 0.0;
 		y_target = 0.0;
 	}
-
+#endif
 	int error = imaqGetLastError();
 	return success;
 }

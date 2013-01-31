@@ -79,12 +79,8 @@ public:
 	void SetShowAiming( bool bAimingText ) { m_bShowAimingText = bAimingText; }
 	void SetShowBounds( bool bBoundsText ) { m_bShowBoundsText = bBoundsText; }
 
-	// particle processing opts
-	void SetRejectBorderObjs( bool bRejctBorder ) { m_bRejectBorderParticles = bRejctBorder; }
-	void SetUseConvexHull( bool bUseConvex )	  { m_bUseConvexHull = bUseConvex; }
-
-	void SetUseNoiseFilter( bool bNoiseFilter ) { m_bUseNoiseFilter = bNoiseFilter; }
-	void SetShowFilteredImage( bool bShowFiltered ) { m_bShowFiltered = bShowFiltered; }
+	// threshold
+	void SetUseColorThreshold( bool bUserColorTresh ) {m_bUseColorThreshold = bUserColorTresh; }
 
 	// corner and and edge
 	void SetFindCorners( bool bFindCorners ) { m_bUseFindCorners = bFindCorners; }
@@ -98,12 +94,8 @@ private:
 	bool m_bShowAimingText;	
 	bool m_bShowBoundsText;	
 
-	// particle processing opts
-	bool m_bRejectBorderParticles;	
-	bool m_bUseConvexHull;			
-
-	bool m_bUseNoiseFilter;		
-	bool m_bShowFiltered;
+	// threshold method
+	bool m_bUseColorThreshold;
 
 	// corner and and edge
 	//TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
@@ -116,6 +108,7 @@ private:
 	Image *InputImageRGB;		// our input image
 	ImageInfo SourceImageInfo;	// info about our input image
 	Image *ParticleImageU8;		// 8 bit image - particle processing
+	Image *WorkImageU8;			// 8 bit image - work area
 
 	// separate planes for splitting color images
 	Image *Plane1;

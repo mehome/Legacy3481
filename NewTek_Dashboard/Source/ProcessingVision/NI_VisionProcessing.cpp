@@ -16,8 +16,6 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 
 	// quick tweaks 
 	g_pTracker->SetUseMasking(false);
-	g_pTracker->SetUseNoiseFilter(false);
-	g_pTracker->SetShowFilteredImage(false);
 
 	g_pTracker->Profiler.start();
 
@@ -37,9 +35,9 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 
 VisionTracker::VisionTracker()
 	: criteriaCount( 0 ), particleCriteria( NULL ),
-	  m_bUseMasking( false ), m_bShowOverlays( true ), m_bShowFiltered( false ),
+	  m_bUseMasking( false ), m_bShowOverlays( true ),
 	  m_bShowAimingText( true ), m_bShowBoundsText( false ),
-	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ), m_bUseNoiseFilter( false ),
+	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
 {	
 	plane1Range.minValue = 100, plane1Range.maxValue = 200,	// red	- These values are grey - used in our sample video.
@@ -152,29 +150,8 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	//  Color threshold and optional noise filter                      //
 	//-----------------------------------------------------------------//
 
-	// use only for really noisy camera images.
-	if( m_bUseNoiseFilter )
-	{
-		if( m_bShowFiltered )
-		{
-			VisionErrChk(BlurImage(InputImageRGB, InputImageRGB, IMAQ_RGB, IMAQ_RGB));
-			// color threshold
-			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
-		}
-		else
-		{
-			Image* BlurredImage = imaqCreateImage(SourceImageInfo.imageType, IMAGE_BORDER_SIZE);
-			VisionErrChk(BlurImage(BlurredImage, InputImageRGB, IMAQ_RGB, IMAQ_RGB));
-			// color threshold
-			VisionErrChk(imaqColorThreshold(ParticleImageU8, BlurredImage, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
-			imaqDispose(BlurredImage);
-		}
-	}
-	else
-	{
-		// color threshold
-		VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
-	}
+	// color threshold
+	VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
 
 	//-------------------------------------------------------------------//
 	//     Advanced Morphology: particle filtering functions             //
@@ -356,9 +333,6 @@ int VisionTracker::BlurImage(Image* DestImage, Image* SrcImage, ColorMode_enum D
 
 	int krows = 5;
 	int kcols = 5;
-
-	// 3x3 kernal adds 4 ms
-	// 5x5 kernel adds 6 ms
 
 	// simple averaging convolution
 	float kernel[] = {1,1,1,1,1,
