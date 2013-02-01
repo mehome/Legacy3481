@@ -61,11 +61,16 @@ VisionTracker::VisionTracker()
 	Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 
 	// particle filter parameters
-	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
-	float plower[] = {20, 20};	
-	float pUpper[] = {200, 200};
-	int pCalibrated[] = {0,0};
-	int pExclude[] = {0,0};
+	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR};
+	float plower[] = {1};	
+	float pUpper[] = {1.50};
+	int pCalibrated[] = {0};
+	int pExclude[] = {0};
+	//MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
+	//float plower[] = {20, 20};	
+	//float pUpper[] = {200, 200};
+	//int pCalibrated[] = {0,0};
+	//int pExclude[] = {0,0};
 
 	criteriaCount = sizeof(FilterMeasureTypes) / sizeof(FilterMeasureTypes[0]);
 
@@ -197,19 +202,17 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	// Fills holes in particles.
 	VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, TRUE));
 
+	int numParticles = 0;
+
+	// Filters particles based on their morphological measurements.
+	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
+
 	//-------------------------------------------------------------------//
 	//                  Advanced Morphology: Danielsson                  //
 	//-------------------------------------------------------------------//
-
+#if 0
 	// Creates a very accurate distance map based on the Danielsson distance algorithm.
 	VisionErrChk(imaqDanielssonDistance(WorkImageU8, ParticleImageU8));
-
-	//-------------------------------------------------------------------//
-	//                       Lookup Table: Equalize                      //
-	//-------------------------------------------------------------------//
-	// Calculates the histogram of the image and redistributes pixel values across
-	// the desired range to maintain the same pixel value distribution.
-	VisionErrChk(imaqEqualize(WorkImageU8, WorkImageU8, 0, 255, NULL));
 
 	//-------------------------------------------------------------------//
 	//                       Lookup Table: Equalize                      //
@@ -224,6 +227,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 
 	int zoneCount;
 	VisionErrChk(imaqWatershedTransform(WorkImageU8, WorkImageU8, TRUE, &zoneCount));
+
 
 	//-------------------------------------------------------------------//
 	//                          Basic Morphology                         //
@@ -251,13 +255,8 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 
 	// Masks the image
 	VisionErrChk(imaqMask(ParticleImageU8, ParticleImageU8, WorkImageU8));
-
+#endif
 #if 0
-	int numParticles = 0;
-
-	// Filters particles based on their morphological measurements.
-	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
-
 	// we want the qualifying target highest on the screen.
 	// (most valuable target)
 	int min_y = SourceImageInfo.yRes + 1;
@@ -274,6 +273,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 #endif
 			if( m_bUseMasking )
 				imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
+		
 #if 0
 			// overlay some useful info
 			for(int i = 0; i < particleList.numParticles; i++)
