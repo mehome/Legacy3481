@@ -17,6 +17,7 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	// quick tweaks 
 	g_pTracker->SetUseMasking(true);
 	g_pTracker->SetUseColorThreshold(false);
+	g_pTracker->SetShowBounds(true);
 
 	g_pTracker->Profiler.start();
 
@@ -35,7 +36,7 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 }
 
 VisionTracker::VisionTracker()
-	: criteriaCount( 0 ), particleCriteria( NULL ),
+	: criteriaCount( 0 ), particleCriteria( NULL ), m_bObjectSeparation( false ),
 	  m_bUseMasking( false ), m_bShowOverlays( true ), m_bUseColorThreshold( false ),
 	  m_bShowAimingText( true ), m_bShowBoundsText( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
@@ -207,59 +208,62 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	// Filters particles based on their morphological measurements.
 	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
 
-	//-------------------------------------------------------------------//
-	//                  Advanced Morphology: Danielsson                  //
-	//-------------------------------------------------------------------//
-#if 0
-	// Creates a very accurate distance map based on the Danielsson distance algorithm.
-	VisionErrChk(imaqDanielssonDistance(WorkImageU8, ParticleImageU8));
-
-	//-------------------------------------------------------------------//
-	//                       Lookup Table: Equalize                      //
-	//-------------------------------------------------------------------//
-	// Calculates the histogram of the image and redistributes pixel values across
-	// the desired range to maintain the same pixel value distribution.
-	VisionErrChk(imaqEqualize(WorkImageU8, WorkImageU8, 0, 255, NULL));
-
-	//-------------------------------------------------------------------//
-	//                             Watershed                             //
-	//-------------------------------------------------------------------//
-
-	int zoneCount;
-	VisionErrChk(imaqWatershedTransform(WorkImageU8, WorkImageU8, TRUE, &zoneCount));
-
-
-	//-------------------------------------------------------------------//
-	//                          Basic Morphology                         //
-	//-------------------------------------------------------------------//
-
-	// Sets the structuring element.
-	int pKernel1[9] = {0,1,0,
-			  		   1,1,1,
-					   0,1,0};
-	StructuringElement structElem1;
-	structElem1.matrixCols = 3;
-	structElem1.matrixRows = 3;
-	structElem1.hexa = FALSE;
-	structElem1.kernel = pKernel1;
-
-	// Applies multiple morphological transformation to the binary image.
-	for (int i = 0 ; i < 2 ; i++)
+	if( m_bObjectSeparation )
 	{
-		VisionErrChk(imaqMorphology(WorkImageU8, WorkImageU8, IMAQ_ERODE, &structElem1));
+		//-------------------------------------------------------------------//
+		//                  Advanced Morphology: Danielsson                  //
+		//-------------------------------------------------------------------//
+
+		// Creates a very accurate distance map based on the Danielsson distance algorithm.
+		VisionErrChk(imaqDanielssonDistance(WorkImageU8, ParticleImageU8));
+
+		//-------------------------------------------------------------------//
+		//                       Lookup Table: Equalize                      //
+		//-------------------------------------------------------------------//
+		// Calculates the histogram of the image and redistributes pixel values across
+		// the desired range to maintain the same pixel value distribution.
+		VisionErrChk(imaqEqualize(WorkImageU8, WorkImageU8, 0, 255, NULL));
+
+		//-------------------------------------------------------------------//
+		//                             Watershed                             //
+		//-------------------------------------------------------------------//
+
+		int zoneCount;
+		VisionErrChk(imaqWatershedTransform(WorkImageU8, WorkImageU8, TRUE, &zoneCount));
+
+
+		//-------------------------------------------------------------------//
+		//                          Basic Morphology                         //
+		//-------------------------------------------------------------------//
+
+		// Sets the structuring element.
+		int pKernel1[9] = {0,1,0,
+			1,1,1,
+			0,1,0};
+		StructuringElement structElem1;
+		structElem1.matrixCols = 3;
+		structElem1.matrixRows = 3;
+		structElem1.hexa = FALSE;
+		structElem1.kernel = pKernel1;
+
+		// Applies multiple morphological transformation to the binary image.
+		for (int i = 0 ; i < 2 ; i++)
+		{
+			VisionErrChk(imaqMorphology(WorkImageU8, WorkImageU8, IMAQ_ERODE, &structElem1));
+		}
+
+		//-------------------------------------------------------------------//
+		//                       Operators: Mask Image                       //
+		//-------------------------------------------------------------------//
+
+		// Masks the image
+		VisionErrChk(imaqMask(ParticleImageU8, ParticleImageU8, WorkImageU8));
+
 	}
 
-	//-------------------------------------------------------------------//
-	//                       Operators: Mask Image                       //
-	//-------------------------------------------------------------------//
-
-	// Masks the image
-	VisionErrChk(imaqMask(ParticleImageU8, ParticleImageU8, WorkImageU8));
-#endif
-#if 0
-	// we want the qualifying target highest on the screen.
-	// (most valuable target)
-	int min_y = SourceImageInfo.yRes + 1;
+	// we want the qualifying target lowest on the screen.
+	// (closest target)
+	int max_y = 0;
 	int index = 0;
 
 	if( m_bShowOverlays )
@@ -270,11 +274,10 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 		{
 			if( m_bUseFindCorners )
 				VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
-#endif
+
 			if( m_bUseMasking )
 				imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
 		
-#if 0
 			// overlay some useful info
 			for(int i = 0; i < particleList.numParticles; i++)
 			{
@@ -282,10 +285,10 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 				Point P2;
 				Rect rect;
 
-				// track highest center x
-				if( particleList.particleData[i].center.y < min_y )
+				// track lowest center y (image coords, top is zero.)
+				if( particleList.particleData[i].center.y > max_y )
 				{
-					min_y = particleList.particleData[i].center.y;
+					max_y = particleList.particleData[i].center.y;
 					index = i;
 				}
 
@@ -296,7 +299,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 				if( m_bShowAimingText )
 				{
 					TextPoint.x = particleList.particleData[i].center.x;
-					TextPoint.y = particleList.particleData[i].center.y + 20;
+					TextPoint.y = particleList.particleData[i].center.y + 50;
 					sprintf_s(TextBuffer, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
 					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
 					TextPoint.y += 16;
@@ -311,6 +314,12 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 					// center x, y
 					TextPoint.y += 16;
 					sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
+					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+
+					// aspect (don't have info for area ratio...)
+					TextPoint.y += 16;
+					sprintf_s(TextBuffer, 256, "%f", (float)particleList.particleData[i].bound_width / (float)particleList.particleData[i].bound_height); 
+													//	 ,(float)particleList.particleData[i].bound_width * (float)particleList.particleData[i].bound_height);
 					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
 
 				}
@@ -376,11 +385,10 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 			}	// particle loop
 		}	// num particles > 0
 	}	// show overlays
-#endif
+
 Error:
-#if 0
 	// Get return for x, y target values;
-	if( min_y < SourceImageInfo.yRes + 1 )
+	if( max_y > 0 )
 	{
 		x_target = (double)particleList.particleData[index].AimSys.x;
 		y_target = (double)particleList.particleData[index].AimSys.y;
@@ -390,7 +398,7 @@ Error:
 		x_target = 0.0;
 		y_target = 0.0;
 	}
-#endif
+
 	int error = imaqGetLastError();
 	return success;
 }

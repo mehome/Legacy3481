@@ -48,9 +48,9 @@ struct ParticleList
 	{
 		numParticles = 0;
 		particleData.clear();
-		area_threshold = 0.8f;
-		aspectMin = 0.8f;
-		aspectMax = 1.33333333f;
+		area_threshold = 0.5f;
+		aspectMin = 1.0f;
+		aspectMax = 10.0f;
 	}
 
 	int numParticles;
@@ -82,6 +82,8 @@ public:
 	// threshold
 	void SetUseColorThreshold( bool bUserColorTresh ) {m_bUseColorThreshold = bUserColorTresh; }
 
+	// object separation
+	void EnableObjectSeparation( bool bObjsSep ) {m_bObjectSeparation = bObjsSep; }
 	// corner and and edge
 	void SetFindCorners( bool bFindCorners ) { m_bUseFindCorners = bFindCorners; }
 	void SetShowCorners( bool bShowCorners ) { if( m_bUseFindCorners ) m_bShowFindCorners = bShowCorners; }
@@ -93,6 +95,9 @@ private:
 	bool m_bShowOverlays;	
 	bool m_bShowAimingText;	
 	bool m_bShowBoundsText;	
+
+	// object separation
+	bool m_bObjectSeparation;
 
 	// threshold method
 	bool m_bUseColorThreshold;
