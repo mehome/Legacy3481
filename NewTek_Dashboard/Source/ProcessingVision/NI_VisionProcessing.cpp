@@ -15,7 +15,8 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	}
 
 	// quick tweaks 
-	g_pTracker->SetUseMasking(false);
+	g_pTracker->SetUseMasking(true);
+	g_pTracker->SetShowBounds(true);
 
 	g_pTracker->Profiler.start();
 
@@ -35,18 +36,29 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 
 VisionTracker::VisionTracker()
 	: criteriaCount( 0 ), particleCriteria( NULL ),
-	  m_bUseMasking( false ), m_bShowOverlays( true ),
+	  m_bUseMasking( false ), m_bShowOverlays( true ), m_bShowThreshold( false ),
 	  m_bShowAimingText( true ), m_bShowBoundsText( false ),
 	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
 {	
-	plane1Range.minValue = 100, plane1Range.maxValue = 200,	// red	- These values are grey - used in our sample video.
-	plane2Range.minValue = 100, plane2Range.maxValue = 210, // green
-	plane3Range.minValue = 100, plane3Range.maxValue = 210;	// blue
+	// hsv - green
+	plane1Range.minValue = 75, plane1Range.maxValue = 150,	// Hue	
+	plane2Range.minValue = 100, plane2Range.maxValue = 255, // Saturation
+	plane3Range.minValue = 150, plane3Range.maxValue = 255;	// Value
+
+	// rgb - green
+//  plane1Range.minValue = 0, plane1Range.maxValue = 188,	// red
+//	plane2Range.minValue = 163, plane2Range.maxValue = 255, // green
+//	plane3Range.minValue = 9, plane3Range.maxValue = 255;	// blue
+
+//	plane1Range.minValue = 100, plane1Range.maxValue = 200,	// red	- These values are grey - used in our sample video.
+//	plane2Range.minValue = 100, plane2Range.maxValue = 210, // green
+//	plane3Range.minValue = 100, plane3Range.maxValue = 210;	// blue
 
 	Profiler = new profile;
 	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);
 	ParticleImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
+	ThresholdImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 
 	// separate planes (for noise filter)
 	Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
@@ -112,6 +124,7 @@ VisionTracker::~VisionTracker()
 {
 	imaqDispose(InputImageRGB);
 	imaqDispose(ParticleImageU8);
+	imaqDispose(ThresholdImageU8);
 
 	delete[] particleCriteria;
 
@@ -151,14 +164,22 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	//-----------------------------------------------------------------//
 
 	// color threshold
-	VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+	if( m_bShowThreshold )
+	{
+		//	VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+		VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, &plane1Range, &plane2Range, &plane3Range));
 
-	//-------------------------------------------------------------------//
-	//     Advanced Morphology: particle filtering functions             //
-	//-------------------------------------------------------------------//
+		// fill holes
+		VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, true));
+	}
+	else
+	{
+		//	VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+		VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, &plane1Range, &plane2Range, &plane3Range));
 
-	// fill holes
-	VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
+		// fill holes
+		VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
+	}
 
 	// filter small particles
 	int pKernel[] = {1,1,1,
@@ -196,6 +217,11 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	if( m_bShowOverlays )
 	{
 		VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
+
+		if( m_bShowThreshold )
+		{
+			imaqMask(InputImageRGB, InputImageRGB, ThresholdImageU8);
+		}
 
 		if(particleList.numParticles > 0)
 		{

@@ -74,7 +74,8 @@ public:
 
 	// settings accessors
 	// display opts
-	void SetUseMasking( bool bMasking )    { if( m_bShowOverlays ) m_bUseMasking = bMasking; }
+	void SetShowThreshold( bool bShowThreshold ) {m_bShowThreshold = bShowThreshold; m_bUseMasking = false;}
+	void SetUseMasking( bool bMasking )    { if( m_bShowOverlays && !m_bShowThreshold ) m_bUseMasking = bMasking; }
 	void SetShowOverlays( bool bOverlays ) { m_bShowOverlays = bOverlays; }
 	void SetShowAiming( bool bAimingText ) { m_bShowAimingText = bAimingText; }
 	void SetShowBounds( bool bBoundsText ) { m_bShowBoundsText = bBoundsText; }
@@ -95,6 +96,7 @@ private:
 	bool m_bShowOverlays;	
 	bool m_bShowAimingText;	
 	bool m_bShowBoundsText;	
+	bool m_bShowThreshold;
 
 	// object separation
 	bool m_bObjectSeparation;
@@ -114,7 +116,7 @@ private:
 	ImageInfo SourceImageInfo;	// info about our input image
 	Image *ParticleImageU8;		// 8 bit image - particle processing
 	Image *WorkImageU8;			// 8 bit image - work area
-
+	Image *ThresholdImageU8;
 	// separate planes for splitting color images
 	Image *Plane1;
 	Image *Plane2;

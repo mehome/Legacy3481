@@ -50,7 +50,7 @@ struct ParticleList
 		particleData.clear();
 		area_threshold = 0.8f;
 		aspectMin = 0.8f;
-		aspectMax = 1.33333333f;
+		aspectMax = 1.4f;
 	}
 
 	int numParticles;
@@ -74,7 +74,8 @@ public:
 
 	// settings accessors
 	// display opts
-	void SetUseMasking( bool bMasking )    { if( m_bShowOverlays ) m_bUseMasking = bMasking; }
+	void SetShowThreshold( bool bShowThreshold ) {m_bShowThreshold = bShowThreshold; m_bUseMasking = false;}
+	void SetUseMasking( bool bMasking )    { if( m_bShowOverlays && !m_bShowThreshold ) m_bUseMasking = bMasking; }
 	void SetShowOverlays( bool bOverlays ) { m_bShowOverlays = bOverlays; }
 	void SetShowAiming( bool bAimingText ) { m_bShowAimingText = bAimingText; }
 	void SetShowBounds( bool bBoundsText ) { m_bShowBoundsText = bBoundsText; }
@@ -94,6 +95,7 @@ private:
 	bool m_bShowOverlays;	
 	bool m_bShowAimingText;	
 	bool m_bShowBoundsText;	
+	bool m_bShowThreshold;
 
 	// particle processing opts
 	bool m_bRejectBorderParticles;	
@@ -110,6 +112,7 @@ private:
 	Image *InputImageRGB;		// our input image
 	ImageInfo SourceImageInfo;	// info about our input image
 	Image *ParticleImageU8;		// 8 bit image - particle processing
+	Image *ThresholdImageU8;
 
 	// separate planes for splitting color images
 	Image *Plane1;

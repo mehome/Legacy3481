@@ -15,7 +15,9 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	}
 
 	// quick tweaks 
-	g_pTracker->SetUseMasking(true);
+	g_pTracker->SetUseMasking(false);
+	g_pTracker->SetShowThreshold(true);
+
 	g_pTracker->SetUseColorThreshold(false);
 	g_pTracker->SetShowBounds(true);
 
@@ -38,7 +40,7 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 VisionTracker::VisionTracker()
 	: criteriaCount( 0 ), particleCriteria( NULL ), m_bObjectSeparation( false ),
 	  m_bUseMasking( false ), m_bShowOverlays( true ), m_bUseColorThreshold( false ),
-	  m_bShowAimingText( true ), m_bShowBoundsText( false ),
+	  m_bShowAimingText( true ), m_bShowBoundsText( false ), m_bShowThreshold( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
 {	
 	// threshold ranges
@@ -55,7 +57,7 @@ VisionTracker::VisionTracker()
 	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);
 	ParticleImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	WorkImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
-
+	ThresholdImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	// separate planes (for noise filter)
 	Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
@@ -125,6 +127,7 @@ VisionTracker::~VisionTracker()
 {
 	imaqDispose(InputImageRGB);
 	imaqDispose(ParticleImageU8);
+	imaqDispose(ThresholdImageU8);
 
 	delete[] particleCriteria;
 
@@ -167,15 +170,45 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	// color threshold
 	if( m_bUseColorThreshold )
 	{
-		VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+		if( m_bShowThreshold )
+		{
+			VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+
+			// Fills holes in particles.
+			VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, TRUE));
+		}
+		else
+		{
+			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+
+			// Fills holes in particles.
+			VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, TRUE));
+		}		
 	}
 	else
 	{
-		// Extracts the luminance plane
-		VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, ParticleImageU8));
+		if( m_bShowThreshold )
+		{
+			// Extracts the luminance plane
+			VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, ThresholdImageU8));
 
-		// Thresholds the image.
-		VisionErrChk(imaqThreshold(ParticleImageU8, ParticleImageU8, (float)plane1Range.minValue, (float)plane1Range.maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
+			// Thresholds the image.
+			VisionErrChk(imaqThreshold(ThresholdImageU8, ThresholdImageU8, (float)plane1Range.minValue, (float)plane1Range.maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
+
+			// Fills holes in particles.
+			VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, TRUE));
+		}
+		else
+		{
+			// Extracts the luminance plane
+			VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, ParticleImageU8));
+
+			// Thresholds the image.
+			VisionErrChk(imaqThreshold(ParticleImageU8, ParticleImageU8, (float)plane1Range.minValue, (float)plane1Range.maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
+
+			// Fills holes in particles.
+			VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, TRUE));
+		}	
 	}
 
 	//-------------------------------------------------------------------//
@@ -196,12 +229,6 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, FALSE, erosions, IMAQ_KEEP_LARGE, &structElem));
 
-	//-------------------------------------------------------------------//
-	//                  Advanced Morphology: Fill Holes                  //
-	//-------------------------------------------------------------------//
-
-	// Fills holes in particles.
-	VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, TRUE));
 
 	int numParticles = 0;
 
@@ -269,6 +296,11 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	if( m_bShowOverlays )
 	{
 		VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
+
+		if( m_bShowThreshold )
+		{
+			imaqMask(InputImageRGB, InputImageRGB, ThresholdImageU8);
+		}
 
 		if(particleList.numParticles > 0)
 		{
