@@ -15,8 +15,9 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	}
 
 	// quick tweaks 
-	g_pTracker->SetUseMasking(true);
+	g_pTracker->SetUseMasking(false);
 	g_pTracker->SetShowBounds(true);
+	g_pTracker->SetShowThreshold(true);
 
 	g_pTracker->Profiler.start();
 
@@ -43,8 +44,8 @@ VisionTracker::VisionTracker()
 {	
 	// hsv - green
 	plane1Range.minValue = 75, plane1Range.maxValue = 150,	// Hue	
-	plane2Range.minValue = 100, plane2Range.maxValue = 255, // Saturation
-	plane3Range.minValue = 150, plane3Range.maxValue = 255;	// Value
+	plane2Range.minValue = 50, plane2Range.maxValue = 255, // Saturation
+	plane3Range.minValue = 50, plane3Range.maxValue = 250;	// Value
 
 	// rgb - green
 //  plane1Range.minValue = 0, plane1Range.maxValue = 188,	// red
