@@ -215,9 +215,9 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	//                Advanced Morphology: Remove Objects                //
 	//-------------------------------------------------------------------//
 
-	int pKernel[9] = {1,1,1,
-					  1,1,1,
-					  1,1,1};	// 3x3 kernal
+	int pKernel[] = {1,1,1,
+				     1,1,1,
+					 1,1,1};	// 3x3 kernel
 	StructuringElement structElem;
 	structElem.matrixCols = 3;
 	structElem.matrixRows = 3;
@@ -444,9 +444,6 @@ int VisionTracker::BlurImage(Image* DestImage, Image* SrcImage, ColorMode_enum D
 
 	int krows = 5;
 	int kcols = 5;
-
-	// 3x3 kernal adds 4 ms
-	// 5x5 kernel adds 6 ms
 
 	// simple averaging convolution
 	float kernel[] = {1,1,1,1,1,

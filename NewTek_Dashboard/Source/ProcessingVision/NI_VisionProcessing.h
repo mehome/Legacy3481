@@ -53,6 +53,13 @@ struct ParticleList
 		aspectMax = 1.4f;
 	}
 
+	SetParticleParams( float thresh, float aspMin, float aspMax )
+	{
+		area_threshold = thresh;
+		aspectMin = aspMin;
+		aspectMax = aspMax;
+	}
+
 	int numParticles;
 	float area_threshold;	// particles must fill this much of their bounding box to qualify.
 	float aspectMin;		// particle bounding box must be in this range of aspect ratios.
