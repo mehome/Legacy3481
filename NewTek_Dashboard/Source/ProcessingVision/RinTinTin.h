@@ -117,6 +117,7 @@ private:
 	Image *ParticleImageU8;		// 8 bit image - particle processing
 	Image *WorkImageU8;			// 8 bit image - work area
 	Image *ThresholdImageU8;
+
 	// separate planes for splitting color images
 	Image *Plane1;
 	Image *Plane2;

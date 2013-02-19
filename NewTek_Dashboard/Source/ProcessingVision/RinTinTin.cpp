@@ -58,6 +58,7 @@ VisionTracker::VisionTracker()
 	ParticleImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	WorkImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	ThresholdImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
+
 	// separate planes (for noise filter)
 	Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
@@ -164,7 +165,7 @@ int VisionTracker::ProcessImage(double &x_target, double &y_target)
 	int success = 1;
 
 	//-----------------------------------------------------------------//
-	//  Threshold                                                //
+	//  Threshold                                                      //
 	//-----------------------------------------------------------------//
 
 	// color threshold
