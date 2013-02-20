@@ -48,9 +48,16 @@ struct ParticleList
 	{
 		numParticles = 0;
 		particleData.clear();
-		area_threshold = 0.5f;
-		aspectMin = 1.0f;
-		aspectMax = 10.0f;
+		area_threshold = 0.8f;
+		aspectMin = 0.8f;
+		aspectMax = 1.4f;
+	}
+
+	void SetParticleParams( float thresh, float aspMin, float aspMax )
+	{
+		area_threshold = thresh;
+		aspectMin = aspMin;
+		aspectMax = aspMax;
 	}
 
 	int numParticles;
@@ -64,9 +71,11 @@ class VisionTracker
 {
 public:
 	VisionTracker();
-	~VisionTracker();
+	virtual ~VisionTracker();
 
-	int ProcessImage(double &x, double &y);
+	// override.
+	virtual int ProcessImage(double &x, double &y) = 0;
+	
 	int GetFrame(Bitmap_Frame *Frame);
 	void ReturnFrame(Bitmap_Frame *Frame);
 
@@ -80,16 +89,21 @@ public:
 	void SetShowAiming( bool bAimingText ) { m_bShowAimingText = bAimingText; }
 	void SetShowBounds( bool bBoundsText ) { m_bShowBoundsText = bBoundsText; }
 
+	// particle processing opts
+	void SetRejectBorderObjs( bool bRejctBorder ) { m_bRejectBorderParticles = bRejctBorder; }
+	void SetUseConvexHull( bool bUseConvex )	  { m_bUseConvexHull = bUseConvex; }
+
 	// threshold
 	void SetUseColorThreshold( bool bUserColorTresh ) {m_bUseColorThreshold = bUserColorTresh; }
 
 	// object separation
 	void EnableObjectSeparation( bool bObjsSep ) {m_bObjectSeparation = bObjsSep; }
+
 	// corner and and edge
 	void SetFindCorners( bool bFindCorners ) { m_bUseFindCorners = bFindCorners; }
 	void SetShowCorners( bool bShowCorners ) { if( m_bUseFindCorners ) m_bShowFindCorners = bShowCorners; }
 
-private:
+protected:
 	// option switches
 	// display opts
 	bool m_bUseMasking;		// dependent on show overlays
@@ -98,6 +112,10 @@ private:
 	bool m_bShowBoundsText;	
 	bool m_bShowThreshold;
 
+	// particle processing opts
+	bool m_bRejectBorderParticles;	
+	bool m_bUseConvexHull;			
+
 	// object separation
 	bool m_bObjectSeparation;
 
@@ -105,9 +123,6 @@ private:
 	bool m_bUseColorThreshold;
 
 	// corner and and edge
-	//TODO On my xd300 this makes the average frame time around 100ms (sometimes 200ms)... with disabled it can stay within 33ms
-	// Let's keep checked in disabled as long as this remains true... Note: this appears to work just as well without it
-	//  [12/15/2012 James]
 	bool m_bUseFindCorners;		
 	bool m_bShowFindCorners;	// dependent on find corners
 
@@ -147,10 +162,12 @@ private:
 	// Edge / corner finding
 	ROI *roi;
 
-	int BlurImage(Image* DestImage, Image* SrcImage, ColorMode_enum DestColorMOde, ColorMode_enum SrcColorMode);
 	void InitParticleFilter(MeasurementType FilterMeasureTypes[], float plower[], float pUpper[], int pCalibrated[],
 		int pExclude[], int rejectMatches, int connectivity);
 	int GetParticles(Image* image, int connectivity, ParticleList& particleList);
+
+	// not used in current implementations
+	int BlurImage(Image* DestImage, Image* SrcImage, ColorMode_enum DestColorMOde, ColorMode_enum SrcColorMode);
 	int FindParticleCorners(Image* image, ParticleList& particleList);
 	int FindEdge(Image* image, ROI* roi, RakeDirection pDirection, unsigned int pStepSize, ParticleData& particleData, int lineIndex);
 };

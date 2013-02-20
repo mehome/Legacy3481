@@ -1,81 +1,25 @@
 #include "stdafx.h"
 #include "ProcessingVision.h"
 #include "profile.h"
-#include "NI_VisionProcessing.h"
-
-extern VisionTracker* g_pTracker;
-
-Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target)
-{
-	if( g_pTracker == NULL )
-	{
-		g_pTracker = new VisionTracker();
-		if( g_pTracker == NULL)
-			return Frame;
-	}
-
-	// quick tweaks 
-	g_pTracker->SetUseMasking(false);
-	g_pTracker->SetShowBounds(true);
-	g_pTracker->SetShowThreshold(true);
-
-	g_pTracker->Profiler.start();
-
-	g_pTracker->GetFrame(Frame);
-
-	// do the actual processing
-	g_pTracker->ProcessImage(x_target, y_target);
-
-	// Return our processed image back to our outgoing frame.
-	g_pTracker->ReturnFrame(Frame);
-
-	g_pTracker->Profiler.stop();
-	g_pTracker->Profiler.display(L"vision:");
-
-	return Frame;
-}
+#include "NI_VisionProcessingBase.h"
 
 VisionTracker::VisionTracker()
-	: criteriaCount( 0 ), particleCriteria( NULL ),
+	: criteriaCount( 0 ), particleCriteria( NULL ), m_bObjectSeparation( false ),
 	  m_bUseMasking( false ), m_bShowOverlays( true ), m_bShowThreshold( false ),
-	  m_bShowAimingText( true ), m_bShowBoundsText( false ),
+	  m_bShowAimingText( true ), m_bShowBoundsText( false ), m_bUseColorThreshold( false ),
 	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
 {	
-	// hsv - green
-	plane1Range.minValue = 75, plane1Range.maxValue = 150,	// Hue	
-	plane2Range.minValue = 50, plane2Range.maxValue = 255, // Saturation
-	plane3Range.minValue = 50, plane3Range.maxValue = 250;	// Value
-
-	// rgb - green
-//  plane1Range.minValue = 0, plane1Range.maxValue = 188,	// red
-//	plane2Range.minValue = 163, plane2Range.maxValue = 255, // green
-//	plane3Range.minValue = 9, plane3Range.maxValue = 255;	// blue
-
-//	plane1Range.minValue = 100, plane1Range.maxValue = 200,	// red	- These values are grey - used in our sample video.
-//	plane2Range.minValue = 100, plane2Range.maxValue = 210, // green
-//	plane3Range.minValue = 100, plane3Range.maxValue = 210;	// blue
-
 	Profiler = new profile;
 	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);
 	ParticleImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
+	WorkImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	ThresholdImageU8 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 
 	// separate planes (for noise filter)
 	Plane1 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	Plane2 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
 	Plane3 = imaqCreateImage(IMAQ_IMAGE_U8, IMAGE_BORDER_SIZE);
-
-	// particle filter parameters
-	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
-	float plower[] = {20, 20};	
-	float pUpper[] = {200, 200};
-	int pCalibrated[] = {0,0};
-	int pExclude[] = {0,0};
-
-	criteriaCount = sizeof(FilterMeasureTypes) / sizeof(FilterMeasureTypes[0]);
-
-	InitParticleFilter(FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE);
 
 	// text drawing setup
 	strcpy_s(textOps.fontName, 32, "Arial");
@@ -131,6 +75,7 @@ VisionTracker::~VisionTracker()
 
 	imaqDispose(roi);
 
+	imaqDispose(WorkImageU8);
 	imaqDispose(Plane1);
 	imaqDispose(Plane2);
 	imaqDispose(Plane3);
@@ -155,202 +100,6 @@ void VisionTracker::ReturnFrame(Bitmap_Frame *Frame)
 		imaqDispose(pImageArray);
 	}
 }
-
-int VisionTracker::ProcessImage(double &x_target, double &y_target)
-{
-	int success = 1;
-
-	//-----------------------------------------------------------------//
-	//  Color threshold and optional noise filter                      //
-	//-----------------------------------------------------------------//
-
-	// color threshold
-	if( m_bShowThreshold )
-	{
-		//	VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
-		VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, &plane1Range, &plane2Range, &plane3Range));
-
-		// fill holes
-		VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, true));
-	}
-	else
-	{
-		//	VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
-		VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, &plane1Range, &plane2Range, &plane3Range));
-
-		// fill holes
-		VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
-	}
-
-	// filter small particles
-	int pKernel[] = {1,1,1,
-					 1,1,1,
-					 1,1,1};	// 3x3 kernel 
-	StructuringElement structElem;
-	structElem.matrixCols = 3;
-	structElem.matrixRows = 3;
-	structElem.hexa = TRUE;
-	structElem.kernel = pKernel;
-
-	int erosions = 2;
-
-	// Filters particles based on their size.
-	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, TRUE, erosions, IMAQ_KEEP_LARGE, &structElem));
-
-	// Eliminates particles touching the border of the image.
-	if( m_bRejectBorderParticles )
-		VisionErrChk(imaqRejectBorder(ParticleImageU8, ParticleImageU8, TRUE));
-
-	int numParticles = 0;
-
-	// Filters particles based on their morphological measurements.
-	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
-
-	// Computes the convex envelope for each labeled particle in the source image.
-	if( m_bUseConvexHull )
-		VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
-
-	// we want the qualifying target highest on the screen.
-	// (most valuable target)
-	int min_y = SourceImageInfo.yRes + 1;
-	int index = 0;
-
-	if( m_bShowOverlays )
-	{
-		VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
-
-		if( m_bShowThreshold )
-		{
-			imaqMask(InputImageRGB, InputImageRGB, ThresholdImageU8);
-		}
-
-		if(particleList.numParticles > 0)
-		{
-			if( m_bUseFindCorners )
-				VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
-
-			if( m_bUseMasking )
-				imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
-
-			// overlay some useful info
-			for(int i = 0; i < particleList.numParticles; i++)
-			{
-				Point P1;
-				Point P2;
-				Rect rect;
-
-				// track highest center x
-				if( particleList.particleData[i].center.y < min_y )
-				{
-					min_y = particleList.particleData[i].center.y;
-					index = i;
-				}
-
-				// write some text to show aiming point 
-				Point TextPoint;
-				int fu;
-
-				if( m_bShowAimingText )
-				{
-					TextPoint.x = particleList.particleData[i].center.x;
-					TextPoint.y = particleList.particleData[i].center.y + 20;
-					sprintf_s(TextBuffer, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
-					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
-					TextPoint.y += 16;
-				}
-
-				if( m_bShowBoundsText )
-				{
-					// show size of bounding box
-					sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].bound_width, particleList.particleData[i].bound_height);
-					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
-
-					// center x, y
-					TextPoint.y += 16;
-					sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
-					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
-
-				}
-
-				// draw a line from target CoM to center of screen
-				P1.x = particleList.particleData[i].center.x;
-				P1.y = particleList.particleData[i].center.y;
-				P2.x = SourceImageInfo.xRes / 2;
-				P2.y = SourceImageInfo.yRes / 2;
-				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
-
-				// small crosshair at center of mass
-				P1.x = particleList.particleData[i].center.x - 6;
-				P1.y = particleList.particleData[i].center.y;
-				P2.x = particleList.particleData[i].center.x + 6;
-				P2.y = particleList.particleData[i].center.y;
-
-				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
-
-				P1.x = particleList.particleData[i].center.x;
-				P1.y = particleList.particleData[i].center.y - 6;
-				P2.x = particleList.particleData[i].center.x;
-				P2.y = particleList.particleData[i].center.y + 6;
-
-				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
-
-				// bounding box
-				rect.top = particleList.particleData[i].bound_top;
-				rect.left = particleList.particleData[i].bound_left;
-				rect.height = particleList.particleData[i].bound_height;
-				rect.width = particleList.particleData[i].bound_width;
-
-				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
-
-				// center box
-				rect.top = SourceImageInfo.yRes / 2 - 5;
-				rect.left = SourceImageInfo.xRes / 2 - 5;
-				rect.height = 10;
-				rect.width = 10; 
-
-				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_PAINT_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
-				
-				if( m_bUseFindCorners && m_bShowFindCorners )
-				{
-					// corner points
-					for(int j = 0; j < 4; j++)
-					{
-						P1.x = (int)particleList.particleData[i].Intersections[j].x - 6;
-						P1.y = (int)particleList.particleData[i].Intersections[j].y;
-						P2.x = (int)particleList.particleData[i].Intersections[j].x + 6;
-						P2.y = (int)particleList.particleData[i].Intersections[j].y;
-
-						imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
-
-						P1.x = (int)particleList.particleData[i].Intersections[j].x;
-						P1.y = (int)particleList.particleData[i].Intersections[j].y - 6;
-						P2.x = (int)particleList.particleData[i].Intersections[j].x;
-						P2.y = (int)particleList.particleData[i].Intersections[j].y + 6;
-
-						imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
-					}
-				}
-			}	// particle loop
-		}	// num particles > 0
-	}	// show overlays
-
-Error:
-	// Get return for x, y target values;
-	if( min_y < SourceImageInfo.yRes + 1 )
-	{
-		x_target = (double)particleList.particleData[index].AimSys.x;
-		y_target = (double)particleList.particleData[index].AimSys.y;
-	}
-	else
-	{
-		x_target = 0.0;
-		y_target = 0.0;
-	}
-
-	int error = imaqGetLastError();
-	return success;
-}
-
 
 int VisionTracker::BlurImage(Image* DestImage, Image* SrcImage, ColorMode_enum DestColorMOde, ColorMode_enum SrcColorMode)
 {

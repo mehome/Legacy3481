@@ -1,9 +1,13 @@
 
 #include "stdafx.h"
 #include "ProcessingVision.h"
+#include "NI_VisionProcessingBase.h"
+#include "VisionGoalTracker.h"
+#include "VisionRinTinTinTracker.h"
 #undef  __UseSampleExample__
 
 UDP_Client_Interface *g_UDP_Output=NULL;
+extern VisionTracker* g_pTracker;
 
 //Give something cool to look at
 class SineWaveMaker
@@ -39,6 +43,36 @@ class SineWaveMaker
 		double m_rho,m_rho2;
 } g_TestSample;
 
+Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target)
+{
+	if( g_pTracker == NULL )
+	{							// TODO: keep instances of both, add selection call.
+		g_pTracker = new /*VisionRinTinTinTracker( true );*/ VisionGoalTracker();
+		if( g_pTracker == NULL)
+			return Frame;
+
+		// quick tweaks 
+		g_pTracker->SetShowThreshold(false);
+		g_pTracker->SetUseMasking(true);
+		g_pTracker->SetUseColorThreshold(true);
+		g_pTracker->SetShowBounds(true);
+	}
+
+	g_pTracker->Profiler.start();
+
+	g_pTracker->GetFrame(Frame);
+
+	// do the actual processing
+	g_pTracker->ProcessImage(x_target, y_target);
+
+	// Return our processed image back to our outgoing frame.
+	g_pTracker->ReturnFrame(Frame);
+
+	g_pTracker->Profiler.stop();
+	g_pTracker->Profiler.display(L"vision:");
+
+	return Frame;
+}
 
 extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *Frame)
 {

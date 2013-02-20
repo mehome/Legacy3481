@@ -1,6 +1,6 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
-#include "NI_VisionProcessing.h"
+#include "NI_VisionProcessingBase.h"
 
 VisionTracker* g_pTracker = NULL;
 

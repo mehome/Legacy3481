@@ -197,7 +197,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\NI_VisionProcessing.cpp"
+				RelativePath=".\NI_VisionProcessingBase.cpp"
 				>
 			</File>
 			<File
@@ -232,6 +232,14 @@
 				RelativePath=".\UDP_Client.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\VisionGoalTracker.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VisionRinTinTinTracker.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -239,7 +247,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\NI_VisionProcessing.h"
+				RelativePath=".\NI_VisionProcessingBase.h"
 				>
 			</File>
 			<File
@@ -256,6 +264,14 @@
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VisionGoalTracker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VisionRinTinTinTracker.h"
 				>
 			</File>
 		</Filter>

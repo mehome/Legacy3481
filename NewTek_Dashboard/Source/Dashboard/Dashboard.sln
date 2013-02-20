@@ -23,11 +23,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Controls", "..\Controls\Con
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcAmp", "..\ProcAmp\ProcAmp.vcproj", "{40C81C1D-8ABD-4282-8298-3750EEC0B623}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RinTinTin", "..\ProcessingVision\RinTinTin.vcproj", "{416EB6F1-90AF-4590-B390-5AFDD3193530}"
-	ProjectSection(ProjectDependencies) = postProject
-		{455B6FC3-BCD0-4927-B561-55F896A96185} = {455B6FC3-BCD0-4927-B561-55F896A96185}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -58,10 +53,6 @@ Global
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623}.Debug|Win32.Build.0 = Debug|Win32
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623}.Release|Win32.ActiveCfg = Release|Win32
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623}.Release|Win32.Build.0 = Release|Win32
-		{416EB6F1-90AF-4590-B390-5AFDD3193530}.Debug|Win32.ActiveCfg = Debug|Win32
-		{416EB6F1-90AF-4590-B390-5AFDD3193530}.Debug|Win32.Build.0 = Debug|Win32
-		{416EB6F1-90AF-4590-B390-5AFDD3193530}.Release|Win32.ActiveCfg = Release|Win32
-		{416EB6F1-90AF-4590-B390-5AFDD3193530}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
