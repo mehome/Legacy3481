@@ -1,81 +1,82 @@
 #pragma once
 
-// A read-write lock class.
-//
-// In general this will allow many reads at once, but only a single write.
-// A read and write cannot occur at the same time. Although this is a
-// very efficient implementation, bear in mind that in most cases it is
-// still slightly slower than a single critical section. In general, the
-// performance is still good enough that it is likely to be recommended.
-//
-// This implementation supports recursion, but not elevation. This means
-// that you can perform multiple reads and multiple writes on the same
-// thread. What you cannot do however is perform a read, then write without
-// first doing a read unlock.
-//
-// Unlike most implementations, this also supports try_lock functions to
-// attempt to recover a lock quickly.
-//
-// Compared to the Intel TBB, CodeGuru, .Net implementaionts this should
-// be significantly faster and does not spin-lock for waiting threads.
-//
 struct FRAMEWORKCOMMUNICATION3_API read_write_lock
-{            // Constructor
-           read_write_lock( void );
+{			// Constructor
+			read_write_lock( void );
 
-           // Destructor
-           ~read_write_lock( void );
+			// Destructor
+			~read_write_lock( void );
 
-           // Lock this object for reading
-           void read_lock( void );
+			// Deliberately not implemented
+			explicit read_write_lock( const read_write_lock& from ) { assert( false ); }
+			void operator= ( const read_write_lock& from )		{ assert( false ); }
 
-		   // Try to lock this object for reading.
-           bool try_read_lock( void );
+			// Lock this object for reading
+			__forceinline void read_lock( void )				{ fcn_AcquireSRWLockShared( &m_lock ); }
 
-		   // Unlock this object for reading
-           void read_unlock( void );
+			// Try to lock this object for reading.
+			__forceinline const bool try_read_lock( void )		{ return fcn_TryAcquireSRWLockShared( &m_lock ) ? true : false; }
 
-           // Lock this object for writing
-           void write_lock( void );
+			// Unlock this object for reading
+			__forceinline void read_unlock( void )				{ fcn_ReleaseSRWLockShared( &m_lock ); }
 
-		   // Try to lock this object for writing
-           bool try_write_lock( void );
+			// Lock this object for writing
+			__forceinline void write_lock( void )				{ const DWORD thread = ::GetCurrentThreadId();  if ( m_thread != thread ) { fcn_AcquireSRWLockExclusive( &m_lock );	assert( m_thread == 0 ); m_thread = thread; } else m_recursion++; }
 
-		   // Unlock this object for writing
-           void write_unlock( void );
+			// Try to lock this object for writing
+			__forceinline const bool try_write_lock( void )		{ const DWORD thread = ::GetCurrentThreadId(); if ( m_thread != thread ) { if ( !fcn_TryAcquireSRWLockExclusive( &m_lock ) ) return false; assert( m_thread == 0 ); m_thread = thread; } else m_recursion++; return true; }
 
-private:    // The write lock critical section
-           CRITICAL_SECTION    m_write_lock;
+			// Unlock this object for writing
+			__forceinline void write_unlock( void )				{ assert( ::GetCurrentThreadId() == m_thread ); if ( !m_recursion ) { m_thread = 0; fcn_ReleaseSRWLockExclusive( &m_lock ); } else m_recursion--; }
+		
+private:	// The lock variable
+			SRWLOCK	m_lock;
 
-           // An event to trigger waiting writes
-           HANDLE m_write_trigger;
+			// The thread and recursion count
+			DWORD	m_thread;
+			DWORD	m_recursion;
 
-           // The number of reading threads
-           int m_no_reads;
+			// Global functions
+			static BOOLEAN (WINAPI *fcn_TryAcquireSRWLockShared) ( PSRWLOCK SRWLock );
+			static BOOLEAN (WINAPI *fcn_TryAcquireSRWLockExclusive) ( PSRWLOCK SRWLock );
+			static VOID (WINAPI *fcn_AcquireSRWLockShared) ( PSRWLOCK SRWLock );
+			static VOID (WINAPI *fcn_ReleaseSRWLockShared) ( PSRWLOCK SRWLock );
+			static VOID (WINAPI *fcn_AcquireSRWLockExclusive) ( PSRWLOCK SRWLock );
+			static VOID (WINAPI *fcn_ReleaseSRWLockExclusive) ( PSRWLOCK SRWLock );
+			static VOID (WINAPI *fcn_InitializeSRWLock) ( PSRWLOCK SRWLock );
+};
 
-           // The number of outstanding write requests
-           int m_no_pending_writes;
-}; 
-
-struct read_auto_lock
+struct FRAMEWORKCOMMUNICATION3_API read_auto_lock
 {				// Constructor
-				read_auto_lock( read_write_lock& lock );
-				read_auto_lock( read_write_lock* p_lock );
+				__forceinline read_auto_lock( read_write_lock& lock )	: m_p_lock( &lock ) { m_p_lock->read_lock(); }
+				__forceinline read_auto_lock( read_write_lock* p_lock )	: m_p_lock( p_lock ) { m_p_lock->read_lock(); }
 
 				// Destructor
-				~read_auto_lock( void );
+				__forceinline ~read_auto_lock( void ) { m_p_lock->read_unlock(); }
 
 private:		// The lock
 				read_write_lock *m_p_lock;
 };
 
-struct write_auto_lock
+struct FRAMEWORKCOMMUNICATION3_API write_auto_lock
 {				// Constructor
-				write_auto_lock( read_write_lock& lock );
-				write_auto_lock( read_write_lock* p_lock );
+				__forceinline write_auto_lock( read_write_lock& lock )	 : m_p_lock( &lock ) { m_p_lock->write_lock(); }
+				__forceinline write_auto_lock( read_write_lock* p_lock ) : m_p_lock( p_lock ) { m_p_lock->write_lock(); }
 
 				// Destructor
-				~write_auto_lock( void );
+				__forceinline ~write_auto_lock( void ) { m_p_lock->write_unlock(); }
+
+private:		// The lock
+				read_write_lock *m_p_lock;
+};
+
+struct FRAMEWORKCOMMUNICATION3_API write_auto_unlock
+{				// Constructor
+				__forceinline write_auto_unlock( read_write_lock& lock )   : m_p_lock( &lock )  { m_p_lock->write_unlock(); }
+				__forceinline write_auto_unlock( read_write_lock* p_lock ) : m_p_lock( p_lock ) { m_p_lock->write_unlock(); }
+
+				// Destructor
+				__forceinline ~write_auto_unlock( void ) { m_p_lock->write_lock(); }
 
 private:		// The lock
 				read_write_lock *m_p_lock;

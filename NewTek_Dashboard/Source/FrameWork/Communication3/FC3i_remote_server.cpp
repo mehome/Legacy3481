@@ -155,16 +155,26 @@ DWORD server::connection::thread_proc( void )
 		if ( header.m_message_type != FC3ir::tcpip_message_header::message_type_send ) { assert( false ); continue; }
 		
 		// Get the destination name
-		wchar_t *p_dst_name = (wchar_t*)_alloca( header.m_destination_size );
+		wchar_t *p_dst_name = (wchar_t*)_alloca( header.m_destination_size + 2 );
 		if ( !m_client_socket.recv( (char*)p_dst_name, header.m_destination_size, 0 ) ) break;
+
+		// Handle names that are not correctly null terminated.
+		// DHOMAS bug :(
+		p_dst_name[ header.m_destination_size/2 ] = 0;
 
 		// Get the message
 		const DWORD message_data_size = header.m_message_size - server::remote_message::header_size;
-		server::remote_message	msg( message_data_size );
-		char *p_data = msg.error() ? (char*)::malloc( header.m_message_size ) : (char*)msg.ptr_raw();
+		server::remote_message	msg( message_data_size + 2 );
+		char *p_data = msg.error() ? (char*)::malloc( header.m_message_size + 2 ) : (char*)msg.ptr_raw();
 
 		// Read the message
 		if ( !m_client_socket.recv( p_data, header.m_message_size, 0 ) ) break;
+
+		// Terminate the string if it was not, at the expense of messages being 2 bytes larger than they
+		// need to be. This would fix any XML sent to us.
+		// DHOMAS bug :(
+		p_data[ header.m_message_size   ] = 0;
+		p_data[ header.m_message_size+1 ] = 0;
 		
 		// Free if it was an error
 		if ( msg.error() )  { assert( false ); ::free( p_data ); }

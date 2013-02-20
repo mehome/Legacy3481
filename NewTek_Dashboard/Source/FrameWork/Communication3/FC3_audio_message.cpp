@@ -78,12 +78,14 @@ void message::setup_memory( const int no_samples, const int no_channels, const i
 	assert( m_p_header );
 
 	// Setup the header
-	m_p_header->m_sample_rate = 96000;
-	m_p_header->m_max_no_samples = no_samples;
-	m_p_header->m_no_samples = no_samples;
-	m_p_header->m_no_channels = no_channels;
-	m_p_header->m_time_stamp = 0;
-	m_p_header->m_extra_data_size = extra_data_size;
+	m_p_header->m_sample_rate		  = 96000;
+	m_p_header->m_max_no_samples	  = no_samples;
+	m_p_header->m_no_samples		  = no_samples;
+	m_p_header->m_no_channels		  = no_channels;
+	m_p_header->m_time_stamp		  = 0;
+	m_p_header->m_extra_data_size	  = extra_data_size;
+	m_p_header->m_extra_data_size_max = extra_data_size;
+	m_p_header->m_extra_data_fourcc	  = 0;
 
 	// Setup the rest
 	setup_memory();
@@ -187,6 +189,22 @@ void* message::extra_data( void )
 
 const int message::extra_data_size( void ) const
 {	return m_p_header->m_extra_data_size;	
+}
+
+const DWORD	message::extra_data_fourCC( void ) const
+{	assert( !error() );
+	return m_p_header->m_extra_data_fourcc;
+}
+
+void message::set_extra_data_size( const int new_data_size )
+{	assert( !error() );
+	assert( new_data_size <= m_p_header->m_extra_data_size_max );
+	m_p_header->m_extra_data_size = new_data_size;
+}
+
+DWORD &message::extra_data_fourCC( void )
+{	assert( !error() );
+	return m_p_header->m_extra_data_fourcc;
 }
 
 // This ensures that people can delete the read_with_info structs returned above correctly

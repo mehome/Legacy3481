@@ -8,7 +8,9 @@ struct FRAMEWORKCOMMUNICATION3_API receive : private FrameWork::Communication3::
 														// Overload the functions used here
 														public FrameWork::Communication3::audio::receive::client,
 														// Overload the functions used here
-														public FrameWork::Communication3::xml::receive::client
+														public FrameWork::Communication3::xml::receive::client,
+														// Overload the functions
+														public FrameWork::Communication3::raw::receive::client
 			{	
 			};
 

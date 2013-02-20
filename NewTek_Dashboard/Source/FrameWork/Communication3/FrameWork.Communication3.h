@@ -16,7 +16,6 @@
 #include <vector>
 #include <queue>
 
-
 // Bitmaps
 #include "..\FrameWork.h"
 #include "..\XML\FrameWork.XML.h"
@@ -156,6 +155,13 @@ namespace FrameWork
 				#include "FC3i_remote_client.h"
 				#include "FC3i_remote_client_cache.h"
 			};
+		};
+
+		namespace raw
+		{
+			#include "FC3_raw_message.h"
+			#include "FC3_raw_receive.h"
+			#include "FC3_raw_pull.h"
 		};
 
 		namespace xml

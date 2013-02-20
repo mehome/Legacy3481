@@ -1,51 +1,40 @@
 #pragma once
 
+#pragma once
+
 // A basic critical section class
-struct FRAMEWORKCOMMUNICATION3_API critical_section
-{				// Constructor
-				critical_section( void );
-
-				// Destructor
-				~critical_section( void );
-
-				// Lock this critical section
-				void lock( void );
+struct FRAMEWORKCOMMUNICATION3_API critical_section : private read_write_lock
+{				// Lock this critical section
+				__forceinline void lock( void )				{ read_write_lock::write_lock(); }
 
 				// Unlock this critical section
-				void unlock( void );
+				__forceinline void unlock( void )			{ read_write_lock::write_unlock(); }
 
 				// Try locking this critical section and return true if success
-				bool try_lock( void );
-
-	private:	// Internal data
-				CRITICAL_SECTION	m_CS;
-#ifdef _DEBUG
-				volatile LONG m_c_locks;
-#endif
+				__forceinline const bool try_lock( void )	{ return read_write_lock::try_write_lock(); }
 };
 
 // A stack based lock for the critical section
 struct FRAMEWORKCOMMUNICATION3_API auto_lock
 {				// Constructor
-				auto_lock( critical_section *pCritSec );
-				auto_lock( critical_section &rCritSec );
+				__forceinline auto_lock( critical_section& lock )	: m_p_lock( &lock ) { m_p_lock->lock(); }
+				__forceinline auto_lock( critical_section* p_lock ) : m_p_lock( p_lock ) { m_p_lock->lock(); }
 
 				// Destructor
-				~auto_lock( void );
+				__forceinline ~auto_lock( void ) { m_p_lock->unlock(); }
 
-	private:	// Internal data
-				critical_section		*m_p_critsec;
+private:		// The lock
+				critical_section *m_p_lock;
 };
 
-// A stack based lock for the critical section
 struct FRAMEWORKCOMMUNICATION3_API auto_unlock
 {				// Constructor
-				auto_unlock( critical_section *pCritSec );
-				auto_unlock( critical_section &rCritSec );
+				__forceinline auto_unlock( critical_section& lock )   : m_p_lock( &lock )  { m_p_lock->unlock(); }
+				__forceinline auto_unlock( critical_section* p_lock ) : m_p_lock( p_lock ) { m_p_lock->unlock(); }
 
 				// Destructor
-				~auto_unlock( void );
+				__forceinline ~auto_unlock( void ) { m_p_lock->lock(); }
 
-	private:	// Internal data
-				critical_section		*m_p_critsec;
+private:		// The lock
+				critical_section *m_p_lock;
 };

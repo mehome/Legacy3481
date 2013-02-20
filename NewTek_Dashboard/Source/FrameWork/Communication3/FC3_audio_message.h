@@ -2,7 +2,7 @@
 
 struct FRAMEWORKCOMMUNICATION3_API message : public FrameWork::Communication3::implementation::message
 {			// Constructor
-			message( const int no_samples, const int no_channels, const int extra_data_size = 0 );
+			message( const int no_samples, const int no_channels, const int extra_data_size_max = 0 );
 
 			// Destructor
 			~message( void );
@@ -50,7 +50,15 @@ struct FRAMEWORKCOMMUNICATION3_API message : public FrameWork::Communication3::i
 			const void* extra_data( void ) const;
 				  void* extra_data( void );
 
-			const int	extra_data_size( void ) const;
+			// This allows you to reduce the extra data size. Treat this with caution.
+			void set_extra_data_size( const int new_data_size );
+
+			// Get the current extra data size
+			const int extra_data_size( void ) const;
+
+			// Get access to the unique code that identifies the "extrea" data attached to this frame.
+			const DWORD	 extra_data_fourCC( void ) const;
+				  DWORD	&extra_data_fourCC( void );
 
 			// This ensures that people can pass messages between DLLs
 			static void* operator new ( const size_t size );
@@ -81,7 +89,9 @@ private:	// This is the data header
 				__int64 m_time_stamp;
 
 				// The size of the extra data
-				int m_extra_data_size;
+				int		m_extra_data_size;
+				int		m_extra_data_size_max;
+				DWORD	m_extra_data_fourcc;
 
 			} *m_p_header;
 

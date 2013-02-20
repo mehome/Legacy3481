@@ -20,7 +20,7 @@ struct FRAMEWORKCOMMUNICATION3_API trigger
 			// crash which we never want to lock up the person waiting on it.
 			const bool wait( const DWORD timeout = 2000 ) const;
 
-protected:	// Get the handle
+			// Get the handle. Treat this with utmost care !
 			HANDLE get_handle( void ) const;
 
 private:	// Constructor when referenting another ID, this is done by messages.

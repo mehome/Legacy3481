@@ -72,8 +72,25 @@ void receive::deliver( const DWORD block_id, const DWORD addr )
 		return;
 	}
 
+	// Try to create an video message
+	FrameWork::Communication3::raw::message		*p_raw_msg = new FrameWork::Communication3::raw::message( block_id, addr );	
+
 	// Unknown message type
+	p_raw_msg->simulate_send();
 	p_xml_msg->release();
+
+	// Handle it
+	if ( !p_raw_msg->error() )
+	{	// Deliver the message
+		m_p_destination->deliver_raw( p_raw_msg );
+
+		// Finished
+		p_raw_msg->release();
+		return;
+	}
+
+	// Releast the raw message
+	p_raw_msg->release();
 
 	// Error in debug mode
 	assert( false );

@@ -102,3 +102,15 @@ const __int64 message::frame_rate_type::frame_time( const __int64 time_base ) co
 	const __int64 ret = (__int64)( m_d*time_base + m_n/2 ) / (__int64)m_n;
 	return ( ret >= 0 ) ? ret : -ret;
 }
+
+message::frame_rate_type::operator float  ( void ) const
+{	return (float)m_n/(float)m_d;
+}
+
+message::frame_rate_type::operator double ( void ) const
+{	return (double)m_n/(double)m_d;
+}
+
+message::frame_rate_type::operator int    ( void ) const
+{	return (int)( 0.5 + (double)m_n/(double)m_d );	
+}

@@ -24,6 +24,13 @@ namespace xml
 	struct message;
 };
 
+namespace raw
+{
+	struct pull;
+	struct receive;
+	struct message;
+};
+
 namespace audio
 {
 	struct pull;

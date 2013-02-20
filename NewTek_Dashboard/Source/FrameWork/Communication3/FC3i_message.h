@@ -77,8 +77,9 @@ protected:	// Data access
 				static const message_type message_type_error  = 0;		// Do not use this !
 				static const message_type message_type_raw    = 1;		// The message type is not yet known.
 				static const message_type message_type_xml    = 2;		// A XML string
+				static const message_type message_type_xml2	  = 6;		// An XML string, also including extra data
 				static const message_type message_type_video  = 3;		// A video frame paclet
-				static const message_type message_type_audio  = 4;		// A video frame
+				static const message_type message_type_audio  = 4;		// A video frame				
 
 				static const message_type message_type_debug  = 5;		// A debug message
 

@@ -3,11 +3,10 @@
 
 using namespace FrameWork::Communication3::video;
 
-// Constructor
-message::message( const e_data_format format, const int xres, const int yres, const int extra_data_size )
-	:	m_ref( 1 ), 
-		FrameWork::Communication3::implementation::message( message_size( format, xres, yres, extra_data_size ) ),
-		m_p_header( NULL )
+// Constructur for compressed data formats
+message::message( const e_data_format format, const int xres, const int yres, const int compressed_data_size, const int extra_data_size_max )
+	:	m_ref( 1 ), m_p_header( NULL ), m_p_compressed_data( NULL ),
+		FrameWork::Communication3::implementation::message( message_size( format, xres, yres, compressed_data_size, extra_data_size_max ) )
 
 {	// Set the type
 	if ( !FrameWork::Communication3::implementation::message::error() )
@@ -15,15 +14,30 @@ message::message( const e_data_format format, const int xres, const int yres, co
 		type() = message_type_video;
 
 		// Setup the memory
-		setup_memory( format, xres, yres, extra_data_size );
+		setup_memory( format, xres, yres, compressed_data_size, extra_data_size_max );
+	}	
+}
+
+// Constructur for compressed data formats
+message::message( const e_data_format format, const int xres, const int yres )
+	:	m_ref( 1 ), m_p_header( NULL ), m_p_compressed_data( NULL ),
+		FrameWork::Communication3::implementation::message( message_size( format, xres, yres, 0, 0 ) )
+
+{	// Set the type
+	if ( !FrameWork::Communication3::implementation::message::error() )
+	{	// Set the size
+		type() = message_type_video;
+
+		// Setup the memory
+		setup_memory( format, xres, yres, 0, 0 );
 	}	
 }
 
 // Internal use only :)
 message::message( const DWORD block_id, const DWORD addr )
-	:	m_ref( 1 ), 
-		FrameWork::Communication3::implementation::message( block_id, addr ),
-		m_p_header( NULL )
+	:	m_ref( 1 ), m_p_header( NULL ), m_p_compressed_data( NULL ),
+		FrameWork::Communication3::implementation::message( block_id, addr )
+
 {	// Check the size and the type
 	if ( !FrameWork::Communication3::implementation::message::error() )
 	{	// If the type is correct, set it up.
@@ -60,7 +74,7 @@ const long message::refcount( void ) const
 }
 
 // Get the size of a message
-const int message::message_size( const e_data_format format, const int xres, const int yres, const int extra_size )
+const int message::message_size( const e_data_format format, const int xres, const int yres, const int compressed_data_size, const int extra_size )
 {	// Has a header
 	int size = header_size;
 
@@ -70,11 +84,13 @@ const int message::message_size( const e_data_format format, const int xres, con
 	switch( format )
 	{	case data_format_ycbcr_422_u8:						// This is UYVY
 				assert( is_even(xres) );
+				assert( !compressed_data_size );
 				size += xres * yres * 2;					// YCbCr
 				break;
 
 		case data_format_ycbcr_a_4224_u8:					// This is what we call UYVA which is UYVY + Alpha
 				assert( is_even(xres) );
+				assert( !compressed_data_size );
 				size += xres * yres * 2;					// YCbCr
 				size += xres * yres;						// Alpha
 				break;
@@ -82,16 +98,35 @@ const int message::message_size( const e_data_format format, const int xres, con
 		case data_format_y_cb_cr_420_u8:					// This is YV12
 		case data_format_y_cbcr_420_u8:						// This is NV12
 				assert( is_even(xres) && is_even(yres) );
+				assert( !compressed_data_size );
 				size += xres * yres;						// Y
 				size += ( xres / 2 ) * ( yres / 2 ) * 2;	// Cb, Cr
 				break;		
 
 		case data_format_ycbcra_4444_u8:					// This is YCbCrA
+				assert( !compressed_data_size );
 				size += xres * yres * 4;					// YCbCrA
 				break;
 
 		case data_format_bgra_4444_u8:						// This is regular BGRA
+				assert( !compressed_data_size );
 				size += xres * yres * 4;					// BGRA
+				break;
+
+		// Compressed data formats do not have a fixed data size
+		case data_format_m2v1_422:
+		case data_format_m2v1_420:
+		case data_format_shq_4444:
+		case data_format_shq_444:
+		case data_format_shq_4224:
+		case data_format_shq_422:
+		case data_format_shq_4204:
+		case data_format_shq_420:
+				assert( compressed_data_size );
+				size += fc3_size_align( compressed_data_size );
+				break;
+
+		default:assert( false );
 				break;
 	}
 
@@ -146,6 +181,18 @@ const bool message::has_alpha( void ) const
 {	return m_alpha() ? true : false;
 }
 
+const bool message::has_compressed( void ) const
+{	return m_p_compressed_data ? true : false;
+}
+
+const bool message::is_compressed( void ) const
+{	return m_p_compressed_data ? true : false;
+}
+
+const bool message::is_uncompressed( void ) const
+{	return m_p_compressed_data ? false : true;
+}
+
 // does this frame have a dirty sub rectangle region?
 const bool message::has_sub_rect( void ) const
 {	// Check the sub-rectangle
@@ -192,7 +239,6 @@ const bool message::has_field_0( void ) const
 		case field_type_single_field_0:		return true;	// A single field, number 0
 		case field_type_single_field_1:		return false;	// A single field, number 1
 		case field_type_both_interleaved:	return true;	// Both fields, interleaved together
-		case field_type_both_stacked:		return true;	// Both fields, field 0 stacked above field 1
 		case_not_possible									// Not supported
 	}
 }
@@ -204,7 +250,6 @@ const bool message::has_field_1( void ) const
 		case field_type_single_field_0:		return false;	// A single field, number 0
 		case field_type_single_field_1:		return true;	// A single field, number 1
 		case field_type_both_interleaved:	return true;	// Both fields, interleaved together
-		case field_type_both_stacked:		return true;	// Both fields, field 0 stacked above field 1
 		case_not_possible									// Not supported
 	}
 }
@@ -216,7 +261,6 @@ const bool message::has_both_fields( void ) const
 		case field_type_single_field_0:		return false;	// A single field, number 0
 		case field_type_single_field_1:		return false;	// A single field, number 1
 		case field_type_both_interleaved:	return true;	// Both fields, interleaved together
-		case field_type_both_stacked:		return true;	// Both fields, field 0 stacked above field 1
 		case_not_possible									// Not supported
 	}
 }
@@ -228,7 +272,6 @@ const bool message::has_one_field( void ) const
 		case field_type_single_field_0:		return true;	// A single field, number 0
 		case field_type_single_field_1:		return true;	// A single field, number 1
 		case field_type_both_interleaved:	return false;	// Both fields, interleaved together
-		case field_type_both_stacked:		return false;	// Both fields, field 0 stacked above field 1
 		case_not_possible									// Not supported
 	}
 }
@@ -240,7 +283,6 @@ const bool message::is_fielded( void ) const
 		case field_type_single_field_0:		return true;	// A single field, number 0
 		case field_type_single_field_1:		return true;	// A single field, number 1
 		case field_type_both_interleaved:	return true;	// Both fields, interleaved together
-		case field_type_both_stacked:		return true;	// Both fields, field 0 stacked above field 1
 		case_not_possible									// Not supported
 	}
 }
@@ -252,7 +294,6 @@ const bool message::is_progressive( void ) const
 		case field_type_single_field_0:		return false;	// A single field, number 0
 		case field_type_single_field_1:		return false;	// A single field, number 1
 		case field_type_both_interleaved:	return false;	// Both fields, interleaved together
-		case field_type_both_stacked:		return false;	// Both fields, field 0 stacked above field 1
 		case_not_possible									// Not supported
 	}
 }
@@ -263,7 +304,6 @@ const bool message::has_field( const int i ) const
 		case field_type_single_field_0:		return ( i == 0 );
 		case field_type_single_field_1:		return ( i == 1 );
 		case field_type_both_interleaved:	return ( i == 0 ) || ( i == 1 );
-		case field_type_both_stacked:		return ( i == 0 ) || ( i == 1 );
 		case_not_possible					// Not supported
 	}
 }
@@ -274,7 +314,6 @@ const bool message::has_field( const e_field_type field ) const
 		case field_type_single_field_0:		return ( field == field_type_single_field_0 );
 		case field_type_single_field_1:		return ( field == field_type_single_field_1 );
 		case field_type_both_interleaved:	return ( field == field_type_single_field_0 ) || ( field == field_type_single_field_1 ) || ( field == field_type_both_interleaved );
-		case field_type_both_stacked:		return ( field == field_type_single_field_0 ) || ( field == field_type_single_field_1 ) || ( field == field_type_both_stacked );
 		case_not_possible					// Not supported
 	}
 }
@@ -404,7 +443,7 @@ const FrameWork::Bitmaps::bitmap_ycbcra_u8&	message::ycbcra( void ) const
 }
 
 // Setup all pointers
-void message::setup_memory( const e_data_format format, const int xres, const int yres, const int extra_size )
+void message::setup_memory( const e_data_format format, const int xres, const int yres, const int compressed_data_size, const int extra_size )
 {	// Set the header pointer
 	assert( !m_p_header );
 	m_p_header = (header*)ptr();
@@ -415,6 +454,7 @@ void message::setup_memory( const e_data_format format, const int xres, const in
 	m_p_header->m_data_format = format;
 	m_p_header->m_xres = xres;
 	m_p_header->m_yres = yres;
+	m_p_header->m_compressed_data_size = compressed_data_size;
 	m_p_header->m_aspect_ratio = 16.0f / 9.0f;
 	m_p_header->m_frame_rate = frame_rate_type_29_97;
 	m_p_header->m_time_stamp = 0;
@@ -422,8 +462,10 @@ void message::setup_memory( const e_data_format format, const int xres, const in
 	m_p_header->m_sub_rect.top = 0;
 	m_p_header->m_sub_rect.right = xres;
 	m_p_header->m_sub_rect.bottom = yres;
-	m_p_header->m_extra_data_size = extra_size;
-	m_p_header->m_time_code = 0;
+	m_p_header->m_extra_data_size	  = extra_size;
+	m_p_header->m_extra_data_size_max = extra_size;
+	m_p_header->m_extra_data_fourcc = 0;
+	m_p_header->m_time_code = 0;	
 
 	// Setup the rest
 	setup_memory();
@@ -435,7 +477,7 @@ void message::setup_memory( void )
 
 	// Store the size
 	const int xres = m_p_header->m_xres;
-	const int yres = m_p_header->m_yres;
+	const int yres = m_p_header->m_yres;	
 
 	// We get the current offset
 	BYTE*	p_ptr = ptr( header_size );
@@ -448,6 +490,7 @@ void message::setup_memory( void )
 	{	case data_format_ycbcr_422_u8:						
 					// This is UYVY
 					assert( is_even(xres) );
+					assert( !m_p_header->m_compressed_data_size );
 
 					// YCbCr
 					m_ycbcr.reference_in_bytes( (FrameWork::Bitmaps::pixel_ycbcr_u8*)p_ptr, xres, yres, xres*2 );
@@ -459,6 +502,7 @@ void message::setup_memory( void )
 		case data_format_ycbcr_a_4224_u8:					
 					// This is what we call UYVA which is UYVY + Alpha
 					assert( is_even(xres) );
+					assert( !m_p_header->m_compressed_data_size );
 
 					// YCbCr
 					m_ycbcr.reference_in_bytes( (FrameWork::Bitmaps::pixel_ycbcr_u8*)p_ptr, xres, yres, xres*2 );
@@ -474,6 +518,7 @@ void message::setup_memory( void )
 		case data_format_y_cbcr_420_u8:					
 					// This is NV12
 					assert( is_even(xres) && is_even(yres) );
+					assert( !m_p_header->m_compressed_data_size );
 
 					// Y
 					m_y.reference_in_bytes( (FrameWork::Bitmaps::pixel_y_u8*)p_ptr, xres, yres, xres );
@@ -489,6 +534,7 @@ void message::setup_memory( void )
 		case data_format_y_cb_cr_420_u8:					
 					// This is YV12
 					assert( is_even(xres) && is_even(yres) );
+					assert( !m_p_header->m_compressed_data_size );
 
 					// Y
 					m_y.reference_in_bytes( (FrameWork::Bitmaps::pixel_y_u8*)p_ptr, xres, yres, xres );
@@ -507,14 +553,29 @@ void message::setup_memory( void )
 
 		case data_format_ycbcra_4444_u8:					
 					// This is YCbCrA
+					assert( !m_p_header->m_compressed_data_size );
 					m_ycbcra.reference_in_bytes( (FrameWork::Bitmaps::pixel_ycbcra_u8*)p_ptr, xres, yres, xres*4 );
 					p_ptr += xres*yres*4;
 					break;
 
-		case data_format_bgra_4444_u8:						
+		case data_format_bgra_4444_u8:
 					// This is regular BGRA
+					assert( !m_p_header->m_compressed_data_size );
 					m_bgra.reference_in_bytes( (FrameWork::Bitmaps::pixel_bgra_u8*)p_ptr, xres, yres, xres*4 );
 					p_ptr += xres*yres*4;
+					break;
+
+		case data_format_m2v1_422:
+		case data_format_m2v1_420:
+		case data_format_shq_4444:
+		case data_format_shq_444:
+		case data_format_shq_4224:
+		case data_format_shq_422:
+		case data_format_shq_4204:
+		case data_format_shq_420:
+					assert( m_p_header->m_compressed_data_size );
+					m_p_compressed_data = (BYTE*)p_ptr;
+					p_ptr += fc3_size_align( m_p_header->m_compressed_data_size );
 					break;
 
 		default:	// Something bad
@@ -527,7 +588,7 @@ void message::setup_memory( void )
 	m_p_extra_data = m_p_header->m_extra_data_size ? (void*)p_ptr : NULL;
 
 	// Increment the pointer for the assert below
-	p_ptr += m_p_header->m_extra_data_size;
+	p_ptr += m_p_header->m_extra_data_size_max;
 
 	// Debugging
 	assert( p_ptr == ptr() + size() );
@@ -535,16 +596,33 @@ void message::setup_memory( void )
 #undef	is_even
 }
 
-const void* message::extra_data( void ) const
+const DWORD	message::extra_data_fourCC( void ) const
+{	assert( !error() );
+	return m_p_header->m_extra_data_fourcc;
+}
+
+DWORD &message::extra_data_fourCC( void )
+{	assert( !error() );
+	return m_p_header->m_extra_data_fourcc;
+}
+
+const void* message::p_extra_data( void ) const
 {	return m_p_extra_data;
 }
 
-void* message::extra_data( void )
+void* message::p_extra_data( void )
 {	return m_p_extra_data;
+}
+
+void message::set_extra_data_size( const int new_data_size )
+{	assert( !error() );
+	assert( new_data_size <= m_p_header->m_extra_data_size_max );
+	m_p_header->m_extra_data_size = new_data_size;
 }
 
 const int message::extra_data_size( void ) const
-{	return m_p_header->m_extra_data_size;	
+{	assert( !error() );
+	return m_p_header->m_extra_data_size;	
 }
 
 // This ensures that people can delete the read_with_info structs returned above correctly
@@ -584,4 +662,17 @@ const double message::duration_in_seconds( void ) const
 
 	// Return the result
 	return (double)d / (double)n;
+}
+
+BYTE* message::p_compressed_data( void )
+{	return m_p_compressed_data;
+}
+
+const BYTE* message::p_compressed_data( void ) const
+{	return m_p_compressed_data;
+}
+
+const int message::compressed_data_size( void ) const
+{	assert( !error() );
+	return m_p_header->m_compressed_data_size;
 }

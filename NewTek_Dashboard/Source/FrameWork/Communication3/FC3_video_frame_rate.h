@@ -32,6 +32,11 @@
 				const bool operator>= ( const frame_rate_type &from ) const;
 				const bool operator<= ( const frame_rate_type &from ) const;
 
+				// Assignment
+				operator float  ( void ) const;
+				operator double ( void ) const;
+				operator int    ( void ) const;
+
 				// Compute the frame-rate as a double
 				const double frames_per_second( void ) const;
 				const double time_in_ms( void ) const;
