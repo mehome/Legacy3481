@@ -16,10 +16,9 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 
 	// quick tweaks 
 	g_pTracker->SetUseMasking(false);
-	g_pTracker->SetShowThreshold(true);
-
 	g_pTracker->SetUseColorThreshold(false);
 	g_pTracker->SetShowBounds(true);
+	g_pTracker->SetShowThreshold(true);
 
 	g_pTracker->Profiler.start();
 
