@@ -254,7 +254,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		// particle area
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &area));
 
-		// if particle area doesn't fill bounding area enough skip it.
+		// if particle area fills too much bounding area enough skip it.
 		if( bound_area > 0 && (area / bound_area < particleList.area_threshold) )
 			continue;
 

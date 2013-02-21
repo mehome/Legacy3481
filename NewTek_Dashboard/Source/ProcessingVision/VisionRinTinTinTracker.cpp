@@ -16,12 +16,12 @@ VisionRinTinTinTracker::VisionRinTinTinTracker()
 	else
 		plane1Range.minValue = 143, plane1Range.maxValue = 255;	// luma
 
-	particleList.SetParticleParams( 0.5f, 1.0f, 10.0f );	// area threshold, aspect min, max
+	particleList.SetParticleParams( 0.65f, 1.0f, 10.0f );	// area threshold, aspect min, max
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR};
-	float plower[] = {1};	
-	float pUpper[] = {1.50};
+	float plower[] = {1.127};	
+	float pUpper[] = {1.3};
 	int pCalibrated[] = {0};
 	int pExclude[] = {0};
 
@@ -44,12 +44,12 @@ VisionRinTinTinTracker::VisionRinTinTinTracker( bool use_color_treshold )
 	else
 		plane1Range.minValue = 143, plane1Range.maxValue = 255;	// luma
 
-	particleList.SetParticleParams( 0.5f, 1.0f, 10.0f );	// area threshold, aspect min, max
+	particleList.SetParticleParams( 0.65f, 1.0f, 10.0f );	// area threshold, aspect min, max
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR};
-	float plower[] = {1};	
-	float pUpper[] = {1.50};
+	float plower[] = {1.127};	
+	float pUpper[] = {1.3};
 	int pCalibrated[] = {0};
 	int pExclude[] = {0};
 

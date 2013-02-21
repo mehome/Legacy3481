@@ -39,6 +39,13 @@ extern "C"
 // redundant, but allows for easy separation.
 Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target);
 
+enum TrackerType 
+{
+	eGoalTracker,
+	eFrisbeTracker,
+	eNumTrackers
+};
+
 class UDP_Client_Interface
 {
 	public:
