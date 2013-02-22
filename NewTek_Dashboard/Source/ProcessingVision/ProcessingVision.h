@@ -37,7 +37,7 @@ extern "C"
 #pragma warning ( disable : 4996 )
 
 // redundant, but allows for easy separation.
-Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target);
+Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target, bool &have_target);
 
 enum TrackerType 
 {

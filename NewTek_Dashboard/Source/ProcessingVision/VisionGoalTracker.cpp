@@ -210,6 +210,8 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 				}
 			}	// particle loop
 		}	// num particles > 0
+		else
+			success = 0;
 	}	// show overlays
 
 Error:

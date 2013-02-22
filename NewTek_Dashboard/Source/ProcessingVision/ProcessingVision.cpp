@@ -8,7 +8,7 @@
 
 UDP_Client_Interface *g_UDP_Output=NULL;
 extern VisionTracker* g_pTracker[eNumTrackers];
-TrackerType SelectedTracker = /*eGoalTracker;*/ eFrisbeTracker;
+TrackerType SelectedTracker = eGoalTracker; /*eFrisbeTracker;*/
 
 //Give something cool to look at
 class SineWaveMaker
@@ -44,7 +44,7 @@ class SineWaveMaker
 		double m_rho,m_rho2;
 } g_TestSample;
 
-Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target)
+Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target, bool &have_target)
 {
 	if( g_pTracker[SelectedTracker] == NULL )
 	{
@@ -67,7 +67,7 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	g_pTracker[SelectedTracker]->GetFrame(Frame);
 
 	// do the actual processing
-	g_pTracker[SelectedTracker]->ProcessImage(x_target, y_target);
+	have_target = g_pTracker[SelectedTracker]->ProcessImage(x_target, y_target) > 0;
 
 	// Return our processed image back to our outgoing frame.
 	g_pTracker[SelectedTracker]->ReturnFrame(Frame);
@@ -82,9 +82,10 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *F
 {
 #ifndef __UseSampleExample__
 	double x_target, y_target;
-	Frame = NI_VisionProcessing(Frame, x_target, y_target);
+	bool have_target = false;
+	Frame = NI_VisionProcessing(Frame, x_target, y_target, have_target);
 	//DebugOutput("X=%.2f,Y=%.2f\n",x_target,y_target);
-	if (g_UDP_Output)
+	if (g_UDP_Output && have_target)
 		(*g_UDP_Output)(x_target,y_target);
 #else
 

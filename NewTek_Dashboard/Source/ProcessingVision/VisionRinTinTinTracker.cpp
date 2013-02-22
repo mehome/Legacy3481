@@ -20,8 +20,8 @@ VisionRinTinTinTracker::VisionRinTinTinTracker()
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR};
-	float plower[] = {1.127};	
-	float pUpper[] = {1.3};
+	float plower[] = {(float)1.127};	
+	float pUpper[] = {(float)1.3};
 	int pCalibrated[] = {0};
 	int pExclude[] = {0};
 
@@ -48,8 +48,8 @@ VisionRinTinTinTracker::VisionRinTinTinTracker( bool use_color_treshold )
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR};
-	float plower[] = {1.127};	
-	float pUpper[] = {1.3};
+	float plower[] = {(float)1.127};	
+	float pUpper[] = {(float)1.3};
 	int pCalibrated[] = {0};
 	int pExclude[] = {0};
 
@@ -319,6 +319,9 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 				}
 			}	// particle loop
 		}	// num particles > 0
+		else
+			success = 0;
+
 	}	// show overlays
 
 Error:
