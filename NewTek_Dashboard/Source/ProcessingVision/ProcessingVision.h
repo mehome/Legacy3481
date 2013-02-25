@@ -14,6 +14,60 @@ struct Bitmap_Frame
 	size_t Stride;  //This is >= Xres some memory buffers need extra room for processing... this can be changed (and might need to be)
 };
 
+// No C library depreciation warnings
+#pragma warning ( disable : 4995 )
+#pragma warning ( disable : 4996 )
+
+enum VisionSetting_enum
+{
+	eTrackerType,
+	eDisplayType,
+	eOverlays,
+	eAimingText,
+	eBoundsText,
+	eThresholdPlane1Min,
+	eThresholdPlane2Min,
+	eThresholdPlane3Min,
+	eThresholdPlain1Max,
+	eThresholdPlain2Max,
+	eThresholdPlain3Max,
+	eThresholdMode,	
+	eNumTrackerSettings
+};
+
+enum TrackerType 
+{
+	eGoalTracker,
+	eFrisbeTracker,
+	eNumTrackers
+};
+
+enum DisplayType
+{
+	eNormal,
+	eThreshold,
+	eMasked,
+	eNumDisplayTypes
+};
+
+enum ThresholdMode
+{
+	eThreshRGB,
+	eThreshHSL,
+	eThreshLuma,
+	eNumThreshTypes
+};
+
+class UDP_Client_Interface
+{
+public:
+	static UDP_Client_Interface *GetNewInstance(char *servIP= "10.28.1.2",unsigned short echoServPort=1130);
+	virtual void operator() (double X,double Y)=0;
+	virtual ~UDP_Client_Interface() {}
+protected:
+	UDP_Client_Interface() {}
+};
+
 extern "C" 
 {
 	/// \param IPAddress- this may be null if user does not wish to send out UDP packets
@@ -30,28 +84,9 @@ extern "C"
 	/// if necessary.  The m1011 camera in h264 mode produces YUV 420p by default, and this gets converted to desired colorspace.
 	PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *Frame);
 
+	/// this is for changing settings - generally via controls.
+	PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum VisionSetting, double value);
+
+	PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum VisionSetting );
 };
 
-// No C library depreciation warnings
-#pragma warning ( disable : 4995 )
-#pragma warning ( disable : 4996 )
-
-// redundant, but allows for easy separation.
-Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target, bool &have_target);
-
-enum TrackerType 
-{
-	eGoalTracker,
-	eFrisbeTracker,
-	eNumTrackers
-};
-
-class UDP_Client_Interface
-{
-	public:
-		static UDP_Client_Interface *GetNewInstance(char *servIP= "10.28.1.2",unsigned short echoServPort=1130);
-		virtual void operator() (double X,double Y)=0;
-		virtual ~UDP_Client_Interface() {}
-	protected:
-		UDP_Client_Interface() {}
-};

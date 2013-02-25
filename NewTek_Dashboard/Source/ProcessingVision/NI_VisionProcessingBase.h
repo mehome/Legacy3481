@@ -83,8 +83,7 @@ public:
 
 	// settings accessors
 	// display opts
-	void SetShowThreshold( bool bShowThreshold ) {m_bShowThreshold = bShowThreshold; m_bUseMasking = false;}
-	void SetUseMasking( bool bMasking )    { if( m_bShowOverlays && !m_bShowThreshold ) m_bUseMasking = bMasking; }
+	void SetDisplayMode( DisplayType DisplayMode ) {m_DisplayMode = DisplayMode; }
 	void SetShowOverlays( bool bOverlays ) { m_bShowOverlays = bOverlays; }
 	void SetShowAiming( bool bAimingText ) { m_bShowAimingText = bAimingText; }
 	void SetShowBounds( bool bBoundsText ) { m_bShowBoundsText = bBoundsText; }
@@ -106,11 +105,10 @@ public:
 protected:
 	// option switches
 	// display opts
-	bool m_bUseMasking;		// dependent on show overlays
+	DisplayType m_DisplayMode;
 	bool m_bShowOverlays;	
 	bool m_bShowAimingText;	
 	bool m_bShowBoundsText;	
-	bool m_bShowThreshold;
 
 	// particle processing opts
 	bool m_bRejectBorderParticles;	
@@ -138,7 +136,9 @@ protected:
 	Image *Plane2;
 	Image *Plane3;
 
-	// Color thresholding values // TODO: add UI to set these
+	// TODO: change below to be pointers, add ranges for the supported modes, add a member for mode, and function to switch
+	//       also add a destination image pointer to simplify supporting threshold display.
+	// Color thresholding values 
 	Range plane1Range;
 	Range plane2Range;
 	Range plane3Range;

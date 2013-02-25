@@ -38,7 +38,7 @@ static void GetVisionFilename(HWND pParent,std::string &Output)
 }
 
   /***********************************************************************************************************************/
- /*														FileControls													*/
+ /*														VisionControls													*/
 /***********************************************************************************************************************/
 
 
@@ -49,6 +49,8 @@ VisionControls::VisionControls()
 bool VisionControls::Run(HWND pParent)
 {
 	bool ret=__super::Run(pParent);
+
+
 #if 0
 	using namespace std;
 	string InFile;

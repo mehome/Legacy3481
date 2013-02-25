@@ -52,76 +52,92 @@ END
 // Dialog
 //
 
-IDD_FILE_DIALOG DIALOGEX 0, 0, 317, 90
+IDD_FILE_DIALOG DIALOGEX 0, 0, 317, 89
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Pause",IDC_PAUSE,62,50,32,14
-    PUSHBUTTON      "Stop",IDC_STOP,16,50,36,14
-    PUSHBUTTON      "Play",IDC_PLAY,104,50,34,14
-    CONTROL         "",IDC_SCRUB,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,149,50,136,15
-    EDITTEXT        IDC_FILENAME,18,19,236,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "...",IDC_BROWSE,265,19,20,14
+    PUSHBUTTON      "Pause",IDC_PAUSE,66,53,32,14
+    PUSHBUTTON      "Stop",IDC_STOP,20,53,36,14
+    PUSHBUTTON      "Play",IDC_PLAY,108,53,34,14
+    CONTROL         "",IDC_SCRUB,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,153,53,136,15
+    EDITTEXT        IDC_FILENAME,18,22,236,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BROWSE,265,22,20,14
+    GROUPBOX        "Enter camera URL or browse for a video clip",IDC_STATIC,7,7,303,75
 END
 
-IDD_PROCAMP_DIALOG DIALOGEX 0, 0, 441, 149
+IDD_PROCAMP_DIALOG DIALOGEX 0, 0, 424, 132
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Property Page"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Brightness",IDC_LabelBrightness,16,23,34,11
-    CONTROL         "",IDC_SliderBrightness,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,21,100,15
-    EDITTEXT        IDC_EditBrightness,62,21,40,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SliderContrast,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,43,100,15
-    EDITTEXT        IDC_EditContrast,63,43,40,14,ES_AUTOHSCROLL
-    LTEXT           "Contrast",IDC_LabelContrast,20,45,29,8
-    LTEXT           "Hue",IDC_LabelHue,26,67,24,11
-    CONTROL         "",IDC_SliderHue,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,64,100,15
-    EDITTEXT        IDC_EditHue,61,64,42,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SliderSaturation,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,86,100,15
-    EDITTEXT        IDC_EditSaturation,63,86,40,14,ES_AUTOHSCROLL
-    LTEXT           "Saturation",IDC_LabelSaturation,19,88,34,8
-    LTEXT           "U Offset",IDC_LabelU_Offset,221,24,34,11
-    CONTROL         "",IDC_SliderU_Offset,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,21,100,15
-    EDITTEXT        IDC_EditU_Offset,260,21,40,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SliderV_Offset,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,43,100,15
-    EDITTEXT        IDC_EditV_Offset,262,43,40,14,ES_AUTOHSCROLL
-    LTEXT           "V Offset",IDC_LabelV_Offset,222,46,28,8
-    LTEXT           "U Gain",IDC_LabelU_Gain,225,67,24,11
-    CONTROL         "",IDC_SliderU_Gain,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,64,100,15
-    EDITTEXT        IDC_EditU_Gain,260,64,42,14,ES_AUTOHSCROLL
-    CONTROL         "",IDC_SliderV_Gain,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,86,100,15
-    EDITTEXT        IDC_EditV_Gain,262,86,40,14,ES_AUTOHSCROLL
-    LTEXT           "V Gain",IDC_LabelV_Gain,226,88,21,8
-    PUSHBUTTON      "Restore Defaults",IDC_RestoreDefaults,183,115,63,14
+    LTEXT           "Brightness",IDC_LabelBrightness,17,16,34,11
+    CONTROL         "",IDC_SliderBrightness,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,14,100,15
+    EDITTEXT        IDC_EditBrightness,63,14,40,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderContrast,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,36,100,15
+    EDITTEXT        IDC_EditContrast,63,36,40,14,ES_AUTOHSCROLL
+    LTEXT           "Contrast",IDC_LabelContrast,19,38,29,8
+    LTEXT           "Hue",IDC_LabelHue,26,60,24,11
+    CONTROL         "",IDC_SliderHue,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,57,100,15
+    EDITTEXT        IDC_EditHue,63,57,40,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderSaturation,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,109,79,100,15
+    EDITTEXT        IDC_EditSaturation,63,79,40,14,ES_AUTOHSCROLL
+    LTEXT           "Saturation",IDC_LabelSaturation,18,81,34,8
+    LTEXT           "U Offset",IDC_LabelU_Offset,221,17,40,11
+    CONTROL         "",IDC_SliderU_Offset,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,14,100,15
+    EDITTEXT        IDC_EditU_Offset,260,14,40,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderV_Offset,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,36,100,15
+    EDITTEXT        IDC_EditV_Offset,260,36,40,14,ES_AUTOHSCROLL
+    LTEXT           "V Offset",IDC_LabelV_Offset,222,39,28,8
+    LTEXT           "U Gain",IDC_LabelU_Gain,224,60,24,11
+    CONTROL         "",IDC_SliderU_Gain,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,57,100,15
+    EDITTEXT        IDC_EditU_Gain,260,57,40,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SliderV_Gain,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,308,79,100,15
+    EDITTEXT        IDC_EditV_Gain,260,79,40,14,ES_AUTOHSCROLL
+    LTEXT           "V Gain",IDC_LabelV_Gain,225,81,21,8
+    PUSHBUTTON      "Restore Defaults",IDC_RestoreDefaults,183,108,63,14
+    GROUPBOX        "",IDC_STATIC,12,5,198,96
+    GROUPBOX        "",IDC_STATIC,216,5,192,96
 END
 
-IDD_VISION_DIALOG DIALOGEX 0, 0, 247, 163
+IDD_VISION_DIALOG DIALOGEX 0, 0, 331, 175
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Display",IDC_DisplayGroup,7,7,115,49
-    CONTROL         "Normal",IDC_DisplayNormal,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,20,38,10
-    CONTROL         "Threshold",IDC_DisplayThreshold,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,31,47,10
-    CONTROL         "Mask",IDC_DisplayMask,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,42,32,10
+    GROUPBOX        "Display Mode",IDC_DisplayGroup,7,7,121,49,WS_GROUP
+    CONTROL         "Normal",IDC_DisplayNormal,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,15,20,38,10
+    CONTROL         "Threshold",IDC_DisplayThreshold,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,15,31,47,10
+    CONTROL         "Mask",IDC_DisplayMask,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,15,42,32,10
     CONTROL         "Overlay",IDC_ShowOverlay,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,71,20,41,10
-    CONTROL         "Aiming",IDC_ShowAiming,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,71,30,37,10
-    CONTROL         "",IDC_RHMin,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,7,97,100,15
-    CONTROL         "",IDC_GSMin,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,7,116,100,15
-    CONTROL         "",IDC_BLMin,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,7,135,100,15
-    CONTROL         "",IDC_RHMax,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,115,97,100,15
-    CONTROL         "",IDC_GSMax,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,115,116,100,15
-    CONTROL         "",IDC_BLMax,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,115,135,100,15
-    GROUPBOX        "Threshold",IDC_STATIC,7,60,233,96
-    CONTROL         "RGB",IDC_ThresholdRGB,"Button",BS_AUTORADIOBUTTON | WS_GROUP,21,72,29,10
-    CONTROL         "HSL",IDC_ThresholdHSL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,56,72,28,10
-    LTEXT           "Min",IDC_STATIC,52,85,12,8
-    LTEXT           "Max",IDC_STATIC,155,84,14,8
-    LTEXT           "R/H",IDC_STATIC,220,100,13,8
-    LTEXT           "G/S",IDC_STATIC,220,119,12,8
-    LTEXT           "B/L",IDC_STATIC,221,138,11,8
+    CONTROL         "Aiming Text",IDC_ShowAiming,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,71,31,53,10
+    CONTROL         "",IDC_RHMin,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,9,108,97,15
+    CONTROL         "",IDC_GSMin,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,9,127,94,15
+    CONTROL         "",IDC_BLMin,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,9,146,95,15
+    CONTROL         "",IDC_RHMax,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,157,108,97,15
+    CONTROL         "",IDC_GSMax,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,157,127,96,15
+    CONTROL         "",IDC_BLMax,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,157,146,94,15
+    GROUPBOX        "Threshold",IDC_STATIC,7,60,317,108
+    CONTROL         "RGB",IDC_ThresholdRGB,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,21,72,29,10
+    CONTROL         "HSL",IDC_ThresholdHSL,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,56,72,28,10
+    CONTROL         "Luminance",IDC_ThresholdLuma,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,85,72,49,10
+    LTEXT           "Min",IDC_STATIC,40,89,12,8
+    LTEXT           "Max",IDC_STATIC,188,88,14,8
+    LTEXT           "R/H",IDC_STATIC,303,111,13,8
+    LTEXT           "G/S",IDC_STATIC,304,130,12,8
+    LTEXT           "B/L",IDC_STATIC,305,149,11,8
+    EDITTEXT        IDC_RHMin_Ed,107,109,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_GSMin_Ed,107,127,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_BLMin_Ed,107,146,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_RHMax_Ed,256,109,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_GSMax_Ed,256,128,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_BLMax_Ed,256,147,40,14,ES_AUTOHSCROLL
+    GROUPBOX        "Targeting",IDC_STATIC,137,7,187,49
+    PUSHBUTTON      "Set",IDC_SetMinThr,56,86,26,14
+    PUSHBUTTON      "Set",IDC_SetMaxThr,207,87,26,14
+    CONTROL         "Target Goal",IDC_TargetGoal,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,143,19,53,10
+    CONTROL         "Target Frisbe",IDC_TargetFrisbe,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,143,30,59,10
+    CONTROL         "Bounds Text",IDC_BoundsText,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,71,42,56,10
 END
 
 
@@ -138,23 +154,23 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 310
         TOPMARGIN, 7
-        BOTTOMMARGIN, 83
+        BOTTOMMARGIN, 82
     END
 
     IDD_PROCAMP_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 435
+        RIGHTMARGIN, 418
         TOPMARGIN, 7
-        BOTTOMMARGIN, 142
+        BOTTOMMARGIN, 125
     END
 
     IDD_VISION_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 240
+        RIGHTMARGIN, 324
         TOPMARGIN, 7
-        BOTTOMMARGIN, 156
+        BOTTOMMARGIN, 168
     END
 END
 #endif    // APSTUDIO_INVOKED

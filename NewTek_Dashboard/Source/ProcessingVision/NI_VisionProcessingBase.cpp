@@ -5,7 +5,7 @@
 
 VisionTracker::VisionTracker()
 	: criteriaCount( 0 ), particleCriteria( NULL ), m_bObjectSeparation( false ),
-	  m_bUseMasking( false ), m_bShowOverlays( true ), m_bShowThreshold( false ),
+	  m_DisplayMode( eNormal ), m_bShowOverlays( true ),
 	  m_bShowAimingText( true ), m_bShowBoundsText( false ), m_bUseColorThreshold( false ),
 	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )

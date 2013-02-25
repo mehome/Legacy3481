@@ -4,11 +4,10 @@
 #include "NI_VisionProcessingBase.h"
 #include "VisionGoalTracker.h"
 #include "VisionRinTinTinTracker.h"
-#undef  __UseSampleExample__
 
 UDP_Client_Interface *g_UDP_Output=NULL;
 extern VisionTracker* g_pTracker[eNumTrackers];
-TrackerType SelectedTracker = eGoalTracker; /*eFrisbeTracker;*/
+TrackerType SelectedTracker = eGoalTracker;
 
 //Give something cool to look at
 class SineWaveMaker
@@ -56,8 +55,7 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 			return Frame;
 
 		// quick tweaks 
-		g_pTracker[SelectedTracker]->SetShowThreshold(false);
-		g_pTracker[SelectedTracker]->SetUseMasking(true);
+		g_pTracker[SelectedTracker]->SetDisplayMode(eMasked);
 		g_pTracker[SelectedTracker]->SetUseColorThreshold(false);
 		g_pTracker[SelectedTracker]->SetShowBounds(true);
 	}
@@ -80,38 +78,42 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 
 extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *Frame)
 {
-#ifndef __UseSampleExample__
 	double x_target, y_target;
 	bool have_target = false;
 	Frame = NI_VisionProcessing(Frame, x_target, y_target, have_target);
-	//DebugOutput("X=%.2f,Y=%.2f\n",x_target,y_target);
+	//DebugOutput("X=%.2f, Y=%.2f, %s\n", x_target, y_target, have_target ? "target: yes" : "target: no");
 	if (g_UDP_Output && have_target)
 		(*g_UDP_Output)(x_target,y_target);
-#else
-
-	//Test... make a green box in the center of the frame
-	size_t CenterY=Frame->YRes / 2;
-	size_t CenterX=Frame->XRes / 2;
-	size_t LineWidthInBytes=Frame->Stride * 4;
-	for (size_t y=CenterY-5;y<CenterY+5;y++)
-	{
-		for (size_t x=CenterX-5; x<CenterX+5; x++)
-		{
-			*(Frame->Memory+ (x*4 + 0) + (LineWidthInBytes * y))=0;
-			*(Frame->Memory+ (x*4 + 1) + (LineWidthInBytes * y))=255;
-			*(Frame->Memory+ (x*4 + 2) + (LineWidthInBytes * y))=0;
-		}
-	}
-	double X,Y;
-	g_TestSample(X,Y);
-	//DebugOutput("X=%.2f,Y=%.2f\n",X,Y);
-	if (g_UDP_Output)
-		(*g_UDP_Output)(X,Y);
-#endif
 
 	return Frame;
 }
 
+extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum VisionSetting, double value)
+{
+	switch( VisionSetting )
+	{
+		case eTrackerType:
+			SelectedTracker = (TrackerType)(int)value;
+			break;
+		default:
+			break;
+	}
+
+	return true;
+}
+
+extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum VisionSetting )
+{
+	switch( VisionSetting )
+	{
+		case eTrackerType:
+			return (double)SelectedTracker;
+			break;
+		default:
+			break;
+	}
+	return 0.0;
+}
 
 extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char *IPAddress)
 {

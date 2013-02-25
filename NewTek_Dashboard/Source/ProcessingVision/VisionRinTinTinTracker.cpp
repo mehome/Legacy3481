@@ -73,7 +73,7 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 	// color threshold
 	if( m_bUseColorThreshold )
 	{
-		if( m_bShowThreshold )
+		if( m_DisplayMode == eThreshold )
 		{
 			VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
 
@@ -90,7 +90,7 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 	}
 	else
 	{
-		if( m_bShowThreshold )
+		if( m_DisplayMode == eThreshold )
 		{
 			// Extracts the luminance plane
 			VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, ThresholdImageU8));
@@ -196,37 +196,37 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 	int max_y = 0;
 	int index = 0;
 
-	if( m_bShowOverlays )
+	VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
+
+	if( m_DisplayMode == eThreshold )
 	{
-		VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
+		imaqMask(InputImageRGB, InputImageRGB, ThresholdImageU8);
+	}
 
-		if( m_bShowThreshold )
+	if(particleList.numParticles > 0)
+	{
+		if( m_bUseFindCorners )
+			VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
+
+		if( m_DisplayMode == eMasked )
+			imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
+	
+		// overlay some useful info
+		for(int i = 0; i < particleList.numParticles; i++)
 		{
-			imaqMask(InputImageRGB, InputImageRGB, ThresholdImageU8);
-		}
+			Point P1;
+			Point P2;
+			Rect rect;
 
-		if(particleList.numParticles > 0)
-		{
-			if( m_bUseFindCorners )
-				VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
-
-			if( m_bUseMasking )
-				imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
-		
-			// overlay some useful info
-			for(int i = 0; i < particleList.numParticles; i++)
+			// track lowest center y (image coords, top is zero.)
+			if( particleList.particleData[i].center.y > max_y )
 			{
-				Point P1;
-				Point P2;
-				Rect rect;
+				max_y = particleList.particleData[i].center.y;
+				index = i;
+			}
 
-				// track lowest center y (image coords, top is zero.)
-				if( particleList.particleData[i].center.y > max_y )
-				{
-					max_y = particleList.particleData[i].center.y;
-					index = i;
-				}
-
+			if( m_bShowOverlays )
+			{
 				// write some text to show aiming point 
 				Point TextPoint;
 				int fu;
@@ -317,12 +317,11 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 						imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
 					}
 				}
-			}	// particle loop
-		}	// num particles > 0
-		else
-			success = 0;
-
-	}	// show overlays
+			}	// show overlays
+		}	// particle loop
+	}	// num particles > 0
+	else
+		success = 0;
 
 Error:
 	// Get return for x, y target values;
