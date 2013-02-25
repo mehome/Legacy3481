@@ -9,12 +9,19 @@ VisionRinTinTinTracker::VisionRinTinTinTracker()
 	// threshold ranges
 	if( m_bUseColorThreshold )
 	{
-		plane1Range.minValue = 130, plane1Range.maxValue = 255,	// red
-		plane2Range.minValue = 130, plane2Range.maxValue = 255, // green
-		plane3Range.minValue = 130, plane3Range.maxValue = 255;	// blue
+		RedRange.minValue = 130, RedRange.maxValue = 255,	// red
+		GreenRange.minValue = 130, GreenRange.maxValue = 255, // green
+		BlueRange.minValue = 130, BlueRange.maxValue = 255;	// blue
+
+		plane1Range = &RedRange;
+		plane2Range = &GreenRange;
+		plane3Range = &BlueRange;
 	}
 	else
-		plane1Range.minValue = 143, plane1Range.maxValue = 255;	// luma
+	{
+		LuminanceRange.minValue = 143, LuminanceRange.maxValue = 255;	// luma
+		plane1Range = &LuminanceRange;
+	}
 
 	particleList.SetParticleParams( 0.65f, 1.0f, 10.0f );	// area threshold, aspect min, max
 
@@ -34,15 +41,21 @@ VisionRinTinTinTracker::VisionRinTinTinTracker( bool use_color_treshold )
 {
 	m_bUseColorThreshold = use_color_treshold;
 
-	// threshold ranges
 	if( m_bUseColorThreshold )
 	{
-		plane1Range.minValue = 130, plane1Range.maxValue = 255,	// red
-			plane2Range.minValue = 130, plane2Range.maxValue = 255, // green
-			plane3Range.minValue = 130, plane3Range.maxValue = 255;	// blue
+		RedRange.minValue = 130, RedRange.maxValue = 255,	// red
+			GreenRange.minValue = 130, GreenRange.maxValue = 255, // green
+			BlueRange.minValue = 130, BlueRange.maxValue = 255;	// blue
+
+		plane1Range = &RedRange;
+		plane2Range = &GreenRange;
+		plane3Range = &BlueRange;
 	}
 	else
-		plane1Range.minValue = 143, plane1Range.maxValue = 255;	// luma
+	{
+		LuminanceRange.minValue = 143, LuminanceRange.maxValue = 255;	// luma
+		plane1Range = &LuminanceRange;
+	}
 
 	particleList.SetParticleParams( 0.65f, 1.0f, 10.0f );	// area threshold, aspect min, max
 
@@ -75,14 +88,14 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 	{
 		if( m_DisplayMode == eThreshold )
 		{
-			VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+			VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
 
 			// Fills holes in particles.
 			VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, TRUE));
 		}
 		else
 		{
-			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, &plane1Range, &plane2Range, &plane3Range));
+			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
 
 			// Fills holes in particles.
 			VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, TRUE));
@@ -96,7 +109,7 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 			VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, ThresholdImageU8));
 
 			// Thresholds the image.
-			VisionErrChk(imaqThreshold(ThresholdImageU8, ThresholdImageU8, (float)plane1Range.minValue, (float)plane1Range.maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
+			VisionErrChk(imaqThreshold(ThresholdImageU8, ThresholdImageU8, (float)plane1Range->minValue, (float)plane1Range->maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
 
 			// Fills holes in particles.
 			VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, TRUE));
@@ -107,7 +120,7 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 			VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, ParticleImageU8));
 
 			// Thresholds the image.
-			VisionErrChk(imaqThreshold(ParticleImageU8, ParticleImageU8, (float)plane1Range.minValue, (float)plane1Range.maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
+			VisionErrChk(imaqThreshold(ParticleImageU8, ParticleImageU8, (float)plane1Range->minValue, (float)plane1Range->maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
 
 			// Fills holes in particles.
 			VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, TRUE));

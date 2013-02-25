@@ -50,10 +50,10 @@ enum DisplayType
 	eNumDisplayTypes
 };
 
-enum ThresholdMode
+enum ThresholdColorSpace
 {
 	eThreshRGB,
-	eThreshHSL,
+	eThreshHSV,
 	eThreshLuma,
 	eNumThreshTypes
 };

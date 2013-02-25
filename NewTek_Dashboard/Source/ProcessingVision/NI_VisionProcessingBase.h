@@ -118,6 +118,7 @@ protected:
 	bool m_bObjectSeparation;
 
 	// threshold method
+	ThresholdColorSpace m_ThresholdMode;
 	bool m_bUseColorThreshold;
 
 	// corner and and edge
@@ -136,12 +137,24 @@ protected:
 	Image *Plane2;
 	Image *Plane3;
 
+	Image *Destination;
+
 	// TODO: change below to be pointers, add ranges for the supported modes, add a member for mode, and function to switch
 	//       also add a destination image pointer to simplify supporting threshold display.
 	// Color thresholding values 
-	Range plane1Range;
-	Range plane2Range;
-	Range plane3Range;
+	Range RedRange;
+	Range GreenRange;
+	Range BlueRange;
+
+	Range HueRange;
+	Range SaturationRange;
+	Range ValueRange;
+
+	Range LuminanceRange;
+
+	Range *plane1Range;
+	Range *plane2Range;
+	Range *plane3Range;
 
 	// particle filter params
 	int criteriaCount;
