@@ -51,15 +51,13 @@ private:
 		//Sleep(33);
 		//Sleep(1000);
 		DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
-		m_RGB=m_TestMap;
-		m_Outstream->process_frame(&m_RGB);
+		m_Outstream->process_frame(&m_TestMap,true,(double)time_type::get_current_time());
 		//printf("%d\n",m_Counter++);
 	}
 	FrameWork::Threads::thread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
 
 private:
 	FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
-	FrameWork::Bitmaps::bitmap_bgra_u8 m_RGB;
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
 	size_t m_Counter;
 };

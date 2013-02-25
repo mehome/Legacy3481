@@ -203,7 +203,7 @@ PBYTE Buffer::pGetBufferData(size_t *pMemorySize,size_t desiredXRes,size_t desir
 	return (PBYTE)Desc.lpSurface;
 }
 
-void Buffer::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
+void Buffer::process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer)
 {
 	using namespace FrameWork::Bitmaps;
 	assert (m_BufferState==eAvailable);
@@ -214,7 +214,6 @@ void Buffer::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
 	int YResToUse=pBuffer->yres();
 	PBYTE frame=pGetBufferData(&MemorySize,pBuffer->xres(),YResToUse);
 	bitmap_ycbcr_u8 DestBuffer((pixel_ycbcr_u8 *)frame,pBuffer->xres(),YResToUse,m_Pitch>>2);
-	//bitmap_bgra_u8 DestBuffer((pixel_bgr_u8 *)frame,pBuffer->xres(),YResToUse,m_Pitch/3);
 	//perform the copy
 	DestBuffer=*pBuffer;
 	//update the state
@@ -322,9 +321,7 @@ void Preview::StartStreaming()
 			FrameWork::Bitmaps::bitmap_ycbcr_u8 black_frame(720,480);
 			const int FieldSize_ =(int) (720*480*2);
 			BlackField((PBYTE)black_frame(),FieldSize_);
-			FrameWork::Bitmaps::bitmap_bgra_u8 RGB;
-			RGB=black_frame;
-			m_LastBufferProcessed->process_frame(&RGB);
+			m_LastBufferProcessed->process_frame(&black_frame);
 		}
 		m_LastTime=time_type::get_current_time();
 
@@ -615,7 +612,7 @@ void Preview::operator() ( const void* )
 	}
 }
 
-void Preview::process_frame_internal(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
+void Preview::process_frame_internal(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer)
 {
 	m_LastUsingProcessSlot=(m_LastUsingProcessSlot+1) % Preview_NoVideoBuffers;
 	if (m_VideoBuffers[m_LastUsingProcessSlot]->GetBufferState()!=Buffer::eAvailable)
@@ -650,11 +647,11 @@ void Preview::process_frame_internal(const FrameWork::Bitmaps::bitmap_bgra_u8 *p
 }
 
 
-void Preview::process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
+void Preview::process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock)
 {
 	using namespace FrameWork::Bitmaps;
-	bitmap_bgra_u8 DestBuffer((*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
-	if (pBuffer->is_interleaved())
+	bitmap_ycbcr_u8 DestBuffer((*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
+	if (isInterlaced)
 	{
 		DestBuffer.reference_even_lines(*pBuffer);
 		process_frame_internal(&DestBuffer);

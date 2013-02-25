@@ -69,7 +69,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 				try
 				{
 				
-					m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_RGB32");
+					m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_UYVY");
 					if (!m_DriverProc) throw 1;
 					m_fpInitialize=(function_Initialize) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Initialize");
 					if (!m_fpInitialize) throw 2;
@@ -87,7 +87,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		void StartStreaming() {m_IsStreaming=true;}
 		void StopStreaming() {m_IsStreaming=false;}
 
-		virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer)
+		virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock)
 		{
 			if (m_IsStreaming)
 			{
@@ -96,11 +96,11 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 					using namespace FrameWork::Bitmaps;
 					Bitmap_Frame frame((PBYTE)(*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
 					Bitmap_Frame out_frame=*((*m_DriverProc)(&frame));
-					bitmap_bgra_u8 dest((pixel_bgra_u8 *)out_frame.Memory,out_frame.XRes,out_frame.YRes,out_frame.Stride);
-					m_Outstream->process_frame(&dest);
+					bitmap_ycbcr_u8 dest((pixel_ycbcr_u8 *)out_frame.Memory,out_frame.XRes,out_frame.YRes,out_frame.Stride);
+					m_Outstream->process_frame(&dest,isInterlaced,VideoClock);
 				}
 				else
-					m_Outstream->process_frame(pBuffer); //just passing through			
+					m_Outstream->process_frame(pBuffer,isInterlaced,VideoClock); //just passing through			
 			}
 		}
 	private:

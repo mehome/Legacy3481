@@ -1113,8 +1113,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 
 	//always dispatch
     {
-		FrameWork::Bitmaps::bitmap_bgra_u8 bitmap(src_frame->width,src_frame->height);
-		bitmap.set_interleaved(src_frame->interlaced_frame!=0);
+		FrameWork::Bitmaps::bitmap_ycbcr_u8 bitmap(src_frame->width,src_frame->height);
 		AVPicture pict = { { 0 } };
 		pict.data[0] = (uint8_t *) bitmap();
 		pict.data[1] = 0;
@@ -1129,37 +1128,14 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 		#else
         sws_flags = (int)av_get_int(sws_opts, "sws_flags", NULL);
 		#endif
-		if (m_procamp->Get_Procamp_Matrix()==NULL)
-		{
-			m_img_convert_ctx = sws_getCachedContext(m_img_convert_ctx,
-				src_frame->width, src_frame->height, (AVPixelFormat)src_frame->format,bitmap.xres(), bitmap.yres(),
-				AV_PIX_FMT_BGRA, sws_flags, NULL, NULL, NULL);
+		m_img_convert_ctx = sws_getCachedContext(m_img_convert_ctx,
+			src_frame->width, src_frame->height, (AVPixelFormat)src_frame->format,bitmap.xres(), bitmap.yres(),
+			AV_PIX_FMT_UYVY422, sws_flags, NULL, NULL, NULL);
 
-			assert(m_img_convert_ctx != NULL);
+		assert(m_img_convert_ctx != NULL);
 
-			sws_scale(m_img_convert_ctx, src_frame->data, src_frame->linesize,
-					  0, src_frame->height, pict.data, pict.linesize);
-		}
-		else
-		{
-			//unfortunately the procamp is in UYVY so we'll have to convert it to BGRA
-			FrameWork::Bitmaps::bitmap_ycbcr_u8 bitmap_ycbcr(src_frame->width,src_frame->height);
-			pict.data[0] = (uint8_t *) bitmap_ycbcr();
-			pict.linesize[0] = bitmap_ycbcr.stride_in_bytes();
-
-			m_img_convert_ctx = sws_getCachedContext(m_img_convert_ctx,
-				src_frame->width, src_frame->height, (AVPixelFormat)src_frame->format,bitmap_ycbcr.xres(), bitmap_ycbcr.yres(),
-				AV_PIX_FMT_UYVY422, sws_flags, NULL, NULL, NULL);
-
-			assert(m_img_convert_ctx != NULL);
-
-			sws_scale(m_img_convert_ctx, src_frame->data, src_frame->linesize,
-				0, src_frame->height, pict.data, pict.linesize);
-			//Apply the procamp
-			(*m_procamp)(bitmap_ycbcr);
-			//yuck... the conversion copy
-			bitmap=bitmap_ycbcr;
-		}
+		sws_scale(m_img_convert_ctx, src_frame->data, src_frame->linesize,
+				  0, src_frame->height, pict.data, pict.linesize);
 
 		const int Playback_MaxQueue=8;
 		{
@@ -1169,7 +1145,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 			#endif
 			//Don't let the queue grow by skipping the processing when it is too large
 			if (m_videoq.nb_packets < (m_realtime ? 2 : Playback_MaxQueue) )
-				m_Preview->process_frame(&bitmap);
+				m_Preview->process_frame(&bitmap,src_frame->interlaced_frame==0?false:true,m_video_clock);
 
 			#ifdef __ShowProcessingDelta__
 			DebugOutput("%d time delta=%.1f\n",m_videoq.nb_packets,(double)(time_type::get_current_time()-StartTime) * 1000.0);

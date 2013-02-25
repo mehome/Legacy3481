@@ -10,7 +10,7 @@ public:
 	virtual ~Buffer( void );
 
 	/// \param fieldType allows frames to be sent as they come and then properly copied onto the surface buffer
-	void process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer);
+	void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer);
 
 	const FrameWork::event &GetFrameEvent() {return m_FrameEvent;}
 	//This will ensure the surface is allocated on the correct index
@@ -101,8 +101,7 @@ public:
 	virtual ~Preview( void );
 
 	bool Get_IsError() const {return m_IsError;} //make sure everything is happy before pumping frames to it
-	//virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer);
-	virtual void process_frame(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer);
+	virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock);
 
 	//override these to do things like start / stop the fc3 server
 	virtual void StartStreaming( void );
@@ -118,7 +117,7 @@ protected:
 	IDirectDraw7 *GetCurrentDisplayDevice( void ) const;
 
 private:
-	virtual void process_frame_internal(const FrameWork::Bitmaps::bitmap_bgra_u8 *pBuffer);
+	virtual void process_frame_internal(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer);
 	// My worker thread function that does something useful w/ a buffer after it's been filled
 	friend FrameWork::Threads::thread<Preview>;
 	void operator() ( const void* );

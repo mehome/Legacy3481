@@ -76,7 +76,9 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	return Frame;
 }
 
-extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *Frame)
+//TODO convert UYVY to BGRA (expose plugin methods to make the conversion)
+#if 0
+extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 {
 	double x_target, y_target;
 	bool have_target = false;
@@ -87,6 +89,33 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_RGB32(Bitmap_Frame *F
 
 	return Frame;
 }
+
+#else
+extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
+{
+	#if 1
+	//Test... make a green box in the center of the frame
+	size_t CenterY=Frame->YRes / 2;
+	size_t CenterX=Frame->XRes / 2;
+	size_t LineWidthInBytes=Frame->Stride * 4;
+	for (size_t y=CenterY;y<CenterY+10;y++)
+	{
+		//http://www.mikekohn.net/file_formats/yuv_rgb_converter.php
+		//yuv 149,43,21 = rgb 0,255,0
+		for (size_t x=CenterX; x<CenterX+10; x++)
+		{
+			*(Frame->Memory+ (x*2 + 0) + (LineWidthInBytes * y))=21;
+			*(Frame->Memory+ (x*2 + 1) + (LineWidthInBytes * y))=149;
+			*(Frame->Memory+ (x*2 + 2) + (LineWidthInBytes * y))=43;
+			*(Frame->Memory+ (x*2 + 3) + (LineWidthInBytes * y))=149;
+		}
+	}
+	return Frame;
+	#else
+	return Frame;
+	#endif
+}
+#endif
 
 extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum VisionSetting, double value)
 {
