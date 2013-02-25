@@ -1137,6 +1137,14 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 		sws_scale(m_img_convert_ctx, src_frame->data, src_frame->linesize,
 				  0, src_frame->height, pict.data, pict.linesize);
 
+
+		//TODO: evaluate if this is to be removed once we have support in process vision
+		if (m_procamp->Get_Procamp_Matrix()!=NULL)
+		{
+			//Apply the procamp
+			(*m_procamp)(bitmap);
+		}
+
 		const int Playback_MaxQueue=8;
 		{
 			#ifdef __ShowProcessingDelta__
