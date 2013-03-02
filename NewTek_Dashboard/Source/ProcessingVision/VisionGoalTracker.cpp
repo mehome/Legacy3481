@@ -4,6 +4,8 @@
 #include "NI_VisionProcessingBase.h"
 #include "VisionGoalTracker.h"
 
+#define THRESH_RGB_GRAY
+
 VisionGoalTracker::VisionGoalTracker()
 {	
 	m_ThresholdMode = eThreshHSV;
@@ -13,11 +15,19 @@ VisionGoalTracker::VisionGoalTracker()
 	SaturationRange.minValue = 50,	SaturationRange.maxValue = 255,
 	ValueRange.minValue = 50,		ValueRange.maxValue = 250;
 
+#ifndef THRESH_RGB_GRAY
 	// rgb - green
     RedRange.minValue = 0,		RedRange.maxValue = 188,
 	GreenRange.minValue = 163,	GreenRange.maxValue = 255,
 	BlueRange.minValue = 9,		BlueRange.maxValue = 255;	
+#else
+	m_ThresholdMode = eThreshRGB;
 
+	// rgb - gray - works with video clips from proir competitions
+	RedRange.minValue = 100,	RedRange.maxValue = 200,
+	GreenRange.minValue = 100,	GreenRange.maxValue = 210,
+	BlueRange.minValue = 100,	BlueRange.maxValue = 210;
+#endif
 	switch(m_ThresholdMode)
 	{
 		case eThreshRGB:
@@ -60,16 +70,28 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 	// color threshold
 	if( m_DisplayMode == eThreshold )
 	{
-		//	VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
-		VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, plane1Range, plane2Range, plane3Range));
+		if( m_ThresholdMode == eThreshRGB )
+		{
+			VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
+		}
+		else
+		{
+			VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, plane1Range, plane2Range, plane3Range));
+		}
 
 		// fill holes
 		VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, true));
 	}
 	else
 	{
-		//	VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
-		VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, plane1Range, plane2Range, plane3Range));
+		if( m_ThresholdMode == eThreshRGB )
+		{
+			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
+		}
+		else
+		{
+			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, plane1Range, plane2Range, plane3Range));
+		}
 
 		// fill holes
 		VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
