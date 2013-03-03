@@ -45,11 +45,57 @@ inline void GUIDtow(GUID id,wchar_t *string) {
 		id.Data4[0],id.Data4[1],id.Data4[2],id.Data4[3],id.Data4[4],id.Data4[5],id.Data4[6],id.Data4[7]);
 }
 
+Bitmap_Handle::Bitmap_Handle(PBYTE memory,size_t xres,size_t yres,size_t stride) : frame(memory,xres,yres,stride)
+{
+}
+
+Bitmap_Handle::~Bitmap_Handle()
+{
+	using namespace FrameWork::Bitmaps;
+	bitmap_bgra_u8 *bitmap=(bitmap_bgra_u8 *)Handle;
+	delete bitmap;
+	Handle=NULL;
+	frame.Memory=NULL; //pedantic
+}
+
+class Dashboard_Framework_Helper : public Dashboard_Framework_Interface
+{
+	Bitmap_Handle *CreateBGRA(const Bitmap_Frame *sourceUVYV)
+	{
+		using namespace FrameWork::Bitmaps;
+		bitmap_bgra_u8 *bitmap=new bitmap_bgra_u8(sourceUVYV->XRes,sourceUVYV->YRes,sourceUVYV->Stride * 2);
+		Bitmap_Handle *handle=new Bitmap_Handle((PBYTE)((*bitmap)()),bitmap->xres(),bitmap->yres(),bitmap->stride());
+		handle->Handle=(void *)bitmap;
+		return handle;
+	}
+
+	void DestroyBGRA(Bitmap_Handle *handle)
+	{
+		delete handle;
+	}
+
+	void UYVY_to_BGRA(const Bitmap_Frame *sourceUVYV,Bitmap_Frame *destBGRA)
+	{
+		using namespace FrameWork::Bitmaps;
+		bitmap_ycbcr_u8 source_bitmap((pixel_ycbcr_u8 *)sourceUVYV->Memory,sourceUVYV->XRes,sourceUVYV->YRes,sourceUVYV->Stride);
+		bitmap_bgra_u8 dest_bitmap((pixel_bgra_u8 *)destBGRA->Memory,destBGRA->XRes,destBGRA->YRes,destBGRA->Stride);
+		dest_bitmap=source_bitmap;
+	}
+	void BGRA_to_UYVY(const Bitmap_Frame *sourceBGRA,Bitmap_Frame *destUYVY)
+	{
+		using namespace FrameWork::Bitmaps;
+		bitmap_bgra_u8 source_bitmap((pixel_bgra_u8 *)sourceBGRA->Memory,sourceBGRA->XRes,sourceBGRA->YRes,sourceBGRA->Stride);
+		bitmap_ycbcr_u8 dest_bitmap((pixel_ycbcr_u8 *)destUYVY->Memory,destUYVY->XRes,destUYVY->YRes,destUYVY->Stride);
+		dest_bitmap=source_bitmap;
+	}
+
+};
+
 class ProcessingVision : public FrameWork::Outstream_Interface
 {
 	public:
 		ProcessingVision(FrameWork::Outstream_Interface *Preview=NULL) : m_DriverProc(NULL),m_PlugIn(NULL),m_Outstream(Preview) {}
-		void Callback_Initialize(char *IPAddress) {if (m_PlugIn) (*m_fpInitialize)(IPAddress);}
+		void Callback_Initialize(char *IPAddress) {if (m_PlugIn) (*m_fpInitialize)(IPAddress,&m_DashboardHelper);}
 		void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
 		~ProcessingVision()
 		{
@@ -107,7 +153,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		typedef Bitmap_Frame * (*DriverProc_t)(Bitmap_Frame *Frame);
 		DriverProc_t m_DriverProc;
 
-		typedef void (*function_Initialize) (char *IPAddress);
+		typedef void (*function_Initialize) (char *IPAddress,Dashboard_Framework_Helper *DashboardHelper);
 		function_Initialize m_fpInitialize;
 
 		typedef void (*function_void) ();
@@ -125,6 +171,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		HMODULE m_PlugIn;
 		FrameWork::Outstream_Interface * m_Outstream; //I'm not checking for NULL so stream must be stopped while pointer is invalid
 		bool m_IsStreaming;
+		Dashboard_Framework_Helper m_DashboardHelper;
 };
 
 

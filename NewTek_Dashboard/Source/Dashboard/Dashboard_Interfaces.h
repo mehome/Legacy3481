@@ -25,6 +25,33 @@ enum ProcAmp_enum
 	e_no_procamp_items
 };
 
+struct Bitmap_Frame
+{
+	Bitmap_Frame(PBYTE memory,size_t xres,size_t yres,size_t stride) : Memory(memory),XRes(xres),YRes(yres),Stride(stride) {}
+	PBYTE Memory;  //A pointer to memory of the frame... this can be written over for compositing effects
+	size_t XRes,YRes;  //X and Y res in pixels, these may also change but typically should stay the same (and return same memory)
+	size_t Stride;  //This is >= Xres some memory buffers need extra room for processing... this can be changed (and might need to be)
+};
+struct Bitmap_Handle
+{
+	Bitmap_Handle(PBYTE memory,size_t xres,size_t yres,size_t stride);
+	~Bitmap_Handle();
+	Bitmap_Frame frame;
+	void *Handle; //used internally
+};
+
+class Dashboard_Framework_Interface
+{
+public:
+	//helper functions to easily construct blank BGRA frame
+	virtual Bitmap_Handle *CreateBGRA(const Bitmap_Frame *sourceUVYV)=0;
+	virtual void DestroyBGRA(Bitmap_Handle *handle)=0;
+
+	//converter functions
+	virtual void UYVY_to_BGRA(const Bitmap_Frame *sourceUVYV,Bitmap_Frame *destBGRA)=0;
+	virtual void BGRA_to_UYVY(const Bitmap_Frame *sourceBGRA,Bitmap_Frame *destUYVY)=0;
+};
+
 class Dashboard_Controller_Interface
 {
 public:

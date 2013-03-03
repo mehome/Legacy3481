@@ -8,6 +8,7 @@
 UDP_Client_Interface *g_UDP_Output=NULL;
 extern VisionTracker* g_pTracker[eNumTrackers];
 TrackerType SelectedTracker = eGoalTracker;
+Dashboard_Framework_Interface *g_Framework=NULL;
 
 //Give something cool to look at
 class SineWaveMaker
@@ -76,16 +77,24 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	return Frame;
 }
 
-//TODO convert UYVY to BGRA (expose plugin methods to make the conversion)
-#if 0
+#if 1
 extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 {
+	Bitmap_Handle *bgra_handle=g_Framework->CreateBGRA(Frame);
+	Bitmap_Frame &bgra_frame=bgra_handle->frame;
+	g_Framework->UYVY_to_BGRA(Frame,&bgra_frame);
+
 	double x_target, y_target;
 	bool have_target = false;
-	Frame = NI_VisionProcessing(Frame, x_target, y_target, have_target);
+	//Note: out_frame could be UVYV if we wanted it to be... I don't want to assume its the same as &bgra_frame even though it may be
+	Bitmap_Frame *out_frame;
+	out_frame = NI_VisionProcessing(&bgra_frame, x_target, y_target, have_target);
 	//DebugOutput("X=%.2f, Y=%.2f, %s\n", x_target, y_target, have_target ? "target: yes" : "target: no");
 	if (g_UDP_Output && have_target)
 		(*g_UDP_Output)(x_target,y_target);
+
+	g_Framework->BGRA_to_UYVY(out_frame,Frame);
+	g_Framework->DestroyBGRA(bgra_handle);
 
 	return Frame;
 }
@@ -93,7 +102,9 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Fr
 #else
 extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 {
-	#if 1
+	#undef __TestUYVYDot__
+	#define __TestBGRADot__
+	#ifdef __TestUYVYDot__
 	//Test... make a green box in the center of the frame
 	size_t CenterY=Frame->YRes / 2;
 	size_t CenterX=Frame->XRes / 2;
@@ -110,10 +121,32 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Fr
 			*(Frame->Memory+ (x*2 + 3) + (LineWidthInBytes * y))=149;
 		}
 	}
-	return Frame;
-	#else
-	return Frame;
 	#endif
+	#ifdef __TestBGRADot__
+	if (g_Framework)
+	{
+		Bitmap_Handle *bgra_handle=g_Framework->CreateBGRA(Frame);
+		Bitmap_Frame &bgra_frame=bgra_handle->frame;
+		g_Framework->UYVY_to_BGRA(Frame,&bgra_frame);
+		//Test... make a green box in the center of the frame
+		size_t CenterY=bgra_frame.YRes / 2;
+		size_t CenterX=bgra_frame.XRes / 2;
+		size_t LineWidthInBytes=bgra_frame.Stride * 4;
+		for (size_t y=CenterY-5;y<CenterY+5;y++)
+		{
+			for (size_t x=CenterX-5; x<CenterX+5; x++)
+			{
+				*(bgra_frame.Memory+ (x*4 + 0) + (LineWidthInBytes * y))=0;
+				*(bgra_frame.Memory+ (x*4 + 1) + (LineWidthInBytes * y))=255;
+				*(bgra_frame.Memory+ (x*4 + 2) + (LineWidthInBytes * y))=0;
+			}
+		}
+		g_Framework->BGRA_to_UYVY(&bgra_frame,Frame);
+		g_Framework->DestroyBGRA(bgra_handle);
+	}
+	#endif
+
+	return Frame;
 }
 #endif
 
@@ -144,8 +177,9 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 	return 0.0;
 }
 
-extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char *IPAddress)
+extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
 {
+	g_Framework=DashboardHelper;
 	if (IPAddress)
 		g_UDP_Output=UDP_Client_Interface::GetNewInstance(IPAddress);
 }

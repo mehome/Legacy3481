@@ -1,18 +1,11 @@
 #pragma once
+#include "../Dashboard/Dashboard_Interfaces.h"
 
 #ifdef PROCESSINGVISION_EXPORTS
 #define PROCESSINGVISION_API __declspec(dllexport)
 #else
 #define PROCESSINGVISION_API __declspec(dllimport)
 #endif
-
-struct Bitmap_Frame
-{
-	Bitmap_Frame(PBYTE memory,size_t xres,size_t yres,size_t stride) : Memory(memory),XRes(xres),YRes(yres),Stride(stride) {}
-	PBYTE Memory;  //A pointer to memory of the frame... this can be written over for compositing effects
-	size_t XRes,YRes;  //X and Y res in pixels, these may also change but typically should stay the same (and return same memory)
-	size_t Stride;  //This is >= Xres some memory buffers need extra room for processing... this can be changed (and might need to be)
-};
 
 // No C library depreciation warnings
 #pragma warning ( disable : 4995 )
@@ -71,7 +64,7 @@ protected:
 extern "C" 
 {
 	/// \param IPAddress- this may be null if user does not wish to send out UDP packets
-	PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char *IPAddress);
+	PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper);
 	/// This is called when we are about to close will all for creation and destruction of classes
 	PROCESSINGVISION_API void Callback_SmartCppDashboard_Shutdown();
 
