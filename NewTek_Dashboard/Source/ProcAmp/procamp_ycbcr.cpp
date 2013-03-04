@@ -53,7 +53,7 @@ void apply_procamp( const FBMP::bitmap_ycbcr_u8& src, FBMP::bitmap_ycbcr_u8& dst
 	const int yres = src.yres();
 
 	// A constant to mask luminances
-	const __m128i mask_y = _mm_set_epi32( -1, 0, -1, -1 );
+	const __m128i mask_y = _mm_setr_epi32( -1, 0, -1, -1 );
 
 	// Cycle down the image
 	for( int y=0; y<yres; y++ )
@@ -67,53 +67,28 @@ void apply_procamp( const FBMP::bitmap_ycbcr_u8& src, FBMP::bitmap_ycbcr_u8& dst
 		{	// Prefetch
 			_mm_prefetch( 256 + (char*)p_src, _MM_HINT_NTA );
 			
-#if 0		// SSE 4.2 is borked in the compiler
-			
-			// Load in 8 source pixels
-			__m128i		src_0123 = src_align ? _mm_load_si128( (__m128i*)p_src ) : _mm_loadu_si128( (__m128i*)p_src );
-
 			// Color correct the first pixel
-			const __m128i ycbcr_0 = _mm_adds_epi16( _mm_adds_epi16( load_cb( _mm_extract_epi8( src_0123, 0 ) ), load_cr( _mm_extract_epi8( src_0123, 2 ) ) ),
-													_mm_adds_epi16( _mm_and_si128   ( mask_y, load_y( _mm_extract_epi8( src_0123, 1 ) ) ), _mm_andnot_si128( mask_y, load_y( _mm_extract_epi8( src_0123, 3 ) ) ) ) );
+			const DWORD src_0 = *( 0 + (DWORD*)p_src );
+			const __m128i ycbcr_0 = _mm_adds_epi16( _mm_adds_epi16( load_cb( (BYTE)(src_0) ), load_cr( (BYTE)(src_0>>16) ) ),
+													_mm_adds_epi16( _mm_and_si128( mask_y, load_y( (BYTE)(src_0>>8) ) ), _mm_andnot_si128( mask_y, load_y( (BYTE)(src_0>>24) ) ) ) );
 
 			// Color correct the second pixel
-			const __m128i ycbcr_1 = _mm_adds_epi16( _mm_adds_epi16( load_cb( _mm_extract_epi8( src_0123, 4 ) ), load_cr( _mm_extract_epi8( src_0123, 6 ) ) ),
-													_mm_adds_epi16( _mm_and_si128   ( mask_y, load_y( _mm_extract_epi8( src_0123, 5 ) ) ), _mm_andnot_si128( mask_y, load_y( _mm_extract_epi8( src_0123, 7 ) ) ) ) );
+			const DWORD src_1 = *( 1 + (DWORD*)p_src );
+			const __m128i ycbcr_1 = _mm_adds_epi16( _mm_adds_epi16( load_cb( (BYTE)(src_1) ), load_cr( (BYTE)(src_1>>16) ) ),
+													_mm_adds_epi16( _mm_and_si128( mask_y, load_y( (BYTE)(src_1>>8) ) ), _mm_andnot_si128( mask_y, load_y( (BYTE)(src_1>>24) ) ) ) );
 
 			// Combine the first two pixels together
 			const __m128i ycbcr_01 = _mm_srai_epi16( _mm_unpacklo_epi64( ycbcr_0, ycbcr_1 ), 5 );
 
 			// Color correct the third pixel
-			const __m128i ycbcr_2 = _mm_adds_epi16( _mm_adds_epi16( load_cb( _mm_extract_epi8( src_0123, 8 ) ), load_cr( _mm_extract_epi8( src_0123, 10 ) ) ),
-													_mm_adds_epi16( _mm_and_si128   ( mask_y, load_y( _mm_extract_epi8( src_0123, 9 ) ) ), _mm_andnot_si128( mask_y, load_y( _mm_extract_epi8( src_0123, 11 ) ) ) ) );
+			const DWORD src_2 = *( 2 + (DWORD*)p_src );
+			const __m128i ycbcr_2 = _mm_adds_epi16( _mm_adds_epi16( load_cb( (BYTE)(src_2) ), load_cr( (BYTE)(src_2>>16) ) ),
+													_mm_adds_epi16( _mm_and_si128( mask_y, load_y( (BYTE)(src_2>>8) ) ), _mm_andnot_si128( mask_y, load_y( (BYTE)(src_2>>24) ) ) ) );
 
 			// Color correct the forth pixel
-			const __m128i ycbcr_3 = _mm_adds_epi16( _mm_adds_epi16( load_cb( _mm_extract_epi8( src_0123, 12 ) ), load_cr( _mm_extract_epi8( src_0123, 14 ) ) ),
-													_mm_adds_epi16( _mm_and_si128   ( mask_y, load_y( _mm_extract_epi8( src_0123, 13 ) ) ), _mm_andnot_si128( mask_y, load_y( _mm_extract_epi8( src_0123, 15 ) ) ) ) );
-
-#else
-
-			// Color correct the first pixel
-			const __m128i ycbcr_0 = _mm_adds_epi16( _mm_adds_epi16( load_cb( p_src[ 0 ] ), load_cr( p_src[ 2 ] ) ),
-													_mm_adds_epi16( _mm_and_si128( mask_y, load_y( p_src[ 1 ] ) ), _mm_andnot_si128( mask_y, load_y( p_src[ 3 ] ) ) ) );
-
-			// Color correct the second pixel
-			const __m128i ycbcr_1 = _mm_adds_epi16( _mm_adds_epi16( load_cb( p_src[ 4 ] ), load_cr( p_src[ 6 ] ) ),
-													_mm_adds_epi16( _mm_and_si128( mask_y, load_y( p_src[ 5 ] ) ), _mm_andnot_si128( mask_y, load_y( p_src[ 7 ] ) ) ) );
-
-			// Combine the first two pixels together
-			const __m128i ycbcr_01 = _mm_srai_epi16( _mm_unpacklo_epi64( ycbcr_0, ycbcr_1 ), 5 );
-
-			// Color correct the third pixel
-			const __m128i ycbcr_2 = _mm_adds_epi16( _mm_adds_epi16( load_cb( p_src[ 8 ] ), load_cr( p_src[ 10 ] ) ),
-													_mm_adds_epi16( _mm_and_si128( mask_y, load_y( p_src[ 9 ] ) ), _mm_andnot_si128( mask_y, load_y( p_src[ 11 ] ) ) ) );
-
-			// Color correct the forth pixel
-			const __m128i ycbcr_3 = _mm_adds_epi16( _mm_adds_epi16( load_cb( p_src[ 12 ] ), load_cr( p_src[ 14 ] ) ),
-													_mm_adds_epi16( _mm_and_si128( mask_y, load_y( p_src[ 13 ] ) ), _mm_andnot_si128( mask_y, load_y( p_src[ 15 ] ) ) ) );
-
-
-#endif
+			const DWORD src_3 = *( 3 + (DWORD*)p_src );
+			const __m128i ycbcr_3 = _mm_adds_epi16( _mm_adds_epi16( load_cb( (BYTE)(src_3) ), load_cr( (BYTE)(src_3>>16) ) ),
+													_mm_adds_epi16( _mm_and_si128( mask_y, load_y( (BYTE)(src_3>>8) ) ), _mm_andnot_si128( mask_y, load_y( (BYTE)(src_3>>24) ) ) ) );
 
 			// Combine the second two pixels together
 			const __m128i ycbcr_23 = _mm_srai_epi16( _mm_unpacklo_epi64( ycbcr_2, ycbcr_3 ), 5 );
