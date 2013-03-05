@@ -1,5 +1,6 @@
 #pragma once
 #include "../Dashboard/Dashboard_Interfaces.h"
+#include "../ProcessingVision/Plugin_Control_Interface.h"
 
 #ifdef CONTROLS_EXPORTS
 #define CONTROLS_API __declspec(dllexport)
@@ -11,6 +12,7 @@ extern "C"
 {
 	//callbacks
 	CONTROLS_API void Callback_SmartCppDashboard_Initialize(Dashboard_Controller_Interface *controller,DLGPROC gWinProc);
+	CONTROLS_API void CallBack_SmartCppDashboard_Initialize_Plugin(Plugin_Controller_Interface *plugin);
 	CONTROLS_API void Callback_SmartCppDashboard_StartedStreaming(HWND pParent);
 	CONTROLS_API void Callback_SmartCppDashboard_Shutdown();
 	/// Populate your own menu items to be appended to the default menu

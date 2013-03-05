@@ -1,6 +1,8 @@
 #pragma once
 #include "../Dashboard/Dashboard_Interfaces.h"
 
+#include "Plugin_Control_Interface.h"
+
 #ifdef PROCESSINGVISION_EXPORTS
 #define PROCESSINGVISION_API __declspec(dllexport)
 #else
@@ -10,46 +12,6 @@
 // No C library depreciation warnings
 #pragma warning ( disable : 4995 )
 #pragma warning ( disable : 4996 )
-
-enum VisionSetting_enum
-{
-	eTrackerType,
-	eDisplayType,
-	eOverlays,
-	eAimingText,
-	eBoundsText,
-	eThresholdPlane1Min,
-	eThresholdPlane2Min,
-	eThresholdPlane3Min,
-	eThresholdPlain1Max,
-	eThresholdPlain2Max,
-	eThresholdPlain3Max,
-	eThresholdMode,	
-	eNumTrackerSettings
-};
-
-enum TrackerType 
-{
-	eGoalTracker,
-	eFrisbeTracker,
-	eNumTrackers
-};
-
-enum DisplayType
-{
-	eNormal,
-	eThreshold,
-	eMasked,
-	eNumDisplayTypes
-};
-
-enum ThresholdColorSpace
-{
-	eThreshRGB,
-	eThreshHSV,
-	eThreshLuma,
-	eNumThreshTypes
-};
 
 class UDP_Client_Interface
 {
@@ -81,5 +43,7 @@ extern "C"
 	PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum VisionSetting, double value);
 
 	PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum VisionSetting );
+
+	PROCESSINGVISION_API void ResetDefaults( void );
 };
 

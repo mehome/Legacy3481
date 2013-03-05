@@ -251,6 +251,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Plugin_Control_Interface.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ProcessingVision.h"
 				>
 			</File>

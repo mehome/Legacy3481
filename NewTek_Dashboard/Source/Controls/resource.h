@@ -51,7 +51,7 @@
 #define IDC_GSMax                       1041
 #define IDC_BLMax                       1042
 #define IDC_ThresholdRGB                1043
-#define IDC_ThresholdHSL                1044
+#define IDC_ThresholdHSV                1044
 #define IDC_DisplayGroup                1045
 #define IDC_RHMin_Ed                    1046
 #define IDC_GSMin_Ed                    1047
@@ -61,11 +61,12 @@
 #define IDC_BLMax_Ed                    1051
 #define IDC_ThresholdLuma               1052
 #define IDC_SetMinThr                   1053
+#define IDC_SetThreshold                1053
 #define IDC_SetMaxThr                   1054
+#define IDC_ResetThreshold              1054
 #define IDC_TargetGoal                  1055
 #define IDC_TargetFrisbe                1056
-#define IDC_CHECK1                      1057
-#define IDC_BoundsText                  1057
+#define IDC_ShowBounds                  1057
 
 // Next default values for new objects
 // 

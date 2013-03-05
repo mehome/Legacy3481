@@ -121,6 +121,13 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 					if (!m_fpInitialize) throw 2;
 					m_fpShutdown=(function_void) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
 					if (!m_fpShutdown) throw 3;
+					m_fpGetSettings=(function_get) GetProcAddress(m_PlugIn,"Get_VisionSettings");
+					if (!m_fpGetSettings) throw 4;
+					m_fpSetSettings=(function_set) GetProcAddress(m_PlugIn,"Set_VisionSettings");
+					if (!m_fpSetSettings) throw 5;
+					m_fpResetThreshholds=(function_void) GetProcAddress(m_PlugIn, "ResetDefaults");
+					if (! m_fpResetThreshholds) throw 6;
+
 				}
 				catch (int ErrorCode)
 				{
@@ -149,6 +156,9 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 					m_Outstream->process_frame(pBuffer,isInterlaced,VideoClock); //just passing through			
 			}
 		}
+
+		Plugin_Controller_Interface* GetPluginInterface(void) { return new Plugin_Controller_Interface(m_fpGetSettings, m_fpSetSettings, m_fpResetThreshholds); }
+
 	private:
 		typedef Bitmap_Frame * (*DriverProc_t)(Bitmap_Frame *Frame);
 		DriverProc_t m_DriverProc;
@@ -158,6 +168,14 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 
 		typedef void (*function_void) ();
 		function_void m_fpShutdown;
+		function_void m_fpResetThreshholds;
+
+		typedef bool (*function_set) (VisionSetting_enum Setting, double value);
+		function_set m_fpSetSettings;
+
+		typedef double (*function_get) (VisionSetting_enum Setting);
+		function_get m_fpGetSettings;
+
 
 		void FlushPlugin()
 		{
@@ -242,6 +260,8 @@ class DDraw_Preview
 			function_On_Selection m_fpOn_Selection;
 			typedef void (*function_Initialize) (Dashboard_Controller_Interface *controller,DLGPROC gWinProc);
 			function_Initialize m_fpInitialize;
+			typedef void (*function_initiailze_plugin) (Plugin_Controller_Interface *plugin);
+			function_initiailze_plugin m_fpInitializePlugin;
 			typedef void (*function_void) ();
 			function_void m_fpShutdown;
 			typedef void (*function_StartedStreaming) (HWND pParent);
@@ -631,6 +651,8 @@ void DDraw_Preview::Controls_Plugin::LoadPlugIn(const wchar_t Plugin[])
 			if (!m_fpShutdown) throw 3;
 			m_fpStartedStreaming=(function_StartedStreaming) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_StartedStreaming");
 			if (!m_fpStartedStreaming) throw 4;
+			m_fpInitializePlugin=(function_initiailze_plugin) GetProcAddress(m_PlugIn, "CallBack_SmartCppDashboard_Initialize_Plugin");
+			if (!m_fpInitializePlugin) throw 5;
 		}
 		catch (int ErrorCode)
 		{
@@ -765,6 +787,7 @@ void DDraw_Preview::OpenResources()
 			IpToUse=wchar2char_pchar;
 		}
 		m_ProcessingVision.Callback_Initialize(IpToUse);
+		m_Controls_PlugIn.m_fpInitializePlugin(m_ProcessingVision.GetPluginInterface());
 	}
 	LONG XRes=m_DefaultWindow.left, YRes=m_DefaultWindow.top, XPos=m_DefaultWindow.right, YPos=m_DefaultWindow.bottom;
 	const wchar_t *source_name=m_Props.source_name.c_str();

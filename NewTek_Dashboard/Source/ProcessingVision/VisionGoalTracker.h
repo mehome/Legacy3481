@@ -7,4 +7,6 @@ public:
 	virtual ~VisionGoalTracker();
 
 	int ProcessImage(double &x, double &y);
+	void SetDefaultThreshold(void);
+
 };

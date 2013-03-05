@@ -75,7 +75,8 @@ public:
 
 	// override.
 	virtual int ProcessImage(double &x, double &y) = 0;
-	
+	virtual void SetDefaultThreshold( void ) = 0;
+
 	int GetFrame(Bitmap_Frame *Frame);
 	void ReturnFrame(Bitmap_Frame *Frame);
 
@@ -93,7 +94,8 @@ public:
 	void SetUseConvexHull( bool bUseConvex )	  { m_bUseConvexHull = bUseConvex; }
 
 	// threshold
-	void SetUseColorThreshold( bool bUserColorTresh ) {m_bUseColorThreshold = bUserColorTresh; }
+	void SetThresholdMode( ThresholdColorSpace mode );
+	void SetThresholdValues( VisionSetting_enum whichVal, int value );
 
 	// object separation
 	void EnableObjectSeparation( bool bObjsSep ) {m_bObjectSeparation = bObjsSep; }
@@ -101,6 +103,16 @@ public:
 	// corner and and edge
 	void SetFindCorners( bool bFindCorners ) { m_bUseFindCorners = bFindCorners; }
 	void SetShowCorners( bool bShowCorners ) { if( m_bUseFindCorners ) m_bShowFindCorners = bShowCorners; }
+
+	// query accessors
+	// display opts
+	DisplayType GetDisplayMode( void ) { return m_DisplayMode; }
+	bool GetShowOverlays( void ) { return m_bShowOverlays; }
+	bool GetShowAiming( void ) { return m_bShowAimingText; }
+	bool GetShowBounds( void ) { return m_bShowBoundsText; }
+
+	ThresholdColorSpace GetThresholdMode( void ) { return m_ThresholdMode; }
+	int GetThresholdValues( VisionSetting_enum whichVal );
 
 protected:
 	// option switches
@@ -137,10 +149,8 @@ protected:
 	Image *Plane2;
 	Image *Plane3;
 
-	Image *Destination;
+	Image *DestinationThresImage;
 
-	// TODO: change below to be pointers, add ranges for the supported modes, add a member for mode, and function to switch
-	//       also add a destination image pointer to simplify supporting threshold display.
 	// Color thresholding values 
 	Range RedRange;
 	Range GreenRange;

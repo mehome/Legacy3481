@@ -21,6 +21,8 @@
 #include <math.h>
 #include <windows.h>
 #include <tchar.h>
+#include <Commctrl.h>
+
 
 #define wchar2char(wchar2char_pwchar_source) \
 	const size_t wchar2char_Length=wcstombs(NULL,wchar2char_pwchar_source,0)+1; \

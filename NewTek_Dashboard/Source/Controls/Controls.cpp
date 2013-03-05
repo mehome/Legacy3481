@@ -15,6 +15,7 @@ void DebugOutput(const char *format, ... )
 extern HMODULE g_hModule;
 Dashboard_Controller_Interface *g_Controller=NULL;
 DLGPROC g_WinProc;
+Plugin_Controller_Interface *g_plugin;
 
 DialogBase *g_pProcamp;
 DialogBase *g_pFileControls;
@@ -151,6 +152,11 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_Initialize (Dashboard_Co
 {
 	g_Controller=controller;
 	g_WinProc=gWinProc;
+}
+
+extern "C" CONTROLS_API void CallBack_SmartCppDashboard_Initialize_Plugin (Plugin_Controller_Interface *plugin)
+{
+	g_plugin=plugin;
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_StartedStreaming(HWND pParent)

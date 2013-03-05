@@ -1,5 +1,6 @@
 
 #include "stdafx.h"
+#include "../FrameWork/FrameWork.h"
 #include "ProcessingVision.h"
 #include "NI_VisionProcessingBase.h"
 #include "VisionGoalTracker.h"
@@ -9,6 +10,8 @@ UDP_Client_Interface *g_UDP_Output=NULL;
 extern VisionTracker* g_pTracker[eNumTrackers];
 TrackerType SelectedTracker = eGoalTracker;
 Dashboard_Framework_Interface *g_Framework=NULL;
+TrackerType PendingTracker = eGoalTracker;
+FrameWork::event frameSync;
 
 //Give something cool to look at
 class SineWaveMaker
@@ -51,15 +54,12 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 		if( SelectedTracker == eGoalTracker )
 			g_pTracker[eGoalTracker] = new VisionGoalTracker();
 		if( SelectedTracker == eFrisbeTracker )
-			g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker( false ); 
+			g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
 		if( g_pTracker[SelectedTracker] == NULL)
 			return Frame;
-
-		// quick tweaks 
-		g_pTracker[SelectedTracker]->SetDisplayMode(eMasked);
-		g_pTracker[SelectedTracker]->SetUseColorThreshold(false);
-		g_pTracker[SelectedTracker]->SetShowBounds(true);
 	}
+
+	//g_pTracker[SelectedTracker]->EnableObjectSeparation(true);
 
 	g_pTracker[SelectedTracker]->Profiler.start();
 
@@ -73,6 +73,12 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 
 	g_pTracker[SelectedTracker]->Profiler.stop();
 	g_pTracker[SelectedTracker]->Profiler.display(L"vision:");
+
+	if( SelectedTracker != PendingTracker )
+	{
+		SelectedTracker = PendingTracker;
+		frameSync.set(); 
+	}
 
 	return Frame;
 }
@@ -150,13 +156,63 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Fr
 }
 #endif
 
+extern "C" PROCESSINGVISION_API void ResetDefaults( void )
+{
+	g_pTracker[SelectedTracker]->SetDefaultThreshold();
+}
+
 extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum VisionSetting, double value)
 {
 	switch( VisionSetting )
 	{
 		case eTrackerType:
-			SelectedTracker = (TrackerType)(int)value;
+			PendingTracker = (TrackerType)(int)value;
+			if( g_pTracker[PendingTracker] == NULL )
+			{
+				if( PendingTracker == eGoalTracker )
+					g_pTracker[eGoalTracker] = new VisionGoalTracker();
+				if( PendingTracker == eFrisbeTracker )
+					g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
+			}
+			frameSync.wait(500);	// cheezy method to make the control dialog wait so it can get the correct values after switching
 			break;
+		case eDisplayType:
+			if( g_pTracker[SelectedTracker] == NULL )
+				return false;
+			g_pTracker[SelectedTracker]->SetDisplayMode((DisplayType)(int)value);
+			break;
+		case eThresholdMode:
+			if( g_pTracker[SelectedTracker] == NULL )
+				return false;
+			g_pTracker[SelectedTracker]->SetThresholdMode((ThresholdColorSpace)(int)value);
+			frameSync.wait(250);	// cheezy method to make the control dialog wait so it can get the correct values after switching
+			break;
+		case eOverlays:
+			if( g_pTracker[SelectedTracker] == NULL )
+				return false;
+			g_pTracker[SelectedTracker]->SetShowOverlays((bool)(int)value);
+			break;
+		case eAimingText:
+			if( g_pTracker[SelectedTracker] == NULL )
+				return false;
+			g_pTracker[SelectedTracker]->SetShowAiming((bool)(int)value);
+			break;
+		case eBoundsText:
+			if( g_pTracker[SelectedTracker] == NULL )
+				return false;
+			g_pTracker[SelectedTracker]->SetShowBounds((bool)(int)value);
+			break;
+		case eThresholdPlane1Min:
+		case eThresholdPlane2Min:
+		case eThresholdPlane3Min:
+		case eThresholdPlane1Max:
+		case eThresholdPlane2Max:
+		case eThresholdPlane3Max:
+			if( g_pTracker[SelectedTracker] == NULL )
+				return false;
+			g_pTracker[SelectedTracker]->SetThresholdValues(VisionSetting, (int)value);
+			break;
+
 		default:
 			break;
 	}
@@ -166,10 +222,46 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 
 extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum VisionSetting )
 {
+	if( g_pTracker[PendingTracker] == NULL )
+	{
+		if( PendingTracker == eGoalTracker )
+			g_pTracker[eGoalTracker] = new VisionGoalTracker();
+		if( PendingTracker == eFrisbeTracker )
+			g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
+	}
+
 	switch( VisionSetting )
 	{
 		case eTrackerType:
 			return (double)SelectedTracker;
+		case eDisplayType:
+			if( g_pTracker[SelectedTracker] != NULL )
+				return g_pTracker[SelectedTracker]->GetDisplayMode();	
+			break;
+		case eThresholdMode:
+			if( g_pTracker[SelectedTracker] != NULL )
+				return g_pTracker[SelectedTracker]->GetThresholdMode();
+			break;
+		case eOverlays:
+			if( g_pTracker[SelectedTracker] != NULL )
+				return g_pTracker[SelectedTracker]->GetShowOverlays();
+			break;
+		case eAimingText:
+			if( g_pTracker[SelectedTracker] != NULL )
+				return g_pTracker[SelectedTracker]->GetShowAiming();
+			break;
+		case eBoundsText:
+			if( g_pTracker[SelectedTracker] != NULL )
+				return g_pTracker[SelectedTracker]->GetShowBounds();
+			break;
+		case eThresholdPlane1Min:
+		case eThresholdPlane2Min:
+		case eThresholdPlane3Min:
+		case eThresholdPlane1Max:
+		case eThresholdPlane2Max:
+		case eThresholdPlane3Max:
+			if( g_pTracker[SelectedTracker] != NULL )
+				return g_pTracker[SelectedTracker]->GetThresholdValues(VisionSetting);
 			break;
 		default:
 			break;

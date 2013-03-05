@@ -4,30 +4,12 @@
 #include "NI_VisionProcessingBase.h"
 #include "VisionGoalTracker.h"
 
-#define THRESH_RGB_GRAY
-
 VisionGoalTracker::VisionGoalTracker()
 {	
-	m_ThresholdMode = eThreshHSV;
-
-	// hsv - green
-	HueRange.minValue = 75,			HueRange.maxValue = 150,
-	SaturationRange.minValue = 50,	SaturationRange.maxValue = 255,
-	ValueRange.minValue = 50,		ValueRange.maxValue = 250;
-
-#ifndef THRESH_RGB_GRAY
-	// rgb - green
-    RedRange.minValue = 0,		RedRange.maxValue = 188,
-	GreenRange.minValue = 163,	GreenRange.maxValue = 255,
-	BlueRange.minValue = 9,		BlueRange.maxValue = 255;	
-#else
 	m_ThresholdMode = eThreshRGB;
 
-	// rgb - gray - works with video clips from proir competitions
-	RedRange.minValue = 100,	RedRange.maxValue = 200,
-	GreenRange.minValue = 100,	GreenRange.maxValue = 210,
-	BlueRange.minValue = 100,	BlueRange.maxValue = 210;
-#endif
+	SetDefaultThreshold();
+
 	switch(m_ThresholdMode)
 	{
 		case eThreshRGB:
@@ -39,6 +21,10 @@ VisionGoalTracker::VisionGoalTracker()
 			plane1Range = &HueRange;
 			plane2Range = &SaturationRange;
 			plane3Range = &ValueRange;
+			break;
+		case eThreshLuma:
+			plane1Range = &LuminanceRange;
+			break;
 	}
 
 	particleList.SetParticleParams( 0.8f, 0.8f, 1.4f );	// area threshold, aspect min, max
@@ -59,6 +45,23 @@ VisionGoalTracker::~VisionGoalTracker()
 {
 }
 
+void VisionGoalTracker::SetDefaultThreshold( void )
+{
+	// hsv - green
+	HueRange.minValue = 75,			HueRange.maxValue = 150,
+	SaturationRange.minValue = 50,	SaturationRange.maxValue = 255,
+	ValueRange.minValue = 50,		ValueRange.maxValue = 250;
+
+	// rgb - green
+	RedRange.minValue = 0,		RedRange.maxValue = 188,
+	GreenRange.minValue = 163,	GreenRange.maxValue = 255,
+	BlueRange.minValue = 9,		BlueRange.maxValue = 255;	
+
+	// luma - I doubt this would be a good choice - added for completeness.
+	LuminanceRange.minValue = 50, LuminanceRange.maxValue = 250;
+}
+
+
 int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
@@ -67,35 +70,34 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 	//  Color threshold and optional noise filter                      //
 	//-----------------------------------------------------------------//
 
-	// color threshold
+	//-----------------------------------------------------------------//
+	//  Threshold                                                      //
+	//-----------------------------------------------------------------//
+
 	if( m_DisplayMode == eThreshold )
-	{
-		if( m_ThresholdMode == eThreshRGB )
-		{
-			VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
-		}
-		else
-		{
-			VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, plane1Range, plane2Range, plane3Range));
-		}
-
-		// fill holes
-		VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, true));
-	}
+		DestinationThresImage = ThresholdImageU8;
 	else
-	{
-		if( m_ThresholdMode == eThreshRGB )
-		{
-			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
-		}
-		else
-		{
-			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, plane1Range, plane2Range, plane3Range));
-		}
+		DestinationThresImage = ParticleImageU8;
 
-		// fill holes
-		VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, true));
+	switch (m_ThresholdMode)
+	{
+	case eThreshRGB:
+		VisionErrChk(imaqColorThreshold(DestinationThresImage, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
+		break;
+	case eThreshHSV:
+		VisionErrChk(imaqColorThreshold(DestinationThresImage, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, plane1Range, plane2Range, plane3Range));
+		break;
+	case eThreshLuma:
+		// Extracts the luminance plane
+		VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, DestinationThresImage));
+		// Thresholds the image.
+		VisionErrChk(imaqThreshold(DestinationThresImage, DestinationThresImage, (float)plane1Range->minValue, (float)plane1Range->maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
+		break;
 	}
+
+	// Fills holes in particles.
+	VisionErrChk(imaqFillHoles(ParticleImageU8, DestinationThresImage, TRUE));
+
 
 	// filter small particles
 	int pKernel[] = {1,1,1,

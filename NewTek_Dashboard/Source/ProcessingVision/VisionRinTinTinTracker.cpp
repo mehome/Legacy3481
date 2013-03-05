@@ -5,56 +5,26 @@
 #include "VisionRinTinTinTracker.h"
 
 VisionRinTinTinTracker::VisionRinTinTinTracker()
-{	
-	// threshold ranges
-	if( m_bUseColorThreshold )
-	{
-		RedRange.minValue = 130, RedRange.maxValue = 255,	// red
-		GreenRange.minValue = 130, GreenRange.maxValue = 255, // green
-		BlueRange.minValue = 130, BlueRange.maxValue = 255;	// blue
-
-		plane1Range = &RedRange;
-		plane2Range = &GreenRange;
-		plane3Range = &BlueRange;
-	}
-	else
-	{
-		LuminanceRange.minValue = 143, LuminanceRange.maxValue = 255;	// luma
-		plane1Range = &LuminanceRange;
-	}
-
-	particleList.SetParticleParams( 0.65f, 1.0f, 10.0f );	// area threshold, aspect min, max
-
-	// particle filter parameters
-	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR};
-	float plower[] = {(float)1.127};	
-	float pUpper[] = {(float)1.3};
-	int pCalibrated[] = {0};
-	int pExclude[] = {0};
-
-	criteriaCount = sizeof(FilterMeasureTypes) / sizeof(FilterMeasureTypes[0]);
-
-	InitParticleFilter(FilterMeasureTypes, plower, pUpper, pCalibrated, pExclude, FALSE, TRUE);
-}
-
-VisionRinTinTinTracker::VisionRinTinTinTracker( bool use_color_treshold )
 {
-	m_bUseColorThreshold = use_color_treshold;
+	m_ThresholdMode = eThreshRGB;
 
-	if( m_bUseColorThreshold )
+	SetDefaultThreshold();
+
+	switch(m_ThresholdMode)
 	{
-		RedRange.minValue = 130, RedRange.maxValue = 255,	// red
-			GreenRange.minValue = 130, GreenRange.maxValue = 255, // green
-			BlueRange.minValue = 130, BlueRange.maxValue = 255;	// blue
-
+	case eThreshRGB:
 		plane1Range = &RedRange;
 		plane2Range = &GreenRange;
 		plane3Range = &BlueRange;
-	}
-	else
-	{
-		LuminanceRange.minValue = 143, LuminanceRange.maxValue = 255;	// luma
+		break;
+	case eThreshHSV:
+		plane1Range = &HueRange;
+		plane2Range = &SaturationRange;
+		plane3Range = &ValueRange;
+		break;
+	case eThreshLuma:
 		plane1Range = &LuminanceRange;
+		break;
 	}
 
 	particleList.SetParticleParams( 0.65f, 1.0f, 10.0f );	// area threshold, aspect min, max
@@ -75,6 +45,22 @@ VisionRinTinTinTracker::~VisionRinTinTinTracker()
 {
 }
 
+void VisionRinTinTinTracker::SetDefaultThreshold( void )
+{
+	// hsv ????
+	HueRange.minValue = 75,			HueRange.maxValue = 150,
+		SaturationRange.minValue = 0,	SaturationRange.maxValue = 255,
+		ValueRange.minValue = 130,		ValueRange.maxValue = 255;
+
+	// rgb
+	RedRange.minValue = 130,	RedRange.maxValue = 255,
+		GreenRange.minValue = 130,	GreenRange.maxValue = 255,
+		BlueRange.minValue = 130,		BlueRange.maxValue = 255;	
+
+	// luma - I doubt this would be a good choice - added for completeness.
+	LuminanceRange.minValue = 143, LuminanceRange.maxValue = 255;
+}
+
 int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
@@ -83,49 +69,30 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 	//  Threshold                                                      //
 	//-----------------------------------------------------------------//
 
-	// color threshold
-	if( m_bUseColorThreshold )
-	{
-		if( m_DisplayMode == eThreshold )
-		{
-			VisionErrChk(imaqColorThreshold(ThresholdImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
-
-			// Fills holes in particles.
-			VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, TRUE));
-		}
-		else
-		{
-			VisionErrChk(imaqColorThreshold(ParticleImageU8, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
-
-			// Fills holes in particles.
-			VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, TRUE));
-		}		
-	}
+	if( m_DisplayMode == eThreshold )
+		DestinationThresImage = ThresholdImageU8;
 	else
+		DestinationThresImage = ParticleImageU8;
+
+	switch (m_ThresholdMode)
 	{
-		if( m_DisplayMode == eThreshold )
-		{
+		case eThreshRGB:
+			VisionErrChk(imaqColorThreshold(DestinationThresImage, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_RGB, plane1Range, plane2Range, plane3Range));
+			break;
+		case eThreshHSV:
+			VisionErrChk(imaqColorThreshold(DestinationThresImage, InputImageRGB, THRESHOLD_IMAGE_REPLACE_VALUE, IMAQ_HSV, plane1Range, plane2Range, plane3Range));
+			break;
+		case eThreshLuma:
 			// Extracts the luminance plane
-			VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, ThresholdImageU8));
-
+			VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, DestinationThresImage));
 			// Thresholds the image.
-			VisionErrChk(imaqThreshold(ThresholdImageU8, ThresholdImageU8, (float)plane1Range->minValue, (float)plane1Range->maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
-
-			// Fills holes in particles.
-			VisionErrChk(imaqFillHoles(ParticleImageU8, ThresholdImageU8, TRUE));
-		}
-		else
-		{
-			// Extracts the luminance plane
-			VisionErrChk(imaqExtractColorPlanes(InputImageRGB, IMAQ_HSL, NULL, NULL, ParticleImageU8));
-
-			// Thresholds the image.
-			VisionErrChk(imaqThreshold(ParticleImageU8, ParticleImageU8, (float)plane1Range->minValue, (float)plane1Range->maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
-
-			// Fills holes in particles.
-			VisionErrChk(imaqFillHoles(ParticleImageU8, ParticleImageU8, TRUE));
-		}	
+			VisionErrChk(imaqThreshold(DestinationThresImage, DestinationThresImage, (float)plane1Range->minValue, (float)plane1Range->maxValue, TRUE, THRESHOLD_IMAGE_REPLACE_VALUE));
+			break;
 	}
+
+	// Fills holes in particles.
+	VisionErrChk(imaqFillHoles(ParticleImageU8, DestinationThresImage, TRUE));
+
 
 	//-------------------------------------------------------------------//
 	//                Advanced Morphology: Remove Objects                //

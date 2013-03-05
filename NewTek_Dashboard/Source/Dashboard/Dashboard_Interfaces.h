@@ -76,3 +76,4 @@ class MessageBase_Interface
 public:
 	virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)=0;
 };
+

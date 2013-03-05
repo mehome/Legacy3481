@@ -6,7 +6,7 @@
 VisionTracker::VisionTracker()
 	: criteriaCount( 0 ), particleCriteria( NULL ), m_bObjectSeparation( false ),
 	  m_DisplayMode( eNormal ), m_bShowOverlays( true ),
-	  m_bShowAimingText( true ), m_bShowBoundsText( false ), m_bUseColorThreshold( false ),
+	  m_bShowAimingText( true ), m_bShowBoundsText( false ), m_ThresholdMode( eThreshRGB ),
 	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
 {	
@@ -79,6 +79,71 @@ VisionTracker::~VisionTracker()
 	imaqDispose(Plane1);
 	imaqDispose(Plane2);
 	imaqDispose(Plane3);
+}
+
+void VisionTracker::SetThresholdMode( ThresholdColorSpace mode ) 
+{
+	m_ThresholdMode = mode; 
+	switch( mode )
+	{
+		case eThreshRGB:
+			plane1Range = &RedRange;
+			plane2Range = &GreenRange;
+			plane3Range = &BlueRange;
+			break;
+		case eThreshHSV:
+			plane1Range = &HueRange;
+			plane2Range = &SaturationRange;
+			plane3Range = &ValueRange;
+			break;
+		case eThreshLuma:
+			plane1Range = plane2Range = plane2Range = &LuminanceRange;
+			break;
+	}
+}
+
+void VisionTracker::SetThresholdValues( VisionSetting_enum whichVal, int value )
+{
+	switch( whichVal )
+	{
+		case eThresholdPlane1Min:
+			plane1Range->minValue = value;
+			break;
+		case eThresholdPlane2Min:
+			plane2Range->minValue = value;
+			break;
+		case eThresholdPlane3Min:
+			plane3Range->minValue = value;
+			break;
+		case eThresholdPlane1Max:
+			plane1Range->maxValue = value;
+			break;
+		case eThresholdPlane2Max:
+			plane2Range->maxValue = value;
+			break;
+		case eThresholdPlane3Max:
+			plane3Range->maxValue = value;
+			break;
+	}
+}
+
+int VisionTracker::GetThresholdValues( VisionSetting_enum whichVal )
+{
+	switch( whichVal )
+	{
+	case eThresholdPlane1Min:
+		return plane1Range->minValue;
+	case eThresholdPlane2Min:
+		return plane2Range->minValue;
+	case eThresholdPlane3Min:
+		return plane3Range->minValue;
+	case eThresholdPlane1Max:
+		return plane1Range->maxValue;
+	case eThresholdPlane2Max:
+		return plane2Range->maxValue;
+	case eThresholdPlane3Max:
+		return plane3Range->maxValue;
+	}
 }
 
 int VisionTracker::GetFrame(Bitmap_Frame *Frame)
