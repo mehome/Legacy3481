@@ -1170,7 +1170,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 		//too fast
 		if ((!m_realtime) && (m_videoq.nb_packets<Playback_MaxQueue))
 		{
-			#if 1
+			#if 0
 			// compute nominal last_duration
 			double last_duration = pts - m_frame_last_pts;
 			if (last_duration > 0 && last_duration < 10.0) {
@@ -1203,18 +1203,40 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 			update_video_pts(pts, pos, serial);
 
 			#else
-			//double diff=delay - (time-m_frame_timer);
-			double TimeDelta;
-			TimeDelta=get_external_clock(is);
-			double diff=(1.0/av_q2d(m_video_st->r_frame_rate)) - TimeDelta;
-			//FrameWork::DebugOutput("%f\n",TimeDelta);
+			////double diff=delay - (time-m_frame_timer);
+			//double TimeDelta;
+			//TimeDelta=get_external_clock(is);
+			//double diff=(1.0/av_q2d(m_video_st->r_frame_rate)) - TimeDelta;
+			////FrameWork::DebugOutput("%f\n",TimeDelta);
 
-			if (diff>0.0)
+			//if (diff>0.0)
+			//{
+			//	//FrameWork::DebugOutput("%f\n",diff);
+			//	Sleep((DWORD)(diff*1000.0)); 
+			//}
+			//update_external_clock_pts(is,pts);
+
+			double last_duration = pts - m_frame_last_pts;
+			if (last_duration > 0 && last_duration < 10.0)
 			{
-				//FrameWork::DebugOutput("%f\n",diff);
-				Sleep((DWORD)(diff*1000.0)); 
+				//printf("\r%.3f good       ",m_audio_clock);
+				//printf("\r%.3f     ",m_audio_current_pts);
+				//Sleep((DWORD)(last_duration * 1000.0));
+				const double diff=m_frame_last_pts-get_external_clock();
+				//printf("%.1f %f %f\n",diff * 1000.0,m_audio_current_pts,get_external_clock());
+				if ((diff>0)&&(diff<10.0))
+					Sleep((DWORD)(diff * 1000.0));
 			}
-			update_external_clock_pts(is,pts);
+			else if (last_duration >= 10.0)
+			{
+				if (m_frame_last_pts!=(double)AV_NOPTS_VALUE)
+					printf("last_duration = %f\n",last_duration);
+				else
+					printf("m_frame_last_pts = AV_NOPTS_VALUE\n");
+				Sleep(33);
+			}
+
+			update_video_pts(pts, pos, serial);
 			#endif
 		}
     }
