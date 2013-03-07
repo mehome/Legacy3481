@@ -29,7 +29,7 @@ VisionRinTinTinTracker::VisionRinTinTinTracker()
 
 	particleList.SetParticleParams( 0.65f, 1.0f, 10.0f );	// area threshold, aspect min, max
 
-	// particle filter parameters
+	// particle filter parameters	// TODO: should add bounding size limits to eliminate small objects like round lights.
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR};
 	float plower[] = {(float)1.127};	
 	float pUpper[] = {(float)1.3};
@@ -93,7 +93,6 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 	// Fills holes in particles.
 	VisionErrChk(imaqFillHoles(ParticleImageU8, DestinationThresImage, TRUE));
 
-
 	//-------------------------------------------------------------------//
 	//                Advanced Morphology: Remove Objects                //
 	//-------------------------------------------------------------------//
@@ -112,12 +111,12 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, FALSE, erosions, IMAQ_KEEP_LARGE, &structElem));
 
-
+#if 0
 	int numParticles = 0;
 
 	// Filters particles based on their morphological measurements.
 	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
-
+#endif
 	if( m_bObjectSeparation )
 	{
 		//-------------------------------------------------------------------//
@@ -137,7 +136,7 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 		//-------------------------------------------------------------------//
 		//                             Watershed                             //
 		//-------------------------------------------------------------------//
-
+		
 		int zoneCount;
 		VisionErrChk(imaqWatershedTransform(WorkImageU8, WorkImageU8, TRUE, &zoneCount));
 
@@ -148,8 +147,8 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 
 		// Sets the structuring element.
 		int pKernel1[9] = {0,1,0,
-			1,1,1,
-			0,1,0};
+			  			   1,1,1,
+						   0,1,0};
 		StructuringElement structElem1;
 		structElem1.matrixCols = 3;
 		structElem1.matrixRows = 3;
@@ -157,7 +156,7 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 		structElem1.kernel = pKernel1;
 
 		// Applies multiple morphological transformation to the binary image.
-		for (int i = 0 ; i < 2 ; i++)
+		for (int i = 0 ; i < 1 ; i++)
 		{
 			VisionErrChk(imaqMorphology(WorkImageU8, WorkImageU8, IMAQ_ERODE, &structElem1));
 		}
@@ -189,8 +188,16 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 			VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
 
 		if( m_DisplayMode == eMasked )
+		{
+			if( m_bShowSolidMask )
+			{
+				PixelValue px_val;
+				px_val.rgb = IMAQ_RGB_YELLOW;
+				imaqFillImage(InputImageRGB, px_val, ParticleImageU8);
+			}
 			imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
-	
+		}
+
 		// overlay some useful info
 		for(int i = 0; i < particleList.numParticles; i++)
 		{
@@ -211,10 +218,11 @@ int VisionRinTinTinTracker::ProcessImage(double &x_target, double &y_target)
 				Point TextPoint;
 				int fu;
 
+				TextPoint.x = particleList.particleData[i].center.x;
+				TextPoint.y = particleList.particleData[i].center.y + 50;
+
 				if( m_bShowAimingText )
 				{
-					TextPoint.x = particleList.particleData[i].center.x;
-					TextPoint.y = particleList.particleData[i].center.y + 50;
 					sprintf_s(TextBuffer, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
 					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
 					TextPoint.y += 16;

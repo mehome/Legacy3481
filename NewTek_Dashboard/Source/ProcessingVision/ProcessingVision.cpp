@@ -59,8 +59,6 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 			return Frame;
 	}
 
-	//g_pTracker[SelectedTracker]->EnableObjectSeparation(true);
-
 	g_pTracker[SelectedTracker]->Profiler.start();
 
 	g_pTracker[SelectedTracker]->GetFrame(Frame);
@@ -181,6 +179,11 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 				return false;
 			g_pTracker[SelectedTracker]->SetDisplayMode((DisplayType)(int)value);
 			break;
+		case eSolidMask:
+			if( g_pTracker[SelectedTracker] == NULL )
+				return false;
+			g_pTracker[SelectedTracker]->SetSolidMask((bool)(int)value);
+			break;
 		case eThresholdMode:
 			if( g_pTracker[SelectedTracker] == NULL )
 				return false;
@@ -241,6 +244,10 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 		case eThresholdMode:
 			if( g_pTracker[SelectedTracker] != NULL )
 				return g_pTracker[SelectedTracker]->GetThresholdMode();
+			break;
+		case eSolidMask:
+			if( g_pTracker[SelectedTracker] != NULL )
+				return g_pTracker[SelectedTracker]->GetSolidMask();
 			break;
 		case eOverlays:
 			if( g_pTracker[SelectedTracker] != NULL )

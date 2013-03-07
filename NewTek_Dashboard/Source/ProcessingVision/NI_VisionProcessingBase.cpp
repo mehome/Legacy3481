@@ -143,6 +143,8 @@ int VisionTracker::GetThresholdValues( VisionSetting_enum whichVal )
 		return plane2Range->maxValue;
 	case eThresholdPlane3Max:
 		return plane3Range->maxValue;
+	default:
+		return 0;
 	}
 }
 
@@ -312,16 +314,24 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double aspect = bound_width / bound_height;
 		double bound_area = bound_width * bound_height;
 
+		//FrameWork::DebugOutput("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
+
 		// if aspect is not in range, skip it.
 		if( aspect < particleList.aspectMin || aspect > particleList.aspectMax)
+		{
+			//FrameWork::DebugOutput("rejected - min %f < asp %f < max %f\n", particleList.aspectMin, aspect, particleList.aspectMax);
 			continue;
+		}
 
 		// particle area
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &area));
 
 		// if particle area fills too much bounding area enough skip it.
 		if( bound_area > 0 && (area / bound_area < particleList.area_threshold) )
+		{
+			//FrameWork::DebugOutput("rejected - area ratio %f < threshold %f\n", area / bound_area, particleList.area_threshold);
 			continue;
+		}
 
 		// all good, fill the values and add new entry to the list.
 		ParticleData newParticle;
@@ -346,6 +356,10 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		// convert to aiming system coords
 		newParticle.AimSys.x = (float)((center_x - (XRes/2.0)) / (XRes/2.0)) * Aspect;
 		newParticle.AimSys.y = (float)((center_y - (YRes/2.0)) / (YRes/2.0));
+
+		double circularity;
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR, &circularity));
+		//FrameWork::DebugOutput("circularity: %f\n", circularity);
 
 		particleList.particleData.push_back(newParticle);
 	}

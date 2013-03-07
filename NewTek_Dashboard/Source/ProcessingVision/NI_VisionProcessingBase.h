@@ -85,6 +85,7 @@ public:
 	// settings accessors
 	// display opts
 	void SetDisplayMode( DisplayType DisplayMode ) {m_DisplayMode = DisplayMode; }
+	void SetSolidMask( bool bSolid ) { m_bShowSolidMask = bSolid; }
 	void SetShowOverlays( bool bOverlays ) { m_bShowOverlays = bOverlays; }
 	void SetShowAiming( bool bAimingText ) { m_bShowAimingText = bAimingText; }
 	void SetShowBounds( bool bBoundsText ) { m_bShowBoundsText = bBoundsText; }
@@ -107,6 +108,7 @@ public:
 	// query accessors
 	// display opts
 	DisplayType GetDisplayMode( void ) { return m_DisplayMode; }
+	bool GetSolidMask( void ) { return m_bShowSolidMask; }
 	bool GetShowOverlays( void ) { return m_bShowOverlays; }
 	bool GetShowAiming( void ) { return m_bShowAimingText; }
 	bool GetShowBounds( void ) { return m_bShowBoundsText; }
@@ -118,6 +120,7 @@ protected:
 	// option switches
 	// display opts
 	DisplayType m_DisplayMode;
+	bool m_bShowSolidMask;
 	bool m_bShowOverlays;	
 	bool m_bShowAimingText;	
 	bool m_bShowBoundsText;	

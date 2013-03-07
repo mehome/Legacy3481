@@ -4,6 +4,7 @@ enum VisionSetting_enum
 {
 	eTrackerType,
 	eDisplayType,
+	eSolidMask,
 	eOverlays,
 	eAimingText,
 	eBoundsText,

@@ -145,7 +145,15 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 			VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
 
 		if( m_DisplayMode == eMasked )
+		{
+			if( m_bShowSolidMask )
+			{
+				PixelValue px_val;
+				px_val.rgb = IMAQ_RGB_YELLOW;
+				imaqFillImage(InputImageRGB, px_val, ParticleImageU8);
+			}
 			imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
+		}
 
 		// overlay some useful info
 		for(int i = 0; i < particleList.numParticles; i++)
@@ -167,10 +175,11 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 				Point TextPoint;
 				int fu;
 
+				TextPoint.x = particleList.particleData[i].center.x;
+				TextPoint.y = particleList.particleData[i].center.y + 20;
+
 				if( m_bShowAimingText )
 				{
-					TextPoint.x = particleList.particleData[i].center.x;
-					TextPoint.y = particleList.particleData[i].center.y + 20;
 					sprintf_s(TextBuffer, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
 					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
 					TextPoint.y += 16;

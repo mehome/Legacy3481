@@ -24,6 +24,7 @@ class VisionControls : public DialogBase
 		{
 			TrackerType vsTrackerType;
 			DisplayType vsDisplayType;
+			bool vsSolidMask;
 			bool vsOverlays;
 			bool vsAimingText;
 			bool vsBoundsText;
@@ -146,6 +147,7 @@ void VisionControls::GetVisionSettings()
 {
 	CurrentSettings.vsTrackerType = (TrackerType)(int)g_plugin->Get_Vision_Settings(eTrackerType);
 	CurrentSettings.vsDisplayType = (DisplayType)(int)g_plugin->Get_Vision_Settings(eDisplayType);
+	CurrentSettings.vsSolidMask = (bool)((int)g_plugin->Get_Vision_Settings(eSolidMask) > 0);
 	CurrentSettings.vsOverlays = (bool)((int)g_plugin->Get_Vision_Settings(eOverlays) > 0);
 	CurrentSettings.vsAimingText = (bool)((int)g_plugin->Get_Vision_Settings(eAimingText) > 0);
 	CurrentSettings.vsBoundsText = (bool)((int)g_plugin->Get_Vision_Settings(eBoundsText) > 0);
@@ -165,6 +167,7 @@ void VisionControls::UpdateControls()
 	SendDlgItemMessage(m_hDlg, IDC_DisplayThreshold, BM_SETCHECK, ( CurrentSettings.vsDisplayType == eThreshold ), 0);
 	SendDlgItemMessage(m_hDlg, IDC_DisplayMask, BM_SETCHECK, ( CurrentSettings.vsDisplayType == eMasked ), 0);
 
+	SendDlgItemMessage(m_hDlg, IDC_SOLID, BM_SETCHECK, CurrentSettings.vsSolidMask, 0);
 	SendDlgItemMessage(m_hDlg, IDC_ShowAiming, BM_SETCHECK, CurrentSettings.vsAimingText, 0);
 	SendDlgItemMessage(m_hDlg, IDC_ShowBounds, BM_SETCHECK, CurrentSettings.vsBoundsText, 0);
 	SendDlgItemMessage(m_hDlg, IDC_ShowOverlay, BM_SETCHECK, CurrentSettings.vsOverlays, 0);
@@ -260,6 +263,9 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 						break;
 					case IDC_DisplayMask:
 						g_plugin->Set_Vision_Settings(eDisplayType, eMasked);
+						break;
+					case IDC_SOLID:
+						g_plugin->Set_Vision_Settings(eSolidMask, SendDlgItemMessage(m_hDlg, IDC_SOLID, BM_GETCHECK, 0, 0));
 						break;
 					case IDC_ShowOverlay:
 						g_plugin->Set_Vision_Settings(eOverlays, SendDlgItemMessage(m_hDlg, IDC_ShowOverlay, BM_GETCHECK, 0, 0));
