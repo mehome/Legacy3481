@@ -2856,6 +2856,35 @@ FrameGrabber::~FrameGrabber()
 	m_VideoStream=NULL;
 }
 
+
+  /***********************************************************************************************************/
+ /*											FFPlay_Controller::FailSafe										*/
+/***********************************************************************************************************/
+
+FFPlay_Controller::FailSafe::FailSafe(Dashboard_Controller_Interface *pParent,const wchar_t *IPAddress) : m_pParent(pParent),m_FileName(IPAddress)
+{
+	using namespace FrameWork::Threads;
+	m_pThread=new thread<FailSafe>(this);
+}
+FFPlay_Controller::FailSafe::~FailSafe()
+{
+	m_Heartbeat.set();
+	delete m_pThread;
+	m_pThread=NULL;
+}
+
+void FFPlay_Controller::FailSafe::operator() ( const void* )
+{
+	bool EventResult=m_Heartbeat.wait(10000);
+	if (!EventResult)
+	{
+		FrameWork::DebugOutput("***No heartbeat... resetting\n");
+		m_pParent->SwitchFilename(m_FileName.c_str());
+	}
+	else
+		Sleep(2000);  //This does not need to be so active
+}
+
   /***************************************************************************************************************/
  /*												FFPlay_Controller												*/
 /***************************************************************************************************************/
@@ -2878,6 +2907,7 @@ int FFPlay_Controller::Run (void)
 void FFPlay_Controller::SwitchFilename(const wchar_t FileToUse[])
 {
 	StopStreaming();
+	m_FailSafe.SwitchFilename(FileToUse);
 	SetFileName(FileToUse,m_IP_Format);
 	StartStreaming();
 }
@@ -2958,4 +2988,11 @@ double FFPlay_Controller::Get_ProcAmp(ProcAmp_enum ProcSetting) const
 {
 	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
 	return instance.Get_ProcAmp(ProcSetting);
+}
+
+
+void FFPlay_Controller::process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock)
+{
+	m_FailSafe.UpdateHeartBeat();
+	m_Preview->process_frame(pBuffer,isInterlaced,VideoClock);
 }

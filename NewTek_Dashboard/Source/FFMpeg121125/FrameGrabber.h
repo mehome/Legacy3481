@@ -117,16 +117,19 @@ protected:
 };
 
 class FFPlay_Controller : public FrameGrabber_FFMpeg, 
-						  public Dashboard_Controller_Interface
+						  public Dashboard_Controller_Interface,
+						  public FrameWork::Outstream_Interface
 {
 public:
 	FFPlay_Controller(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"",IpURLConversion IP_Format=eIpURL_H264) : 
-	  FrameGrabber_FFMpeg(Preview,IPAddress),m_IP_Format(IP_Format)
+	  FrameGrabber_FFMpeg(this,IPAddress),m_IP_Format(IP_Format),m_Preview(Preview),m_FailSafe(this,IPAddress)
 	{
 	}
 
 protected:
 	virtual Dashboard_Controller_Interface *GetDashboard_Controller_Interface() {return this;}
+	//Intercept frames dispatched as a way to measure heartbeat in failsafe
+	virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock);
 
 	void Flush();
 	int Run (void);											// run the filter graph
@@ -138,6 +141,29 @@ protected:
 	void GetFileName(std::wstring &Output) const;
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);
 	virtual double Get_ProcAmp(ProcAmp_enum ProcSetting) const;
+
+	//allow late binding of the output (hence start streaming exists for this delay)
+	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_Preview=Preview;}
+
 private:
+	//This class simply listens for a DO exit event, and will SwitchFilename process if it receives this event
+	class FailSafe
+	{
+		public:
+			FailSafe(Dashboard_Controller_Interface *pParent,const wchar_t *IPAddress=L"");
+			~FailSafe();
+			void UpdateHeartBeat() {m_Heartbeat.set();}
+			void SwitchFilename(const wchar_t FileToUse[]) {m_FileName=FileToUse;}
+		private:
+			Dashboard_Controller_Interface * const m_pParent;
+			friend FrameWork::Threads::thread<FailSafe>;
+			void operator() ( const void* );
+			FrameWork::Threads::thread<FailSafe> *m_pThread;
+			FrameWork::event m_Heartbeat;
+			std::wstring m_FileName;  //cache last filename used
+	} m_FailSafe;
+
+
 	IpURLConversion m_IP_Format;
+	FrameWork::Outstream_Interface *m_Preview;
 };
