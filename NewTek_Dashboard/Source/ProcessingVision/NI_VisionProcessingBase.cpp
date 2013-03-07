@@ -5,7 +5,7 @@
 
 VisionTracker::VisionTracker()
 	: criteriaCount( 0 ), particleCriteria( NULL ), m_bObjectSeparation( false ),
-	  m_DisplayMode( eNormal ), m_bShowOverlays( true ),
+	  m_DisplayMode( eNormal ), m_bShowOverlays( true ), m_bShowSolidMask( false ),
 	  m_bShowAimingText( true ), m_bShowBoundsText( false ), m_ThresholdMode( eThreshRGB ),
 	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
@@ -316,10 +316,24 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 
 		//FrameWork::DebugOutput("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
 
+		Point P1;
+		Point P2;
+		Rect rect;
+
 		// if aspect is not in range, skip it.
 		if( aspect < particleList.aspectMin || aspect > particleList.aspectMax)
 		{
 			//FrameWork::DebugOutput("rejected - min %f < asp %f < max %f\n", particleList.aspectMin, aspect, particleList.aspectMax);
+			if( m_bShowBoundsText )
+			{
+				// bounding box
+				rect.top = bound_top;
+				rect.left = bound_left;
+				rect.height = bound_height;
+				rect.width = bound_width;
+
+				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_RED );
+			}
 			continue;
 		}
 
@@ -330,6 +344,16 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		if( bound_area > 0 && (area / bound_area < particleList.area_threshold) )
 		{
 			//FrameWork::DebugOutput("rejected - area ratio %f < threshold %f\n", area / bound_area, particleList.area_threshold);
+			if( m_bShowBoundsText )
+			{
+				// bounding box
+				rect.top = bound_top;
+				rect.left = bound_left;
+				rect.height = bound_height;
+				rect.width = bound_width;
+
+				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+			}
 			continue;
 		}
 
