@@ -77,7 +77,7 @@ public:
 		eIpURL_H264,
 		eIpURL_MJPEG
 	};
-	FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"");
+	FrameGrabber_FFMpeg(Dashboard_Controller_Interface *parent,FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"");
 
 	//allow late binding of the output (hence start streaming exists for this delay)
 	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview);
@@ -94,6 +94,7 @@ protected:
 private:
 	size_t split_arguments(const std::string& str, std::vector<std::string>& arguments);
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
+	Dashboard_Controller_Interface * const m_Parent; //used to implement the failsafe()
 	FrameGrabber_TestPattern m_TestPattern;  //handle the empty string with something useful
 	std::string m_Options; //Support options to see what options we would need
 	//Used for failsafe
@@ -131,7 +132,7 @@ class FFPlay_Controller : public FrameGrabber_FFMpeg,
 {
 public:
 	FFPlay_Controller(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"",IpURLConversion IP_Format=eIpURL_H264) : 
-	  FrameGrabber_FFMpeg(Preview,IPAddress),m_IP_Format(IP_Format)
+	  FrameGrabber_FFMpeg(this,Preview,IPAddress),m_IP_Format(IP_Format)
 	{
 	}
 

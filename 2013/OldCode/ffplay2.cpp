@@ -2043,6 +2043,13 @@ int FF_Play_Reader_Internal::read_thread()
 	{
         print_error(m_filename, err);
         ret = -1;
+
+		if (m_realtime)
+		{
+			FrameWork::DebugOutput("***Read thread failed; reset() issued\n");
+			Reset();
+		}
+
         goto fail;
     }
     //if ((t = av_dict_get(format_opts, "", NULL, AV_DICT_IGNORE_SUFFIX))) {
@@ -2722,7 +2729,8 @@ void FrameGrabber_FFMpeg::SetFileName(const wchar_t *IPAddress,IpURLConversion f
 	input_filename=m_URL.c_str();
 }
 
-FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL),m_TestPattern(Preview,IPAddress)
+FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(Dashboard_Controller_Interface *parent,FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Parent(parent), m_Outstream(Preview), 
+	m_VideoStream(NULL),m_TestPattern(Preview,IPAddress)
 {
 	//If we have no IPAddress we have no work to do
 	if(IPAddress[0]==0)
@@ -2827,9 +2835,10 @@ void FrameGrabber_FFMpeg::StopStreaming()
 
 void FrameGrabber_FFMpeg::Reset_Thread()
 {
-	StopStreaming();
-	Sleep(1000);  //give some time to close
-	StartStreaming();
+	//Sleep(30000);
+	FrameWork::DebugOutput("---Resetting filename %s\n",m_URL.c_str());
+	char2wchar(m_URL.c_str());
+	m_Parent->SwitchFilename(char2wchar_pwchar);
 }
 
 void FrameGrabber_FFMpeg::Reset()
