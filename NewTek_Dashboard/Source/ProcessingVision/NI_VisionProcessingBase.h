@@ -17,9 +17,16 @@
 #define COLOR_MAGENT 255 + 255 * 256.0f * 256.0f
 #define COLOR_CYAN   255 * 256.0f + 255 * 256.0f * 256.0f
 
-#define IMAGE_BORDER_SIZE 7
+#define IMAGE_BORDER_SIZE 2
 
 #define THRESHOLD_IMAGE_REPLACE_VALUE 1 	
+
+enum eStatus
+{
+	eOK,
+	eAspectFail,
+	eAreaFail
+};
 
 struct LineSegment
 {
@@ -30,6 +37,7 @@ struct LineSegment
 
 struct ParticleData
 {
+	eStatus status;
 	Point center;
 	PointFloat AimSys;
 	int bound_left;

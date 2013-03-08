@@ -300,6 +300,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double area;
 		double center_x;
 		double center_y;
+		eStatus status = eOK;
 
 		// Computes the requested pixel measurements about the particle.
 
@@ -314,53 +315,32 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double aspect = bound_width / bound_height;
 		double bound_area = bound_width * bound_height;
 
-		//FrameWork::DebugOutput("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
-
-		Point P1;
-		Point P2;
-		Rect rect;
+		FrameWork::DebugOutput("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
 
 		// if aspect is not in range, skip it.
 		if( aspect < particleList.aspectMin || aspect > particleList.aspectMax)
 		{
-			//FrameWork::DebugOutput("rejected - min %f < asp %f < max %f\n", particleList.aspectMin, aspect, particleList.aspectMax);
-			if( m_bShowBoundsText )
-			{
-				// bounding box
-				rect.top = bound_top;
-				rect.left = bound_left;
-				rect.height = bound_height;
-				rect.width = bound_width;
-
-				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_RED );
-			}
-			continue;
+			FrameWork::DebugOutput("rejected - min %f < asp %f < max %f\n", particleList.aspectMin, aspect, particleList.aspectMax);
+			status = eAspectFail;
 		}
-
-		// particle area
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &area));
-
-		// if particle area fills too much bounding area enough skip it.
-		if( bound_area > 0 && (area / bound_area < particleList.area_threshold) )
+		else
 		{
-			//FrameWork::DebugOutput("rejected - area ratio %f < threshold %f\n", area / bound_area, particleList.area_threshold);
-			if( m_bShowBoundsText )
-			{
-				// bounding box
-				rect.top = bound_top;
-				rect.left = bound_left;
-				rect.height = bound_height;
-				rect.width = bound_width;
+			// particle area
+			VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &area));
 
-				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_CYAN );
+			// if particle area fills too much bounding area enough skip it.
+			if( bound_area > 0 && (area / bound_area < particleList.area_threshold) )
+			{
+				FrameWork::DebugOutput("rejected - area ratio %f < threshold %f\n", area / bound_area, particleList.area_threshold);
+				status = eAreaFail;
 			}
-			continue;
 		}
 
 		// all good, fill the values and add new entry to the list.
 		ParticleData newParticle;
 		particleList.numParticles++;
 
+		newParticle.status = status;
 		newParticle.bound_left = (int)bound_left;
 		newParticle.bound_top = (int)bound_top;
 		newParticle.bound_right = (int)bound_right;
@@ -381,8 +361,8 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		newParticle.AimSys.x = (float)((center_x - (XRes/2.0)) / (XRes/2.0)) * Aspect;
 		newParticle.AimSys.y = (float)((center_y - (YRes/2.0)) / (YRes/2.0));
 
-		double circularity;
-		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR, &circularity));
+		//double circularity;
+		//VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR, &circularity));
 		//FrameWork::DebugOutput("circularity: %f\n", circularity);
 
 		particleList.particleData.push_back(newParticle);

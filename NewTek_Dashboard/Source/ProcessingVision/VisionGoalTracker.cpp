@@ -27,12 +27,12 @@ VisionGoalTracker::VisionGoalTracker()
 			break;
 	}
 
-	particleList.SetParticleParams( 0.8f, 0.8f, 1.4f );	// area threshold, aspect min, max
+	particleList.SetParticleParams( 0.75f, 0.7f, 3.2f );	// area threshold, aspect min, max
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
 	float plower[] = {20, 20};	
-	float pUpper[] = {200, 200};
+	float pUpper[] = {630, 470};
 	int pCalibrated[] = {0,0};
 	int pExclude[] = {0,0};
 
@@ -155,12 +155,13 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 			imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
 		}
 
+		Rect rect;
+
 		// overlay some useful info
 		for(int i = 0; i < particleList.numParticles; i++)
 		{
 			Point P1;
 			Point P2;
-			Rect rect;
 
 			// track highest center x
 			if( particleList.particleData[i].center.y < min_y )
@@ -171,54 +172,57 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 
 			if( m_bShowOverlays )
 			{
-				// write some text to show aiming point 
-				Point TextPoint;
-				int fu;
-
-				TextPoint.x = particleList.particleData[i].center.x;
-				TextPoint.y = particleList.particleData[i].center.y + 20;
-
-				if( m_bShowAimingText )
+				if( particleList.particleData[i].status == eOK )
 				{
-					sprintf_s(TextBuffer, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
-					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
-					TextPoint.y += 16;
+					// write some text to show aiming point 
+					Point TextPoint;
+					int fu;
+
+					TextPoint.x = particleList.particleData[i].center.x;
+					TextPoint.y = particleList.particleData[i].center.y + 20;
+
+					if( m_bShowAimingText )
+					{
+						sprintf_s(TextBuffer, 256, "%f, %f", particleList.particleData[i].AimSys.x, particleList.particleData[i].AimSys.y);
+						imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+						TextPoint.y += 16;
+					}
+
+					if( m_bShowBoundsText )
+					{
+						// show size of bounding box
+						sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].bound_width, particleList.particleData[i].bound_height);
+						imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+
+						// center x, y
+						TextPoint.y += 16;
+						sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
+						imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+
+					}
+
+					// draw a line from target CoM to center of screen
+					P1.x = particleList.particleData[i].center.x;
+					P1.y = particleList.particleData[i].center.y;
+					P2.x = SourceImageInfo.xRes / 2;
+					P2.y = SourceImageInfo.yRes / 2;
+					imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
+
+					// small crosshair at center of mass
+					P1.x = particleList.particleData[i].center.x - 6;
+					P1.y = particleList.particleData[i].center.y;
+					P2.x = particleList.particleData[i].center.x + 6;
+					P2.y = particleList.particleData[i].center.y;
+
+					imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+
+					P1.x = particleList.particleData[i].center.x;
+					P1.y = particleList.particleData[i].center.y - 6;
+					P2.x = particleList.particleData[i].center.x;
+					P2.y = particleList.particleData[i].center.y + 6;
+
+					imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
 				}
-
-				if( m_bShowBoundsText )
-				{
-					// show size of bounding box
-					sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].bound_width, particleList.particleData[i].bound_height);
-					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
-
-					// center x, y
-					TextPoint.y += 16;
-					sprintf_s(TextBuffer, 256, "%d, %d", particleList.particleData[i].center.x, particleList.particleData[i].center.y);
-					imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
-
-				}
-
-				// draw a line from target CoM to center of screen
-				P1.x = particleList.particleData[i].center.x;
-				P1.y = particleList.particleData[i].center.y;
-				P2.x = SourceImageInfo.xRes / 2;
-				P2.y = SourceImageInfo.yRes / 2;
-				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
-
-				// small crosshair at center of mass
-				P1.x = particleList.particleData[i].center.x - 6;
-				P1.y = particleList.particleData[i].center.y;
-				P2.x = particleList.particleData[i].center.x + 6;
-				P2.y = particleList.particleData[i].center.y;
-
-				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
-
-				P1.x = particleList.particleData[i].center.x;
-				P1.y = particleList.particleData[i].center.y - 6;
-				P2.x = particleList.particleData[i].center.x;
-				P2.y = particleList.particleData[i].center.y + 6;
-
-				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
 
 				// bounding box
 				rect.top = particleList.particleData[i].bound_top;
@@ -226,16 +230,22 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 				rect.height = particleList.particleData[i].bound_height;
 				rect.width = particleList.particleData[i].bound_width;
 
-				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+				if( particleList.particleData[i].status == eOK )
+					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+				else
+				{
+					if( m_bShowBoundsText )
+					{
+						float BBoxColor = COLOR_GREEN;
+						if( particleList.particleData[i].status == eAspectFail )
+							BBoxColor = COLOR_RED;
+						else if( particleList.particleData[i].status == eAreaFail)
+							BBoxColor = COLOR_CYAN;
+						imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
+					}
+					continue;
+				}
 
-				// center box
-				rect.top = SourceImageInfo.yRes / 2 - 5;
-				rect.left = SourceImageInfo.xRes / 2 - 5;
-				rect.height = 10;
-				rect.width = 10; 
-
-				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_PAINT_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
-				
 				if( m_bUseFindCorners && m_bShowFindCorners )
 				{
 					// corner points
@@ -258,6 +268,14 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 				}
 			}	// show overlays
 		}	// particle loop
+
+		// center box
+		rect.top = SourceImageInfo.yRes / 2 - 5;
+		rect.left = SourceImageInfo.xRes / 2 - 5;
+		rect.height = 10;
+		rect.width = 10; 
+
+		imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_PAINT_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
 	}	// num particles > 0
 	else
 		success = 0;
