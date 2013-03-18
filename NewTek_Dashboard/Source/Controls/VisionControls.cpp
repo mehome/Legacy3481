@@ -28,8 +28,8 @@ class VisionControls : public DialogBase
 			bool vsOverlays;
 			bool vsAimingText;
 			bool vsBoundsText;
-			int ThresholdValues[eNumThresholdSettings];
 			ThresholdColorSpace vsThresholdMode;	
+			int ThresholdValues[eNumThresholdSettings];
 		} CurrentSettings;
 		void GetVisionSettings(void);
 		void UpdateControls(void);
@@ -104,35 +104,46 @@ bool VisionControls::Run(HWND pParent)
 		SendDlgItemMessage(m_hDlg, s_ThresholdResourceTable_TrackerBar[i], TBM_SETTICFREQ, 21, 0);
 	}
 
-#if 0
 	using namespace std;
 	string InFile;
 	GetVisionFilename(GetParent(m_hDlg),InFile);
 	m_BLS_Filename=InFile;  //keep copy for exit
+
+	GetVisionSettings();
+
 	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 	if (in.is_open())
 	{
-		const size_t NoEnties=e_no_procamp_items;
-		string StringEntry[e_no_procamp_items<<1];
-		{
-			char Buffer[1024];
-			for (size_t i=0;i<NoEnties;i++)
-			{
-				in>>StringEntry[i<<1];
-				in.getline(Buffer,1024);
-				StringEntry[(i<<1)+1]=Buffer;
-			}
-		}
+		string StringEntry;
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.vsTrackerType = (TrackerType)atoi(StringEntry.c_str());
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.vsDisplayType = (DisplayType)atoi(StringEntry.c_str());
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.vsSolidMask = (bool)(atoi(StringEntry.c_str()) > 0);
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.vsOverlays = (bool)(atoi(StringEntry.c_str()) > 0);
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.vsAimingText = (bool)(atoi(StringEntry.c_str()) > 0);
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.vsBoundsText = (bool)(atoi(StringEntry.c_str()) > 0);
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.vsThresholdMode = (ThresholdColorSpace)atoi(StringEntry.c_str());
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.ThresholdValues[0] = atoi(StringEntry.c_str());
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.ThresholdValues[1] = atoi(StringEntry.c_str());
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.ThresholdValues[2] = atoi(StringEntry.c_str());
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.ThresholdValues[3] = atoi(StringEntry.c_str());
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.ThresholdValues[4] = atoi(StringEntry.c_str());
+		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.ThresholdValues[5] = atoi(StringEntry.c_str());
 		in.close();
-		for (size_t i=0;i<8;i++)
-		{
-			m_ProcAmpValues[i]=atof(StringEntry[(i<<1)+1].c_str());
-		}
 	}
 
-#endif
-
-	GetVisionSettings();
 	UpdateControls();
 
 	return ret;
@@ -140,7 +151,26 @@ bool VisionControls::Run(HWND pParent)
 
 VisionControls::~VisionControls()
 {
+	using namespace std;
 	g_pVisionControls=NULL;
+	string OutFile=m_BLS_Filename;
+	ofstream out(OutFile.c_str(), std::ios::out );
+	//this is unrolled to look pretty... :)
+	out << "TrackerType= " << CurrentSettings.vsTrackerType << endl;
+	out << "DisplayType= " << CurrentSettings.vsDisplayType << endl;
+	out << "SolidMask= " << CurrentSettings.vsSolidMask << endl;
+	out << "Overlays= " << CurrentSettings.vsOverlays << endl;
+	out << "Aiming= " << CurrentSettings.vsAimingText << endl;
+	out << "Bounds= " << CurrentSettings.vsBoundsText << endl;
+	out << "ThresholdType= " << CurrentSettings.vsThresholdMode << endl;
+	out << "Plane1Min= " << CurrentSettings.ThresholdValues[0] << endl;
+	out << "Plane2Min= " << CurrentSettings.ThresholdValues[1] << endl;
+	out << "Plane3Min= " << CurrentSettings.ThresholdValues[2] << endl;
+	out << "Plane1Max= " << CurrentSettings.ThresholdValues[3] << endl;
+	out << "Plane2Max= " << CurrentSettings.ThresholdValues[4] << endl;
+	out << "Plane3Max= " << CurrentSettings.ThresholdValues[5] << endl;
+	out.close();
+
 }
 
 void VisionControls::GetVisionSettings()
@@ -306,9 +336,6 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 					{
 						if ((!m_UpdatingEdit[i]) && (buttonid == s_ThresholdResourceTable_Edit[i]))
 						{
-							//Sanity check... leaving disabled to avoid overhead
-							//assert(hWndEdit==GetDlgItem(m_hDlg, s_ProcampResourceTable_Edit[i]));
-
 							unsigned TextLength = GetWindowTextLength(hWndEdit);
 							if (TextLength < 128)
 							{
