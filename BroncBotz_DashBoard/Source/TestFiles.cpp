@@ -74,7 +74,10 @@ const char * const James_MPGTS_Filelist[] =
 	__Drive__"Media\\Video\\m2t\\HD\\Hot Air Ballons 1080i Sony HDV.m2t",
 	__Drive__"Media\\Video\\m2t\\HD\\motoX_MainConcept MPEG-2_HDV 1080-60i[3].m2t",
 	//This one has the audio out of sync by about 9 frames
-	__Drive__"Media\\Video\\m2t\\AudioSync\\Canopus1080iCapture.m2t"
+	__Drive__"Media\\Video\\m2t\\AudioSync\\Canopus1080iCapture.m2t",
+	__Drive__ "Media\\Video\\m2t\\AudioSync\\Capture1080i.m2t",
+	__Drive__ "Media\\Video\\m2t\\AudioSync\\SE-A-006.m2t",
+	__Drive__ "Media\\Video\\m2t\\AudioSync\\SonyBeepFlash.m2t"
 };
 FileGroupListTemplate(James,MPGTS,7);
 
