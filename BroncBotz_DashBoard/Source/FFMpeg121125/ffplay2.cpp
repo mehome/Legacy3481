@@ -1467,6 +1467,14 @@ display:
             if (!display_disable)
                 video_display(is);
 
+			#if 0
+			const double diff=is->frame_timer - time;
+			double av_diff=0;
+			if (is->audio_st && is->video_st)
+				av_diff = get_audio_clock(is) - get_video_clock(is);
+			printf("%.1f d=%.1f A-V=%f %f\n",diff * 1000,delay*1000.0,is->frame_timer-time,is->video_current_pts_drift+time);
+			#endif
+
             pictq_next_picture(is);
         }
     } else if (is->audio_st) {
