@@ -116,31 +116,48 @@ bool VisionControls::Run(HWND pParent)
 	{
 		string StringEntry;
 		in >> StringEntry; in >> StringEntry;
-		CurrentSettings.vsTrackerType = (TrackerType)atoi(StringEntry.c_str());
+		if( CurrentSettings.vsTrackerType != (TrackerType)atoi(StringEntry.c_str()) )
+		{
+			CurrentSettings.vsTrackerType = (TrackerType)atoi(StringEntry.c_str());
+			g_plugin->Set_Vision_Settings(eTrackerType, (double)CurrentSettings.vsTrackerType);
+			GetVisionSettings();	// need to update the rest.
+		}
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsDisplayType = (DisplayType)atoi(StringEntry.c_str());
+		g_plugin->Set_Vision_Settings(eDisplayType, (double)CurrentSettings.vsDisplayType);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsSolidMask = (bool)(atoi(StringEntry.c_str()) > 0);
+		g_plugin->Set_Vision_Settings(eSolidMask, (double)CurrentSettings.vsSolidMask);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsOverlays = (bool)(atoi(StringEntry.c_str()) > 0);
+		g_plugin->Set_Vision_Settings(eOverlays, (double)CurrentSettings.vsOverlays);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsAimingText = (bool)(atoi(StringEntry.c_str()) > 0);
+		g_plugin->Set_Vision_Settings(eAimingText, (double)CurrentSettings.vsAimingText);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsBoundsText = (bool)(atoi(StringEntry.c_str()) > 0);
+		g_plugin->Set_Vision_Settings(eBoundsText, (double)CurrentSettings.vsBoundsText);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsThresholdMode = (ThresholdColorSpace)atoi(StringEntry.c_str());
+		g_plugin->Set_Vision_Settings(eThresholdMode, (double)CurrentSettings.vsThresholdMode);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[0] = atoi(StringEntry.c_str());
+		g_plugin->Set_Vision_Settings(eThresholdPlane1Min, (double)CurrentSettings.ThresholdValues[0]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[1] = atoi(StringEntry.c_str());
+		g_plugin->Set_Vision_Settings(eThresholdPlane2Min, (double)CurrentSettings.ThresholdValues[1]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[2] = atoi(StringEntry.c_str());
+		g_plugin->Set_Vision_Settings(eThresholdPlane3Min, (double)CurrentSettings.ThresholdValues[2]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[3] = atoi(StringEntry.c_str());
+		g_plugin->Set_Vision_Settings(eThresholdPlane1Max, (double)CurrentSettings.ThresholdValues[3]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[4] = atoi(StringEntry.c_str());
+		g_plugin->Set_Vision_Settings(eThresholdPlane2Max, (double)CurrentSettings.ThresholdValues[4]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[5] = atoi(StringEntry.c_str());
+		g_plugin->Set_Vision_Settings(eThresholdPlane3Max, (double)CurrentSettings.ThresholdValues[5]);
 		in.close();
 	}
 
@@ -269,6 +286,7 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 				HWND hWndEdit=(HWND)lParam;
 				WORD notifycode = HIWORD(wParam);
 				WORD buttonid = LOWORD(wParam);
+				bool bChecked = false;
 
 				if (notifycode==BN_CLICKED) 
 				{
@@ -287,24 +305,35 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 						break;
 					case IDC_DisplayNormal:
 						g_plugin->Set_Vision_Settings(eDisplayType, eNormal);
+						CurrentSettings.vsDisplayType = eNormal;
 						break;
 					case IDC_DisplayThreshold:
 						g_plugin->Set_Vision_Settings(eDisplayType, eThreshold);
+						CurrentSettings.vsDisplayType = eThreshold;
 						break;
 					case IDC_DisplayMask:
 						g_plugin->Set_Vision_Settings(eDisplayType, eMasked);
+						CurrentSettings.vsDisplayType = eMasked;
 						break;
 					case IDC_SOLID:
-						g_plugin->Set_Vision_Settings(eSolidMask, SendDlgItemMessage(m_hDlg, IDC_SOLID, BM_GETCHECK, 0, 0));
+						bChecked = SendDlgItemMessage(m_hDlg, IDC_SOLID, BM_GETCHECK, 0, 0) > 0;
+						g_plugin->Set_Vision_Settings(eSolidMask, bChecked);
+						CurrentSettings.vsSolidMask = bChecked;
 						break;
 					case IDC_ShowOverlay:
-						g_plugin->Set_Vision_Settings(eOverlays, SendDlgItemMessage(m_hDlg, IDC_ShowOverlay, BM_GETCHECK, 0, 0));
+						bChecked = SendDlgItemMessage(m_hDlg, IDC_ShowOverlay, BM_GETCHECK, 0, 0) > 0;
+						g_plugin->Set_Vision_Settings(eOverlays, bChecked);
+						CurrentSettings.vsOverlays = bChecked;
 						break;
 					case IDC_ShowAiming:
-						g_plugin->Set_Vision_Settings(eAimingText, SendDlgItemMessage(m_hDlg, IDC_ShowAiming, BM_GETCHECK, 0, 0));
+						bChecked = SendDlgItemMessage(m_hDlg, IDC_ShowAiming, BM_GETCHECK, 0, 0) > 0;
+						g_plugin->Set_Vision_Settings(eAimingText, bChecked);
+						CurrentSettings.vsAimingText = bChecked;
 						break;
 					case IDC_ShowBounds:
-						g_plugin->Set_Vision_Settings(eBoundsText, SendDlgItemMessage(m_hDlg, IDC_ShowBounds, BM_GETCHECK, 0, 0));
+						bChecked = SendDlgItemMessage(m_hDlg, IDC_ShowBounds, BM_GETCHECK, 0, 0) > 0;
+						g_plugin->Set_Vision_Settings(eBoundsText, bChecked);
+						CurrentSettings.vsBoundsText = bChecked;
 						break;
 					case IDC_ThresholdRGB:
 						g_plugin->Set_Vision_Settings(eThresholdMode, eThreshRGB);
