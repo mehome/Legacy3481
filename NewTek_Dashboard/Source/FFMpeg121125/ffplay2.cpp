@@ -1145,7 +1145,9 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 			(*m_procamp)(bitmap);
 		}
 
-		const int Playback_MaxQueue=8;
+		//Note: for now KirkTest.mp4 has set this ceiling as it spikes to around 11 on each GOP interval, but quickly drops back to around 5-6
+		//  [3/19/2013 JamesK]
+		const int Playback_MaxQueue=14;
 		{
 			#ifdef __ShowProcessingDelta__
 			using namespace FrameWork;
@@ -1205,7 +1207,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 			#else
 			////double diff=delay - (time-m_frame_timer);
 			//double TimeDelta;
-			//TimeDelta=get_external_clock(is);
+			//TimeDelta=get_external_clock();
 			//double diff=(1.0/av_q2d(m_video_st->r_frame_rate)) - TimeDelta;
 			////FrameWork::DebugOutput("%f\n",TimeDelta);
 
@@ -1214,23 +1216,50 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 			//	//FrameWork::DebugOutput("%f\n",diff);
 			//	Sleep((DWORD)(diff*1000.0)); 
 			//}
-			//update_external_clock_pts(is,pts);
+			//update_external_clock_pts(pts);
 
 			double last_duration = pts - m_frame_last_pts;
+
 			if (last_duration > 0 && last_duration < 10.0)
 			{
 				//printf("\r%.3f good       ",m_audio_clock);
 				//printf("\r%.3f     ",m_audio_current_pts);
 				//Sleep((DWORD)(last_duration * 1000.0));
 				const double diff=m_frame_last_pts-get_external_clock();
-				//printf("%.1f %f %f\n",diff * 1000.0,m_audio_current_pts,get_external_clock());
-				if ((diff>0)&&(diff<10.0))
-					Sleep((DWORD)(diff * 1000.0));
+				double adjusted_diff=diff;
+				if (diff < m_frame_last_duration * 2)
+					adjusted_diff+=m_frame_last_duration;
+				//double delay = compute_target_delay(m_frame_last_duration);
+				const double c_SmoothingValue=0.5;
+
+				if ((adjusted_diff>0)&&(adjusted_diff<10.0))
+				{
+					//Testing KirkTest.mp4, the PTS has short/long gaps per every GOP (e.g. 12 frames) we can use similar technique to smooth 
+					//these out
+					//const double smoothed_diff=last_duration * FFMAX(1, floor(diff / last_duration));
+					//printf("%.1f %.1f %f %f\n",m_frame_last_duration * 1000.0,diff * 1000.0,m_frame_last_pts,get_external_clock());
+					m_frame_last_duration=((FFMIN(adjusted_diff,last_duration) * c_SmoothingValue ) + (m_frame_last_duration  * (1.0-c_SmoothingValue)));
+					//const double c_SmoothDif2=0.25;
+					//const double smoothed_diff=(delay * c_SmoothDif2)+(m_frame_last_duration * (1.0-c_SmoothDif2));
+					double av_diff=0;
+					if (m_audio_st && m_video_st)
+						av_diff = get_video_clock()- get_audio_clock();
+
+					//printf("%.1f %.1f %.1f %.1f q=%d\n",diff * 1000.0,m_frame_last_duration * 1000.0,av_diff,m_frame_last_pts,m_videoq.nb_packets);
+					const double sleeptime=FFMAX(m_frame_last_duration + av_diff,adjusted_diff);
+					if (sleeptime>0.0)
+						Sleep((DWORD)(sleeptime * 1000.0));
+				}
+				else
+				{
+					m_frame_last_duration=((last_duration * c_SmoothingValue ) + (m_frame_last_duration  * (1.0-c_SmoothingValue)));
+					printf("early- %.1f %f %f\n",diff * 1000.0,m_frame_last_pts,get_external_clock());
+				}
 			}
 			else if (last_duration >= 10.0)
 			{
 				if (m_frame_last_pts!=(double)AV_NOPTS_VALUE)
-					printf("last_duration = %f\n",last_duration);
+					printf("last_duration = %f\n",last_duration); 
 				else
 					printf("m_frame_last_pts = AV_NOPTS_VALUE\n");
 				Sleep(33);
@@ -1238,6 +1267,13 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 
 			update_video_pts(pts, pos, serial);
 			#endif
+		}
+		else
+		{
+			if (!m_realtime)
+				printf("dropping frame %.1f q=%d\n",m_frame_last_pts,m_videoq.nb_packets);
+			//else
+			//	printf("q=%d\n",m_videoq.nb_packets);
 		}
     }
     return 0;
