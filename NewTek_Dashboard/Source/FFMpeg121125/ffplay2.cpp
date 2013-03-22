@@ -2023,12 +2023,20 @@ static int decode_interrupt_cb(void *ctx)
     return is->decode_interrupt_cb();
 }
 
+//Ok here is the run-down for whether or not http should be declared as realtime.  In the context of being a robust file reader of html files 
+//with proper timing and by default this realtime should be false; however, this comes at a price of added latency... so in the context
+//of being a dashboard (hence _LIB check) we do not care about reading many html files, but do care that our camera does not acrue latency.
+//So while in dashboard build it is true, and while in file reading testbed, it is false.
+//  [3/22/2013 JamesK]
+
 static int is_realtime(AVFormatContext *s)
 {
     if(   !strcmp(s->iformat->name, "rtp")
        || !strcmp(s->iformat->name, "rtsp")
        || !strcmp(s->iformat->name, "sdp")
-	   || !strnicmp(s->filename, "http", 4)  //TODO see about determining http being realtime or not -James
+	   #ifdef _LIB
+	   || !strnicmp(s->filename, "http", 4)
+		#endif
     )
         return 1;
 
