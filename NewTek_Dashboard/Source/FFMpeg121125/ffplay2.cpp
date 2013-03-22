@@ -2536,18 +2536,31 @@ static int lockmgr(void** mutex, enum AVLockOp op)
 static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
 {
 #ifndef NDEBUG
+	//TODO if we really need %td messages we'll need to copy replace them out to avoid debug crash
+	if (strstr(fmt, "%td"))
+		return;
+
+	//Turn this on for low-level decoding
+	#if 0
 	if (level==AV_LOG_DEBUG)
 	{
 		char Temp[2048];
 		vsprintf_s(Temp, 2048, fmt, vl);
 		printf(Temp);
 	}
-	if (level > av_log_get_level() || strstr(fmt, "%td"))
+	#endif
+
+	if (level > av_log_get_level())
 		return;
 
 	char Temp[2048];
 	vsprintf_s(Temp, 2048, fmt, vl);
+	#if 0
+	char2wchar(Temp);
+	debug_output(L"FFPlay2",char2wchar_pwchar);
+	#else
 	OutputDebugStringA(Temp);
+	#endif
 #endif
 }
 
