@@ -751,8 +751,6 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	m_last_video_stream(0), m_last_audio_stream(0), m_last_subtitle_stream(0),
 	m_continue_read_thread(NULL)
 {
-	//TODO probably use a new operation on this variable and then make it a member
-	//DECLARE_ALIGNED(16,uint8_t,g_audio_buf2)[AVCODEC_MAX_AUDIO_FRAME_SIZE * 4];
 	m_filename[0]=0;
 	memset(&m_audioq,0,sizeof(PacketQueue));
 	memset(&m_videoq,0,sizeof(PacketQueue));
@@ -902,11 +900,13 @@ void FF_Play_Reader_Internal::stream_toggle_pause()
 {
     if (m_paused) 
 	{
+		const double current_time=av_gettime() / 1000000.0;
         m_frame_timer += av_gettime() / 1000000.0 + m_video_current_pts_drift - m_video_current_pts;
         if (m_read_pause_return != AVERROR(ENOSYS)) 
-            m_video_current_pts = m_video_current_pts_drift + av_gettime() / 1000000.0;
+            m_video_current_pts = m_video_current_pts_drift + current_time;
         
-        m_video_current_pts_drift = m_video_current_pts - av_gettime() / 1000000.0;
+        m_video_current_pts_drift = m_video_current_pts - current_time;
+		m_audio_current_pts_drift = m_audio_current_pts - current_time;
     }
     update_external_clock_pts( get_external_clock());
     m_paused = !m_paused;
@@ -937,6 +937,7 @@ double FF_Play_Reader_Internal::compute_target_delay(double delay) const
     }
 
     av_dlog(NULL, "video: delay=%0.3f A-V=%f\n", delay, -diff);
+	//printf("video: delay=%0.3f A-V=%f\n", delay, -diff);
 
     return delay;
 }
@@ -1145,9 +1146,10 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 			(*m_procamp)(bitmap);
 		}
 
-		//Note: for now KirkTest.mp4 has set this ceiling as it spikes to around 11 on each GOP interval, but quickly drops back to around 5-6
-		//  [3/19/2013 JamesK]
-		const int Playback_MaxQueue=14;
+		//Note: for now TCStudio Quick Tour.wmv has set this ceiling as it spikes to around 200 on startup, 
+		//but slowly drops back to around 128.
+		//  [3/22/2013 JamesK]  
+		const int Playback_MaxQueue=200;
 		{
 			#ifdef __ShowProcessingDelta__
 			using namespace FrameWork;
@@ -1172,7 +1174,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 		//too fast
 		if ((!m_realtime) && (m_videoq.nb_packets<Playback_MaxQueue))
 		{
-			#if 0
+			#if 1
 			// compute nominal last_duration
 			double last_duration = pts - m_frame_last_pts;
 			if (last_duration > 0 && last_duration < 10.0) {
@@ -1181,7 +1183,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 			}
 			double delay = compute_target_delay(m_frame_last_duration);
 
-			double time= av_gettime()/1000000.0;
+			const double time= av_gettime()/1000000.0;
 			//Having delay means that our frames are not ahead of time
 			if (delay > 0)
 				m_frame_timer += delay * FFMAX(1, floor((time-m_frame_timer) / delay));
@@ -1192,6 +1194,8 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 			{
 				double diff=frame_timer - time;
 				//FrameWork::DebugOutput("%.1f= %.3f - %.3f time=%.3f\n",diff*1000.0,delay,frame_timer,time);
+				//printf("%.1f %f %f\n",diff * 1000.0,m_frame_last_pts,get_external_clock());
+				//printf("%.1f d=%.1f dif=%f %f\n",diff * 1000,delay*1000.0,m_frame_timer-time,m_video_current_pts_drift+time);
 				if (diff>0.002)
 					if (diff<0.100)
 						Sleep((DWORD)(diff*1000.0)); 
@@ -1222,9 +1226,6 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 
 			if (last_duration > 0 && last_duration < 10.0)
 			{
-				//printf("\r%.3f good       ",m_audio_clock);
-				//printf("\r%.3f     ",m_audio_current_pts);
-				//Sleep((DWORD)(last_duration * 1000.0));
 				const double diff=m_frame_last_pts-get_external_clock();
 				double adjusted_diff=diff;
 				if (diff < m_frame_last_duration * 2)
@@ -1239,6 +1240,12 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 					//const double smoothed_diff=last_duration * FFMAX(1, floor(diff / last_duration));
 					//printf("%.1f %.1f %f %f\n",m_frame_last_duration * 1000.0,diff * 1000.0,m_frame_last_pts,get_external_clock());
 					m_frame_last_duration=((FFMIN(adjusted_diff,last_duration) * c_SmoothingValue ) + (m_frame_last_duration  * (1.0-c_SmoothingValue)));
+					//This check will make it recover faster from a serious timelapse (shouldn't happen under usual circumstances)
+					if ((m_frame_last_duration>0.300)||(adjusted_diff>0.300))
+					{
+						m_frame_last_duration=0.100;
+						adjusted_diff=0.100;
+					}
 					//const double c_SmoothDif2=0.25;
 					//const double smoothed_diff=(delay * c_SmoothDif2)+(m_frame_last_duration * (1.0-c_SmoothDif2));
 					double av_diff=0;
@@ -1252,8 +1259,11 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 				}
 				else
 				{
-					m_frame_last_duration=((last_duration * c_SmoothingValue ) + (m_frame_last_duration  * (1.0-c_SmoothingValue)));
-					printf("early- %.1f %f %f\n",diff * 1000.0,m_frame_last_pts,get_external_clock());
+					//This is a blend of itself against 0... to shrink down the smoothed duration to prevent sleeping to long on next iteration
+					m_frame_last_duration=(m_frame_last_duration  * (1.0-c_SmoothingValue));
+					printf("early- %.1f %f %f q=%d\n",diff * 1000.0,m_frame_last_pts,get_external_clock(),m_videoq.nb_packets);
+					//I shouldn't need this, but I want to keep around just in case I need to pull out the big guns.
+					//update_external_clock_pts(m_frame_last_pts-m_frame_last_duration);
 				}
 			}
 			else if (last_duration >= 10.0)
@@ -1264,7 +1274,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 					printf("m_frame_last_pts = AV_NOPTS_VALUE\n");
 				Sleep(33);
 			}
-
+			
 			update_video_pts(pts, pos, serial);
 			#endif
 		}
@@ -1426,13 +1436,6 @@ int FF_Play_Reader_Internal::video_thread()
     return 0;
 }
 
-//TODO nuke once we switch to our threads
-static int video_thread(void *arg)
-{
-	FF_Play_Reader_Internal *is = (FF_Play_Reader_Internal *)arg;
-	return is->video_thread();
-}
-
 int FF_Play_Reader_Internal::subtitle_thread()
 {
     SubPicture *sp;
@@ -1502,11 +1505,6 @@ int FF_Play_Reader_Internal::subtitle_thread()
     return 0;
 }
 
-static int subtitle_thread(void *arg)
-{
-	FF_Play_Reader_Internal *is = (FF_Play_Reader_Internal *)arg;
-	return is->subtitle_thread();
-}
 
 int FF_Play_Reader_Internal::synchronize_audio(int nb_samples)
 {
