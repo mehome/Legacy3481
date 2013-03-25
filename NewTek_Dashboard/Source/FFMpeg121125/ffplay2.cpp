@@ -1157,7 +1157,20 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 			#endif
 			//Don't let the queue grow by skipping the processing when it is too large
 			if (m_videoq.nb_packets < (m_realtime ? 2 : Playback_MaxQueue) )
-				m_Preview->process_frame(&bitmap,src_frame->interlaced_frame==0?false:true,m_video_clock);
+			{
+				float aspect_ratio;
+
+				if (m_video_st->sample_aspect_ratio.num == 0)
+					aspect_ratio = 0;
+				else
+					aspect_ratio = (float)av_q2d(m_video_st->sample_aspect_ratio);
+
+				if (aspect_ratio <= 0.0)
+					aspect_ratio = 1.0;
+				aspect_ratio *= (float)m_video_st->codec->width / (float)m_video_st->codec->height;
+
+				m_Preview->process_frame(&bitmap,src_frame->interlaced_frame==0?false:true,m_video_clock,aspect_ratio);
+			}
 
 			#ifdef __ShowProcessingDelta__
 			DebugOutput("%d time delta=%.1f\n",m_videoq.nb_packets,(double)(time_type::get_current_time()-StartTime) * 1000.0);
@@ -3046,8 +3059,8 @@ double FFPlay_Controller::Get_ProcAmp(ProcAmp_enum ProcSetting) const
 }
 
 
-void FFPlay_Controller::process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock)
+void FFPlay_Controller::process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock,float AspectRatio)
 {
 	m_FailSafe.UpdateHeartBeat();
-	m_Preview->process_frame(pBuffer,isInterlaced,VideoClock);
+	m_Preview->process_frame(pBuffer,isInterlaced,VideoClock,AspectRatio);
 }

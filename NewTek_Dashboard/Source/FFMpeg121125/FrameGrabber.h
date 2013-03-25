@@ -51,7 +51,7 @@ private:
 		//Sleep(33);
 		//Sleep(1000);
 		DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
-		m_Outstream->process_frame(&m_TestMap,true,(double)time_type::get_current_time());
+		m_Outstream->process_frame(&m_TestMap,true,(double)time_type::get_current_time(),4.0f/3.0f);
 		//printf("%d\n",m_Counter++);
 	}
 	FrameWork::Threads::thread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
@@ -129,7 +129,7 @@ public:
 protected:
 	virtual Dashboard_Controller_Interface *GetDashboard_Controller_Interface() {return this;}
 	//Intercept frames dispatched as a way to measure heartbeat in failsafe
-	virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock);
+	virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock,float AspectRatio);
 
 	void Flush();
 	int Run (void);											// run the filter graph

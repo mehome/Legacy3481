@@ -285,7 +285,7 @@ void Buffer::SetBufferState(BufferState state)
 
 Preview::Preview( HWND hWnd, Preview::eThreadPriority priority) : m_pThread(NULL), m_CurrentFrameIndex(0),m_hWnd(hWnd), 
 	m_pDisplayDeviceInfo(new DisplayDeviceInfo()),m_CurrDisplayDeviceIdx(0),m_ThreadPriority(priority),m_FrameRateAverage(0.10),
-	m_ConsecutiveRenderDelayCounter(0),m_LastUsingProcessSlot(-1),m_IsStreaming(false)
+	m_ConsecutiveRenderDelayCounter(0),m_LastUsingProcessSlot(-1),m_AspectRatio(16.0/9.0),m_IsStreaming(false)
 {
 	assert(::IsWindow(hWnd));
 	if (CreateAllDisplayDevices())
@@ -647,9 +647,10 @@ void Preview::process_frame_internal(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *
 }
 
 
-void Preview::process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock)
+void Preview::process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock,float AspectRatio)
 {
 	using namespace FrameWork::Bitmaps;
+	m_AspectRatio=AspectRatio;
 	bitmap_ycbcr_u8 DestBuffer((*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
 	if (isInterlaced)
 	{

@@ -43,7 +43,7 @@ struct mem
 class Outstream_Interface
 {
 	public:
-		virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock)=0;
+		virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock,float AspectRatio)=0;
 		//virtual void process_audio(const FrameWork::Audio2::buffer_f32 *pBuffer,int SampleRate,double AudioClock)=0;
 };
 

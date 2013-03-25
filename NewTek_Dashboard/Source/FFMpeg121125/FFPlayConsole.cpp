@@ -11,7 +11,7 @@ const wchar_t * const cwsz_AudioName=L"mixer|input|10:frame";
 class FC3Out_Update : public FrameWork::Outstream_Interface
 {
 protected:
-	virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock)
+	virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock,float AspectRatio)
 	{
 		#if 0
 		static size_t counter=0;
@@ -25,6 +25,7 @@ protected:
 		message msg(message::data_format_ycbcr_422_u8,XRes,YRes);
 		msg.field_type()=isInterlaced?message::field_type_both_interleaved:message::field_type_progressive;
 		msg.ycbcr()=*pBuffer; //copy contents
+		msg.aspect_ratio()=AspectRatio;
 		msg.send(cwsz_VideoName);
 	}
 };

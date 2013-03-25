@@ -152,7 +152,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		void StartStreaming() {m_IsStreaming=true;}
 		void StopStreaming() {m_IsStreaming=false;}
 
-		virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock)
+		virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock,float AspectRatio)
 		{
 			if (m_IsStreaming)
 			{
@@ -162,10 +162,10 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 					Bitmap_Frame frame((PBYTE)(*pBuffer)(),pBuffer->xres(),pBuffer->yres(),pBuffer->stride());
 					Bitmap_Frame out_frame=*((*m_DriverProc)(&frame));
 					bitmap_ycbcr_u8 dest((pixel_ycbcr_u8 *)out_frame.Memory,out_frame.XRes,out_frame.YRes,out_frame.Stride);
-					m_Outstream->process_frame(&dest,isInterlaced,VideoClock);
+					m_Outstream->process_frame(&dest,isInterlaced,VideoClock,AspectRatio);
 				}
 				else
-					m_Outstream->process_frame(pBuffer,isInterlaced,VideoClock); //just passing through			
+					m_Outstream->process_frame(pBuffer,isInterlaced,VideoClock,AspectRatio); //just passing through			
 			}
 		}
 
@@ -256,6 +256,7 @@ class DDraw_Preview
 		void Callback_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset) {m_Controls_PlugIn.Callback_AddMenuItems(hPopupMenu,StartingOffset);}
 		//Note: it is imperative to enter client code on the GUI thread
 		void Callback_On_Selection(int selection,HWND pParent) {m_Controls_PlugIn.Callback_On_Selection(selection,pParent);}
+		double GetAspectRatio() const {return m_DD_StreamOut->GetAspectRatio();}
 	protected:
 		virtual void CloseResources();
 		virtual void OpenResources();
@@ -368,7 +369,7 @@ class DDraw_Window : public Window
 	public:
 		DDraw_Window(DDraw_Preview *pParent, HWND HWND_Parent=NULL , const bool IsPopup=true , 
 			const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL ) : Window(HWND_Parent,IsPopup,pWindowName,pWindowPosition), 
-			m_pParent(pParent),m_AspectRatio(4.0/3.0),m_Editable(false),m_IsDragging(false)
+			m_pParent(pParent),m_AspectRatio(16.0/9.0),m_Editable(false),m_IsDragging(false)
 		{
 		}
 		~DDraw_Window()
@@ -383,6 +384,7 @@ class DDraw_Window : public Window
 			eMenu_Floating=100,	//typically win32 starts these at 100  (not sure why, but it is probably optional)
 			eMenu_Dockable,
 			eMenu_Editable,
+			eMenu_LockAuto,
 			eMenu_Lock4x3,
 			eMenu_Lock16x9,
 			eMenu_Stretch,
@@ -492,6 +494,7 @@ class DDraw_Window : public Window
 					if (g_IsPopup)
 					{
 						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_SEPARATOR, eMenu_NoSelection, NULL);
+						InsertMenu(hPopupMenu, -1, ((m_AspectRatio==(double)m_pParent->GetAspectRatio())?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_LockAuto, L"Lock file aspect");
 						InsertMenu(hPopupMenu, -1, ((m_AspectRatio==4.0/3.0)?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Lock4x3, L"Lock 4x3 aspect");
 						InsertMenu(hPopupMenu, -1, ((m_AspectRatio==16.0/9.0)?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Lock16x9, L"Lock 16x9 aspect");
 						InsertMenu(hPopupMenu, -1, ((m_AspectRatio==0.0)?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Stretch, L"Stretch");
@@ -503,12 +506,6 @@ class DDraw_Window : public Window
 					m_pParent->Callback_AddMenuItems(hPopupMenu,eMenu_NoEntries);
 					SetForegroundWindow(window);
 
-					//TODO omit this... I thought I needed to exclude from DDraw surface but it works fine
-					//TPMPARAMS excludeRegion;
-					//excludeRegion.cbSize=sizeof(TPMPARAMS);
-					//GetWindowRect(window,&excludeRegion.rcExclude);
-					//TODO omit this... If I want to keep it centered
-					//UINT L_R_Alignment=GetSystemMetrics(SM_MENUDROPALIGNMENT)==0?TPM_LEFTALIGN:TPM_RIGHTALIGN;
 					int XPos=0;
 					int YPos=0;
 					if (!g_IsPopup)
@@ -545,6 +542,9 @@ class DDraw_Window : public Window
 									m_pParent->Reset_DPC();
 								}
 								break;
+							case eMenu_LockAuto:
+								m_AspectRatio=m_pParent->GetAspectRatio();
+								break;
 							case eMenu_Lock4x3:
 								m_AspectRatio=4.0/3.0;
 								break;
@@ -555,31 +555,17 @@ class DDraw_Window : public Window
 								m_AspectRatio=0.0;
 								break;
 							case eMenu_Show480i:
-								if (m_AspectRatio==16.0/9.0)
 								{
 									RECT rc;
 									GetWindowRect(*this,&rc);
-									SetWindowPos(*this,NULL,0,0,853,480,SWP_NOMOVE|SWP_NOZORDER);
-								}
-								else
-								{
-									RECT rc;
-									GetWindowRect(*this,&rc);
-									SetWindowPos(*this,NULL,0,0,640,480,SWP_NOMOVE|SWP_NOZORDER);
+									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*480.0f),480,SWP_NOMOVE|SWP_NOZORDER);
 								}
 								break;
 							case eMenu_ShowHalfRes:
-								if (m_AspectRatio==16.0/9.0)
 								{
 									RECT rc;
 									GetWindowRect(*this,&rc);
-									SetWindowPos(*this,NULL,0,0,427,240,SWP_NOMOVE|SWP_NOZORDER);
-								}
-								else
-								{
-									RECT rc;
-									GetWindowRect(*this,&rc);
-									SetWindowPos(*this,NULL,0,0,320,240,SWP_NOMOVE|SWP_NOZORDER);
+									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*240.0f),240,SWP_NOMOVE|SWP_NOZORDER);
 								}
 								break;
 							default:

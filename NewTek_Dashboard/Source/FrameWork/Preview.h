@@ -101,12 +101,12 @@ public:
 	virtual ~Preview( void );
 
 	bool Get_IsError() const {return m_IsError;} //make sure everything is happy before pumping frames to it
-	virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock);
+	virtual void process_frame(const FrameWork::Bitmaps::bitmap_ycbcr_u8 *pBuffer,bool isInterlaced,double VideoClock,float AspectRatio);
 
 	//override these to do things like start / stop the fc3 server
 	virtual void StartStreaming( void );
 	virtual void StopStreaming( void );
-
+	double GetAspectRatio() const {return m_AspectRatio;}
 protected:
 
 	// These 2 bad boys return success
@@ -148,6 +148,7 @@ private:
 	FrameWork::time_type m_LastTime;  //keep track of time
 	size_t m_ConsecutiveRenderDelayCounter; //a simple counter of the delay count that resets every time it performs a Blit
 	size_t m_LastUsingProcessSlot;  //keeps track of last slot available for use
+	double m_AspectRatio;
 
 	bool m_IsError;  //determined during construction
 	bool m_IsStreaming;
