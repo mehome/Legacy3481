@@ -108,6 +108,13 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		void LoadPlugIn(const wchar_t Plugin[])
 		{
 			FlushPlugin();  //ensure its not already loaded
+			m_DriverProc = NULL;  //this will avoid crashing if others fail
+			m_fpInitialize = NULL;
+			m_fpShutdown = NULL;
+			m_fpGetSettings = NULL;
+			m_fpSetSettings = NULL;
+			m_fpResetThreshholds = NULL;
+
 			m_PlugIn=LoadLibrary(Plugin);
 
 			if (m_PlugIn)
@@ -131,7 +138,12 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 				}
 				catch (int ErrorCode)
 				{
-					m_DriverProc=NULL;  //this will avoid crashing if others fail
+					m_DriverProc = NULL;  //this will avoid crashing if others fail
+					m_fpInitialize = NULL;
+					m_fpShutdown = NULL;
+					m_fpGetSettings = NULL;
+					m_fpSetSettings = NULL;
+					m_fpResetThreshholds = NULL;
 					FrameWork::DebugOutput("ProcessingVision Plugin failed error code=%d",ErrorCode);
 					FlushPlugin();
 				}
@@ -778,16 +790,19 @@ void DDraw_Preview::OpenResources()
 	typedef DDraw_Preview::DDraw_Preview_Props PrevProps;
 	CloseResources(); //just ensure all resources are closed
 
-	m_ProcessingVision.LoadPlugIn(m_Props.plugin_file.c_str());
+	if( !m_Props.plugin_file.empty() )
 	{
-		char *IpToUse=NULL;
-		if (g_Robot_IP_Address.c_str()[0]!=0)
+		m_ProcessingVision.LoadPlugIn(m_Props.plugin_file.c_str());
 		{
-			wchar2char(g_Robot_IP_Address.c_str());
-			IpToUse=wchar2char_pchar;
+			char *IpToUse=NULL;
+			if (g_Robot_IP_Address.c_str()[0]!=0)
+			{
+				wchar2char(g_Robot_IP_Address.c_str());
+				IpToUse=wchar2char_pchar;
+			}
+			m_ProcessingVision.Callback_Initialize(IpToUse);
+			m_Controls_PlugIn.m_fpInitializePlugin(m_ProcessingVision.GetPluginInterface());
 		}
-		m_ProcessingVision.Callback_Initialize(IpToUse);
-		m_Controls_PlugIn.m_fpInitializePlugin(m_ProcessingVision.GetPluginInterface());
 	}
 	LONG XRes=m_DefaultWindow.left, YRes=m_DefaultWindow.top, XPos=m_DefaultWindow.right, YPos=m_DefaultWindow.bottom;
 	const wchar_t *source_name=m_Props.source_name.c_str();

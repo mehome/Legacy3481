@@ -99,6 +99,8 @@ bool VisionControls::Run(HWND pParent)
 {
 	bool ret=__super::Run(pParent);
 
+	if( g_plugin == NULL ) return ret;
+
 	for( int i = 0; i < eNumThresholdSettings; i++ )
 	{
 		SendDlgItemMessage(m_hDlg, s_ThresholdResourceTable_TrackerBar[i], TBM_SETRANGE, 1, (LPARAM) MAKELONG(0, 255));
@@ -197,6 +199,8 @@ VisionControls::~VisionControls()
 
 void VisionControls::GetVisionSettings()
 {
+	if( g_plugin == NULL ) return;
+
 	CurrentSettings.vsTrackerType = (TrackerType)(int)g_plugin->Get_Vision_Settings(eTrackerType);
 	CurrentSettings.vsDisplayType = (DisplayType)(int)g_plugin->Get_Vision_Settings(eDisplayType);
 	CurrentSettings.vsSolidMask = (bool)((int)g_plugin->Get_Vision_Settings(eSolidMask) > 0);
