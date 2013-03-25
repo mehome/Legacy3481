@@ -27,11 +27,11 @@ VisionGoalTracker::VisionGoalTracker()
 			break;
 	}
 
-	particleList.SetParticleParams( 0.75f, 0.7f, 3.2f );	// area threshold, aspect min, max
+	Set3PtGoalAspect(m_b3PtGoal);
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
-	float plower[] = {20, 20};	
+	float plower[] = {40, 30};	
 	float pUpper[] = {630, 470};
 	int pCalibrated[] = {0,0};
 	int pExclude[] = {0,0};
@@ -43,6 +43,14 @@ VisionGoalTracker::VisionGoalTracker()
 
 VisionGoalTracker::~VisionGoalTracker()
 {
+}
+
+void VisionGoalTracker::Set3PtGoalAspect(bool bUse3pt)
+{
+	if( bUse3pt )
+		particleList.SetParticleParams( 0.75f, 0.7f, 3.2f );	// area threshold, aspect min, max
+	else
+		particleList.SetParticleParams( 0.75f, 0.7f, 2.2f );	// area threshold, aspect min, max
 }
 
 void VisionGoalTracker::SetDefaultThreshold( void )
@@ -66,9 +74,12 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
 
-	//-----------------------------------------------------------------//
-	//  Color threshold and optional noise filter                      //
-	//-----------------------------------------------------------------//
+	// we want the qualifying target highest on the screen.
+	// (most valuable target)
+	int min_y = SourceImageInfo.yRes + 1;
+	int index = 0;
+
+	Set3PtGoalAspect(m_b3PtGoal);	// not very efficient since it won't change every frame.
 
 	//-----------------------------------------------------------------//
 	//  Threshold                                                      //
@@ -126,11 +137,6 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 	// Computes the convex envelope for each labeled particle in the source image.
 	if( m_bUseConvexHull )
 		VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
-
-	// we want the qualifying target highest on the screen.
-	// (most valuable target)
-	int min_y = SourceImageInfo.yRes + 1;
-	int index = 0;
 
 	VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
 

@@ -28,6 +28,7 @@ class VisionControls : public DialogBase
 			bool vsOverlays;
 			bool vsAimingText;
 			bool vsBoundsText;
+			bool vs3ptGoal;
 			ThresholdColorSpace vsThresholdMode;	
 			int ThresholdValues[eNumThresholdSettings];
 		} CurrentSettings;
@@ -138,6 +139,9 @@ bool VisionControls::Run(HWND pParent)
 		CurrentSettings.vsBoundsText = (bool)(atoi(StringEntry.c_str()) > 0);
 		g_plugin->Set_Vision_Settings(eBoundsText, (double)CurrentSettings.vsBoundsText);
 		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.vs3ptGoal = (bool)(atoi(StringEntry.c_str()) > 0);
+		g_plugin->Set_Vision_Settings(e3PtGoal, (double)CurrentSettings.vs3ptGoal);
+		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsThresholdMode = (ThresholdColorSpace)atoi(StringEntry.c_str());
 		g_plugin->Set_Vision_Settings(eThresholdMode, (double)CurrentSettings.vsThresholdMode);
 		in >> StringEntry; in >> StringEntry;
@@ -179,6 +183,7 @@ VisionControls::~VisionControls()
 	out << "Overlays= " << CurrentSettings.vsOverlays << endl;
 	out << "Aiming= " << CurrentSettings.vsAimingText << endl;
 	out << "Bounds= " << CurrentSettings.vsBoundsText << endl;
+	out << "3ptgoal= " << CurrentSettings.vs3ptGoal << endl;
 	out << "ThresholdType= " << CurrentSettings.vsThresholdMode << endl;
 	out << "Plane1Min= " << CurrentSettings.ThresholdValues[0] << endl;
 	out << "Plane2Min= " << CurrentSettings.ThresholdValues[1] << endl;
@@ -198,6 +203,7 @@ void VisionControls::GetVisionSettings()
 	CurrentSettings.vsOverlays = (bool)((int)g_plugin->Get_Vision_Settings(eOverlays) > 0);
 	CurrentSettings.vsAimingText = (bool)((int)g_plugin->Get_Vision_Settings(eAimingText) > 0);
 	CurrentSettings.vsBoundsText = (bool)((int)g_plugin->Get_Vision_Settings(eBoundsText) > 0);
+	CurrentSettings.vs3ptGoal = (bool)((int)g_plugin->Get_Vision_Settings(e3PtGoal) > 0);
 	CurrentSettings.vsThresholdMode = (ThresholdColorSpace)(int)g_plugin->Get_Vision_Settings(eThresholdMode);
 	for( int i = 0; i < eNumThresholdSettings; i++ )
 	{
@@ -218,6 +224,9 @@ void VisionControls::UpdateControls()
 	SendDlgItemMessage(m_hDlg, IDC_ShowAiming, BM_SETCHECK, CurrentSettings.vsAimingText, 0);
 	SendDlgItemMessage(m_hDlg, IDC_ShowBounds, BM_SETCHECK, CurrentSettings.vsBoundsText, 0);
 	SendDlgItemMessage(m_hDlg, IDC_ShowOverlay, BM_SETCHECK, CurrentSettings.vsOverlays, 0);
+
+	SendDlgItemMessage(m_hDlg, IDC_3PT, BM_SETCHECK, CurrentSettings.vs3ptGoal, 0);
+	SendDlgItemMessage(m_hDlg, IDC_2PT, BM_SETCHECK, !CurrentSettings.vs3ptGoal, 0);
 
 	SendDlgItemMessage(m_hDlg, IDC_ThresholdRGB, BM_SETCHECK, ( CurrentSettings.vsThresholdMode == eThreshRGB ), 0);
 	SendDlgItemMessage(m_hDlg, IDC_ThresholdHSV, BM_SETCHECK, ( CurrentSettings.vsThresholdMode == eThreshHSV ), 0);
@@ -334,6 +343,16 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 						bChecked = SendDlgItemMessage(m_hDlg, IDC_ShowBounds, BM_GETCHECK, 0, 0) > 0;
 						g_plugin->Set_Vision_Settings(eBoundsText, bChecked);
 						CurrentSettings.vsBoundsText = bChecked;
+						break;
+					case IDC_3PT:
+						bChecked = SendDlgItemMessage(m_hDlg, IDC_3PT, BM_GETCHECK, 0, 0) > 0;
+						g_plugin->Set_Vision_Settings(e3PtGoal, bChecked);
+						CurrentSettings.vs3ptGoal = bChecked;
+						break;
+					case IDC_2PT:
+						bChecked = SendDlgItemMessage(m_hDlg, IDC_2PT, BM_GETCHECK, 0, 0) > 0;
+						g_plugin->Set_Vision_Settings(e3PtGoal, !bChecked);
+						CurrentSettings.vs3ptGoal = !bChecked;
 						break;
 					case IDC_ThresholdRGB:
 						g_plugin->Set_Vision_Settings(eThresholdMode, eThreshRGB);

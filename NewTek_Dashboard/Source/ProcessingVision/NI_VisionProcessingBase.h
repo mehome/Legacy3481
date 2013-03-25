@@ -101,6 +101,7 @@ public:
 	// particle processing opts
 	void SetRejectBorderObjs( bool bRejctBorder ) { m_bRejectBorderParticles = bRejctBorder; }
 	void SetUseConvexHull( bool bUseConvex )	  { m_bUseConvexHull = bUseConvex; }
+	void Set3PtGoal(bool b3PtGoal )		  { m_b3PtGoal = b3PtGoal; }
 
 	// threshold
 	void SetThresholdMode( ThresholdColorSpace mode );
@@ -136,6 +137,7 @@ protected:
 	// particle processing opts
 	bool m_bRejectBorderParticles;	
 	bool m_bUseConvexHull;			
+	bool m_b3PtGoal;
 
 	// object separation
 	bool m_bObjectSeparation;

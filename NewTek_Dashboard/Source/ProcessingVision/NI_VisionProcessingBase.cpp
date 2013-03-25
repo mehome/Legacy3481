@@ -7,7 +7,7 @@ VisionTracker::VisionTracker()
 	: criteriaCount( 0 ), particleCriteria( NULL ), m_bObjectSeparation( false ),
 	  m_DisplayMode( eNormal ), m_bShowOverlays( true ), m_bShowSolidMask( false ),
 	  m_bShowAimingText( true ), m_bShowBoundsText( false ), m_ThresholdMode( eThreshRGB ),
-	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ),
+	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ), m_b3PtGoal( false ),
 	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
 {	
 	Profiler = new profile;

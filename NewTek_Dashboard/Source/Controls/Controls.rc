@@ -105,12 +105,12 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Dialog"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Display Mode",IDC_DisplayGroup,7,7,166,49,WS_GROUP
+    GROUPBOX        "Display Mode",IDC_DisplayGroup,7,7,141,49,WS_GROUP
     CONTROL         "Normal",IDC_DisplayNormal,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,15,20,38,10
     CONTROL         "Threshold",IDC_DisplayThreshold,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,15,31,47,10
     CONTROL         "Mask",IDC_DisplayMask,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,15,42,32,10
-    CONTROL         "Overlay",IDC_ShowOverlay,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,108,20,41,10
-    CONTROL         "Aiming Text",IDC_ShowAiming,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,108,31,53,10
+    CONTROL         "Overlay",IDC_ShowOverlay,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,20,41,10
+    CONTROL         "Aiming Text",IDC_ShowAiming,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,31,53,10
     CONTROL         "",IDC_RHMin,"msctls_trackbar32",TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,9,105,97,25
     CONTROL         "",IDC_GSMin,"msctls_trackbar32",TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,9,130,97,25
     CONTROL         "",IDC_BLMin,"msctls_trackbar32",TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,9,155,97,25
@@ -132,12 +132,14 @@ BEGIN
     EDITTEXT        IDC_RHMax_Ed,256,111,40,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_GSMax_Ed,256,135,40,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_BLMax_Ed,256,161,40,14,ES_AUTOHSCROLL
-    GROUPBOX        "Targeting",IDC_STATIC,182,7,142,49
+    GROUPBOX        "Targeting",IDC_STATIC,158,7,166,49
     PUSHBUTTON      "Reset Defaults",IDC_ResetThreshold,193,70,54,14
-    CONTROL         "Target Goal",IDC_TargetGoal,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,191,19,53,10
-    CONTROL         "Target Frisbe",IDC_TargetFrisbe,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,191,30,59,10
-    CONTROL         "Bounds Text",IDC_ShowBounds,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,108,42,56,10
+    CONTROL         "Target Goal  --",IDC_TargetGoal,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,167,19,63,10
+    CONTROL         "Target Frisbe",IDC_TargetFrisbe,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,167,30,59,10
+    CONTROL         "Bounds Text",IDC_ShowBounds,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,42,56,10
     CONTROL         "Solid",IDC_SOLID,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,48,42,31,10
+    CONTROL         "3pt",IDC_3PT,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,230,19,27,10
+    CONTROL         "2pt",IDC_2PT,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,258,19,27,10
 END
 
 

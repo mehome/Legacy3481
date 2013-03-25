@@ -205,6 +205,12 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 				return false;
 			g_pTracker[SelectedTracker]->SetShowBounds((bool)(int)value);
 			break;
+		case e3PtGoal:
+			if( g_pTracker[SelectedTracker] == NULL )
+				return false;
+			if( SelectedTracker == eGoalTracker )
+				g_pTracker[SelectedTracker]->Set3PtGoal((bool)(int)value);
+			break;
 		case eThresholdPlane1Min:
 		case eThresholdPlane2Min:
 		case eThresholdPlane3Min:

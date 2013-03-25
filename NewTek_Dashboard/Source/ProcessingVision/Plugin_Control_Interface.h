@@ -8,6 +8,7 @@ enum VisionSetting_enum
 	eOverlays,
 	eAimingText,
 	eBoundsText,
+	e3PtGoal,
 	eThresholdStart,
 	eThresholdPlane1Min = eThresholdStart,
 	eThresholdPlane2Min,
