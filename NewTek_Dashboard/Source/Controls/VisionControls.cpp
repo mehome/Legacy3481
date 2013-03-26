@@ -86,6 +86,50 @@ static size_t s_ThresholdResourceTable_Edit[]=
 	IDC_BLMax_Ed 
 };
 
+void Vision_Initialize(HWND pParent)
+{
+	if( g_plugin == NULL ) return;
+
+	using namespace std;
+	string InFile;
+	GetVisionFilename(pParent, InFile);
+
+	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
+	if (in.is_open())
+	{
+		string StringEntry;
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eTrackerType, (double)(TrackerType)atoi(StringEntry.c_str()));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eDisplayType, (double)(DisplayType)atoi(StringEntry.c_str()));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eSolidMask, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eOverlays, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eAimingText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eBoundsText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(e3PtGoal, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eThresholdMode, (double)(ThresholdColorSpace)atoi(StringEntry.c_str()));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eThresholdPlane1Min, (double)atoi(StringEntry.c_str()));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eThresholdPlane2Min, (double)atoi(StringEntry.c_str()));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eThresholdPlane3Min, (double)atoi(StringEntry.c_str()));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eThresholdPlane1Max, (double)atoi(StringEntry.c_str()));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eThresholdPlane2Max, (double)atoi(StringEntry.c_str()));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eThresholdPlane3Max, (double)atoi(StringEntry.c_str()));
+		in.close();
+	}
+}
+
 VisionControls::VisionControls() 
 {
 	for (size_t i=0; i < eNumThresholdSettings; i++)

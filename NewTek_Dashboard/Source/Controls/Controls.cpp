@@ -26,6 +26,7 @@ DialogBase *CreateFileControlsDialog();
 DialogBase *CreateVisionControlsDialog();  //cjt
 
 void ProcAmp_Initialize(HWND pParent);
+void Vision_Initialize(HWND pParent);
 
   /***********************************************************************************************************************/
  /*														DialogBase														*/
@@ -163,6 +164,8 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_StartedStreaming(HWND pP
 {
 	if (g_Controller)
 		ProcAmp_Initialize(pParent);
+	if (g_plugin)
+		Vision_Initialize(pParent);
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
