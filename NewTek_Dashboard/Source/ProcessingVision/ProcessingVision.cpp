@@ -166,7 +166,9 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 		case eTrackerType:
 			PendingTracker = (TrackerType)(int)value;
 			if( g_pTracker[PendingTracker] == NULL )
-			{
+			{	// this is for init - no sync needed if selected tracker not started.
+				if( g_pTracker[SelectedTracker] == NULL )
+					SelectedTracker = PendingTracker;
 				if( PendingTracker == eGoalTracker )
 					g_pTracker[eGoalTracker] = new VisionGoalTracker();
 				if( PendingTracker == eFrisbeTracker )
