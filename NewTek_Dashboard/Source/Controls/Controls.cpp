@@ -28,6 +28,22 @@ DialogBase *CreateVisionControlsDialog();  //cjt
 void ProcAmp_Initialize(HWND pParent);
 void Vision_Initialize(HWND pParent);
 
+const char *DashBoard_GetWindowText(wchar_t *StartUp)
+{
+	static std::string s_WindowText;
+	const char *ret=NULL;
+	if (StartUp) 
+	{
+		assert(s_WindowText[0]==0);  //sanity check first and only write
+		assert(StartUp[0]!=0); //sanity check our startup text is not an empty string
+		wchar2char(StartUp);
+		s_WindowText=wchar2char_pchar;
+	}
+	assert(s_WindowText[0]!=0); //check for race condition... no calls should have been called prior to startup
+	ret=s_WindowText.c_str();
+	return ret;
+}
+
   /***********************************************************************************************************************/
  /*														DialogBase														*/
 /***********************************************************************************************************************/
@@ -162,6 +178,11 @@ extern "C" CONTROLS_API void CallBack_SmartCppDashboard_Initialize_Plugin (Plugi
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_StartedStreaming(HWND pParent)
 {
+	{
+		wchar_t Buffer[128];
+		GetWindowText(pParent,Buffer,128);
+		DashBoard_GetWindowText(Buffer);
+	}
 	if (g_Controller)
 		ProcAmp_Initialize(pParent);
 	if (g_plugin)

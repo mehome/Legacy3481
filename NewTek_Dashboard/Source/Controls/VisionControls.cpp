@@ -49,16 +49,11 @@ class VisionControls : public DialogBase
 DialogBase *CreateVisionControlsDialog() {return new VisionControls;}
 
 const char * const csz_Filename="Vision_";
-static void GetVisionFilename(HWND pParent,std::string &Output)
+static void GetVisionFilename(std::string &Output)
 {
 	Output = csz_Filename;
-	wchar_t Buffer[128];
-	GetWindowText(pParent, Buffer, 128);
-	{
-		wchar2char(Buffer);
-		Output += wchar2char_pchar;
-		Output += ".ini";
-	}
+	Output += DashBoard_GetWindowText();
+	Output += ".ini";
 }
 
   /***********************************************************************************************************************/
@@ -92,7 +87,7 @@ void Vision_Initialize(HWND pParent)
 
 	using namespace std;
 	string InFile;
-	GetVisionFilename(pParent, InFile);
+	GetVisionFilename(InFile);
 
 	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 	if (in.is_open())
@@ -153,7 +148,7 @@ bool VisionControls::Run(HWND pParent)
 
 	using namespace std;
 	string InFile;
-	GetVisionFilename(GetParent(m_hDlg),InFile);
+	GetVisionFilename(InFile);
 	m_BLS_Filename=InFile;  //keep copy for exit
 
 	GetVisionSettings();

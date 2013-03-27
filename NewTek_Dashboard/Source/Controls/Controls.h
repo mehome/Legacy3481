@@ -27,6 +27,8 @@ extern "C"
 #pragma warning ( disable : 4996 )
 
 void DebugOutput(const char *format, ... );
+//Startup parameter is only used to write initial name during startup... all client code should use method as read-only of that
+const char *DashBoard_GetWindowText(wchar_t *StartUp=NULL);
 
 #define TBM_GETPOS              (WM_USER)
 #define TBM_SETPOS              (WM_USER+5)

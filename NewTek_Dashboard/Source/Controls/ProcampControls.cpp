@@ -222,16 +222,11 @@ static double GetValueForFormattedString(wchar_t Input[],ProcAmp_enum setting)
 }
 
 const char * const csz_Filename="ProcAmp_";
-static void GetProcampFilename(HWND pParent,std::string &Output)
+static void GetProcampFilename(std::string &Output)
 {
 	Output=csz_Filename;
-	wchar_t Buffer[128];
-	GetWindowText(pParent,Buffer,128);
-	{
-		wchar2char(Buffer);
-		Output+=wchar2char_pchar;
-		Output+=".ini";
-	}
+	Output+=DashBoard_GetWindowText();
+	Output+=".ini";
 }
 
 
@@ -239,7 +234,7 @@ void ProcAmp_Initialize(HWND pParent)
 {
 	using namespace std;
 	string InFile;
-	GetProcampFilename(pParent,InFile);
+	GetProcampFilename(InFile);
 	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 	if (in.is_open())
 	{
@@ -327,7 +322,7 @@ bool ProcampControls::Run(HWND pParent)
 	//Now to load procamp values from .ini (if it exists)
 	using namespace std;
 	string InFile;
-	GetProcampFilename(GetParent(m_hDlg),InFile);
+	GetProcampFilename(InFile);
 	m_BLS_Filename=InFile;  //keep copy for exit
 	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 	if (in.is_open())
