@@ -299,11 +299,11 @@ void VisionControls::UpdateSlider(VisionSetting_enum setting, bool ForceUpdate)
 {
 	if(	((m_OldSlider_ThresholdValues[setting - eThresholdStart] != CurrentSettings.ThresholdValues[setting - eThresholdStart]) || (ForceUpdate)) )
 	{
-		m_UpdatingSlider[setting] = true;
+		m_UpdatingSlider[setting - eThresholdStart] = true;
 		HWND hWndScroller = GetDlgItem(m_hDlg, s_ThresholdResourceTable_TrackerBar[setting - eThresholdStart]);
 		SendMessage(hWndScroller, TBM_SETPOS, TRUE, CurrentSettings.ThresholdValues[setting - eThresholdStart]);
 		m_OldSlider_ThresholdValues[setting - eThresholdStart] = CurrentSettings.ThresholdValues[setting - eThresholdStart];  //keep note of last value written
-		m_UpdatingSlider[setting] = false;
+		m_UpdatingSlider[setting - eThresholdStart] = false;
 	}
 }
 
