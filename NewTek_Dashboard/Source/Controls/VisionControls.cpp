@@ -42,8 +42,6 @@ class VisionControls : public DialogBase
 		//Avoid recursion on messages
 		bool m_UpdatingEdit[eNumThresholdSettings],
 			m_UpdatingSlider[eNumThresholdSettings];
-
-		std::string m_BLS_Filename; //keep note of the formed name for exit
 };
 
 DialogBase *CreateVisionControlsDialog() {return new VisionControls;}
@@ -149,8 +147,6 @@ bool VisionControls::Run(HWND pParent)
 	using namespace std;
 	string InFile;
 	GetVisionFilename(InFile);
-	m_BLS_Filename=InFile;  //keep copy for exit
-
 	GetVisionSettings();
 
 	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
@@ -215,7 +211,8 @@ VisionControls::~VisionControls()
 {
 	using namespace std;
 	g_pVisionControls=NULL;
-	string OutFile=m_BLS_Filename;
+	string OutFile;
+	GetVisionFilename(OutFile);
 	ofstream out(OutFile.c_str(), std::ios::out );
 	//this is unrolled to look pretty... :)
 	out << "TrackerType= " << CurrentSettings.vsTrackerType << endl;
@@ -233,7 +230,6 @@ VisionControls::~VisionControls()
 	out << "Plane2Max= " << CurrentSettings.ThresholdValues[4] << endl;
 	out << "Plane3Max= " << CurrentSettings.ThresholdValues[5] << endl;
 	out.close();
-
 }
 
 void VisionControls::GetVisionSettings()

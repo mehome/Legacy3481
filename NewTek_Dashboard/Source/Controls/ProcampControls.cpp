@@ -26,7 +26,6 @@ class ProcampControls : public DialogBase
 		double m_OldSlider_ProcAmpValues[e_no_procamp_items];   //flood control for sliders
 		//Avoid recursion on messages
 		bool m_UpdatingEdit[e_no_procamp_items],m_UpdatingSlider[e_no_procamp_items];
-		std::string m_BLS_Filename; //keep note of the formed name for exit
 };
 
 DialogBase *CreateProcampDialog() {return new ProcampControls;}
@@ -272,7 +271,8 @@ ProcampControls::~ProcampControls()
 {
 	using namespace std;
 	g_pProcamp=NULL;
-	string OutFile=m_BLS_Filename;
+	string OutFile;
+	GetProcampFilename(OutFile);
 	ofstream out(OutFile.c_str(), std::ios::out );
 	//this is unrolled to look pretty... :)
 	out << "Brightness= " << m_ProcAmpValues[0] << endl;
@@ -323,7 +323,6 @@ bool ProcampControls::Run(HWND pParent)
 	using namespace std;
 	string InFile;
 	GetProcampFilename(InFile);
-	m_BLS_Filename=InFile;  //keep copy for exit
 	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 	if (in.is_open())
 	{
