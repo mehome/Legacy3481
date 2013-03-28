@@ -216,7 +216,7 @@ const double c_av_nosync_threshold=10.0;
 
 static int sws_flags = SWS_BICUBIC;
 
-const char elemental_save_path[] = "D:\\media\\";
+const char elemental_save_path[] = "D:\\media\\Robot_Capture\\";
 
 struct MyAVPacketList 
 {
