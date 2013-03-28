@@ -741,7 +741,12 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	m_external_clock_time(0),m_external_clock_speed(0.0),m_audio_clock(0.0),m_audio_diff_cum(0.0),m_audio_diff_avg_coef(0.0),m_audio_diff_threshold(0.0),
 	m_audio_diff_avg_count(0),m_audio_st(NULL),m_audio_hw_buf_size(0),m_audio_buf(NULL),m_audio_buf1(NULL),m_audio_buf_size(0),m_audio_buf_index(0),
 	m_audio_write_buf_size(0),m_audio_pkt_temp_serial(0),m_swr_ctx(NULL),m_audio_current_pts(0.0),m_audio_current_pts_drift(0.0),m_frame_drops_early(0),
-	m_frame_drops_late(0),m_frame(NULL),m_recording(true),m_record_stream(NULL),
+	m_frame_drops_late(0),m_frame(NULL),m_record_stream(NULL),
+	#ifdef _LIB
+	m_recording(true),
+	#else
+	m_recording(false),
+	#endif
 	//Nuke this
 	show_mode(eSHOW_MODE_VIDEO),
 	m_sample_array_index(0),m_last_i_start(0),m_rdft(NULL),m_rdft_bits(0),m_rdft_data(NULL),m_xpos(0),
