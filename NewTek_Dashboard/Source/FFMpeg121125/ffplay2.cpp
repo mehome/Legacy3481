@@ -2685,7 +2685,7 @@ bool FF_Play_Reader::start_record()
 	SYSTEMTIME systime;
 	GetLocalTime(&systime);
 	// generate filename using date and time
-	sprintf_s(m_record_filename, 1024, "%selementary_stream_%d_%d_%d_%d_%d_%d.es", 
+	sprintf_s(m_record_filename, 1024, "%selementary_stream_%d_%d_%d_%d_%d_%d.264", 
 		elemental_save_path, systime.wYear, systime.wMonth, systime.wDay, 
 							 systime.wHour, systime.wMinute, systime.wSecond);
 	// make sure we have the destination path
