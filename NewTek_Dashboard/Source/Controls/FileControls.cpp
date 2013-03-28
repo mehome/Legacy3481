@@ -86,6 +86,7 @@ bool FileControls::Run(HWND pParent)
 	assert(g_Controller);
 	g_Controller->GetFileName(FileName);
 	SetWindowText(hwndEdit,FileName.c_str());
+	SendDlgItemMessage(m_hDlg, IDC_RECORD, BM_SETCHECK, g_Controller->GetRecordState(), 0) > 0;
 	return ret;
 }
 

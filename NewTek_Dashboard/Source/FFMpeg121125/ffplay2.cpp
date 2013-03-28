@@ -741,7 +741,7 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	m_external_clock_time(0),m_external_clock_speed(0.0),m_audio_clock(0.0),m_audio_diff_cum(0.0),m_audio_diff_avg_coef(0.0),m_audio_diff_threshold(0.0),
 	m_audio_diff_avg_count(0),m_audio_st(NULL),m_audio_hw_buf_size(0),m_audio_buf(NULL),m_audio_buf1(NULL),m_audio_buf_size(0),m_audio_buf_index(0),
 	m_audio_write_buf_size(0),m_audio_pkt_temp_serial(0),m_swr_ctx(NULL),m_audio_current_pts(0.0),m_audio_current_pts_drift(0.0),m_frame_drops_early(0),
-	m_frame_drops_late(0),m_frame(NULL),m_recording(false),
+	m_frame_drops_late(0),m_frame(NULL),m_recording(true),
 	//Nuke this
 	show_mode(eSHOW_MODE_VIDEO),
 	m_sample_array_index(0),m_last_i_start(0),m_rdft(NULL),m_rdft_bits(0),m_rdft_data(NULL),m_xpos(0),
@@ -2611,6 +2611,7 @@ struct FF_Play_Reader : public FF_Play_Reader_Internal
 		bool StartStreaming();
 		void StopStreaming();
 		void record_elemental(bool start);
+		bool get_rercord_state(void);
 
 	protected:
 		virtual void CreateVideoStream();
@@ -2669,6 +2670,11 @@ void FF_Play_Reader::DestroySubtitleStream()
 	assert(m_pSubtitleThread);
 	delete m_pSubtitleThread;
 	m_pSubtitleThread=NULL;
+}
+
+bool FF_Play_Reader::get_rercord_state()
+{
+	return m_recording;
 }
 
 void FF_Play_Reader::record_elemental(bool start)
@@ -3083,6 +3089,12 @@ void FFPlay_Controller::Record (bool start)
 {
 	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
 	instance.record_elemental(start);
+}
+
+bool FFPlay_Controller::GetRecordState (void)
+{
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	return instance.get_rercord_state();
 }
 
 void FFPlay_Controller::Seek (double fraction)
