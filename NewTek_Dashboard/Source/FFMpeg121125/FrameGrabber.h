@@ -139,6 +139,7 @@ protected:
 	int SetRate (int);										// set the play speed  (as percentage of normal)
 	void SwitchFilename(const wchar_t FileToUse[]);
 	void GetFileName(std::wstring &Output) const;
+	void Record(bool start);
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);
 	virtual double Get_ProcAmp(ProcAmp_enum ProcSetting) const;
 

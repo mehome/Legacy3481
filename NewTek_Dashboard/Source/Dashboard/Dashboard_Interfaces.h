@@ -64,6 +64,7 @@ public:
 	virtual int SetRate (int)=0;									//currently not supported
 	virtual void SwitchFilename(const wchar_t FileToUse[])=0;		//switches to next file (will play it once switched)
 	virtual void GetFileName(std::wstring &Output) const=0;
+	virtual void Record(bool)=0;
 
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value)=0;
 	virtual double Get_ProcAmp(ProcAmp_enum ProcSetting) const=0;

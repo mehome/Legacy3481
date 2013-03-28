@@ -216,6 +216,8 @@ const double c_av_nosync_threshold=10.0;
 
 static int sws_flags = SWS_BICUBIC;
 
+const char elemental_save_path[] = "D:\\media\\";
+
 struct MyAVPacketList 
 {
     AVPacket pkt;
@@ -350,6 +352,11 @@ struct FF_Play_Reader_Internal
 		virtual void CreateSubtitleStream() {}
 		virtual void DestroySubtitleStream() {}
 		int m_abort_request;
+
+		bool m_recording;
+		char m_record_filename[1024];
+		FILE* m_record_stream;
+
 	private:
 		FrameWork::Outstream_Interface *m_Preview;  //Temp for now
 		Processing::FX::procamp::Procamp_Manager *m_procamp;
@@ -734,7 +741,7 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	m_external_clock_time(0),m_external_clock_speed(0.0),m_audio_clock(0.0),m_audio_diff_cum(0.0),m_audio_diff_avg_coef(0.0),m_audio_diff_threshold(0.0),
 	m_audio_diff_avg_count(0),m_audio_st(NULL),m_audio_hw_buf_size(0),m_audio_buf(NULL),m_audio_buf1(NULL),m_audio_buf_size(0),m_audio_buf_index(0),
 	m_audio_write_buf_size(0),m_audio_pkt_temp_serial(0),m_swr_ctx(NULL),m_audio_current_pts(0.0),m_audio_current_pts_drift(0.0),m_frame_drops_early(0),
-	m_frame_drops_late(0),m_frame(NULL),
+	m_frame_drops_late(0),m_frame(NULL),m_recording(false),
 	//Nuke this
 	show_mode(eSHOW_MODE_VIDEO),
 	m_sample_array_index(0),m_last_i_start(0),m_rdft(NULL),m_rdft_bits(0),m_rdft_data(NULL),m_xpos(0),
@@ -752,6 +759,7 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	m_continue_read_thread(NULL)
 {
 	m_filename[0]=0;
+	m_record_filename[0]=0;
 	memset(&m_audioq,0,sizeof(PacketQueue));
 	memset(&m_videoq,0,sizeof(PacketQueue));
 	memset(&m_subtitleq,0,sizeof(PacketQueue));
@@ -1337,6 +1345,15 @@ int FF_Play_Reader_Internal::get_video_frame(AVFrame *frame, int64_t *pts, AVPac
 
         return 0;
     }
+
+	FrameWork::DebugOutput("FF_Play_Reader_Internal::get_video_frame()\n");
+	FrameWork::DebugOutput("size %d  stream_idx %d\n", pkt->size, pkt->stream_index);
+	FrameWork::DebugOutput("codec name: %s  long name: %s\n", m_video_st->codec->codec->name, m_video_st->codec->codec->long_name);
+
+	if( m_recording && m_record_stream )
+	{
+		fwrite( pkt->data, 1, pkt->size, m_record_stream );
+	}
 
     if(avcodec_decode_video2(m_video_st->codec, frame, &got_picture, pkt) < 0)
         return 0;
@@ -2593,6 +2610,8 @@ struct FF_Play_Reader : public FF_Play_Reader_Internal
 		FF_Play_Reader();
 		bool StartStreaming();
 		void StopStreaming();
+		void record_elemental(bool start);
+
 	protected:
 		virtual void CreateVideoStream();
 		virtual void DestroyVideoStream();
@@ -2612,6 +2631,10 @@ struct FF_Play_Reader : public FF_Play_Reader_Internal
 		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pReaderThread;
 		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pVideoThread;
 		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pSubtitleThread;
+
+		bool start_record(void);
+		void stop_record(void);
+
 		bool m_IsStreaming;
 };
 
@@ -2648,10 +2671,48 @@ void FF_Play_Reader::DestroySubtitleStream()
 	m_pSubtitleThread=NULL;
 }
 
+void FF_Play_Reader::record_elemental(bool start)
+{
+	if( !m_recording && start )
+		start_record();
+	if( m_recording && !start )
+		stop_record();
+	m_recording = start;
+}
+
+bool FF_Play_Reader::start_record()
+{
+	SYSTEMTIME systime;
+	GetLocalTime(&systime);
+	// generate filename using date and time
+	sprintf_s(m_record_filename, 1024, "%selementary_stream_%d_%d_%d_%d_%d_%d.es", 
+		elemental_save_path, systime.wYear, systime.wMonth, systime.wDay, 
+							 systime.wHour, systime.wMinute, systime.wSecond);
+	// make sure we have the destination path
+	DWORD dwAttrib = GetFileAttributesA(elemental_save_path);
+	if (!(dwAttrib != INVALID_FILE_ATTRIBUTES && 
+		(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+		CreateDirectoryA(elemental_save_path, NULL);
+
+
+	m_record_stream = fopen(m_record_filename, "wb");
+
+	return m_record_stream != NULL;
+}
+
+void FF_Play_Reader::stop_record()
+{
+	if(m_record_stream)
+		fclose(m_record_stream);
+}
+
 bool FF_Play_Reader::StartStreaming()
 {
 	if (!m_IsStreaming)
 	{
+		FrameWork::DebugOutput("FF_Play_Reader::StartStreaming()\n");
+		if(m_recording)
+			start_record();
 		m_IsStreaming=true;
 		m_pReaderThread = new FrameWork::Threads::thread<FF_Play_Reader,ThreadList>(this,eReaderThread);
 		m_pReaderThread->set_thread_name( "FF_Play_Reader Reader Thread" );
@@ -2663,6 +2724,7 @@ void FF_Play_Reader::StopStreaming()
 {
 	if (m_IsStreaming)
 	{
+		FrameWork::DebugOutput("FF_Play_Reader::StopStreaming()\n");
 		m_IsStreaming=false;
 		if (m_pReaderThread)
 		{
@@ -2670,6 +2732,9 @@ void FF_Play_Reader::StopStreaming()
 			delete m_pReaderThread;
 			m_pReaderThread=NULL;
 		}
+		if(m_recording)
+			stop_record();
+		FrameWork::DebugOutput("Play_Reader::StopStreaming() - done.\n");
 	}
 }
 
@@ -3012,6 +3077,12 @@ int FFPlay_Controller::Pause (void)
 	instance.SetStopped(0);
 	instance.toggle_pause();
 	return 0;
+}
+
+void FFPlay_Controller::Record (bool start)
+{
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	instance.record_elemental(start);
 }
 
 void FFPlay_Controller::Seek (double fraction)

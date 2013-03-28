@@ -130,6 +130,9 @@ long FileControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 							}
 						}
 						break;
+					case IDC_RECORD:
+						bool bChecked = SendDlgItemMessage(m_hDlg, IDC_RECORD, BM_GETCHECK, 0, 0) > 0;
+						g_Controller->Record(bChecked);
 					}
 				}
 			}
