@@ -1200,7 +1200,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 		//too fast
 		if ((!m_realtime) && (m_videoq.nb_packets<Playback_MaxQueue))
 		{
-			#if 1
+			#if 0
 			// compute nominal last_duration
 			double last_duration = pts - m_frame_last_pts;
 			if (last_duration > 0 && last_duration < 10.0) {
@@ -1923,7 +1923,9 @@ int FF_Play_Reader_Internal::stream_component_open(int stream_index)
 	{
     case AVMEDIA_TYPE_AUDIO:
         m_audio_stream = stream_index;
+		#ifndef __DisableAudio__
         m_audio_st = ic->streams[stream_index];
+		#endif
         m_audio_buf_size  = 0;
         m_audio_buf_index = 0;
 
@@ -2301,6 +2303,7 @@ int FF_Play_Reader_Internal::read_thread()
                 pkt->stream_index = m_video_stream;
                 packet_queue_put(&m_videoq, pkt);
             }
+			#ifndef __DisableAudio__
             if (m_audio_stream >= 0 && m_audio_st->codec->codec->capabilities & CODEC_CAP_DELAY) 
 			{
                 av_init_packet(pkt);
@@ -2309,6 +2312,7 @@ int FF_Play_Reader_Internal::read_thread()
                 pkt->stream_index = m_audio_stream;
                 packet_queue_put(&m_audioq, pkt);
             }
+			#endif
             SDL_Delay(10);
             if (m_audioq.size + m_videoq.size + m_subtitleq.size == 0) 
 			{
