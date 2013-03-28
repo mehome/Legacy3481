@@ -2716,7 +2716,6 @@ bool FF_Play_Reader::StartStreaming()
 {
 	if (!m_IsStreaming)
 	{
-		FrameWork::DebugOutput("FF_Play_Reader::StartStreaming()\n");
 		if(m_recording)
 			start_record();
 		m_IsStreaming=true;
@@ -2739,7 +2738,6 @@ void FF_Play_Reader::StopStreaming()
 		}
 		if(m_recording)
 			stop_record();
-		FrameWork::DebugOutput("Play_Reader::StopStreaming().\n");
 	}
 }
 
