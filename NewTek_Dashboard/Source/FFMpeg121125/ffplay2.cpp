@@ -1346,9 +1346,9 @@ int FF_Play_Reader_Internal::get_video_frame(AVFrame *frame, int64_t *pts, AVPac
         return 0;
     }
 
-	FrameWork::DebugOutput("FF_Play_Reader_Internal::get_video_frame()\n");
-	FrameWork::DebugOutput("size %d  stream_idx %d\n", pkt->size, pkt->stream_index);
-	FrameWork::DebugOutput("codec name: %s  long name: %s\n", m_video_st->codec->codec->name, m_video_st->codec->codec->long_name);
+	//FrameWork::DebugOutput("FF_Play_Reader_Internal::get_video_frame()\n");
+	//FrameWork::DebugOutput("size %d  stream_idx %d\n", pkt->size, pkt->stream_index);
+	//FrameWork::DebugOutput("codec name: %s  long name: %s\n", m_video_st->codec->codec->name, m_video_st->codec->codec->long_name);
 
 	if( m_recording && m_record_stream )
 	{
@@ -2730,7 +2730,6 @@ void FF_Play_Reader::StopStreaming()
 {
 	if (m_IsStreaming)
 	{
-		FrameWork::DebugOutput("FF_Play_Reader::StopStreaming()\n");
 		m_IsStreaming=false;
 		if (m_pReaderThread)
 		{
@@ -2740,7 +2739,7 @@ void FF_Play_Reader::StopStreaming()
 		}
 		if(m_recording)
 			stop_record();
-		FrameWork::DebugOutput("Play_Reader::StopStreaming() - done.\n");
+		FrameWork::DebugOutput("Play_Reader::StopStreaming().\n");
 	}
 }
 
