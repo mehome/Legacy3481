@@ -6,6 +6,88 @@
 
 extern DialogBase *g_pFileControls;
 extern Dashboard_Controller_Interface *g_Controller;
+extern DialogBase *g_pTargetEnableControls;
+extern Plugin_Controller_Interface *g_plugin; //For TargetEnableControls only
+
+
+  /***********************************************************************************************************************/
+ /*													TargetEnableControls												*/
+/***********************************************************************************************************************/
+
+class TargetEnableControls : public DialogBase
+{
+public:
+	//TargetEnableControls();
+	~TargetEnableControls();
+	virtual bool Run(HWND pParent);
+protected:
+	virtual size_t GetDialogResource() const {return IDD_Target_DIALOG;}
+	virtual LPARAM GetInstance() const {return (LPARAM) this;}
+	virtual const wchar_t * const GetTitlePrefix() const  {return L"Target Enabling";}
+	virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
+private:
+	void UpdateControls();
+};
+
+DialogBase *CreateTargetEnableDialog() {return new TargetEnableControls;}
+
+TargetEnableControls::~TargetEnableControls()
+{
+	g_pTargetEnableControls=NULL;
+}
+
+void TargetEnableControls::UpdateControls()
+{
+	const bool IsTargeting=g_plugin->Get_Vision_Settings(eIsTargeting)==0.0?false:true;
+	SendDlgItemMessage(m_hDlg, IDC_DisableTarget, BM_SETCHECK, (!IsTargeting), 0);
+	SendDlgItemMessage(m_hDlg, IDC_EnableTarget, BM_SETCHECK,  ( IsTargeting), 0);
+}
+
+bool TargetEnableControls::Run(HWND pParent)
+{
+	bool ret=__super::Run(pParent);
+	//SetWindowPos(m_hDlg,NULL,500,100,0,0,SWP_NOSIZE|SWP_NOZORDER);
+	UpdateControls();
+	return ret;
+}
+
+long TargetEnableControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_COMMAND: 
+		{
+			WORD notifycode = HIWORD(wParam);
+			WORD buttonid = LOWORD(wParam);
+			if (notifycode==BN_CLICKED) 
+			{
+				//Handle our button up
+				switch (buttonid) 
+				{
+				case IDC_DisableTarget:
+					printf("Disable Target\n");
+					g_plugin->Set_Vision_Settings(eIsTargeting,(double)false);
+					break;
+				case IDC_EnableTarget:
+					printf("Enable Target\n");
+					g_plugin->Set_Vision_Settings(eIsTargeting,(double)true);
+					break;
+				}
+			}
+		}
+		break;
+	default:
+		return __super::Dispatcher(w_ptr,uMsg,wParam,lParam);
+	}
+	UpdateControls();  //for this simple dialog everything we capture we'll want an update
+	return TRUE;
+}
+
+
+  /***********************************************************************************************************************/
+ /*														FileControls													*/
+/***********************************************************************************************************************/
+
 
 class FileControls : public DialogBase
 {
@@ -28,9 +110,6 @@ class FileControls : public DialogBase
 DialogBase *CreateFileControlsDialog() {return new FileControls;}
 
 
-  /***********************************************************************************************************************/
- /*														FileControls													*/
-/***********************************************************************************************************************/
 
 
 FileControls::FileControls() : m_ScrubValue(0)
@@ -86,7 +165,7 @@ bool FileControls::Run(HWND pParent)
 	assert(g_Controller);
 	g_Controller->GetFileName(FileName);
 	SetWindowText(hwndEdit,FileName.c_str());
-	SendDlgItemMessage(m_hDlg, IDC_RECORD, BM_SETCHECK, g_Controller->GetRecordState(), 0) > 0;
+	SendDlgItemMessage(m_hDlg, IDC_RECORD, BM_SETCHECK, g_Controller->GetRecordState(), 0);
 	return ret;
 }
 

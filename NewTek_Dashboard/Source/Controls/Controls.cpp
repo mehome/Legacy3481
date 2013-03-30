@@ -17,13 +17,15 @@ Dashboard_Controller_Interface *g_Controller=NULL;
 DLGPROC g_WinProc;
 Plugin_Controller_Interface *g_plugin = NULL;
 
-DialogBase *g_pProcamp;
-DialogBase *g_pFileControls;
-DialogBase *g_pVisionControls;  //cjt
+DialogBase *g_pProcamp=NULL;
+DialogBase *g_pFileControls=NULL;
+DialogBase *g_pVisionControls=NULL;  //cjt
+DialogBase *g_pTargetEnableControls=NULL;
 
 DialogBase *CreateProcampDialog();
 DialogBase *CreateFileControlsDialog();
 DialogBase *CreateVisionControlsDialog();  //cjt
+DialogBase *CreateTargetEnableDialog();
 
 void ProcAmp_Initialize(HWND pParent);
 void Vision_Initialize(HWND pParent);
@@ -243,6 +245,13 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 				DebugOutput("Vision Dialog already running\n");
 				assert(false);
 			}
+
+			//TODO find way to instantiate automatically
+			if (!g_pTargetEnableControls)
+			{
+				g_pTargetEnableControls=CreateTargetEnableDialog();
+				g_pTargetEnableControls->Run(pParent);
+			}
 			break;
 #endif			
 	}
@@ -257,4 +266,6 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_Shutdown()
 		g_pProcamp->OnEndDialog();
 	if (g_pVisionControls)	//cjt
 		g_pVisionControls->OnEndDialog();
+	if (g_pTargetEnableControls)
+		g_pTargetEnableControls->OnEndDialog();
 }

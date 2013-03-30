@@ -9,6 +9,7 @@ enum VisionSetting_enum
 	eAimingText,
 	eBoundsText,
 	e3PtGoal,
+	eIsTargeting,		//Used to determine whether or not we are targeting zero means bypass
 	eThresholdStart,
 	eThresholdPlane1Min = eThresholdStart,
 	eThresholdPlane2Min,

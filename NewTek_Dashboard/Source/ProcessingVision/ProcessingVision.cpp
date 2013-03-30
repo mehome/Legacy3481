@@ -12,6 +12,7 @@ TrackerType SelectedTracker = eGoalTracker;
 Dashboard_Framework_Interface *g_Framework=NULL;
 TrackerType PendingTracker = eGoalTracker;
 FrameWork::event frameSync;
+bool g_IsTargeting=false;
 
 //Give something cool to look at
 class SineWaveMaker
@@ -84,22 +85,24 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 #if 1
 extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 {
-	Bitmap_Handle *bgra_handle=g_Framework->CreateBGRA(Frame);
-	Bitmap_Frame &bgra_frame=bgra_handle->frame;
-	g_Framework->UYVY_to_BGRA(Frame,&bgra_frame);
+	if (g_IsTargeting)
+	{
+		Bitmap_Handle *bgra_handle=g_Framework->CreateBGRA(Frame);
+		Bitmap_Frame &bgra_frame=bgra_handle->frame;
+		g_Framework->UYVY_to_BGRA(Frame,&bgra_frame);
 
-	double x_target, y_target;
-	bool have_target = false;
-	//Note: out_frame could be UVYV if we wanted it to be... I don't want to assume its the same as &bgra_frame even though it may be
-	Bitmap_Frame *out_frame;
-	out_frame = NI_VisionProcessing(&bgra_frame, x_target, y_target, have_target);
-	//DebugOutput("X=%.2f, Y=%.2f, %s\n", x_target, y_target, have_target ? "target: yes" : "target: no");
-	if (g_UDP_Output && have_target)
-		(*g_UDP_Output)(x_target,y_target);
+		double x_target, y_target;
+		bool have_target = false;
+		//Note: out_frame could be UVYV if we wanted it to be... I don't want to assume its the same as &bgra_frame even though it may be
+		Bitmap_Frame *out_frame;
+		out_frame = NI_VisionProcessing(&bgra_frame, x_target, y_target, have_target);
+		//DebugOutput("X=%.2f, Y=%.2f, %s\n", x_target, y_target, have_target ? "target: yes" : "target: no");
+		if (g_UDP_Output && have_target)
+			(*g_UDP_Output)(x_target,y_target);
 
-	g_Framework->BGRA_to_UYVY(out_frame,Frame);
-	g_Framework->DestroyBGRA(bgra_handle);
-
+		g_Framework->BGRA_to_UYVY(out_frame,Frame);
+		g_Framework->DestroyBGRA(bgra_handle);
+	}
 	return Frame;
 }
 
@@ -213,6 +216,9 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 			if( SelectedTracker == eGoalTracker )
 				g_pTracker[SelectedTracker]->Set3PtGoal((bool)(int)value);
 			break;
+		case eIsTargeting:
+			g_IsTargeting=(value==0.0)?false:true;
+			break;
 		case eThresholdPlane1Min:
 		case eThresholdPlane2Min:
 		case eThresholdPlane3Min:
@@ -277,6 +283,9 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 		case eThresholdPlane3Max:
 			if( g_pTracker[SelectedTracker] != NULL )
 				return g_pTracker[SelectedTracker]->GetThresholdValues(VisionSetting);
+			break;
+		case eIsTargeting:
+			return (double)g_IsTargeting;
 			break;
 		default:
 			break;

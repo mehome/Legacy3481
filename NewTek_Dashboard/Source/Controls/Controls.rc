@@ -143,6 +143,15 @@ BEGIN
     CONTROL         "2pt",IDC_2PT,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,258,19,27,10
 END
 
+IDD_Target_DIALOG DIALOGEX 0, 0, 136, 50
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "Disabled",IDC_DisableTarget,"Button",BS_AUTORADIOBUTTON,18,18,43,10
+    CONTROL         "Target!",IDC_EnableTarget,"Button",BS_AUTORADIOBUTTON,77,18,40,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -174,6 +183,14 @@ BEGIN
         RIGHTMARGIN, 324
         TOPMARGIN, 7
         BOTTOMMARGIN, 186
+    END
+
+    IDD_Target_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 128
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 42
     END
 END
 #endif    // APSTUDIO_INVOKED
