@@ -164,6 +164,7 @@ enum MenuSelection
 	eMenu_Controls,
 	eMenu_Procamp,
 	eMenu_Vision,	//cjt
+	eMenu_Targeting,
 	eMenu_NoEntries
 };
 
@@ -201,7 +202,10 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPop
 		InsertMenu(hPopupMenu, -1, (g_pProcamp?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Procamp+StartingOffset, L"Procamp...");
 	}
 	if( g_plugin )
+	{
 		InsertMenu(hPopupMenu, -1, (g_pVisionControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Vision+StartingOffset, L"Vision...");  //cjt
+		InsertMenu(hPopupMenu, -1, (g_pTargetEnableControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Targeting+StartingOffset, L"Targeting...");
+	}
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selection,HWND pParent)
@@ -245,12 +249,17 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 				DebugOutput("Vision Dialog already running\n");
 				assert(false);
 			}
-
-			//TODO find way to instantiate automatically
+			break;
+		case eMenu_Targeting:
 			if (!g_pTargetEnableControls)
 			{
 				g_pTargetEnableControls=CreateTargetEnableDialog();
 				g_pTargetEnableControls->Run(pParent);
+			}
+			else
+			{
+				DebugOutput("Target Dialog already running\n");
+				assert(false);
 			}
 			break;
 #endif			
