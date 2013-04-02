@@ -242,6 +242,8 @@ class DDraw_Preview
 		//returns true to quit
 		bool CommandLineInterface();
 		void RunApp();
+		void SetInitRecord(bool RecordFrames) {m_InitRecord=RecordFrames;}
+		bool GetInitRecord() const {return m_InitRecord;}
 		void SignalQuit() 
 		{ 
 			m_Terminate.set(); 
@@ -257,6 +259,7 @@ class DDraw_Preview
 		//Note: it is imperative to enter client code on the GUI thread
 		void Callback_On_Selection(int selection,HWND pParent) {m_Controls_PlugIn.Callback_On_Selection(selection,pParent);}
 		double GetAspectRatio() const {return m_DD_StreamOut->GetAspectRatio();}
+		Dashboard_Controller_Interface *GetDashboard_Controller_Interface() {return m_FrameGrabber.GetDashboard_Controller_Interface();}
 	protected:
 		virtual void CloseResources();
 		virtual void OpenResources();
@@ -315,6 +318,7 @@ class DDraw_Preview
 
 		bool m_IsPopup_LastOpenedState;  //This is only written at the point when window is created
 		bool m_IsStreaming;
+		bool m_InitRecord;
 };
 
 using namespace std;
@@ -662,7 +666,7 @@ void DDraw_Preview::Controls_Plugin::LoadPlugIn(const wchar_t Plugin[])
 
 
 DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),m_ParentHwnd(NULL),m_DD_StreamOut(NULL),
-	m_FrameGrabber(NULL,props.IP_Address.c_str(),props.ReaderFormat),m_ProcessingVision(NULL),m_IsStreaming(false)
+	m_FrameGrabber(NULL,props.IP_Address.c_str(),props.ReaderFormat),m_ProcessingVision(NULL),m_IsStreaming(false),m_InitRecord(false)
 {
 	m_Controls_PlugIn.LoadPlugIn(props.controls_plugin_file.c_str());
 	Dashboard_Controller_Interface *l_Dashboard_Interface=m_FrameGrabber.GetDashboard_Controller_Interface();
@@ -701,6 +705,8 @@ void DDraw_Preview::StopStreaming()
 {
 	if (m_IsStreaming)
 	{
+		 //Make note of last state for client bls... as early as possible
+		m_InitRecord=m_FrameGrabber.GetDashboard_Controller_Interface()->GetRecordState();
 		//before closing the resources ensure the upstream is not streaming to us
 		m_FrameGrabber.StopStreaming();
 		m_ProcessingVision.StopStreaming();
@@ -767,6 +773,8 @@ void DDraw_Preview::StartStreaming()
 		m_FrameGrabber.StartStreaming();
 		m_ProcessingVision.StartStreaming();
 		Callback_StartedStreaming(*m_Window);
+		 //transfer the init state as late as possible
+		m_FrameGrabber.GetDashboard_Controller_Interface()->Record(m_InitRecord);
 	}
 
 }
@@ -976,6 +984,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	wstring ClassName=cwsz_ClassName;
 	wstring WindowName=cwsz_WindowName;
 	wstring StreamProfile=L"default";
+	bool RecordFrames=false;  //local cache until the app becomes instantiated
 
 	string sz_FileName="Video1.ini";
 	wchar_t *ext=wcsrchr(lpCmdLine,L'.');
@@ -1001,7 +1010,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=15;
+			const size_t NoEnties=16;
 			string StringEntry[NoEnties<<1];
 			{
 				char Buffer[1024];
@@ -1032,6 +1041,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			AssignInput(Plugin,StringEntry[25].c_str());
 			AssignInput(AuxStart,StringEntry[27].c_str());
 			AssignInput(AuxArgs,StringEntry[29].c_str());
+			RecordFrames=atoi(StringEntry[31].c_str())==0?false:true;
 		}
 		else
 		{
@@ -1068,6 +1078,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	//Note: ensure the CWD is maintained on exit... the file requester can change where it goes
 	wchar_t CWD[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH,CWD);
+	TheApp.SetInitRecord(RecordFrames);
 	TheApp.RunApp();
 	SetCurrentDirectory(CWD);
 	bool SaveOnExit=true;
@@ -1109,6 +1120,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		out << "AuxStartupFile= " << output << endl;
 		AssignOutput(output,AuxArgs.c_str());
 		out << "AuxStartupFileArgs= " << output << endl;
+		out << "RecordFrames= " << TheApp.GetInitRecord() << endl;
 		out.close();
 	}
 	return 0;

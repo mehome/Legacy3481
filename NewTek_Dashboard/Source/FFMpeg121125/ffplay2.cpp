@@ -741,12 +741,7 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	m_external_clock_time(0),m_external_clock_speed(0.0),m_audio_clock(0.0),m_audio_diff_cum(0.0),m_audio_diff_avg_coef(0.0),m_audio_diff_threshold(0.0),
 	m_audio_diff_avg_count(0),m_audio_st(NULL),m_audio_hw_buf_size(0),m_audio_buf(NULL),m_audio_buf1(NULL),m_audio_buf_size(0),m_audio_buf_index(0),
 	m_audio_write_buf_size(0),m_audio_pkt_temp_serial(0),m_swr_ctx(NULL),m_audio_current_pts(0.0),m_audio_current_pts_drift(0.0),m_frame_drops_early(0),
-	m_frame_drops_late(0),m_frame(NULL),m_record_stream(NULL),
-	#ifdef _LIB
-	m_recording(true),
-	#else
-	m_recording(false),
-	#endif
+	m_frame_drops_late(0),m_frame(NULL),m_record_stream(NULL),m_recording(false),
 	//Nuke this
 	show_mode(eSHOW_MODE_VIDEO),
 	m_sample_array_index(0),m_last_i_start(0),m_rdft(NULL),m_rdft_bits(0),m_rdft_data(NULL),m_xpos(0),
@@ -1279,6 +1274,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 						av_diff = get_video_clock()- get_audio_clock();
 
 					//printf("%.1f %.1f %.1f %.1f q=%d\n",diff * 1000.0,m_frame_last_duration * 1000.0,av_diff,m_frame_last_pts,m_videoq.nb_packets);
+					//FrameWork::DebugOutput("%.1f %.1f %.1f %.1f q=%d\n",diff * 1000.0,m_frame_last_duration * 1000.0,av_diff,m_frame_last_pts,m_videoq.nb_packets);
 					const double sleeptime=FFMAX(m_frame_last_duration + av_diff,adjusted_diff);
 					if (sleeptime>0.0)
 						Sleep((DWORD)(sleeptime * 1000.0));
