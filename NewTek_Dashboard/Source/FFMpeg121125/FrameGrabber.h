@@ -80,6 +80,8 @@ public:
 
 	virtual ~FrameGrabber_FFMpeg();
 protected:
+	void SetSeekable(bool Seekable) {m_Seekable=Seekable;}
+	bool GetSeekable() const {return m_Seekable;}
 	void SetFileName(const wchar_t *IPAddress,IpURLConversion format=eIpURL_H264);
 
 	void *m_VideoStream;
@@ -87,7 +89,7 @@ private:
 	size_t split_arguments(const std::string& str, std::vector<std::string>& arguments);
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
 	FrameGrabber_TestPattern m_TestPattern;  //handle the empty string with something useful
-	std::string m_Options; //Support options to see what options we would need
+	bool m_Seekable;
 };
 
 class FrameGrabber : public FrameGrabber_Interface

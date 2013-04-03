@@ -283,7 +283,7 @@ struct FF_Play_Reader_Internal
 		virtual ~FF_Play_Reader_Internal();
 
 		//For now keep this separate in case the constructor needs to be light
-		bool init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream);
+		bool init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,bool Seekable);
 
 		void stream_seek(int64_t pos, int64_t rel, int seek_by_bytes);  // seek in the stream
 		void toggle_pause();
@@ -317,6 +317,7 @@ struct FF_Play_Reader_Internal
 		int decode_interrupt_cb() const;
 		int read_thread();   // this thread gets the stream from the disk or the network 
 
+		const FrameWork::event &GetFileInstantiatedSignal() {return m_FileInstantiatedSignal;}
 	protected:
 		void stream_close();
 		double get_audio_clock() const;   // get the current audio clock value
@@ -359,6 +360,7 @@ struct FF_Play_Reader_Internal
 
 	private:
 		void SetSeekable_Option(bool SeekAble);
+		FrameWork::event m_FileInstantiatedSignal; //this if fired once the format context is ready to go in the read thread
 		FrameWork::Outstream_Interface *m_Preview;
 		Processing::FX::procamp::Procamp_Manager *m_procamp;
 		AVInputFormat *m_iformat;
@@ -2228,6 +2230,10 @@ int FF_Play_Reader_Internal::read_thread()
     if (infinite_buffer < 0 && m_realtime)
         infinite_buffer = 1;
 
+
+	//Signal that the format context is setup
+	m_FileInstantiatedSignal.set();
+
     for (;;) 
 	{
         if (m_abort_request)
@@ -2397,7 +2403,7 @@ void FF_Play_Reader_Internal::SetSeekable_Option(bool SeekAble)
 	av_dict_set(&m_format_opts, opt, arg, flags);
 }
 
-bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream)
+bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,bool Seekable)
 {
     av_strlcpy(m_filename, filename, sizeof(m_filename));
     m_iformat = iformat;
@@ -2427,7 +2433,7 @@ bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,
 	//Case 58845: To avoid some http files from stuttering we turn off the seekable option, and then defer seek support until someone
 	//asks for it
 	if (strncmp(filename, "http:", 5)==0)
-		SetSeekable_Option(false);
+		SetSeekable_Option(Seekable);
     return true;
 }
 
@@ -2770,6 +2776,8 @@ bool FF_Play_Reader::StartStreaming()
 		m_IsStreaming=true;
 		m_pReaderThread = new FrameWork::Threads::thread<FF_Play_Reader,ThreadList>(this,eReaderThread);
 		m_pReaderThread->set_thread_name( "FF_Play_Reader Reader Thread" );
+		//wait for the thread to run through setting the format context
+		GetFileInstantiatedSignal().wait();
 	}
 	return true;
 }
@@ -2803,13 +2811,13 @@ void FF_Play_Reader::operator() ( ThreadList WhichThread )
 	}
 }
 
-static FF_Play_Reader *stream_open(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream)
+static FF_Play_Reader *stream_open(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,bool Seekable)
 {
 	FF_Play_Reader *is=NULL;
 
 	//is = (VideoState *)av_mallocz(sizeof(VideoState));
 	is = new FF_Play_Reader; //Note: will init vars implicitly in constructor
-	if ((is)&&(!is->init(filename,iformat,Outstream)))
+	if ((is)&&(!is->init(filename,iformat,Outstream,Seekable)))
 	{
 		delete is;
 		is=NULL;
@@ -2889,7 +2897,8 @@ void FrameGrabber_FFMpeg::SetFileName(const wchar_t *IPAddress,IpURLConversion f
 	input_filename=m_URL.c_str();
 }
 
-FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), m_VideoStream(NULL),m_TestPattern(Preview,IPAddress)
+FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), 
+	m_VideoStream(NULL),m_TestPattern(Preview,IPAddress),m_Seekable(false)
 {
 	//If we have no IPAddress we have no work to do
 	if(IPAddress[0]==0)
@@ -2970,7 +2979,7 @@ bool FrameGrabber_FFMpeg::StartStreaming()
 	if (m_URL[0]==0)
 		return m_TestPattern.StartStreaming();
 
-	FF_Play_Reader *reader= stream_open(input_filename, file_iformat, m_Outstream);
+	FF_Play_Reader *reader= stream_open(input_filename, file_iformat, m_Outstream,GetSeekable());
 	m_VideoStream = reader;
 	if (!m_VideoStream) 
 		fprintf(stderr, "Failed to initialize VideoState!\n");
@@ -3145,6 +3154,13 @@ bool FFPlay_Controller::GetRecordState (void)
 
 void FFPlay_Controller::Seek (double fraction)
 {
+	if (!GetSeekable())
+	{
+		SetSeekable(true);
+		StopStreaming();
+		StartStreaming();
+	}
+
 	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
 	if (instance.GetIsRealtime()) return;
 	instance.SetStopped(0);
