@@ -197,7 +197,7 @@ const int program_birth_year = 2003;
 /* no AV sync correction is done if below the AV sync threshold */
 #define AV_SYNC_THRESHOLD 0.01
 /* no AV correction is done if too big error */
-const double c_av_nosync_threshold=10.0;
+const double c_av_nosync_threshold=5.0;
 
 /* maximum audio speed change to get correct sync */
 #define SAMPLE_CORRECTION_PERCENT_MAX 10
@@ -358,9 +358,11 @@ struct FF_Play_Reader_Internal
 		FILE* m_record_stream;
 
 	private:
-		FrameWork::Outstream_Interface *m_Preview;  //Temp for now
+		void SetSeekable_Option(bool SeekAble);
+		FrameWork::Outstream_Interface *m_Preview;
 		Processing::FX::procamp::Procamp_Manager *m_procamp;
 		AVInputFormat *m_iformat;
+		AVDictionary *m_format_opts; //set internal options for demuxers
 		int m_stopped; // used to avoid crash on repeating dispatch
 		int m_no_background;
 		int m_paused;
@@ -735,8 +737,8 @@ void FF_Play_Reader_Internal::stream_close()
     //av_free(is);
 }
 
-FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(NULL),
-	m_iformat(NULL),m_stopped(0),m_no_background(0),m_abort_request(0),m_paused(0),m_last_paused(0),m_que_attachments_req(0),m_seek_req(0),m_seek_flags(0),
+FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(NULL),m_iformat(NULL),m_format_opts(NULL),
+	m_stopped(0),m_no_background(0),m_abort_request(0),m_paused(0),m_last_paused(0),m_que_attachments_req(0),m_seek_req(0),m_seek_flags(0),
 	m_seek_pos(0),m_seek_rel(0),m_read_pause_return(0),m_ic(NULL),m_realtime(0),m_audio_stream(0),m_av_sync_type(0),m_external_clock(0.0),m_external_clock_drift(0.0),
 	m_external_clock_time(0),m_external_clock_speed(0.0),m_audio_clock(0.0),m_audio_diff_cum(0.0),m_audio_diff_avg_coef(0.0),m_audio_diff_threshold(0.0),
 	m_audio_diff_avg_count(0),m_audio_st(NULL),m_audio_hw_buf_size(0),m_audio_buf(NULL),m_audio_buf1(NULL),m_audio_buf_size(0),m_audio_buf_index(0),
@@ -1174,7 +1176,15 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 					aspect_ratio = (float)av_q2d(m_video_st->sample_aspect_ratio);
 
 				if (aspect_ratio <= 0.0)
+				{
+					//Keep around to test if the guess call will actually salvage some files that do not have aspect embeeded within them
+					#if 0
+					const AVRational sample_aspect_ratio = av_guess_sample_aspect_ratio(m_ic, m_video_st, src_frame);
+					aspect_ratio = (float)av_q2d(sample_aspect_ratio);
+					#else
 					aspect_ratio = 1.0;
+					#endif
+				}
 				aspect_ratio *= (float)m_video_st->codec->width / (float)m_video_st->codec->height;
 
 				m_Preview->process_frame(&bitmap,src_frame->interlaced_frame==0?false:true,m_video_clock,aspect_ratio);
@@ -2110,19 +2120,22 @@ int FF_Play_Reader_Internal::read_thread()
     ic = avformat_alloc_context();
 	ic->interrupt_callback.callback = ::decode_interrupt_cb;
     ic->interrupt_callback.opaque = this;
-    //err = avformat_open_input(&ic, m_filename, m_iformat, &format_opts);
-	err = avformat_open_input(&ic, m_filename, m_iformat, NULL);
+    err = avformat_open_input(&ic, m_filename, m_iformat, &m_format_opts);
     if (err < 0) 
 	{
         print_error(m_filename, err);
         ret = -1;
         goto fail;
     }
-    //if ((t = av_dict_get(format_opts, "", NULL, AV_DICT_IGNORE_SUFFIX))) {
-    //    av_log(NULL, AV_LOG_ERROR, "Option %s not found.\n", t->key);
-    //    ret = AVERROR_OPTION_NOT_FOUND;
-    //    goto fail;
-    //}
+	{
+		AVDictionaryEntry *t;
+	    if ((t = av_dict_get(m_format_opts, "", NULL, AV_DICT_IGNORE_SUFFIX))) 
+		{
+			av_log(NULL, AV_LOG_ERROR, "Option %s not found.\n", t->key);
+			ret = AVERROR_OPTION_NOT_FOUND;
+			goto fail;
+	    }
+	}
     m_ic = ic;
 
     if (genpts)
@@ -2373,6 +2386,17 @@ static int read_thread(void *arg)
 	return is->read_thread();
 }
 
+void FF_Play_Reader_Internal::SetSeekable_Option(bool SeekAble)
+{
+	const char *opt="seekable";
+	const char *arg=SeekAble?"1":"0";
+	 const AVClass *fc = avformat_get_class();
+	const AVOption *o = av_opt_find((void *)&fc, opt, NULL, 0, AV_OPT_SEARCH_CHILDREN | AV_OPT_SEARCH_FAKE_OBJ);
+	assert(o!=NULL);
+	const int flags= (o->type == AV_OPT_TYPE_FLAGS) ? AV_DICT_APPEND : 0;
+	av_dict_set(&m_format_opts, opt, arg, flags);
+}
+
 bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream)
 {
     av_strlcpy(m_filename, filename, sizeof(m_filename));
@@ -2400,6 +2424,10 @@ bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,
 	m_av_sync_type = g_av_sync_type;
 	assert(Outstream);
 	m_Preview=Outstream;
+	//Case 58845: To avoid some http files from stuttering we turn off the seekable option, and then defer seek support until someone
+	//asks for it
+	if (strncmp(filename, "http:", 5)==0)
+		SetSeekable_Option(false);
     return true;
 }
 
