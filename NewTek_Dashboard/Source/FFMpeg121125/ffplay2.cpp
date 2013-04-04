@@ -1179,7 +1179,7 @@ int FF_Play_Reader_Internal::dispatch_picture(AVFrame *src_frame, double pts1, i
 
 				if (aspect_ratio <= 0.0)
 				{
-					//Keep around to test if the guess call will actually salvage some files that do not have aspect embeeded within them
+					//Keep around to test if the guess call will actually salvage some files that do not have aspect embedded within them
 					#if 0
 					const AVRational sample_aspect_ratio = av_guess_sample_aspect_ratio(m_ic, m_video_st, src_frame);
 					aspect_ratio = (float)av_q2d(sample_aspect_ratio);
@@ -2232,6 +2232,7 @@ int FF_Play_Reader_Internal::read_thread()
 
 
 	//Signal that the format context is setup
+	update_external_clock_pts(0.0);  //for clips that take a moment to instantiate, this update will give them a good startup
 	m_FileInstantiatedSignal.set();
 
     for (;;) 
