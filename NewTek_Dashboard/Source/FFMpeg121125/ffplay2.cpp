@@ -792,7 +792,6 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 
 FF_Play_Reader_Internal::~FF_Play_Reader_Internal()
 {
-    stream_close();
     av_lockmgr_register(NULL);
     avformat_network_deinit();
 	#ifdef __ShowStatus__
@@ -2384,6 +2383,13 @@ int FF_Play_Reader_Internal::read_thread()
         avformat_close_input(&m_ic);
 
     SDL_DestroyMutex(wait_mutex);
+	stream_close();
+	//Set to as they are in the constructor
+	m_video_current_pos = 0;
+	m_frame_last_pts = 0.0;
+	m_frame_last_duration = 0;
+	m_frame_timer = 0.0;
+	m_frame_last_dropped_pts = 0.0;
     return 0;
 }
 
