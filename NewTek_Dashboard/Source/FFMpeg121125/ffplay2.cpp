@@ -318,6 +318,7 @@ struct FF_Play_Reader_Internal
 		int read_thread();   // this thread gets the stream from the disk or the network 
 
 		const FrameWork::event &GetFileInstantiatedSignal() {return m_FileInstantiatedSignal;}
+		int GetSeekByBytes() const {return m_seek_by_bytes;}
 	protected:
 		void stream_close();
 		double get_audio_clock() const;   // get the current audio clock value
@@ -470,51 +471,57 @@ struct FF_Play_Reader_Internal
 		int m_last_video_stream, m_last_audio_stream, m_last_subtitle_stream;
 
 		SDL_cond *m_continue_read_thread;
+
+		//Options moved from global space:
+		int m_seek_by_bytes;
 };
 
-/* options specified by the user */
-static AVInputFormat *file_iformat;
-static std::string m_URL;
-static const char *input_filename;
+// options specified by the user 
+
+//Note: we cannot have static options like this, but instead of wiping them out I'll lock down the ones that never change via const, and then
+//move the others to member variables.  This will make it easier to show diff on future versions of FFplay
+
+//static AVInputFormat *file_iformat;
+//static const char *input_filename;
 static const char *window_title;
 static int fs_screen_width;
 static int fs_screen_height;
 static int audio_disable;
 static int video_disable;
-static int wanted_stream[AVMEDIA_TYPE_NB] = {0,-1,-1,0,-1};
-static int seek_by_bytes = -1;
+const int wanted_stream[AVMEDIA_TYPE_NB] = {0,-1,-1,0,-1};
+//static int seek_by_bytes = -1;
 static int display_disable;
 #define __ShowStatus__
 //static int show_status = 1;
-static int g_av_sync_type = eAV_SYNC_AUDIO_MASTER;
-static int64_t start_time = AV_NOPTS_VALUE;
-static int64_t duration = AV_NOPTS_VALUE;
-static int workaround_bugs = 1;
-static int fast = 0;
-static int genpts = 0;
-static int lowres = 0;
-static int idct = FF_IDCT_AUTO;
-static enum AVDiscard skip_frame       = AVDISCARD_DEFAULT;
-static enum AVDiscard skip_idct        = AVDISCARD_DEFAULT;
-static enum AVDiscard skip_loop_filter = AVDISCARD_DEFAULT;
-static int error_concealment = 3;
-static int decoder_reorder_pts = -1;
+const int g_av_sync_type = eAV_SYNC_AUDIO_MASTER;
+const int64_t start_time = AV_NOPTS_VALUE;
+const int64_t duration = AV_NOPTS_VALUE;
+const int workaround_bugs = 1;
+const int fast = 0;
+const int genpts = 0;
+const int lowres = 0;
+const int idct = FF_IDCT_AUTO;
+const enum AVDiscard skip_frame       = AVDISCARD_DEFAULT;
+const enum AVDiscard skip_idct        = AVDISCARD_DEFAULT;
+const enum AVDiscard skip_loop_filter = AVDISCARD_DEFAULT;
+const int error_concealment = 3;
+const int decoder_reorder_pts = -1;
 static int autoexit;
 static int exit_on_keydown;
 static int exit_on_mousedown;
 static int loop = 1;
-static int framedrop = -1;
+const int framedrop = -1;
 static int infinite_buffer = -1;
 //static enum VideoState::ShowMode show_mode = VideoState::SHOW_MODE_NONE;
 static const char *g_audio_codec_name;
 static const char *g_subtitle_codec_name;
 static const char *g_video_codec_name;
-static int rdftspeed = 20;
+const int rdftspeed = 20;
 
 /* current context */
 static int is_full_screen;
 static int64_t audio_callback_time;
-
+//This is instantiated once in the FrameGrabber constructor
 static AVPacket flush_pkt;
 
 #define FF_ALLOC_EVENT   (SDL_USEREVENT)
@@ -760,7 +767,8 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	m_img_convert_ctx(NULL),
 	m_width(0), m_height(0), m_xleft(0), m_ytop(0),m_step(0),
 	m_last_video_stream(0), m_last_audio_stream(0), m_last_subtitle_stream(0),
-	m_continue_read_thread(NULL)
+	m_continue_read_thread(NULL),
+	m_seek_by_bytes(-1)
 {
 	m_filename[0]=0;
 	m_record_filename[0]=0;
@@ -901,7 +909,7 @@ void FF_Play_Reader_Internal::stream_seek(int64_t pos, int64_t rel, int seek_by_
         m_seek_pos = pos;
         m_seek_rel = rel;
         m_seek_flags &= ~AVSEEK_FLAG_BYTE;
-        if (seek_by_bytes)
+        if (m_seek_by_bytes)
             m_seek_flags |= AVSEEK_FLAG_BYTE;
         m_seek_req = 1;
     }
@@ -2160,8 +2168,8 @@ int FF_Play_Reader_Internal::read_thread()
     if (ic->pb)
         ic->pb->eof_reached = 0; // FIXME hack, ffplay maybe should not use url_feof() to test for the end
 
-    if (seek_by_bytes < 0)
-        seek_by_bytes = !!(ic->iformat->flags & AVFMT_TS_DISCONT);
+    if (m_seek_by_bytes < 0)
+        m_seek_by_bytes = !!(ic->iformat->flags & AVFMT_TS_DISCONT);
 
     /* if seeking requested, we execute it */
     if (start_time != AV_NOPTS_VALUE) 
@@ -2390,6 +2398,7 @@ int FF_Play_Reader_Internal::read_thread()
 	m_frame_last_duration = 0;
 	m_frame_timer = 0.0;
 	m_frame_last_dropped_pts = 0.0;
+	m_seek_by_bytes=-1;
     return 0;
 }
 
@@ -2525,6 +2534,7 @@ void FF_Play_Reader_Internal::step_to_next_frame()
     m_step = 1;
 }
 
+#if 0
 static int opt_format(void *optctx, const char *opt, const char *arg)
 {
     file_iformat = av_find_input_format(arg);
@@ -2561,6 +2571,7 @@ static int opt_codec(void *o, const char *opt, const char *arg)
     }
     return 0;
 }
+#endif
 
 static int dummy;
 
@@ -2901,7 +2912,7 @@ void FrameGrabber_FFMpeg::SetFileName(const wchar_t *IPAddress,IpURLConversion f
 		audio_disable=1;
 		m_URL=Buffer;
 	}
-	input_filename=m_URL.c_str();
+	//input_filename=m_URL.c_str();
 }
 
 FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), 
@@ -2986,7 +2997,8 @@ bool FrameGrabber_FFMpeg::StartStreaming()
 	if (m_URL[0]==0)
 		return m_TestPattern.StartStreaming();
 
-	FF_Play_Reader *reader= stream_open(input_filename, file_iformat, m_Outstream,GetSeekable());
+	//see opt_format() for the iformar parameter if we ever need to explicitly use a format
+	FF_Play_Reader *reader= stream_open(m_URL.c_str(), NULL, m_Outstream,GetSeekable());
 	m_VideoStream = reader;
 	if (!m_VideoStream) 
 		fprintf(stderr, "Failed to initialize VideoState!\n");
@@ -3128,7 +3140,7 @@ int FFPlay_Controller::Stop (void)
 		instance.toggle_pause();
 	else
 	{
-		int seek_by_bytes=(::seek_by_bytes || instance.GetDuration() <= 0) ? 1:0;
+		const int seek_by_bytes=(instance.GetSeekByBytes() || instance.GetDuration() <= 0) ? 1:0;
 		instance.stream_seek(0,0,seek_by_bytes);
 		//TODO this is a hack will need to have real seeking
 		instance.toggle_pause();
@@ -3173,6 +3185,7 @@ void FFPlay_Controller::Seek (double fraction)
 	instance.SetStopped(0);
 	{
 		int64_t ts;
+		#if 0
 		int ns, hh, mm, ss;
 		int tns, thh, tmm, tss;
 		tns  = (int)(instance.GetDuration() / 1000000LL);
@@ -3183,8 +3196,8 @@ void FFPlay_Controller::Seek (double fraction)
 		hh   = ns / 3600;
 		mm   = (ns % 3600) / 60;
 		ss   = (ns % 60);
-		fprintf(stderr, "Seek to %2.0f%% (%2d:%02d:%02d) of total duration (%2d:%02d:%02d)       \n", fraction*100,
-			hh, mm, ss, thh, tmm, tss);
+		fprintf(stderr, "Seek to %2.0f%% (%2d:%02d:%02d) of total duration (%2d:%02d:%02d)       \n", fraction*100,	hh, mm, ss, thh, tmm, tss);
+		#endif
 		ts = (int64_t)(fraction * instance.GetDuration());
 		if (instance.GetStartTime() != AV_NOPTS_VALUE)
 			ts += instance.GetStartTime();

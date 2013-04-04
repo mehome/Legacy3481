@@ -85,6 +85,7 @@ protected:
 	void SetFileName(const wchar_t *IPAddress,IpURLConversion format=eIpURL_H264);
 
 	void *m_VideoStream;
+	std::string m_URL;
 private:
 	size_t split_arguments(const std::string& str, std::vector<std::string>& arguments);
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
