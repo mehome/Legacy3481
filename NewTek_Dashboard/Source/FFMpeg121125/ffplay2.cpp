@@ -289,7 +289,15 @@ struct FF_Play_Reader_Internal
 		{
 			Options();
 			void Reset();
+			const char *audio_codec_name;
+			const char *subtitle_codec_name;
+			const char *video_codec_name;
+
 			int seek_by_bytes;
+			int audio_disable;
+			int video_disable;
+			int infinite_buffer;
+			int loop;
 			bool Seekable;
 			bool ForceHTTPRealtime; //If true this could reduce latency in some cameras
 		};
@@ -488,20 +496,20 @@ struct FF_Play_Reader_Internal
 
 // options specified by the user 
 
-//Note: we cannot have static options like this, but instead of wiping them out I'll lock down the ones that never change via const, and then
-//move the others to member variables.  This will make it easier to show diff on future versions of FFplay
+//Note: we cannot have static options like this, but instead of wiping them out we lock down the ones that never change via const, and then
+//the rest are in an options structure as a member variable.  This will make it easier to show diff on future versions of FFplay
 
 //static AVInputFormat *file_iformat;
 //static const char *input_filename;
-static const char *window_title;
+//static const char *window_title;
 //static int fs_screen_width;
 //static int fs_screen_height;
-static int audio_disable;
-static int video_disable;
+//static int audio_disable;
+//static int video_disable;
 const int wanted_stream[AVMEDIA_TYPE_NB] = {0,-1,-1,0,-1};
 //static int seek_by_bytes = -1;
 //static int display_disable;
-#define __ShowStatus__
+const int show_status = 1;
 //static int show_status = 1;
 const int g_av_sync_type = eAV_SYNC_AUDIO_MASTER;
 const int64_t start_time = AV_NOPTS_VALUE;
@@ -516,21 +524,21 @@ const enum AVDiscard skip_idct        = AVDISCARD_DEFAULT;
 const enum AVDiscard skip_loop_filter = AVDISCARD_DEFAULT;
 const int error_concealment = 3;
 const int decoder_reorder_pts = -1;
-static int autoexit;
-static int exit_on_keydown;
-static int exit_on_mousedown;
-static int loop = 1;
+const int autoexit=0; //never want this on!
+//static int exit_on_keydown;
+//static int exit_on_mousedown;
+//static int loop = 1;  
 const int framedrop = -1;
-static int infinite_buffer = -1;
+//static int infinite_buffer = -1;
 //static enum VideoState::ShowMode show_mode = VideoState::SHOW_MODE_NONE;
-static const char *g_audio_codec_name;
-static const char *g_subtitle_codec_name;
-static const char *g_video_codec_name;
+//static const char *audio_codec_name;
+//static const char *subtitle_codec_name;
+//static const char *video_codec_name;
 const int rdftspeed = 20;
 
 /* current context */
-static int is_full_screen;
-static int64_t audio_callback_time;
+//static int is_full_screen;
+//static int64_t audio_callback_time;
 //This is instantiated once in the FrameGrabber constructor
 static AVPacket flush_pkt;
 
@@ -770,9 +778,15 @@ void FF_Play_Reader_Internal::stream_close()
 
 void FF_Play_Reader_Internal::Options::Reset()
 {
+	audio_codec_name=subtitle_codec_name=video_codec_name=NULL;
 	seek_by_bytes=-1;
 	ForceHTTPRealtime=false;
+	audio_disable=0;
+	video_disable=0;
+	infinite_buffer=-1;
+	loop=1;
 }
+
 FF_Play_Reader_Internal::Options::Options()
 {
 	Reset();
@@ -834,9 +848,8 @@ FF_Play_Reader_Internal::~FF_Play_Reader_Internal()
 	stream_close();  //This may be called from client prior to destroying it here
     av_lockmgr_register(NULL);
     avformat_network_deinit();
-	#ifdef __ShowStatus__
-	printf("\n");
-	#endif
+	if (show_status)
+		printf("\n");
     SDL_Quit();
     av_log(NULL, AV_LOG_QUIET, "%s", "");
 	delete m_procamp;
@@ -1915,9 +1928,9 @@ int FF_Play_Reader_Internal::stream_component_open(int stream_index)
 
     switch(avctx->codec_type)
 	{
-        case AVMEDIA_TYPE_AUDIO   : m_last_audio_stream    = stream_index; if(g_audio_codec_name   ) codec= avcodec_find_decoder_by_name(   g_audio_codec_name); break;
-        case AVMEDIA_TYPE_SUBTITLE: m_last_subtitle_stream = stream_index; if(g_subtitle_codec_name) codec= avcodec_find_decoder_by_name(g_subtitle_codec_name); break;
-        case AVMEDIA_TYPE_VIDEO   : m_last_video_stream    = stream_index; if(g_video_codec_name   ) codec= avcodec_find_decoder_by_name(   g_video_codec_name); break;
+        case AVMEDIA_TYPE_AUDIO   : m_last_audio_stream    = stream_index; if(m_Options.audio_codec_name   ) codec= avcodec_find_decoder_by_name(   m_Options.audio_codec_name); break;
+        case AVMEDIA_TYPE_SUBTITLE: m_last_subtitle_stream = stream_index; if(m_Options.subtitle_codec_name) codec= avcodec_find_decoder_by_name(m_Options.subtitle_codec_name); break;
+        case AVMEDIA_TYPE_VIDEO   : m_last_video_stream    = stream_index; if(m_Options.video_codec_name   ) codec= avcodec_find_decoder_by_name(   m_Options.video_codec_name); break;
     }
     if (!codec)
         return -1;
@@ -2220,7 +2233,7 @@ int FF_Play_Reader_Internal::read_thread()
 
     for (i = 0; i < (int)ic->nb_streams; i++)
         ic->streams[i]->discard = AVDISCARD_ALL;
-    if (!video_disable)
+    if (!m_Options.video_disable)
 	{
         st_index[AVMEDIA_TYPE_VIDEO] =
             av_find_best_stream(ic, AVMEDIA_TYPE_VIDEO, wanted_stream[AVMEDIA_TYPE_VIDEO], -1, NULL, 0);
@@ -2231,17 +2244,16 @@ int FF_Play_Reader_Internal::read_thread()
 			st_index[AVMEDIA_TYPE_VIDEO] =	av_find_best_stream(ic, AVMEDIA_TYPE_VIDEO,	wanted_stream[AVMEDIA_TYPE_AUDIO], -1, NULL, 0);
 
 	}
-    if (!audio_disable)
+    if (!m_Options.audio_disable)
         st_index[AVMEDIA_TYPE_AUDIO] =
             av_find_best_stream(ic, AVMEDIA_TYPE_AUDIO,wanted_stream[AVMEDIA_TYPE_AUDIO],st_index[AVMEDIA_TYPE_VIDEO],NULL, 0);
-    if (!video_disable)
+    if (!m_Options.video_disable)
         st_index[AVMEDIA_TYPE_SUBTITLE] =
             av_find_best_stream(ic, AVMEDIA_TYPE_SUBTITLE,wanted_stream[AVMEDIA_TYPE_SUBTITLE],
 				(st_index[AVMEDIA_TYPE_AUDIO] >= 0 ? st_index[AVMEDIA_TYPE_AUDIO] : st_index[AVMEDIA_TYPE_VIDEO]),
                                 NULL, 0);
-		#ifdef __ShowStatus__
-        av_dump_format(ic, 0, m_filename, 0);
-		#endif
+		if (show_status)
+	        av_dump_format(ic, 0, m_filename, 0);
 
     // open the streams 
     if (st_index[AVMEDIA_TYPE_AUDIO] >= 0) 
@@ -2262,8 +2274,8 @@ int FF_Play_Reader_Internal::read_thread()
         goto fail;
     }
 
-    if (infinite_buffer < 0 && m_realtime)
-        infinite_buffer = 1;
+    if (m_Options.infinite_buffer < 0 && m_realtime)
+        m_Options.infinite_buffer = 1;
 
 
 	//Signal that the format context is setup
@@ -2333,7 +2345,7 @@ int FF_Play_Reader_Internal::read_thread()
         }
 
         // if the queue are full, no need to read more 
-        if (infinite_buffer<1 && (m_audioq.size + m_videoq.size + m_subtitleq.size > MAX_QUEUE_SIZE	|| 
+        if (m_Options.infinite_buffer<1 && (m_audioq.size + m_videoq.size + m_subtitleq.size > MAX_QUEUE_SIZE	|| 
 			(   (m_audioq   .nb_packets > MIN_FRAMES || m_audio_stream < 0 || m_audioq.abort_request)	&& 
 				(m_videoq   .nb_packets > MIN_FRAMES || m_video_stream < 0 || m_videoq.abort_request)	&& 
 				(m_subtitleq.nb_packets > MIN_FRAMES || m_subtitle_stream < 0 || m_subtitleq.abort_request)))) 
@@ -2367,7 +2379,7 @@ int FF_Play_Reader_Internal::read_thread()
             SDL_Delay(10);
             if (m_audioq.size + m_videoq.size + m_subtitleq.size == 0) 
 			{
-                if (loop != 1 && (!loop || --loop)) 
+                if (m_Options.loop != 1 && (!m_Options.loop || --m_Options.loop)) 
                     stream_seek(start_time != AV_NOPTS_VALUE ? start_time : 0, 0, 0);
 				else if (autoexit) 
 				{
@@ -2961,10 +2973,8 @@ void FrameGrabber_FFMpeg::SetFileName(const wchar_t *IPAddress,IpURLConversion f
 			default:
 				sprintf_s(Buffer,1024,"rtsp://FRC:FRC@%s/axis-media/media.amp",m_URL.c_str());
 		}
-		audio_disable=1;
 		m_URL=Buffer;
 	}
-	//input_filename=m_URL.c_str();
 }
 
 FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), 
@@ -3030,9 +3040,8 @@ FrameGrabber_FFMpeg::~FrameGrabber_FFMpeg()
 
 	av_lockmgr_register(NULL);
 	avformat_network_deinit();
-	#ifdef __ShowStatus__
+	if (show_status)
 		printf("\n");
-	#endif
 	SDL_Quit();
 	av_log(NULL, AV_LOG_QUIET, "%s", "");
 }
