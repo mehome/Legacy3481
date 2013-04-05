@@ -117,13 +117,15 @@ SDL_cond *SDL_CreateCond()
 	return new SDL_cond;
 }
 
-void SDL_DestroyMutex(SDL_mutex *mutex)
+void SDL_DestroyMutex(SDL_mutex *&mutex)
 {
 	delete mutex;
+	mutex=NULL;
 }
-void SDL_DestroyCond(SDL_cond *cond)
+void SDL_DestroyCond(SDL_cond *&cond)
 {
 	delete cond;
+	cond=NULL;
 }
 
 __inline void SDL_LockMutex(SDL_mutex *mutex)
@@ -282,8 +284,17 @@ struct FF_Play_Reader_Internal
 		FF_Play_Reader_Internal();
 		virtual ~FF_Play_Reader_Internal();
 
+		//Options moved from global space:
+		struct Options
+		{
+			Options();
+			void Reset();
+			int seek_by_bytes;
+			bool Seekable;
+			bool ForceHTTPRealtime; //If true this could reduce latency in some cameras
+		};
 		//For now keep this separate in case the constructor needs to be light
-		bool init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,bool Seekable);
+		bool init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,Options options);
 
 		void stream_seek(int64_t pos, int64_t rel, int seek_by_bytes);  // seek in the stream
 		void toggle_pause();
@@ -318,7 +329,7 @@ struct FF_Play_Reader_Internal
 		int read_thread();   // this thread gets the stream from the disk or the network 
 
 		const FrameWork::event &GetFileInstantiatedSignal() {return m_FileInstantiatedSignal;}
-		int GetSeekByBytes() const {return m_seek_by_bytes;}
+		int GetSeekByBytes() const {return m_Options.seek_by_bytes;}
 	protected:
 		void stream_close();
 		double get_audio_clock() const;   // get the current audio clock value
@@ -358,10 +369,11 @@ struct FF_Play_Reader_Internal
 		bool m_recording;
 		char m_record_filename[1024];
 		FILE* m_record_stream;
+		FrameWork::event m_FileInstantiatedSignal;  ///<this if fired once the format context is ready to go in the read thread
 
 	private:
 		void SetSeekable_Option(bool SeekAble);
-		FrameWork::event m_FileInstantiatedSignal; //this if fired once the format context is ready to go in the read thread
+		
 		FrameWork::Outstream_Interface *m_Preview;
 		Processing::FX::procamp::Procamp_Manager *m_procamp;
 		AVInputFormat *m_iformat;
@@ -471,9 +483,7 @@ struct FF_Play_Reader_Internal
 		int m_last_video_stream, m_last_audio_stream, m_last_subtitle_stream;
 
 		SDL_cond *m_continue_read_thread;
-
-		//Options moved from global space:
-		int m_seek_by_bytes;
+		Options m_Options;
 };
 
 // options specified by the user 
@@ -484,13 +494,13 @@ struct FF_Play_Reader_Internal
 //static AVInputFormat *file_iformat;
 //static const char *input_filename;
 static const char *window_title;
-static int fs_screen_width;
-static int fs_screen_height;
+//static int fs_screen_width;
+//static int fs_screen_height;
 static int audio_disable;
 static int video_disable;
 const int wanted_stream[AVMEDIA_TYPE_NB] = {0,-1,-1,0,-1};
 //static int seek_by_bytes = -1;
-static int display_disable;
+//static int display_disable;
 #define __ShowStatus__
 //static int show_status = 1;
 const int g_av_sync_type = eAV_SYNC_AUDIO_MASTER;
@@ -587,6 +597,7 @@ static void packet_queue_init(PacketQueue *q)
 
 static void packet_queue_flush(PacketQueue *q)
 {
+	if (!q->mutex) return;
     MyAVPacketList *pkt, *pkt1;
 
     SDL_LockMutex(q->mutex);
@@ -741,9 +752,30 @@ void FF_Play_Reader_Internal::stream_close()
     SDL_DestroyCond(m_subpq_cond);
     SDL_DestroyCond(m_continue_read_thread);
     if (m_img_convert_ctx)
+	{
         sws_freeContext(m_img_convert_ctx);
+		m_img_convert_ctx=NULL;
+	}
 	//this is no longer needed
     //av_free(is);
+
+	//Set to as they are in the constructor
+	m_video_current_pos = 0;
+	m_frame_last_pts = 0.0;
+	m_frame_last_duration = 0;
+	m_frame_timer = 0.0;
+	m_frame_last_dropped_pts = 0.0;
+	m_Options.Reset();
+}
+
+void FF_Play_Reader_Internal::Options::Reset()
+{
+	seek_by_bytes=-1;
+	ForceHTTPRealtime=false;
+}
+FF_Play_Reader_Internal::Options::Options()
+{
+	Reset();
 }
 
 FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(NULL),m_iformat(NULL),m_format_opts(NULL),
@@ -767,8 +799,7 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	m_img_convert_ctx(NULL),
 	m_width(0), m_height(0), m_xleft(0), m_ytop(0),m_step(0),
 	m_last_video_stream(0), m_last_audio_stream(0), m_last_subtitle_stream(0),
-	m_continue_read_thread(NULL),
-	m_seek_by_bytes(-1)
+	m_continue_read_thread(NULL)
 {
 	m_filename[0]=0;
 	m_record_filename[0]=0;
@@ -800,6 +831,7 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 
 FF_Play_Reader_Internal::~FF_Play_Reader_Internal()
 {
+	stream_close();  //This may be called from client prior to destroying it here
     av_lockmgr_register(NULL);
     avformat_network_deinit();
 	#ifdef __ShowStatus__
@@ -909,7 +941,7 @@ void FF_Play_Reader_Internal::stream_seek(int64_t pos, int64_t rel, int seek_by_
         m_seek_pos = pos;
         m_seek_rel = rel;
         m_seek_flags &= ~AVSEEK_FLAG_BYTE;
-        if (m_seek_by_bytes)
+        if (m_Options.seek_by_bytes)
             m_seek_flags |= AVSEEK_FLAG_BYTE;
         m_seek_req = 1;
     }
@@ -2073,20 +2105,11 @@ static int decode_interrupt_cb(void *ctx)
     return is->decode_interrupt_cb();
 }
 
-//Ok here is the run-down for whether or not http should be declared as realtime.  In the context of being a robust file reader of html files 
-//with proper timing and by default this realtime should be false; however, this comes at a price of added latency... so in the context
-//of being a dashboard (hence _LIB check) we do not care about reading many html files, but do care that our camera does not acrue latency.
-//So while in dashboard build it is true, and while in file reading testbed, it is false.
-//  [3/22/2013 JamesK]
-
 static int is_realtime(AVFormatContext *s)
 {
     if(   !strcmp(s->iformat->name, "rtp")
        || !strcmp(s->iformat->name, "rtsp")
        || !strcmp(s->iformat->name, "sdp")
-	   #ifdef _LIB
-	   || !strnicmp(s->filename, "http", 4)
-		#endif
     )
         return 1;
 
@@ -2168,8 +2191,8 @@ int FF_Play_Reader_Internal::read_thread()
     if (ic->pb)
         ic->pb->eof_reached = 0; // FIXME hack, ffplay maybe should not use url_feof() to test for the end
 
-    if (m_seek_by_bytes < 0)
-        m_seek_by_bytes = !!(ic->iformat->flags & AVFMT_TS_DISCONT);
+    if (m_Options.seek_by_bytes < 0)
+        m_Options.seek_by_bytes = !!(ic->iformat->flags & AVFMT_TS_DISCONT);
 
     /* if seeking requested, we execute it */
     if (start_time != AV_NOPTS_VALUE) 
@@ -2189,6 +2212,11 @@ int FF_Play_Reader_Internal::read_thread()
     }
 
     m_realtime = is_realtime(ic);
+	if (m_Options.ForceHTTPRealtime)
+	{
+		if (strnicmp(ic->filename, "http", 4)==0)
+			m_realtime=1;
+	}
 
     for (i = 0; i < (int)ic->nb_streams; i++)
         ic->streams[i]->discard = AVDISCARD_ALL;
@@ -2391,15 +2419,8 @@ int FF_Play_Reader_Internal::read_thread()
         avformat_close_input(&m_ic);
 
     SDL_DestroyMutex(wait_mutex);
-	stream_close();
-	//Set to as they are in the constructor
-	m_video_current_pos = 0;
-	m_frame_last_pts = 0.0;
-	m_frame_last_duration = 0;
-	m_frame_timer = 0.0;
-	m_frame_last_dropped_pts = 0.0;
-	m_seek_by_bytes=-1;
-    return 0;
+	//m_ReadThreadEnd.set();  //let client know this thread is complete
+    return err;
 }
 
 static int read_thread(void *arg)
@@ -2419,7 +2440,7 @@ void FF_Play_Reader_Internal::SetSeekable_Option(bool SeekAble)
 	av_dict_set(&m_format_opts, opt, arg, flags);
 }
 
-bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,bool Seekable)
+bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,Options options)
 {
     av_strlcpy(m_filename, filename, sizeof(m_filename));
     m_iformat = iformat;
@@ -2446,10 +2467,11 @@ bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,
 	m_av_sync_type = g_av_sync_type;
 	assert(Outstream);
 	m_Preview=Outstream;
+	m_Options=options;
 	//Case 58845: To avoid some http files from stuttering we turn off the seekable option, and then defer seek support until someone
 	//asks for it
 	if (strncmp(filename, "http:", 5)==0)
-		SetSeekable_Option(Seekable);
+		SetSeekable_Option(m_Options.Seekable);
     return true;
 }
 
@@ -2660,7 +2682,7 @@ static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
   /***************************************************************************************************************/
  /*												FF_Play_Reader													*/
 /***************************************************************************************************************/
-
+/// This implements the reader using its own threads (the original way FFPlay was designed to be used)
 struct FF_Play_Reader : public FF_Play_Reader_Internal
 {
 	public:
@@ -2686,14 +2708,17 @@ struct FF_Play_Reader : public FF_Play_Reader_Internal
 		friend FrameWork::Threads::thread<FF_Play_Reader,ThreadList>;
 		void operator() ( ThreadList WhichThread );
 
-		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pReaderThread;
-		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pVideoThread;
-		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pSubtitleThread;
-
 		bool start_record(void);
 		void stop_record(void);
 
+		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pReaderThread;
+		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pVideoThread;
+		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pSubtitleThread;
+		//Used to ensure failsafe and controls do not clobber each other
+		FrameWork::critical_section m_BlockStreaming;
+
 		bool m_IsStreaming;
+		bool m_ReadError;
 };
 
 FF_Play_Reader::FF_Play_Reader() : m_pReaderThread(NULL),m_pVideoThread(NULL),m_IsStreaming(false)
@@ -2787,11 +2812,13 @@ void FF_Play_Reader::stop_record()
 
 bool FF_Play_Reader::StartStreaming()
 {
+	FrameWork::auto_lock FunctionBlock(m_BlockStreaming);
 	if (!m_IsStreaming)
 	{
 		if(m_recording)
 			start_record();
 		m_IsStreaming=true;
+		m_ReadError=false;
 		m_pReaderThread = new FrameWork::Threads::thread<FF_Play_Reader,ThreadList>(this,eReaderThread);
 		m_pReaderThread->set_thread_name( "FF_Play_Reader Reader Thread" );
 		//wait for the thread to run through setting the format context
@@ -2802,8 +2829,11 @@ bool FF_Play_Reader::StartStreaming()
 
 void FF_Play_Reader::StopStreaming()
 {
+	FrameWork::auto_lock FunctionBlock(m_BlockStreaming);
 	if (m_IsStreaming)
 	{
+		if(m_recording)
+			stop_record();
 		m_IsStreaming=false;
 		if (m_pReaderThread)
 		{
@@ -2811,8 +2841,7 @@ void FF_Play_Reader::StopStreaming()
 			delete m_pReaderThread;
 			m_pReaderThread=NULL;
 		}
-		if(m_recording)
-			stop_record();
+		stream_close();  //protected under critical section
 	}
 }
 
@@ -2821,7 +2850,16 @@ void FF_Play_Reader::operator() ( ThreadList WhichThread )
 	switch (WhichThread)
 	{
 		case eReaderThread:
-			read_thread();
+			if (!m_ReadError)
+			{
+				int result=read_thread();
+				m_ReadError=result==0? false:true;
+			}
+			else
+			{
+				m_FileInstantiatedSignal.set();  //avoid deadlock if other thread start stream is waiting for confirmation
+				Sleep(100);  //avoid busy wait
+			}
 			break;
 		case  eVideoThread:
 			video_thread();
@@ -2833,9 +2871,23 @@ static FF_Play_Reader *stream_open(const char *filename, AVInputFormat *iformat,
 {
 	FF_Play_Reader *is=NULL;
 
+	//Note: if we want to manipulate more options we can switch the last parameter to represent options.
+	//For now we'll leave it for just the Seekable option
+	FF_Play_Reader_Internal::Options options;  //These implicitly set themselves to default
+	options.Seekable=Seekable;
+
+	//Ok here is the run-down for whether or not http should be declared as realtime.  In the context of being a robust file reader of html files 
+	//with proper timing and by default this realtime should be false; however, this comes at a price of added latency... so in the context
+	//of being a dashboard (hence _LIB check) we do not care about reading many html files, but do care that our camera does not acrue latency.
+	//So while in dashboard build it is true, and while in file reading testbed, it is false.
+	//  [3/22/2013 JamesK]
+	#ifdef _LIB
+	options.ForceHTTPRealtime=true;
+	#endif
+
 	//is = (VideoState *)av_mallocz(sizeof(VideoState));
 	is = new FF_Play_Reader; //Note: will init vars implicitly in constructor
-	if ((is)&&(!is->init(filename,iformat,Outstream,Seekable)))
+	if ((is)&&(!is->init(filename,iformat,Outstream,options)))
 	{
 		delete is;
 		is=NULL;
