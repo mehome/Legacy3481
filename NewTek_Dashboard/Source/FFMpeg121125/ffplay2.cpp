@@ -278,6 +278,8 @@ enum AV_Sync
     eAV_SYNC_EXTERNAL_CLOCK // synchronize to an external clock 
 };
 
+using namespace FrameWork;
+
 struct FF_Play_Reader_Internal
 {
 	public:
@@ -302,7 +304,7 @@ struct FF_Play_Reader_Internal
 			bool ForceHTTPRealtime; //If true this could reduce latency in some cameras
 		};
 		//For now keep this separate in case the constructor needs to be light
-		bool init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,Options options);
+		bool init(const char *filename, AVInputFormat *iformat,Outstream_Interface * Outstream,Options options);
 
 		void stream_seek(int64_t pos, int64_t rel, int seek_by_bytes);  // seek in the stream
 		void toggle_pause();
@@ -382,7 +384,7 @@ struct FF_Play_Reader_Internal
 	private:
 		void SetSeekable_Option(bool SeekAble);
 		
-		FrameWork::Outstream_Interface *m_Preview;
+		Outstream_Interface *m_Preview;
 		Processing::FX::procamp::Procamp_Manager *m_procamp;
 		AVInputFormat *m_iformat;
 		AVDictionary *m_format_opts; //set internal options for demuxers
@@ -510,7 +512,6 @@ const int wanted_stream[AVMEDIA_TYPE_NB] = {0,-1,-1,0,-1};
 //static int seek_by_bytes = -1;
 //static int display_disable;
 const int show_status = 1;
-//static int show_status = 1;
 const int g_av_sync_type = eAV_SYNC_AUDIO_MASTER;
 const int64_t start_time = AV_NOPTS_VALUE;
 const int64_t duration = AV_NOPTS_VALUE;
@@ -2452,7 +2453,7 @@ void FF_Play_Reader_Internal::SetSeekable_Option(bool SeekAble)
 	av_dict_set(&m_format_opts, opt, arg, flags);
 }
 
-bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,Options options)
+bool FF_Play_Reader_Internal::init(const char *filename, AVInputFormat *iformat,Outstream_Interface * Outstream,Options options)
 {
     av_strlcpy(m_filename, filename, sizeof(m_filename));
     m_iformat = iformat;
@@ -2879,7 +2880,7 @@ void FF_Play_Reader::operator() ( ThreadList WhichThread )
 	}
 }
 
-static FF_Play_Reader *stream_open(const char *filename, AVInputFormat *iformat,FrameWork::Outstream_Interface * Outstream,bool Seekable)
+static FF_Play_Reader *stream_open(const char *filename, AVInputFormat *iformat,Outstream_Interface * Outstream,bool Seekable)
 {
 	FF_Play_Reader *is=NULL;
 
@@ -2977,7 +2978,7 @@ void FrameGrabber_FFMpeg::SetFileName(const wchar_t *IPAddress,IpURLConversion f
 	}
 }
 
-FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), 
+FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(Outstream_Interface *Preview,const wchar_t *IPAddress) : m_Outstream(Preview), 
 	m_VideoStream(NULL),m_TestPattern(Preview,IPAddress),m_Seekable(false)
 {
 	//If we have no IPAddress we have no work to do
@@ -3046,7 +3047,7 @@ FrameGrabber_FFMpeg::~FrameGrabber_FFMpeg()
 	av_log(NULL, AV_LOG_QUIET, "%s", "");
 }
 
-void FrameGrabber_FFMpeg::SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) 
+void FrameGrabber_FFMpeg::SetOutstream_Interface(Outstream_Interface *Preview) 
 {
 	m_Outstream=Preview;
 	m_TestPattern.SetOutstream_Interface(Preview);
@@ -3083,7 +3084,7 @@ void FrameGrabber_FFMpeg::StopStreaming()
  /*													FrameGrabber												*/
 /***************************************************************************************************************/
 
-FrameGrabber::FrameGrabber(FrameWork::Outstream_Interface *Preview,const wchar_t *IPAddress,ReaderFormat format) : m_VideoStream(NULL)
+FrameGrabber::FrameGrabber(Outstream_Interface *Preview,const wchar_t *IPAddress,ReaderFormat format) : m_VideoStream(NULL)
 {
 	if (IPAddress[0]!=0)
 		FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
