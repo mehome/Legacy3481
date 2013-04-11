@@ -138,10 +138,13 @@ protected:
 	int Run (void);											// run the filter graph
 	int Stop (void);										// stop filter graph
 	int Pause (void);										// pause filter graph
-	void Seek (double fraction);	
+	virtual void Seek (__int64 position_10us);				//time stamp in 10 us units
+	void Seek (double fraction);
 	int SetRate (int);										// set the play speed  (as percentage of normal)
 	void SwitchFilename(const wchar_t FileToUse[]);
 	void GetFileName(std::wstring &Output) const;
+	virtual __int64 GetDuration() const;
+	virtual __int64 GetPosition() const;
 	void Record(bool start);
 	bool GetRecordState(void);
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);

@@ -320,6 +320,7 @@ struct FF_Play_Reader_Internal
 		bool GetIsStopped() const {return m_stopped!=0;}
 		int64_t GetDuration() const {return m_ic->duration;}
 		int64_t GetStartTime() const {return m_ic->start_time;}
+		double get_external_clock() const;	// get the current external clock value
 		double Get_ProcAmp(ProcAmp_enum ProcSetting) const {return m_procamp->Get_ProcAmp(ProcSetting);}
 
 		//mutators
@@ -344,7 +345,6 @@ struct FF_Play_Reader_Internal
 		void stream_close();
 		double get_audio_clock() const;   // get the current audio clock value
 		double get_video_clock() const;	// get the current video clock value 
-		double get_external_clock() const;	// get the current external clock value
 		AV_Sync get_master_sync_type() const;
 		//This will call one of the clocks above depending on the sync type
 		double get_master_clock() const;  // get the current master clock value
@@ -394,6 +394,7 @@ struct FF_Play_Reader_Internal
 		int m_last_paused;
 		int m_que_attachments_req;
 		int m_seek_req;
+		int m_refresh_pause;  //This works a lot like seek_req, but works with the video thread to signal when seek packets were sent
 		int m_seek_flags;
 		int64_t m_seek_pos;
 		int64_t m_seek_rel;
@@ -794,7 +795,7 @@ FF_Play_Reader_Internal::Options::Options()
 }
 
 FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(NULL),m_iformat(NULL),m_format_opts(NULL),
-	m_stopped(0),m_no_background(0),m_abort_request(0),m_paused(0),m_last_paused(0),m_que_attachments_req(0),m_seek_req(0),m_seek_flags(0),
+	m_stopped(0),m_no_background(0),m_abort_request(0),m_paused(0),m_last_paused(0),m_que_attachments_req(0),m_seek_req(0),m_refresh_pause(0),m_seek_flags(0),
 	m_seek_pos(0),m_seek_rel(0),m_read_pause_return(0),m_ic(NULL),m_realtime(0),m_audio_stream(0),m_av_sync_type(0),m_external_clock(0.0),m_external_clock_drift(0.0),
 	m_external_clock_time(0),m_external_clock_speed(0.0),m_audio_clock(0.0),m_audio_diff_cum(0.0),m_audio_diff_avg_coef(0.0),m_audio_diff_threshold(0.0),
 	m_audio_diff_avg_count(0),m_audio_st(NULL),m_audio_hw_buf_size(0),m_audio_buf(NULL),m_audio_buf1(NULL),m_audio_buf_size(0),m_audio_buf_index(0),
@@ -958,6 +959,7 @@ void FF_Play_Reader_Internal::stream_seek(int64_t pos, int64_t rel, int seek_by_
         if (m_Options.seek_by_bytes)
             m_seek_flags |= AVSEEK_FLAG_BYTE;
         m_seek_req = 1;
+		m_refresh_pause = 0;
     }
 }
 
@@ -1480,7 +1482,7 @@ int FF_Play_Reader_Internal::video_thread()
     AVPacket pkt = { 0 };
     AVFrame *frame = avcodec_alloc_frame();
     int64_t pts_int = AV_NOPTS_VALUE, pos = -1;
-    double pts;
+    double pts = (double)AV_NOPTS_VALUE;
     int ret;
     int serial = 0;
 
@@ -1495,15 +1497,35 @@ int FF_Play_Reader_Internal::video_thread()
 			if (!m_stopped)
 			{
 				SDL_Delay(33);
-				ret = dispatch_picture(frame, pts, pkt.pos, serial);
+				//This may happen during a stop/start stream call when seek is first initiated
+				if ((pts==AV_NOPTS_VALUE)||(!ret)||m_refresh_pause)
+				{
+					avcodec_get_frame_defaults(frame);
+					av_free_packet(&pkt);
+					ret = get_video_frame(frame, &pts_int, &pkt, &serial);
+				}
+				//ensure we were not in the middle of constructing a frame when seek was triggered
+				if (ret<0)
+					goto the_end;
+				if (!ret)
+					continue;
+				pts = pts_int * av_q2d(m_video_st->time_base);
+				//note: retain a good ret value for paused state (to reuse frame)
+				int test = dispatch_picture(frame, pts, pkt.pos, serial);
+				if (test < 0)
+				{
+					assert(m_videoq.abort_request);  //this should be the only condition that would cause failure here
+					goto the_end;
+				}
+				m_refresh_pause=0;
 			}
 			else
 				SDL_Delay(10);
 			#endif
 		}
 
-        avcodec_get_frame_defaults(frame);
-        av_free_packet(&pkt);
+		avcodec_get_frame_defaults(frame);
+		av_free_packet(&pkt);
 
         ret = get_video_frame(frame, &pts_int, &pkt, &serial);
         if (ret < 0)
@@ -2337,6 +2359,7 @@ int FF_Play_Reader_Internal::read_thread()
             }
             update_external_clock_pts( (seek_target + ic->start_time) / (double)AV_TIME_BASE);
             m_seek_req = 0;
+			m_refresh_pause=1;
             eof = 0;
         }
         if (m_que_attachments_req) 
@@ -3195,6 +3218,7 @@ void FFPlay_Controller::GetFileName(std::wstring &Output) const
 
 int FFPlay_Controller::Stop (void)
 {
+	StartStreaming();
 	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
 	if (instance.GetIsRealtime()) return 0;
 	instance.SetStopped(1);
@@ -3214,6 +3238,7 @@ int FFPlay_Controller::Stop (void)
 
 int FFPlay_Controller::Pause (void)
 {
+	StartStreaming();
 	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
 	if (instance.GetIsRealtime()) return 0;
 	instance.SetStopped(0);
@@ -3231,6 +3256,25 @@ bool FFPlay_Controller::GetRecordState (void)
 {
 	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
 	return instance.get_rercord_state();
+}
+
+void FFPlay_Controller::Seek (__int64 position_10us)
+{
+	if (!GetSeekable())
+	{
+		SetSeekable(true);
+		StopStreaming();
+		StartStreaming();
+	}
+
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	if (instance.GetIsRealtime()) return;
+	{
+		int64_t ts = (int64_t)(position_10us/10);
+		if (instance.GetStartTime() != AV_NOPTS_VALUE)
+			ts += instance.GetStartTime();
+		instance.stream_seek(ts, 0, 0);
+	}
 }
 
 void FFPlay_Controller::Seek (double fraction)
@@ -3271,6 +3315,19 @@ void FFPlay_Controller::Seek (double fraction)
 int FFPlay_Controller::SetRate (int)
 {
 	return 0;
+}
+
+__int64 FFPlay_Controller::GetDuration() const
+{
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	//convert into 10us units
+	return instance.GetDuration() * 10; 
+}
+
+__int64 FFPlay_Controller::GetPosition() const
+{
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	return (__int64)(instance.get_external_clock() * 10000000.0);
 }
 
 bool FFPlay_Controller::Set_ProcAmp(ProcAmp_enum ProcSetting,double value)
