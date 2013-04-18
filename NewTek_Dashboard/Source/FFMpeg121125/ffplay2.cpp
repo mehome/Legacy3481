@@ -2865,6 +2865,7 @@ bool FF_Play_Reader::StartStreaming()
 
 void FF_Play_Reader::StopStreaming()
 {
+	m_FileInstantiatedSignal.set(); //avoid deadlock (e.g. no power from camera)
 	FrameWork::auto_lock FunctionBlock(m_BlockStreaming);
 	if (m_IsStreaming)
 	{
