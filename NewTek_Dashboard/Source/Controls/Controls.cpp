@@ -36,7 +36,8 @@ const char *DashBoard_GetWindowText(wchar_t *StartUp)
 	const char *ret=NULL;
 	if (StartUp) 
 	{
-		assert(s_WindowText[0]==0);  //sanity check first and only write
+		//Assert lifted... this s_WindowText may have been written and this called again from changing the child window back to pop-up
+		//assert(s_WindowText[0]==0);  
 		assert(StartUp[0]!=0); //sanity check our startup text is not an empty string
 		wchar2char(StartUp);
 		s_WindowText=wchar2char_pchar;
