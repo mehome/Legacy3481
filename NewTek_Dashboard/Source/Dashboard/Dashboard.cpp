@@ -809,12 +809,20 @@ void DDraw_Preview::OpenResources()
 	{
 		if (!g_IsSmartDashboardStarted)
 		{
-			LPTSTR szCmdline = _tcsdup(m_Props.smart_file.c_str());
-			//Note:
-			//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
-			//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
-			//of the error codes below.
-			HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
+			//Sanity check... see if the window already exists from a previous session:
+			if (m_Props.WindowName.c_str()[0]!=0)
+				ParentHwnd=FindWindow(m_Props.ClassName.c_str(),m_Props.WindowName.c_str());
+
+			//No window found (typical case) launch one
+			if (!ParentHwnd)
+			{
+				LPTSTR szCmdline = _tcsdup(m_Props.smart_file.c_str());
+				//Note:
+				//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
+				//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
+				//of the error codes below.
+				HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
+			}
 			IsSmartDashboardStarted=true;
 			//I need about 500ms for LabView to setup before trying to attach myself as a child... this is really a non-issue for smart dashboard
 			//however, if teams have other dashboards that give issues (i.e. need more than 500ms) then we could look into having this as a paramter
