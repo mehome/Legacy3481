@@ -2858,7 +2858,7 @@ bool FF_Play_Reader::StartStreaming()
 		m_pReaderThread = new FrameWork::Threads::thread<FF_Play_Reader,ThreadList>(this,eReaderThread);
 		m_pReaderThread->set_thread_name( "FF_Play_Reader Reader Thread" );
 		//wait for the thread to run through setting the format context
-		GetFileInstantiatedSignal().wait();
+		GetFileInstantiatedSignal().wait(2000);  //Wait long enough to avoid conflict but set limit to avoid deadlock
 	}
 	return true;
 }
