@@ -377,6 +377,7 @@ struct FF_Play_Reader_Internal
 		int m_abort_request;
 
 		bool m_recording;
+		bool m_first_packet;
 		char m_record_filename[1024];
 		FILE* m_record_stream;
 		FrameWork::event m_FileInstantiatedSignal;  ///<this if fired once the format context is ready to go in the read thread
@@ -800,7 +801,7 @@ FF_Play_Reader_Internal::FF_Play_Reader_Internal() : m_Preview(NULL),m_procamp(N
 	m_external_clock_time(0),m_external_clock_speed(0.0),m_audio_clock(0.0),m_audio_diff_cum(0.0),m_audio_diff_avg_coef(0.0),m_audio_diff_threshold(0.0),
 	m_audio_diff_avg_count(0),m_audio_st(NULL),m_audio_hw_buf_size(0),m_audio_buf(NULL),m_audio_buf1(NULL),m_audio_buf_size(0),m_audio_buf_index(0),
 	m_audio_write_buf_size(0),m_audio_pkt_temp_serial(0),m_swr_ctx(NULL),m_audio_current_pts(0.0),m_audio_current_pts_drift(0.0),m_frame_drops_early(0),
-	m_frame_drops_late(0),m_frame(NULL),m_record_stream(NULL),m_recording(false),
+	m_frame_drops_late(0),m_frame(NULL),m_record_stream(NULL),m_recording(false),m_first_packet(true),
 	//Nuke this
 	show_mode(eSHOW_MODE_VIDEO),
 	m_sample_array_index(0),m_last_i_start(0),m_rdft(NULL),m_rdft_bits(0),m_rdft_data(NULL),m_xpos(0),
@@ -1420,6 +1421,11 @@ int FF_Play_Reader_Internal::get_video_frame(AVFrame *frame, int64_t *pts, AVPac
 
 	if( m_recording && m_record_stream )
 	{
+		if( m_first_packet )
+		{
+			fwrite( m_video_st->codec->extradata, 1, m_video_st->codec->extradata_size, m_record_stream );
+			m_first_packet = false;
+		}
 		fwrite( pkt->data, 1, pkt->size, m_record_stream );
 	}
 
@@ -2821,6 +2827,7 @@ bool FF_Play_Reader::start_record()
 
 
 	m_record_stream = fopen(m_record_filename, "wb");
+	m_first_packet = true;
 
 	return m_record_stream != NULL;
 }
