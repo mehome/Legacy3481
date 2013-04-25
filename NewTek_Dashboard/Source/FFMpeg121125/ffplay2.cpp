@@ -1422,8 +1422,10 @@ int FF_Play_Reader_Internal::get_video_frame(AVFrame *frame, int64_t *pts, AVPac
 	if( m_recording && m_record_stream )
 	{
 		if( m_first_packet )
-		{
-			fwrite( m_video_st->codec->extradata, 1, m_video_st->codec->extradata_size, m_record_stream );
+		{	// write extradata only if correct type and valid
+			if( m_video_st->codec->codec_type == AVMEDIA_TYPE_VIDEO && m_video_st->codec->codec_id == AV_CODEC_ID_H264 && 
+				m_video_st->codec->extradata_size && m_video_st->codec->extradata )
+				fwrite( m_video_st->codec->extradata, 1, m_video_st->codec->extradata_size, m_record_stream );
 			m_first_packet = false;
 		}
 		fwrite( pkt->data, 1, pkt->size, m_record_stream );
