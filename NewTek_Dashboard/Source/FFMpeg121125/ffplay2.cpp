@@ -3217,10 +3217,19 @@ int FFPlay_Controller::Run (void)
 
 void FFPlay_Controller::SwitchFilename(const wchar_t FileToUse[])
 {
+	//Get persistence settings
+	bool IsRecording=GetRecordState();
+	std::string RecordPath=GetRecordPath();
+
 	StopStreaming();
 	m_FailSafe.SwitchFilename(FileToUse);
 	SetFileName(FileToUse,m_IP_Format);
 	StartStreaming();
+
+	//Set persistence settings; Note they must follow the start streaming call where this will setup the stream instance
+	SetRecordPath(RecordPath.c_str());
+	Record(IsRecording);
+
 }
 
 void FFPlay_Controller::GetFileName(std::wstring &Output) const
