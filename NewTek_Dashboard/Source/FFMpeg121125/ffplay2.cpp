@@ -218,8 +218,6 @@ const double c_av_nosync_threshold=5.0;
 
 static int sws_flags = SWS_BICUBIC;
 
-const char elemental_save_path[] = "D:\\media\\Robot_Capture\\";
-
 struct MyAVPacketList 
 {
     AVPacket pkt;
@@ -2726,6 +2724,7 @@ static void ffm_logger(void* ptr, int level, const char* fmt, va_list vl)
   /***************************************************************************************************************/
  /*												FF_Play_Reader													*/
 /***************************************************************************************************************/
+
 /// This implements the reader using its own threads (the original way FFPlay was designed to be used)
 struct FF_Play_Reader : public FF_Play_Reader_Internal
 {
@@ -2735,6 +2734,8 @@ struct FF_Play_Reader : public FF_Play_Reader_Internal
 		void StopStreaming();
 		void record_elemental(bool start);
 		bool get_rercord_state(void);
+		void set_record_path(const char *Path) {assert(Path);m_ElementalSavePath=Path;}
+		const char *get_record_path() {return m_ElementalSavePath.c_str();}
 
 	protected:
 		virtual void CreateVideoStream();
@@ -2760,12 +2761,14 @@ struct FF_Play_Reader : public FF_Play_Reader_Internal
 		FrameWork::Threads::thread<FF_Play_Reader,ThreadList>	*m_pSubtitleThread;
 		//Used to ensure failsafe and controls do not clobber each other
 		FrameWork::critical_section m_BlockStreaming;
+		std::string m_ElementalSavePath;
 
 		bool m_IsStreaming;
 		bool m_ReadError;
 };
 
-FF_Play_Reader::FF_Play_Reader() : m_pReaderThread(NULL),m_pVideoThread(NULL),m_IsStreaming(false)
+FF_Play_Reader::FF_Play_Reader() : m_pReaderThread(NULL),m_pVideoThread(NULL),m_ElementalSavePath("D:\\media\\Robot_Capture\\"),
+	m_IsStreaming(false)
 {
 
 }
@@ -2819,13 +2822,13 @@ bool FF_Play_Reader::start_record()
 	GetLocalTime(&systime);
 	// generate filename using date and time
 	sprintf_s(m_record_filename, 1024, "%selementary_stream_%d_%d_%d_%d_%d_%d.264", 
-		elemental_save_path, systime.wYear, systime.wMonth, systime.wDay, 
+		m_ElementalSavePath.c_str(), systime.wYear, systime.wMonth, systime.wDay, 
 							 systime.wHour, systime.wMinute, systime.wSecond);
 	// make sure we have the destination path
-	DWORD dwAttrib = GetFileAttributesA(elemental_save_path);
+	DWORD dwAttrib = GetFileAttributesA(m_ElementalSavePath.c_str());
 	if (!(dwAttrib != INVALID_FILE_ATTRIBUTES && 
 		(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
-		CreateDirectoryA(elemental_save_path, NULL);
+		CreateDirectoryA(m_ElementalSavePath.c_str(), NULL);
 
 
 	m_record_stream = fopen(m_record_filename, "wb");
@@ -3266,6 +3269,19 @@ bool FFPlay_Controller::GetRecordState (void)
 {
 	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
 	return instance.get_rercord_state();
+}
+
+void FFPlay_Controller::SetRecordPath(const char *Path)
+{
+	assert(Path);
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	instance.set_record_path(Path);
+}
+
+const char *FFPlay_Controller::GetRecordPath()
+{
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	return instance.get_record_path();
 }
 
 void FFPlay_Controller::Seek (__int64 position_10us)

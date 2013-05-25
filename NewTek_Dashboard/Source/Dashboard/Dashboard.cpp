@@ -244,6 +244,8 @@ class DDraw_Preview
 		void RunApp();
 		void SetInitRecord(bool RecordFrames) {m_InitRecord=RecordFrames;}
 		bool GetInitRecord() const {return m_InitRecord;}
+		const char *GetRecordPath() const {return m_RecordPath.c_str();}
+		void SetRecordPath(const char *Path) {m_RecordPath=Path;}
 		void SignalQuit() 
 		{ 
 			m_Terminate.set(); 
@@ -307,6 +309,7 @@ class DDraw_Preview
 
 		DDraw_Preview_Props m_Props;
 		RECT m_DefaultWindow;  //left=xRes top=yRes right=xPos bottom=YPos
+		std::string m_RecordPath;
 
 		#if 0
 		FrameGrabber_TestPattern m_FrameGrabber;
@@ -707,6 +710,7 @@ void DDraw_Preview::StopStreaming()
 	{
 		 //Make note of last state for client bls... as early as possible
 		m_InitRecord=m_FrameGrabber.GetDashboard_Controller_Interface()->GetRecordState();
+		m_RecordPath=m_FrameGrabber.GetDashboard_Controller_Interface()->GetRecordPath();
 		//before closing the resources ensure the upstream is not streaming to us
 		m_FrameGrabber.StopStreaming();
 		m_ProcessingVision.StopStreaming();
@@ -774,6 +778,8 @@ void DDraw_Preview::StartStreaming()
 		m_ProcessingVision.StartStreaming();
 		Callback_StartedStreaming(*m_Window);
 		 //transfer the init state as late as possible
+		if (m_RecordPath.c_str()[0]!=0)
+			m_FrameGrabber.GetDashboard_Controller_Interface()->SetRecordPath(m_RecordPath.c_str());
 		m_FrameGrabber.GetDashboard_Controller_Interface()->Record(m_InitRecord);
 	}
 
@@ -957,7 +963,7 @@ void AssignInput(wstring &output,const char *input)
 {
 	if (strlen(input) == 0)
 	{	// can't do anything with this.
-		DebugOutput("Input arg for %s is empty\n", output);
+		DebugOutput("Input arg for %s is empty\n", output.c_str());
 		output=L"";
 		return;
 	}
@@ -992,6 +998,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	wstring ClassName=cwsz_ClassName;
 	wstring WindowName=cwsz_WindowName;
 	wstring StreamProfile=L"default";
+	wstring RecordPath=L"none";
 	bool RecordFrames=false;  //local cache until the app becomes instantiated
 
 	string sz_FileName="Video1.ini";
@@ -1018,7 +1025,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
 		if (in.is_open())
 		{
-			const size_t NoEnties=16;
+			const size_t NoEnties=17;
 			string StringEntry[NoEnties<<1];
 			{
 				char Buffer[1024];
@@ -1050,6 +1057,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			AssignInput(AuxStart,StringEntry[27].c_str());
 			AssignInput(AuxArgs,StringEntry[29].c_str());
 			RecordFrames=atoi(StringEntry[31].c_str())==0?false:true;
+			AssignInput(RecordPath,StringEntry[33].c_str());
 		}
 		else
 		{
@@ -1087,6 +1095,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	wchar_t CWD[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH,CWD);
 	TheApp.SetInitRecord(RecordFrames);
+	{
+		wchar2char(RecordPath.c_str());
+		TheApp.SetRecordPath(wchar2char_pchar);
+	}
 	TheApp.RunApp();
 	SetCurrentDirectory(CWD);
 	bool SaveOnExit=true;
@@ -1129,6 +1141,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		AssignOutput(output,AuxArgs.c_str());
 		out << "AuxStartupFileArgs= " << output << endl;
 		out << "RecordFrames= " << TheApp.GetInitRecord() << endl;
+		out << "RecordPath= " << TheApp.GetRecordPath() << endl;
 		out.close();
 	}
 	return 0;

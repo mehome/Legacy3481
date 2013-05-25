@@ -147,6 +147,8 @@ protected:
 	virtual __int64 GetPosition() const;
 	void Record(bool start);
 	bool GetRecordState(void);
+	virtual void SetRecordPath(const char *Path);
+	virtual const char *GetRecordPath();
 	virtual bool Set_ProcAmp(ProcAmp_enum ProcSetting,double value);
 	virtual double Get_ProcAmp(ProcAmp_enum ProcSetting) const;
 
