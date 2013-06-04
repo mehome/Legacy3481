@@ -119,6 +119,8 @@ void Vision_Initialize(HWND pParent)
 		g_plugin->Set_Vision_Settings(eThresholdPlane2Max, (double)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
 		g_plugin->Set_Vision_Settings(eThresholdPlane3Max, (double)atoi(StringEntry.c_str()));
+		in >> StringEntry; in >> StringEntry;
+		g_plugin->Set_Vision_Settings(eIsTargeting, (double)(bool)(atoi(StringEntry.c_str()) > 0));
 		in.close();
 	}
 }
@@ -207,29 +209,35 @@ bool VisionControls::Run(HWND pParent)
 	return ret;
 }
 
-VisionControls::~VisionControls()
+void VisionControls_SaveChanges()
 {
 	using namespace std;
-	g_pVisionControls=NULL;
 	string OutFile;
 	GetVisionFilename(OutFile);
 	ofstream out(OutFile.c_str(), std::ios::out );
 	//this is unrolled to look pretty... :)
-	out << "TrackerType= " << CurrentSettings.vsTrackerType << endl;
-	out << "DisplayType= " << CurrentSettings.vsDisplayType << endl;
-	out << "SolidMask= " << CurrentSettings.vsSolidMask << endl;
-	out << "Overlays= " << CurrentSettings.vsOverlays << endl;
-	out << "Aiming= " << CurrentSettings.vsAimingText << endl;
-	out << "Bounds= " << CurrentSettings.vsBoundsText << endl;
-	out << "3ptgoal= " << CurrentSettings.vs3ptGoal << endl;
-	out << "ThresholdType= " << CurrentSettings.vsThresholdMode << endl;
-	out << "Plane1Min= " << CurrentSettings.ThresholdValues[0] << endl;
-	out << "Plane2Min= " << CurrentSettings.ThresholdValues[1] << endl;
-	out << "Plane3Min= " << CurrentSettings.ThresholdValues[2] << endl;
-	out << "Plane1Max= " << CurrentSettings.ThresholdValues[3] << endl;
-	out << "Plane2Max= " << CurrentSettings.ThresholdValues[4] << endl;
-	out << "Plane3Max= " << CurrentSettings.ThresholdValues[5] << endl;
+	out << "TrackerType= " << (int)g_plugin->Get_Vision_Settings(eTrackerType) << endl;
+	out << "DisplayType= " << (int)g_plugin->Get_Vision_Settings(eDisplayType) << endl;
+	out << "SolidMask= " <<   (int)g_plugin->Get_Vision_Settings(eSolidMask) << endl;
+	out << "Overlays= " <<    (int)g_plugin->Get_Vision_Settings(eOverlays) << endl;
+	out << "Aiming= " <<      (int)g_plugin->Get_Vision_Settings(eAimingText) << endl;
+	out << "Bounds= " <<      (int)g_plugin->Get_Vision_Settings(eBoundsText) << endl;
+	out << "3ptgoal= " <<     (int)g_plugin->Get_Vision_Settings(e3PtGoal) << endl;
+	out << "ThresholdType= "<<(int)g_plugin->Get_Vision_Settings(eThresholdMode) << endl;
+	out << "Plane1Min= " << g_plugin->Get_Vision_Settings(eThresholdPlane1Min) << endl;
+	out << "Plane2Min= " << g_plugin->Get_Vision_Settings(eThresholdPlane2Min) << endl;
+	out << "Plane3Min= " << g_plugin->Get_Vision_Settings(eThresholdPlane3Min) << endl;
+	out << "Plane1Max= " << g_plugin->Get_Vision_Settings(eThresholdPlane1Max) << endl;
+	out << "Plane2Max= " << g_plugin->Get_Vision_Settings(eThresholdPlane2Max) << endl;
+	out << "Plane3Max= " << g_plugin->Get_Vision_Settings(eThresholdPlane3Max) << endl;
+	out << "IsTargeting= " << (int)g_plugin->Get_Vision_Settings(eIsTargeting) << endl;
 	out.close();
+}
+
+VisionControls::~VisionControls()
+{
+	g_pVisionControls=NULL;
+	VisionControls_SaveChanges();
 }
 
 void VisionControls::GetVisionSettings()

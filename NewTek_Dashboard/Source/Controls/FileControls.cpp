@@ -14,10 +14,12 @@ extern Plugin_Controller_Interface *g_plugin; //For TargetEnableControls only
  /*													TargetEnableControls												*/
 /***********************************************************************************************************************/
 
+void VisionControls_SaveChanges();
+
 class TargetEnableControls : public DialogBase
 {
 public:
-	//TargetEnableControls();
+	TargetEnableControls() : m_IgnoreUpdate(false) {}
 	~TargetEnableControls();
 	virtual bool Run(HWND pParent);
 protected:
@@ -27,6 +29,7 @@ protected:
 	virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
 private:
 	void UpdateControls();
+	bool m_IgnoreUpdate;
 };
 
 DialogBase *CreateTargetEnableDialog() {return new TargetEnableControls;}
@@ -34,6 +37,7 @@ DialogBase *CreateTargetEnableDialog() {return new TargetEnableControls;}
 TargetEnableControls::~TargetEnableControls()
 {
 	g_pTargetEnableControls=NULL;
+	VisionControls_SaveChanges();  //the targeting is bundled in this file
 }
 
 void TargetEnableControls::UpdateControls()
@@ -45,8 +49,9 @@ void TargetEnableControls::UpdateControls()
 
 bool TargetEnableControls::Run(HWND pParent)
 {
+	m_IgnoreUpdate=true;
 	bool ret=__super::Run(pParent);
-	//SetWindowPos(m_hDlg,NULL,500,100,0,0,SWP_NOSIZE|SWP_NOZORDER);
+	m_IgnoreUpdate=false;
 	UpdateControls();
 	return ret;
 }
@@ -61,6 +66,7 @@ long TargetEnableControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM 
 			WORD buttonid = LOWORD(wParam);
 			if (notifycode==BN_CLICKED) 
 			{
+				if (m_IgnoreUpdate) break;
 				//Handle our button up
 				switch (buttonid) 
 				{
