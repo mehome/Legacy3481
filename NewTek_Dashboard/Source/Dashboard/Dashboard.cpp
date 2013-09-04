@@ -785,6 +785,36 @@ void DDraw_Preview::StartStreaming()
 
 }
 
+size_t split_arguments(const std::string& str, std::vector<std::string>& arguments)
+{
+	arguments.clear();
+
+	if (str.empty())
+		return 0;
+
+	const std::string whitespace = " \t\n\r";
+	const char group_char = '"';
+	bool in_argument = false;
+
+	arguments.push_back(std::string());
+	for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
+	{
+		if (*it == group_char)
+			in_argument = !in_argument;
+		else if (in_argument || whitespace.find(*it) == std::string::npos)
+			arguments.back().push_back(*it);
+		else if (!arguments.back().empty())
+			arguments.push_back(std::string());
+	}
+
+	if (arguments.back().empty())
+		arguments.pop_back();
+
+	assert(!in_argument); // Uneven quotes?
+
+	return arguments.size();
+}
+
 void DDraw_Preview::OpenResources()
 {
 	typedef DDraw_Preview::DDraw_Preview_Props PrevProps;
@@ -822,12 +852,27 @@ void DDraw_Preview::OpenResources()
 			//No window found (typical case) launch one
 			if (!ParentHwnd)
 			{
-				LPTSTR szCmdline = _tcsdup(m_Props.smart_file.c_str());
+				std::vector<std::string> Args;
+				wchar2char(m_Props.smart_file.c_str());
+				split_arguments(std::string(wchar2char_pchar),Args);
+
+				LPTSTR szCmdline;
+				{
+					char2wchar(Args[0].c_str());
+					szCmdline= _tcsdup(char2wchar_pwchar);
+				}
+				std::wstring paramaters;
+				for (size_t i=1;i<Args.size();i++)
+				{
+					char2wchar(Args[i].c_str());
+					paramaters+=char2wchar_pwchar;
+					paramaters+=L" ";
+				}
 				//Note:
 				//The return value is cast as an HINSTANCE for backward compatibility with 16-bit Windows applications. It is not a true HINSTANCE, 
 				//however. The only thing that can be done with the returned HINSTANCE is to cast it to an int and compare it with the value 32 or one 
 				//of the error codes below.
-				HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,NULL,NULL,SW_SHOWNORMAL);
+				HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,paramaters.c_str(),NULL,SW_SHOWNORMAL);
 			}
 			IsSmartDashboardStarted=true;
 			//I need about 500ms for LabView to setup before trying to attach myself as a child... this is really a non-issue for smart dashboard
@@ -927,36 +972,6 @@ void DDraw_Preview::RunApp()
 	OpenResources();
 	m_Terminate.wait();
 	CloseResources();
-}
-
-size_t split_arguments(const std::string& str, std::vector<std::string>& arguments)
-{
-	arguments.clear();
-
-	if (str.empty())
-		return 0;
-
-	const std::string whitespace = " \t\n\r";
-	const char group_char = '"';
-	bool in_argument = false;
-
-	arguments.push_back(std::string());
-	for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
-	{
-		if (*it == group_char)
-			in_argument = !in_argument;
-		else if (in_argument || whitespace.find(*it) == std::string::npos)
-			arguments.back().push_back(*it);
-		else if (!arguments.back().empty())
-			arguments.push_back(std::string());
-	}
-
-	if (arguments.back().empty())
-		arguments.pop_back();
-
-	assert(!in_argument); // Uneven quotes?
-
-	return arguments.size();
 }
 
 void AssignInput(wstring &output,const char *input)
@@ -1128,7 +1143,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		out << "bottom= "  << g_WindowInfo.rcNormalPosition.bottom << endl;
 
 		AssignOutput(output,SmartDashboard.c_str());
-		out << "SmartDashboard= " << output << endl;
+		out << "SmartDashboard= " << "\"" << output << "\"" << endl;
 		AssignOutput(output,ClassName.c_str());
 		out << "ClassName= " << output << endl;
 		AssignOutput(output,WindowName.c_str());
