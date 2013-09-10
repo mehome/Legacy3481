@@ -128,13 +128,20 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 					if (!m_fpInitialize) throw 2;
 					m_fpShutdown=(function_void) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
 					if (!m_fpShutdown) throw 3;
+					size_t Tally=0;
+					//These may be NULL
 					m_fpGetSettings=(function_get) GetProcAddress(m_PlugIn,"Get_VisionSettings");
-					if (!m_fpGetSettings) throw 4;
+					if (m_fpGetSettings) Tally++;
 					m_fpSetSettings=(function_set) GetProcAddress(m_PlugIn,"Set_VisionSettings");
-					if (!m_fpSetSettings) throw 5;
+					if (m_fpSetSettings) Tally++;
 					m_fpResetThreshholds=(function_void) GetProcAddress(m_PlugIn, "ResetDefaults");
-					if (! m_fpResetThreshholds) throw 6;
-
+					if (m_fpResetThreshholds) Tally++;
+					//either all or nothing of this group of functions
+					if ((Tally!=0)&&(Tally!=3))
+					{
+						assert(false);
+						throw 4;
+					}
 				}
 				catch (int ErrorCode)
 				{
@@ -169,7 +176,13 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 			}
 		}
 
-		Plugin_Controller_Interface* GetPluginInterface(void) { return new Plugin_Controller_Interface(m_fpGetSettings, m_fpSetSettings, m_fpResetThreshholds); }
+		Plugin_Controller_Interface* GetPluginInterface(void) 
+		{
+			Plugin_Controller_Interface *ret=NULL;
+			if (m_fpGetSettings && m_fpGetSettings && m_fpResetThreshholds)
+				ret=new Plugin_Controller_Interface(m_fpGetSettings, m_fpSetSettings, m_fpResetThreshholds);
+			return ret;
+		}
 
 	private:
 		typedef Bitmap_Frame * (*DriverProc_t)(Bitmap_Frame *Frame);
