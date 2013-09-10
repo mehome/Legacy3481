@@ -1,8 +1,7 @@
 #include "stdafx.h"
 #include "../FrameWork/FrameWork.h"
 #include "Compositer.h"
-#include "../SmartDashboard2/SmartDashboard/SmartDashboard.h"
-#include "../SmartDashboard2/NetworkTables/cpp/include/src/main/include/networktables/NetworkTable.h"
+#include "../SmartDashboard2/SmartDashboard_Import.h"
 
 Dashboard_Framework_Interface *g_Framework=NULL;
 FrameWork::event frameSync;
@@ -104,8 +103,8 @@ extern "C" COMPOSITER_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
 {
 	g_Framework=DashboardHelper;
-	NetworkTable::SetClientMode();
-	NetworkTable::SetIPAddress(IPAddress);
+	SmartDashboard::SetClientMode();
+	SmartDashboard::SetIPAddress(IPAddress);
 	SmartDashboard::init();
 	SmartDashboard::PutBoolean("Edit Position",false);
 }
