@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "../FrameWork/FrameWork.h"
 #include "Compositer.h"
+#include "../SmartDashboard2/SmartDashboard/SmartDashboard.h"
+#include "../SmartDashboard2/NetworkTables/cpp/include/src/main/include/networktables/NetworkTable.h"
 
 Dashboard_Framework_Interface *g_Framework=NULL;
 FrameWork::event frameSync;
@@ -62,6 +64,15 @@ extern "C" COMPOSITER_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 	}
 	#endif
 	#ifdef __TestBGRADot__
+	if (SmartDashboard::GetBoolean("Edit Position"))
+	{
+		static size_t Test=0;
+		if (Test++>30)
+		{
+			FrameWork::DebugOutput("Test!\n");
+			Test=0;
+		}
+	}
 	if (g_Framework)
 	{
 		Bitmap_Handle *bgra_handle=g_Framework->CreateBGRA(Frame);
@@ -93,8 +104,14 @@ extern "C" COMPOSITER_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
 {
 	g_Framework=DashboardHelper;
+	NetworkTable::SetClientMode();
+	NetworkTable::SetIPAddress(IPAddress);
+	SmartDashboard::init();
+	SmartDashboard::PutBoolean("Edit Position",false);
 }
 
 extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Shutdown()
 {
+	SmartDashboard::shutdown();
+
 }
