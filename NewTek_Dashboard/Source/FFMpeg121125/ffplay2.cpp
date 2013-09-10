@@ -3217,6 +3217,7 @@ int FFPlay_Controller::Run (void)
 
 void FFPlay_Controller::SwitchFilename(const wchar_t FileToUse[])
 {
+	if (!m_VideoStream) return;  //pacify failsafe call if this is not yet set up
 	//Get persistence settings
 	bool IsRecording=GetRecordState();
 	std::string RecordPath=GetRecordPath();
