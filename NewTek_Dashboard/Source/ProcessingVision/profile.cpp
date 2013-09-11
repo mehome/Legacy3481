@@ -76,7 +76,7 @@ void profile::display( const wchar_t* p_title )
 		const float max_time = (float)m_max  / (float)m_freq;
 
 		// Output
-		FrameWork::DebugOutput( size ? "[%ls] avg=%5.2fms (min=%5.2fms, max=%5.2fms), %5.1fMb/s.\n" :
+		DOUT( size ? "[%ls] avg=%5.2fms (min=%5.2fms, max=%5.2fms), %5.1fMb/s.\n" :
 										   "[%ls] avg=%5.2fms (min=%5.2fms, max=%5.2fms).\n", 
 										   p_title,
 										   time*1000.0f, 
