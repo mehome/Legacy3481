@@ -6,7 +6,15 @@
 #include "VisionGoalTracker.h"
 #include "VisionRinTinTinTracker.h"
 
+//#define __Using_UDP__
+
+#ifndef __Using_UDP__
+#include "../SmartDashboard2/SmartDashboard_Import.h"
+#endif
+
+#ifdef __Using_UDP__
 UDP_Client_Interface *g_UDP_Output=NULL;
+#endif
 extern VisionTracker* g_pTracker[eNumTrackers];
 TrackerType SelectedTracker = eGoalTracker;
 Dashboard_Framework_Interface *g_Framework=NULL;
@@ -97,8 +105,13 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Fr
 		Bitmap_Frame *out_frame;
 		out_frame = NI_VisionProcessing(&bgra_frame, x_target, y_target, have_target);
 		//DebugOutput("X=%.2f, Y=%.2f, %s\n", x_target, y_target, have_target ? "target: yes" : "target: no");
+		#ifdef __Using_UDP__
 		if (g_UDP_Output && have_target)
 			(*g_UDP_Output)(x_target,y_target);
+		#else
+		SmartDashboard::PutNumber("X Position",x_target);
+		SmartDashboard::PutNumber("Y Position",y_target);
+		#endif
 
 		g_Framework->BGRA_to_UYVY(out_frame,Frame);
 		g_Framework->DestroyBGRA(bgra_handle);
@@ -296,12 +309,22 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
 {
 	g_Framework=DashboardHelper;
+	#ifdef __Using_UDP__
 	if (IPAddress)
 		g_UDP_Output=UDP_Client_Interface::GetNewInstance(IPAddress);
+	#else
+	SmartDashboard::SetClientMode();
+	SmartDashboard::SetIPAddress(IPAddress);
+	SmartDashboard::init();
+	#endif
 }
 
 extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Shutdown()
 {
+	#ifdef __Using_UDP__
 	delete g_UDP_Output;
 	g_UDP_Output=NULL;
+	#else
+	SmartDashboard::shutdown();
+	#endif
 }
