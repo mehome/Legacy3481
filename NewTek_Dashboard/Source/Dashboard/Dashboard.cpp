@@ -766,6 +766,8 @@ void DDraw_Preview::CloseResources()
 		#endif
 		m_ParentHwnd=NULL;
 	}
+
+	m_ProcessingVision.Callback_Shutdown();
 }
 
 DDraw_Preview::~DDraw_Preview()
