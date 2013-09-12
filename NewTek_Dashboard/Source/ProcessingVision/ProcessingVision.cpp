@@ -314,7 +314,7 @@ extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char 
 		g_UDP_Output=UDP_Client_Interface::GetNewInstance(IPAddress);
 	#else
 	SmartDashboard::SetClientMode();
-	SmartDashboard::SetIPAddress(IPAddress);
+	SmartDashboard::SetIPAddress(IPAddress?IPAddress:"127.0.0.1");  //if null use local host
 	SmartDashboard::init();
 	#endif
 }
