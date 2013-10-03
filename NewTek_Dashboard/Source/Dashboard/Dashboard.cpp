@@ -1019,6 +1019,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 					   LPTSTR    lpCmdLine,
 					   int       nCmdShow)
 {
+
 	DDraw_Preview::DDraw_Preview_Props props;
 	wstring SmartDashboard=cwsz_DefaultSmartFile;
 	wstring Title=L"Preview";
@@ -1120,6 +1121,21 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	props.aux_startup_file=AuxStart;
 	props.aux_startup_file_Args=AuxArgs;
 
+
+	// Create a system wide named event
+	std::wstring SystemWideName=L"SmartCPPDashboard_";
+	SystemWideName+=WindowName;  //keep it unique to allow multiple instances (but not of the same kind)
+	HANDLE	SystemWideNamedEvent = ::CreateEventW( NULL, FALSE, FALSE, SystemWideName.c_str() );		
+	if ( SystemWideNamedEvent )
+	{	// Check for another app with the same name running
+		if ( ::GetLastError() == ERROR_ALREADY_EXISTS )
+		{
+			DebugOutput("Another copy of this application is already running.\n");
+			return 1;
+		}
+	}
+
+
 	DDraw_Preview TheApp(props);
 	//Note: ensure the CWD is maintained on exit... the file requester can change where it goes
 	wchar_t CWD[MAX_PATH];
@@ -1174,6 +1190,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		out << "RecordPath= " << TheApp.GetRecordPath() << endl;
 		out.close();
 	}
+	CloseHandle(SystemWideNamedEvent);
 	return 0;
 }
 
