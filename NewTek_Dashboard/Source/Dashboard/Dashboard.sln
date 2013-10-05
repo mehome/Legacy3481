@@ -24,13 +24,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Controls", "..\Controls\Con
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcAmp", "..\ProcAmp\ProcAmp.vcproj", "{40C81C1D-8ABD-4282-8298-3750EEC0B623}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SmartDashboard", "..\SmartDashboard2\SmartDashboard.vcproj", "{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Compositer", "..\Compositer\Compositer.vcproj", "{EB216891-F431-4F9B-BB49-0EF23C08C075}"
 	ProjectSection(ProjectDependencies) = postProject
 		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02} = {556FC434-D0C3-4B96-BF29-E9CF5CD24F02}
 		{455B6FC3-BCD0-4927-B561-55F896A96185} = {455B6FC3-BCD0-4927-B561-55F896A96185}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SmartDashboard", "..\SmartDashboard\SmartDashboard.vcproj", "{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,14 +62,14 @@ Global
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623}.Debug|Win32.Build.0 = Debug|Win32
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623}.Release|Win32.ActiveCfg = Release|Win32
 		{40C81C1D-8ABD-4282-8298-3750EEC0B623}.Release|Win32.Build.0 = Release|Win32
-		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}.Debug|Win32.ActiveCfg = Debug|Win32
-		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}.Debug|Win32.Build.0 = Debug|Win32
-		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}.Release|Win32.ActiveCfg = Release|Win32
-		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}.Release|Win32.Build.0 = Release|Win32
 		{EB216891-F431-4F9B-BB49-0EF23C08C075}.Debug|Win32.ActiveCfg = Debug|Win32
 		{EB216891-F431-4F9B-BB49-0EF23C08C075}.Debug|Win32.Build.0 = Debug|Win32
 		{EB216891-F431-4F9B-BB49-0EF23C08C075}.Release|Win32.ActiveCfg = Release|Win32
 		{EB216891-F431-4F9B-BB49-0EF23C08C075}.Release|Win32.Build.0 = Release|Win32
+		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}.Debug|Win32.ActiveCfg = Debug|Win32
+		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}.Debug|Win32.Build.0 = Debug|Win32
+		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}.Release|Win32.ActiveCfg = Release|Win32
+		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
