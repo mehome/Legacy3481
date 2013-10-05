@@ -1,21 +1,38 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) FIRST 2011. All Rights Reserved.							  */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in $(WIND_BASE)/WPILib.  */
-/*----------------------------------------------------------------------------*/
+#include "stdafx.h"
+#include "SmartDashboard.h"
 
-#include "SmartDashboard/SmartDashboard.h"
-
-#include "NetworkCommunication/UsageReporting.h"
+//#include "../NetworkCommunication/UsageReporting.h"
 #include "NamedSendable.h"
-#include "WPIErrors.h"
+//#include "WPIErrors.h"
 #include "networktables/NetworkTable.h"
+
 
 ITable* SmartDashboard::m_table = NULL;
 std::map<ITable *, Sendable *> SmartDashboard::m_tablesToData;
 
-void SmartDashboard::init(){
+void SmartDashboard::init()
+{
 	m_table = NetworkTable::GetTable("SmartDashboard");
+}
+void SmartDashboard::shutdown()
+{
+	NetworkTable::Shutdown();
+}
+void SmartDashboard::SetClientMode()
+{
+	NetworkTable::SetClientMode();
+}
+void SmartDashboard::SetServerMode()
+{
+	NetworkTable::SetServerMode();
+}
+void SmartDashboard::SetTeam(int team)
+{
+	NetworkTable::SetTeam(team);
+}
+void SmartDashboard::SetIPAddress(const char* address)
+{
+	NetworkTable::SetIPAddress(address);
 }
 
 //TODO usage reporting

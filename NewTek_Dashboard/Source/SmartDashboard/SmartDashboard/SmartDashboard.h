@@ -7,19 +7,22 @@
 #ifndef __SMART_DASHBOARD_H__
 #define __SMART_DASHBOARD_H__
 
-#include "SensorBase.h"
+//#include "SensorBase.h"
+//#include "../Base.h"
 #include <map>
 #include <string>
-#include "SmartDashboard/Sendable.h"
-#include "SmartDashboard/NamedSendable.h"
+#include "Sendable.h"
+#include "NamedSendable.h"
 #include "tables/ITable.h"
+#include "networktables2/type/ComplexData.h"
+#include "ErrorBase.h"
 
-
-class SmartDashboard : public SensorBase
+class SmartDashboard //: public SensorBase
 {
 public:
 	static void init();
-	
+	static void shutdown();
+
 	static void PutData(std::string key, Sendable *data);
 	static void PutData(NamedSendable *value);
 	//static Sendable* GetData(std::string keyName);
@@ -36,6 +39,17 @@ public:
 	
 	static void PutValue(std::string keyName, ComplexData& value);
 	static void RetrieveValue(std::string keyName, ComplexData& value);
+
+	///set that network tables should be a client This must be called before initialize or GetTable
+	static void SetClientMode();
+	///set that network tables should be a server This must be called before initialize or GetTable
+	static void SetServerMode();
+	///set the team the robot is configured for (this will set the ip address that network tables will connect to in client mode)
+	///This must be called before initialize or GetTable @param team the team number
+	static void SetTeam(int team);
+	/// @param address the address that network tables will connect to in client mode
+	static void SetIPAddress(const char* address);
+
 private:
 	SmartDashboard();
 	virtual ~SmartDashboard();

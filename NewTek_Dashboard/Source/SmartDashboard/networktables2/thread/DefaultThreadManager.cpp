@@ -4,42 +4,56 @@
  *  Created on: Sep 21, 2012
  *      Author: Mitchell Wills
  */
-
+#include "../../stdafx.h"
 #include "networktables2/thread/DefaultThreadManager.h"
 #include <stdio.h>
 
 
 PeriodicNTThread::PeriodicNTThread(PeriodicRunnable* _r, const char* _name) : 
-			name(_name), thread(new NTTask(name, (FUNCPTR)PeriodicNTThread::taskMain)), r(_r), run(true){
+			name(_name), thread(new NTTask(name, (FUNCPTR)PeriodicNTThread::taskMain)), r(_r), run(true)
+{
 	fprintf(stdout, "Starting task: %s\n", name);
 	fflush(stdout);
 	thread->Start((UINT32)this);
 }
 
-PeriodicNTThread::~PeriodicNTThread(){
+PeriodicNTThread::~PeriodicNTThread()
+{
+	stop();
 	//TODO somehow do this async
-	//delete thread;
+	if (thread)
+	{
+		delete thread;
+		thread=NULL;
+	}
 }
-int PeriodicNTThread::taskMain(PeriodicNTThread* o){//static wrapper
+
+int PeriodicNTThread::taskMain(PeriodicNTThread* o)
+{
+	//static wrapper
 	return o->_taskMain();
 }
+
 int PeriodicNTThread::_taskMain(){
 	try {
 		while(run){
 			r->run();
 		}
 	} catch (...) {
-		fprintf(stdout, "NTTask exited with uncaught exception %s\n", name);
+		fprintf(stdout, "Task exited with uncaught exception %s\n", name);
 		fflush(stdout);
 		return 1;
 	}
-	fprintf(stdout, "NTTask exited normally: %s\n", name);
+	fprintf(stdout, "Task exited normally: %s\n", name);
 	fflush(stdout);
 	return 0;
 }
-void PeriodicNTThread::stop() {
+void PeriodicNTThread::stop() 
+{
 	run = false;
+	thread->Stop();
 }
+
 bool PeriodicNTThread::isRunning() {
 	return thread->IsReady();
 }

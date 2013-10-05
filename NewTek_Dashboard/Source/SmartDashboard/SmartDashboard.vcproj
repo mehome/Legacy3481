@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)NetworkTables\cpp\include\src\main\include"
+				AdditionalIncludeDirectories="$(ProjectDir)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -105,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)NetworkTables\cpp\include\src\main\include"
+				AdditionalIncludeDirectories="$(ProjectDir)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -175,11 +175,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\Win32\src\main\native\OSAL\Synchronized.cpp"
+				RelativePath=".\OSAL\Synchronized.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\tables\TableKeyNotDefinedException.cpp"
+				RelativePath=".\tables\TableKeyNotDefinedException.cpp"
 				>
 			</File>
 		</Filter>
@@ -215,31 +215,31 @@
 			Name="NetworkTables"
 			>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables\NetworkTable.cpp"
+				RelativePath=".\networktables\NetworkTable.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables\NetworkTableConnectionListenerAdapter.cpp"
+				RelativePath=".\networktables\NetworkTableConnectionListenerAdapter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables\NetworkTableKeyListenerAdapter.cpp"
+				RelativePath=".\networktables\NetworkTableKeyListenerAdapter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables\NetworkTableListenerAdapter.cpp"
+				RelativePath=".\networktables\NetworkTableListenerAdapter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables\NetworkTableMode.cpp"
+				RelativePath=".\networktables\NetworkTableMode.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables\NetworkTableProvider.cpp"
+				RelativePath=".\networktables\NetworkTableProvider.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables\NetworkTableSubListenerAdapter.cpp"
+				RelativePath=".\networktables\NetworkTableSubListenerAdapter.cpp"
 				>
 			</File>
 		</Filter>
@@ -247,54 +247,54 @@
 			Name="NetWorkTables2"
 			>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\AbstractNetworkTableEntryStore.cpp"
+				RelativePath=".\networktables2\AbstractNetworkTableEntryStore.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\NetworkTableEntry.cpp"
+				RelativePath=".\networktables2\NetworkTableEntry.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\NetworkTableNode.cpp"
+				RelativePath=".\networktables2\NetworkTableNode.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\OutgoingEntryReciever.cpp"
+				RelativePath=".\networktables2\OutgoingEntryReciever.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\TableKeyExistsWithDifferentTypeException.cpp"
+				RelativePath=".\networktables2\TableKeyExistsWithDifferentTypeException.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\TransactionDirtier.cpp"
+				RelativePath=".\networktables2\TransactionDirtier.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\WriteManager.cpp"
+				RelativePath=".\networktables2\WriteManager.cpp"
 				>
 			</File>
 			<Filter
 				Name="util"
 				>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\util\EOFException.cpp"
+					RelativePath=".\networktables2\util\EOFException.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\util\IllegalStateException.cpp"
+					RelativePath=".\networktables2\util\IllegalStateException.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\util\IOException.cpp"
+					RelativePath=".\networktables2\util\IOException.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\util\StringCache.cpp"
+					RelativePath=".\networktables2\util\StringCache.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\Win32\src\main\native\OSAL\System.cpp"
+					RelativePath=".\OSAL\System.cpp"
 					>
 				</File>
 			</Filter>
@@ -302,7 +302,7 @@
 				Name="thread"
 				>
 				<File
-					RelativePath=".\NetworkTables\cpp\Win32\src\main\native\networktables2\thread\DefaultThreadManager.cpp"
+					RelativePath=".\networktables2\thread\DefaultThreadManager.cpp"
 					>
 				</File>
 			</Filter>
@@ -310,43 +310,43 @@
 				Name="type"
 				>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\ArrayData.cpp"
+					RelativePath=".\networktables2\type\ArrayData.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\ArrayEntryType.cpp"
+					RelativePath=".\networktables2\type\ArrayEntryType.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\BooleanArray.cpp"
+					RelativePath=".\networktables2\type\BooleanArray.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\ComplexData.cpp"
+					RelativePath=".\networktables2\type\ComplexData.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\ComplexEntryType.cpp"
+					RelativePath=".\networktables2\type\ComplexEntryType.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\DefaultEntryTypes.cpp"
+					RelativePath=".\networktables2\type\DefaultEntryTypes.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\NetworkTableEntryType.cpp"
+					RelativePath=".\networktables2\type\NetworkTableEntryType.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\NetworkTableEntryTypeManager.cpp"
+					RelativePath=".\networktables2\type\NetworkTableEntryTypeManager.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\NumberArray.cpp"
+					RelativePath=".\networktables2\type\NumberArray.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\type\StringArray.cpp"
+					RelativePath=".\networktables2\type\StringArray.cpp"
 					>
 				</File>
 			</Filter>
@@ -354,27 +354,27 @@
 				Name="server"
 				>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\server\NetworkTableServer.cpp"
+					RelativePath=".\networktables2\server\NetworkTableServer.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\server\ServerConnectionAdapter.cpp"
+					RelativePath=".\networktables2\server\ServerConnectionAdapter.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\server\ServerConnectionList.cpp"
+					RelativePath=".\networktables2\server\ServerConnectionList.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\server\ServerConnectionState.cpp"
+					RelativePath=".\networktables2\server\ServerConnectionState.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\server\ServerIncomingStreamMonitor.cpp"
+					RelativePath=".\networktables2\server\ServerIncomingStreamMonitor.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\server\ServerNetworkTableEntryStore.cpp"
+					RelativePath=".\networktables2\server\ServerNetworkTableEntryStore.cpp"
 					>
 				</File>
 			</Filter>
@@ -382,19 +382,19 @@
 				Name="stream"
 				>
 				<File
-					RelativePath=".\NetworkTables\cpp\Win32\src\main\native\networktables2\stream\FDIOStream.cpp"
+					RelativePath=".\networktables2\stream\FDIOStream.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\Win32\src\main\native\networktables2\stream\SocketServerStreamProvider.cpp"
+					RelativePath=".\networktables2\stream\SocketServerStreamProvider.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\Win32\src\main\native\networktables2\stream\SocketStreamFactory.cpp"
+					RelativePath=".\networktables2\stream\SocketStreamFactory.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\Win32\src\main\native\networktables2\stream\SocketStreams.cpp"
+					RelativePath=".\networktables2\stream\SocketStreams.cpp"
 					>
 				</File>
 			</Filter>
@@ -402,19 +402,19 @@
 				Name="client"
 				>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\client\ClientConnectionAdapter.cpp"
+					RelativePath=".\networktables2\client\ClientConnectionAdapter.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\client\ClientConnectionState.cpp"
+					RelativePath=".\networktables2\client\ClientConnectionState.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\client\ClientNetworkTableEntryStore.cpp"
+					RelativePath=".\networktables2\client\ClientNetworkTableEntryStore.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\client\NetworkTableClient.cpp"
+					RelativePath=".\networktables2\client\NetworkTableClient.cpp"
 					>
 				</File>
 			</Filter>
@@ -422,19 +422,19 @@
 				Name="connection"
 				>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\connection\BadMessageException.cpp"
+					RelativePath=".\networktables2\connection\BadMessageException.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\connection\ConnectionMonitorThread.cpp"
+					RelativePath=".\networktables2\connection\ConnectionMonitorThread.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\connection\DataIOStream.cpp"
+					RelativePath=".\networktables2\connection\DataIOStream.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\NetworkTables\cpp\parent\src\main\native\networktables2\connection\NetworkTableConnection.cpp"
+					RelativePath=".\networktables2\connection\NetworkTableConnection.cpp"
 					>
 				</File>
 			</Filter>
@@ -443,7 +443,7 @@
 			Name="OSAL"
 			>
 			<File
-				RelativePath=".\NetworkTables\cpp\Win32\src\main\native\OSAL\Task.cpp"
+				RelativePath=".\OSAL\Task.cpp"
 				>
 			</File>
 		</Filter>
