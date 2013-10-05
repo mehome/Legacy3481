@@ -10,7 +10,7 @@
 
 
 #include <string>
-#include "SmartDashboard/Sendable.h"
+#include "Sendable.h"
 
 /**
  * The interface for sendable objects that gives the sendable a default name in the Smart Dashboard
