@@ -3,7 +3,7 @@
 
 struct lua_State;
 
-namespace Framework
+namespace FrameWork
 {
 	namespace Scripting
 	{
@@ -83,4 +83,4 @@ private:
 	}
 }
 
-namespace Scripting=Framework::Scripting;
+namespace Scripting=FrameWork::Scripting;

@@ -11,7 +11,7 @@
  /*													Script													*/
 /***********************************************************************************************************/
 
-using namespace Framework::Scripting;
+using namespace FrameWork::Scripting;
 
 Script::Script() : m_filename("UN-INITIALIZED"),m_lua_state(NULL) {}
 Script::~Script()

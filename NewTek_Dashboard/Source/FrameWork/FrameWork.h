@@ -102,6 +102,13 @@ static const work_flags long_function = 2;
 
 };	// namespace FrameWork
 
+
+#include "InputBase/Event.h"
+#include "InputBase/EventMap.h"
+#include "InputBase/Joystick.h"
+#include "InputBase/JoystickBinder.h"
+#include "InputBase/Script.h"
+
 namespace FTHRDS   = FrameWork;
 namespace FTHREADS = FrameWork;
 namespace FBMP = FrameWork::Bitmaps;
