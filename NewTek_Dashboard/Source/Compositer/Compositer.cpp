@@ -1,10 +1,57 @@
 #include "stdafx.h"
+//#define __IncludeInputBase__
 #include "../FrameWork/FrameWork.h"
 #include "Compositer.h"
 #include "../SmartDashboard2/SmartDashboard_Import.h"
 
 Dashboard_Framework_Interface *g_Framework=NULL;
 FrameWork::event frameSync;
+
+#if 0
+
+struct Compositor_Props
+{
+	public:	
+
+};
+
+class Compositor_Properties
+{
+	public:
+		Compositor_Properties();
+		const char *SetUpGlobalTable(Scripting::Script& script)
+		{
+			Compositor_Props &props=m_CompositorProps;
+			const char* err;
+			//props.ShipType=Ship_Props::eDefault;
+			err = script.GetGlobalTable("Compositer");
+			assert (!err);
+			return err;
+		}
+
+		virtual void LoadFromScript(Scripting::Script& script);
+
+		const Compositor_Props &GetCompositorProps() const {return m_CompositorProps;}
+	private:
+		Compositor_Props m_CompositorProps;
+
+		class ControlEvents : public LUA_Controls_Properties_Interface
+		{
+			protected: //from LUA_Controls_Properties_Interface
+				virtual const char *LUA_Controls_GetEvents(size_t index) const; 
+		};
+		static ControlEvents s_ControlsEvents;
+		LUA_Controls_Properties m_RobotControls;
+};
+
+class Compositor
+{
+	public:
+	private:
+		Compositor_Properties();
+} g_pCompositor;
+
+#endif
 
 //Give something cool to look at
 class SineWaveMaker
@@ -107,10 +154,26 @@ extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(char *IPAdd
 	SmartDashboard::SetIPAddress(IPAddress);
 	SmartDashboard::init();
 	SmartDashboard::PutBoolean("Edit Position",false);
+
+	#if 0
+	g_pCompositor = new Compositor;
+	{
+		Compositor_Properties props;
+		Framework::Scripting::Script script;
+		script.LoadScript("Compositor.lua",true);
+		script.NameMap["EXISTING_DASHBOARD"] = "EXISTING_COMPOSITER";
+		props.SetUpGlobalTable(script);
+		props.LoadFromScript(script);
+		g_pCompositor->Initialize(m_EventMap,&m_RobotProps);
+	}
+	//Bind the compositor's eventmap to the joystick
+	m_JoyBinder.SetControlledEventMap(m_pRobot->GetEventMap());
+	#endif
 }
 
 extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Shutdown()
 {
+	//delete g_pCompositor;
+	//g_pCompositor=NULL;
 	SmartDashboard::shutdown();
-
 }
