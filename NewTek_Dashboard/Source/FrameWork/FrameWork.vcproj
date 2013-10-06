@@ -341,6 +341,70 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<Filter
+			Name="InputBase"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\InputBase\Event.h"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\EventMap.h"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\Joystick.h"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\JoystickBinder.h"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\LUA.h"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\Script.h"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\stdafx.h"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\Vec2d.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\InputBase\EventMap.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\Joystick.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\JoystickBinder.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\LUA.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\Script.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"
 			>

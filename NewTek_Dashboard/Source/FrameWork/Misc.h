@@ -50,3 +50,24 @@ class Outstream_Interface
 void DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber );
 
 void DebugOutput(const char *format, ... );
+std::string BuildString(const char *format, ... );
+
+//! Easily compare doubles with a delta
+inline bool Equals(double d1, double d2)
+{
+	double tol = (d2>0.0) ? d2*0.000001 : -d2*0.000001;
+	double delta = (d1>d2) ? d1-d2 : d2-d1;
+	return (delta < tol);
+}
+inline bool Equals(float d1, float d2)
+{
+	double tol = (d2>0.0f) ? d2*0.000001f : -d2*0.000001f;
+	double delta = (d1>d2) ? d1-d2 : d2-d1;
+	return (delta < tol);
+}
+
+//Use this to check for zero if your value is going to be used as a denominator in division
+inline bool IsZero(double value,double tolerance=1e-5)
+{
+	return fabs(value)<tolerance;
+}

@@ -10,6 +10,17 @@ void FrameWork::DebugOutput(const char *format, ... )
 	va_end(marker);		
 }
 
+std::string FrameWork::BuildString(const char *format, ... )
+{
+	char Temp[2048];
+	va_list marker;
+	va_start(marker,format);
+	vsprintf(Temp,format,marker);
+	va_end(marker); 
+	std::string ret(Temp);
+	return ret;
+}
+
 void FrameWork::DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber )
 {
 	{ // aka Black Field section
