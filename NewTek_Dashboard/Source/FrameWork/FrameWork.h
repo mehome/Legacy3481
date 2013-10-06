@@ -5,6 +5,7 @@
 #include <vector>
 #include <list>
 #include <queue>
+#include <map>
 
 // The namespace
 namespace FrameWork
@@ -102,12 +103,15 @@ static const work_flags long_function = 2;
 
 };	// namespace FrameWork
 
-
+//These may be included in some projects but not in others
+#ifdef __IncludeInputBase__
 #include "InputBase/Event.h"
 #include "InputBase/EventMap.h"
 #include "InputBase/Joystick.h"
 #include "InputBase/JoystickBinder.h"
 #include "InputBase/Script.h"
+#include "InputBase/LUA_Controls.h"
+#endif
 
 namespace FTHRDS   = FrameWork;
 namespace FTHREADS = FrameWork;

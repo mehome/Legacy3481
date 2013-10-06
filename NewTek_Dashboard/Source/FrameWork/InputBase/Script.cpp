@@ -3,8 +3,6 @@
 #include "Script.h"
 #include "../Misc.h"
 #include "LUA.h"
-#define ASSERT(cond) assert(cond);
-#define ASSERT_MSG(cond, msg) if (!(cond)){printf((msg)); assert(cond);}
 
 
   /***********************************************************************************************************/

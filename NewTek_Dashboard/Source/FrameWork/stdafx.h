@@ -27,3 +27,5 @@
 	const size_t char2wchar_Length=((strlen(char2wchar_pchar_source)+1)*sizeof(wchar_t)); \
 	wchar_t *char2wchar_pwchar = (wchar_t *)_alloca(char2wchar_Length);; /* ";;" is needed to fix a compiler bug */ \
 	mbstowcs(char2wchar_pwchar,char2wchar_pchar_source,char2wchar_Length);
+
+#define __IncludeInputBase__

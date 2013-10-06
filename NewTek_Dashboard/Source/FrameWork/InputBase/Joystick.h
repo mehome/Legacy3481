@@ -63,4 +63,6 @@ class IJoystick
 		virtual bool read_joystick (size_t nr, JoyState &Info)=0;
 };
 
+IJoystick &GetDirectInputJoystick();
+
 }

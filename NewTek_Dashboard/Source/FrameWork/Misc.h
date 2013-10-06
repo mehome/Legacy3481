@@ -71,3 +71,6 @@ inline bool IsZero(double value,double tolerance=1e-5)
 {
 	return fabs(value)<tolerance;
 }
+
+#define ASSERT(cond) assert(cond);
+#define ASSERT_MSG(cond, msg) if (!(cond)){printf((msg)); assert(cond);}

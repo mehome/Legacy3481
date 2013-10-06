@@ -368,6 +368,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\InputBase\LUA_Controls.h"
+					>
+				</File>
+				<File
 					RelativePath=".\InputBase\Script.h"
 					>
 				</File>
@@ -397,6 +401,10 @@
 				</File>
 				<File
 					RelativePath=".\InputBase\LUA.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\InputBase\LUA_Controls.cpp"
 					>
 				</File>
 				<File

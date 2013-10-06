@@ -42,10 +42,8 @@ class DirectInput_Joystick : public IJoystick
 		HWND const m_HWnd;
 };
 
-namespace GG_Framework
+namespace FrameWork
 {
-	namespace Base
-	{
 
 FRAMEWORK_BASE_API IJoystick &GetDirectInputJoystick()
 {
@@ -53,8 +51,8 @@ FRAMEWORK_BASE_API IJoystick &GetDirectInputJoystick()
 	return joystick;
 }
 
-	}
 }
+
 //Use this for verbose
 //#define write_log printf
 #define write_log
