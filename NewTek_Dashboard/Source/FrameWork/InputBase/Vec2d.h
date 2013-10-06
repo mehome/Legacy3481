@@ -1,16 +1,14 @@
 
 #pragma once
 
-#if 0
+#if 1
     inline bool isNaN(float v) { return _isnan(v)!=0; }
     inline bool isNaN(double v) { return _isnan(v)!=0; }
 #else
     inline bool isNaN(float v) { return false; }
     inline bool isNaN(double v) { return false; }
 #endif
-namespace Framework 
-{
-namespace Base 
+namespace FrameWork 
 {
 
 /** General purpose double pair, uses include representation of
@@ -168,7 +166,6 @@ class Vec2d
 
 };    // end of class Vec2d
 
-}    // end of namespace Base
-}	//end of namespace Framework
+}	//end of namespace FrameWork
 
-typedef Framework::Base::Vec2d Vec2D;
+typedef FrameWork::Vec2d Vec2D;
