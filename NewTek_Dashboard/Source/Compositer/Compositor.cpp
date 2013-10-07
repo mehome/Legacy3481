@@ -82,7 +82,7 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 	}
 }
 
-static void PixelSystem_to_AimingSystem(int Px,int Py,double &Ax,double &Ay,double XRes=640.0,double YRes=480.0,double AspectRatio=(3.0/4.0))
+static void PixelSystem_to_AimingSystem(int Px,int Py,double &Ax,double &Ay,double XRes=640.0,double YRes=480.0,double AspectRatio=(4.0/3.0))
 {
 	//Pixel aspect The inverse aspect ratio * the screen res
 	//const double PixelAspectRatio=(3.0/4.0)*(XRes/YRes);

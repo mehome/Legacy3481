@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="Compositer"
+	Name="Compositor"
 	ProjectGUID="{EB216891-F431-4F9B-BB49-0EF23C08C075}"
 	RootNamespace="Compositer"
 	Keyword="Win32Proj"
@@ -173,7 +173,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\Compositer.cpp"
+				RelativePath=".\Compositor.cpp"
 				>
 			</File>
 			<File
