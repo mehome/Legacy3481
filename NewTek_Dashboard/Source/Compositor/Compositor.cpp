@@ -269,7 +269,7 @@ extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(char *IPAdd
 		const char *err;
 		err=script.LoadScript("Compositor.lua",true);
 		if (err!=NULL)
-			err=script.LoadScript("../Compositer/Compositor.lua",true);
+			err=script.LoadScript("../Compositor/Compositor.lua",true);
 
 		if (err==NULL)
 		{
