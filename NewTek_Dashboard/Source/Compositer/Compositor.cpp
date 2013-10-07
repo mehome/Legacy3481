@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #define __IncludeInputBase__
 #include "../FrameWork/FrameWork.h"
-#include "Compositer.h"
+#include "Compositor.h"
 #include "../SmartDashboard2/SmartDashboard_Import.h"
 
 Dashboard_Framework_Interface *g_Framework=NULL;
