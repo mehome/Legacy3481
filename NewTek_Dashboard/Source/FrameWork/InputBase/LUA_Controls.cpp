@@ -184,12 +184,8 @@ void LUA_Controls_Properties::LoadFromScript(Scripting::Script& script)
 	while ( Controls="Joystick_",Controls+=itoa(i++,Buffer,10) ,	(err = script.GetFieldTable(Controls.c_str()))==NULL)
 	{
 		Control_Props control;
-		//Wind River uses generic name, and AI tester uses product name
-		#ifndef Robot_TesterCode
-		control.Controller=Controls.c_str();
-		#else
+		//We can use product name
 		err=script.GetField("control", &control.Controller, NULL, NULL);
-		#endif
 		//ensure the controller is lower case
 		std::transform(control.Controller.begin(),control.Controller.end(),control.Controller.begin(),tolower);
 		j=0;
