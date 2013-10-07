@@ -359,6 +359,10 @@
 					RelativePath=".\FC3_xml_receive.h"
 					>
 				</File>
+				<File
+					RelativePath=".\FC3_xml_slot.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -377,6 +381,10 @@
 				</File>
 				<File
 					RelativePath=".\FC3_xml_receive.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_slot.cpp"
 					>
 				</File>
 			</Filter>
@@ -403,6 +411,10 @@
 					RelativePath=".\FC3_video_receive.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\FC3_video_slot.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Header Files"
@@ -421,6 +433,10 @@
 				</File>
 				<File
 					RelativePath=".\FC3_video_receive.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_video_slot.h"
 					>
 				</File>
 			</Filter>
@@ -443,6 +459,10 @@
 					RelativePath=".\FC3_audio_receive.h"
 					>
 				</File>
+				<File
+					RelativePath=".\FC3_audio_slot.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -457,6 +477,10 @@
 				</File>
 				<File
 					RelativePath=".\FC3_audio_receive.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_audio_slot.cpp"
 					>
 				</File>
 			</Filter>
@@ -476,6 +500,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\FC3i_intrinsics.h"
+					>
+				</File>
+				<File
 					RelativePath=".\FC3i_mapped_file.h"
 					>
 				</File>
@@ -488,15 +516,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\FC3i_memory_block_35.h"
-					>
-				</File>
-				<File
 					RelativePath=".\FC3i_memory_cache.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_memory_cache_35.h"
 					>
 				</File>
 				<File
@@ -508,11 +528,15 @@
 					>
 				</File>
 				<File
-					RelativePath=".\FC3i_message_event.h"
+					RelativePath=".\FC3i_message_queue.h"
 					>
 				</File>
 				<File
-					RelativePath=".\FC3i_message_queue.h"
+					RelativePath=".\FC3i_message_slot.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_message_slot_cache.h"
 					>
 				</File>
 				<File
@@ -648,23 +672,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\FC3i_memory_block_35.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\FC3i_memory_cache.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|x64"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\FC3i_memory_cache_35.cpp"
 					>
 				</File>
 				<File
@@ -672,11 +680,15 @@
 					>
 				</File>
 				<File
-					RelativePath=".\FC3i_message_event.cpp"
+					RelativePath=".\FC3i_message_queue.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\FC3i_message_queue.cpp"
+					RelativePath=".\FC3i_message_slot.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_message_slot_cache.cpp"
 					>
 				</File>
 				<File
@@ -847,6 +859,10 @@
 					RelativePath=".\FC3_debug_receive.h"
 					>
 				</File>
+				<File
+					RelativePath=".\FC3_debug_slot.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -865,6 +881,10 @@
 				</File>
 				<File
 					RelativePath=".\FC3_debug_receive.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_debug_slot.cpp"
 					>
 				</File>
 			</Filter>
@@ -927,6 +947,10 @@
 					RelativePath=".\FC3_raw_receive.h"
 					>
 				</File>
+				<File
+					RelativePath=".\FC3_raw_slot.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -941,6 +965,10 @@
 				</File>
 				<File
 					RelativePath=".\FC3_raw_receive.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_raw_slot.cpp"
 					>
 				</File>
 			</Filter>
