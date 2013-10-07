@@ -67,10 +67,7 @@ inline bool Equals(float d1, float d2)
 }
 
 //Use this to check for zero if your value is going to be used as a denominator in division
-inline bool IsZero(double value,double tolerance=1e-5)
-{
-	return fabs(value)<tolerance;
-}
+inline bool IsZero(double value,double tolerance=1e-5);
 
 #define ASSERT(cond) assert(cond);
 #define ASSERT_MSG(cond, msg) if (!(cond)){printf((msg)); assert(cond);}

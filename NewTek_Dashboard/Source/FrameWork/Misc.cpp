@@ -21,6 +21,11 @@ std::string FrameWork::BuildString(const char *format, ... )
 	return ret;
 }
 
+inline bool FrameWork::IsZero(double value,double tolerance)
+{
+	return fabs(value)<tolerance;
+}
+
 void FrameWork::DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber )
 {
 	{ // aka Black Field section
