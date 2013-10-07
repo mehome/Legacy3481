@@ -1,13 +1,14 @@
 #include "stdafx.h"
-//#define __IncludeInputBase__
+#define __IncludeInputBase__
 #include "../FrameWork/FrameWork.h"
 #include "Compositer.h"
 #include "../SmartDashboard2/SmartDashboard_Import.h"
 
 Dashboard_Framework_Interface *g_Framework=NULL;
-FrameWork::event frameSync;
+using namespace FrameWork;
+event frameSync;
 
-#if 0
+
 
 struct Compositor_Props
 {
@@ -24,7 +25,7 @@ class Compositor_Properties
 			Compositor_Props &props=m_CompositorProps;
 			const char* err;
 			//props.ShipType=Ship_Props::eDefault;
-			err = script.GetGlobalTable("Compositer");
+			err = script.GetGlobalTable("Compositor");
 			assert (!err);
 			return err;
 		}
@@ -32,6 +33,7 @@ class Compositor_Properties
 		virtual void LoadFromScript(Scripting::Script& script);
 
 		const Compositor_Props &GetCompositorProps() const {return m_CompositorProps;}
+		const LUA_Controls_Properties &Get_CompositorControls() const {return m_CompositorControls;}
 	private:
 		Compositor_Props m_CompositorProps;
 
@@ -41,17 +43,172 @@ class Compositor_Properties
 				virtual const char *LUA_Controls_GetEvents(size_t index) const; 
 		};
 		static ControlEvents s_ControlsEvents;
-		LUA_Controls_Properties m_RobotControls;
+		LUA_Controls_Properties m_CompositorControls;
 };
+
+//declared as global to avoid allocation on stack each iteration
+const char * const g_Compositor_Controls_Events[] = 
+{
+	"SetXAxis","SetYAxis","NextSequence","PreviousSequence"
+};
+
+const char *Compositor_Properties::ControlEvents::LUA_Controls_GetEvents(size_t index) const
+{
+	return (index<_countof(g_Compositor_Controls_Events))?g_Compositor_Controls_Events[index] : NULL;
+}
+Compositor_Properties::ControlEvents Compositor_Properties::s_ControlsEvents;
+
+Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_ControlsEvents)
+{
+
+}
+
+void Compositor_Properties::LoadFromScript(Scripting::Script& script)
+{
+	const char* err=NULL;
+	{
+		double version;
+		err=script.GetField("version", NULL, NULL, &version);
+		if (!err)
+			printf ("Version=%.2f\n",version);
+	}
+	//note: call super here if we derived from other props
+
+	err = script.GetFieldTable("controls");
+	if (!err)
+	{
+		m_CompositorControls.LoadFromScript(script);
+		script.Pop();
+	}
+}
+
+static void PixelSystem_to_AimingSystem(int Px,int Py,double &Ax,double &Ay,double XRes=640.0,double YRes=480.0,double AspectRatio=(3.0/4.0))
+{
+	//Pixel aspect The inverse aspect ratio * the screen res
+	//const double PixelAspectRatio=(3.0/4.0)*(XRes/YRes);
+	//const double SquareWidthCoefficient=YRes * PixelAspectRatio;
+
+	Ax = ((Px - (XRes/2.0)) / (XRes/2.0)) * AspectRatio;
+	Ay = -((Py - (YRes/2.0)) / (YRes/2.0));
+}
+
+static void AimingSystem_to_PixelSystem(int &Px,int &Py,double Ax,double Ay,double XRes=640.0,double YRes=480.0,double AspectRatio=(4.0/3.0))
+{
+	Px=(int)((XRes*AspectRatio + XRes*Ax) / (2.0*AspectRatio));
+	Py=(int)(-(((Ay-1)*YRes) / 2.0));
+}
+
+static Bitmap_Frame *RenderGreenReticle(Bitmap_Frame *Frame,double XPos,double YPos)
+{
+	if (g_Framework)
+	{
+		Bitmap_Handle *bgra_handle=g_Framework->CreateBGRA(Frame);
+		Bitmap_Frame &bgra_frame=bgra_handle->frame;
+		g_Framework->UYVY_to_BGRA(Frame,&bgra_frame);
+		#if 0
+		//Test... make a green box in the center of the frame
+		const size_t PositionY=bgra_frame.YRes / 2;
+		const size_t PositionX=bgra_frame.XRes / 2;
+		#else
+		int Px,Py;
+		AimingSystem_to_PixelSystem(Px,Py,XPos,YPos,bgra_frame.XRes,bgra_frame.YRes,((double)bgra_frame.XRes/(double)bgra_frame.YRes));
+		const size_t PositionY=(size_t)Py;
+		const size_t PositionX=(size_t)Px;
+		#endif
+		size_t LineWidthInBytes=bgra_frame.Stride * 4;
+		for (size_t y=PositionY-5;y<PositionY+5;y++)
+		{
+			for (size_t x=PositionX-5; x<PositionX+5; x++)
+			{
+				*(bgra_frame.Memory+ (x*4 + 0) + (LineWidthInBytes * y))=0;
+				*(bgra_frame.Memory+ (x*4 + 1) + (LineWidthInBytes * y))=255;
+				*(bgra_frame.Memory+ (x*4 + 2) + (LineWidthInBytes * y))=0;
+			}
+		}
+		g_Framework->BGRA_to_UYVY(&bgra_frame,Frame);
+		g_Framework->DestroyBGRA(bgra_handle);
+	}
+	return Frame;
+}
 
 class Compositor
 {
 	public:
-	private:
-		Compositor_Properties();
-} g_pCompositor;
+		void SetXAxis(double value)
+		{
+			if (m_IsEditable)
+			{
+				//Temp testing
+				SmartDashboard::PutNumber("X Position",value);
+				m_Xpos+= (value * 0.025);
+				if (m_Xpos>1.0)
+					m_Xpos=1.0;
+				else if (m_Xpos<-1.0)
+					m_Xpos=-1.0;
+			}
+		}
+		void SetYAxis(double value)
+		{
+			if (m_IsEditable)
+			{
+				//Temp testing
+				SmartDashboard::PutNumber("Y Position",value);
+				m_Ypos+= (value * 0.025);
+				if (m_Ypos>0.8)
+					m_Ypos=0.8;
+				else if (m_Ypos<-0.8)
+					m_Ypos=-0.8;
+			}
+		}
 
-#endif
+		IEvent::HandlerList ehl;
+		Compositor() : m_JoyBinder(FrameWork::GetDirectInputJoystick()),m_Xpos(0.0),m_Ypos(0.0)
+		{
+			FrameWork::EventMap *em=&m_EventMap; 
+			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
+			em->EventValue_Map["SetYAxis"].Subscribe(ehl,*this, &Compositor::SetYAxis);
+		}
+		~Compositor()
+		{
+			FrameWork::EventMap *em=&m_EventMap; 
+			em->EventValue_Map["SetXAxis"].Remove(*this, &Compositor::SetXAxis);
+			em->EventValue_Map["SetYAxis"].Remove(*this, &Compositor::SetYAxis);
+			m_CompositorProperties.Get_CompositorControls().BindAdditionalUIControls(false,&m_JoyBinder,NULL);
+		}
+		virtual void Initialize(EventMap& em, const Compositor_Properties *props=NULL)
+		{
+			//props may be NULL if there is no lua
+			if (props)
+			{
+				m_CompositorProperties=*props;
+				m_CompositorProperties.Get_CompositorControls().BindAdditionalUIControls(true,&m_JoyBinder,NULL);
+			}
+
+			//Bind the compositor's eventmap to the joystick
+			m_JoyBinder.SetControlledEventMap(&m_EventMap);
+		}
+		FrameWork::EventMap &GetEventMap_rw() {return m_EventMap;}
+
+		Bitmap_Frame *TimeChange(Bitmap_Frame *Frame)
+		{
+
+			const time_type current_time=time_type::get_current_time();
+			const double dTime_s=(double)(current_time-m_LastTime);
+			m_LastTime=current_time;
+			m_JoyBinder.UpdateJoyStick(dTime_s);
+
+			m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
+			return RenderGreenReticle(Frame,m_Xpos,m_Ypos);
+		}
+
+	private:
+		time_type m_LastTime;
+		FrameWork::UI::JoyStick_Binder m_JoyBinder;
+		FrameWork::EventMap m_EventMap;
+		Compositor_Properties m_CompositorProperties;
+		double m_Xpos,m_Ypos;
+		bool m_IsEditable;
+} *g_pCompositor;
 
 //Give something cool to look at
 class SineWaveMaker
@@ -89,60 +246,10 @@ class SineWaveMaker
 
 extern "C" COMPOSITER_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 {
-	#undef __TestUYVYDot__
-	#define __TestBGRADot__
-	#ifdef __TestUYVYDot__
-	//Test... make a green box in the center of the frame
-	size_t CenterY=Frame->YRes / 2;
-	size_t CenterX=Frame->XRes / 2;
-	size_t LineWidthInBytes=Frame->Stride * 4;
-	for (size_t y=CenterY;y<CenterY+10;y++)
-	{
-		//http://www.mikekohn.net/file_formats/yuv_rgb_converter.php
-		//yuv 149,43,21 = rgb 0,255,0
-		for (size_t x=CenterX; x<CenterX+10; x++)
-		{
-			*(Frame->Memory+ (x*2 + 0) + (LineWidthInBytes * y))=21;
-			*(Frame->Memory+ (x*2 + 1) + (LineWidthInBytes * y))=149;
-			*(Frame->Memory+ (x*2 + 2) + (LineWidthInBytes * y))=43;
-			*(Frame->Memory+ (x*2 + 3) + (LineWidthInBytes * y))=149;
-		}
-	}
-	#endif
-	#ifdef __TestBGRADot__
-	if (SmartDashboard::GetBoolean("Edit Position"))
-	{
-		static size_t Test=0;
-		if (Test++>30)
-		{
-			FrameWork::DebugOutput("Test!\n");
-			Test=0;
-		}
-	}
-	if (g_Framework)
-	{
-		Bitmap_Handle *bgra_handle=g_Framework->CreateBGRA(Frame);
-		Bitmap_Frame &bgra_frame=bgra_handle->frame;
-		g_Framework->UYVY_to_BGRA(Frame,&bgra_frame);
-		//Test... make a green box in the center of the frame
-		size_t CenterY=bgra_frame.YRes / 2;
-		size_t CenterX=bgra_frame.XRes / 2;
-		size_t LineWidthInBytes=bgra_frame.Stride * 4;
-		for (size_t y=CenterY-5;y<CenterY+5;y++)
-		{
-			for (size_t x=CenterX-5; x<CenterX+5; x++)
-			{
-				*(bgra_frame.Memory+ (x*4 + 0) + (LineWidthInBytes * y))=0;
-				*(bgra_frame.Memory+ (x*4 + 1) + (LineWidthInBytes * y))=255;
-				*(bgra_frame.Memory+ (x*4 + 2) + (LineWidthInBytes * y))=0;
-			}
-		}
-		g_Framework->BGRA_to_UYVY(&bgra_frame,Frame);
-		g_Framework->DestroyBGRA(bgra_handle);
-	}
-	#endif
-
-	return Frame;
+	if (g_pCompositor)
+		return g_pCompositor->TimeChange(Frame);
+	else
+		return Frame;
 }
 
 
@@ -155,25 +262,30 @@ extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(char *IPAdd
 	SmartDashboard::init();
 	SmartDashboard::PutBoolean("Edit Position",false);
 
-	#if 0
-	g_pCompositor = new Compositor;
+	g_pCompositor = new Compositor();
 	{
 		Compositor_Properties props;
-		Framework::Scripting::Script script;
-		script.LoadScript("Compositor.lua",true);
-		script.NameMap["EXISTING_DASHBOARD"] = "EXISTING_COMPOSITER";
-		props.SetUpGlobalTable(script);
-		props.LoadFromScript(script);
-		g_pCompositor->Initialize(m_EventMap,&m_RobotProps);
+		Scripting::Script script;
+		const char *err;
+		err=script.LoadScript("Compositor.lua",true);
+		if (err!=NULL)
+			err=script.LoadScript("../Compositer/Compositor.lua",true);
+
+		if (err==NULL)
+		{
+			script.NameMap["EXISTING_DASHBOARD"] = "EXISTING_COMPOSITER";
+			props.SetUpGlobalTable(script);
+			props.LoadFromScript(script);
+			g_pCompositor->Initialize(g_pCompositor->GetEventMap_rw(),&props);
+		}
+		else
+			g_pCompositor->Initialize(g_pCompositor->GetEventMap_rw(),NULL);
 	}
-	//Bind the compositor's eventmap to the joystick
-	m_JoyBinder.SetControlledEventMap(m_pRobot->GetEventMap());
-	#endif
 }
 
 extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Shutdown()
 {
-	//delete g_pCompositor;
-	//g_pCompositor=NULL;
+	delete g_pCompositor;
+	g_pCompositor=NULL;
 	SmartDashboard::shutdown();
 }

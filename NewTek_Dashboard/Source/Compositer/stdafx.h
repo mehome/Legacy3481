@@ -5,13 +5,17 @@
 
 #pragma once
 
-#include "targetver.h"
+#include "../FrameWork/compiler_settings.h"
 
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-// Windows Header Files:
-#include <windows.h>
-
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <vector>
+#include <climits>
+#include <stdio.h>
+#include <cassert>
 #include <math.h>
-
-// TODO: reference additional headers your program requires here
+#include <windows.h>
+#include <winbase.h>
+#include <map>
