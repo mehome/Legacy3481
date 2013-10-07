@@ -1,23 +1,37 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 // Constructor
 server::server( const wchar_t name[] )
-	:	m_queue( name ), m_event( name ), 
-		m_p_name( NULL ), m_ref( 1 )
+	:	m_queue( name ), m_p_name( NULL ), 
+		m_ref( 1 ), m_hServerAlive( NULL )
 {	// Keep a copy of the name
 	const size_t len = ::wcslen( name ) + 1;
 	m_p_name = new wchar_t [ len ];
 	::memcpy( m_p_name, name, len * sizeof( wchar_t ) );
+
+	// Get the named server event so that we can watch for lifetime
+	std::wstring l_server_alive_name( FC3::config::name_server_alive );
+	l_server_alive_name += name;
+	m_hServerAlive = ::CreateEventW( NULL, TRUE, FALSE, l_server_alive_name.c_str() );
 }
 
 // Destructor
 server::~server( void )
-{	// Free the name
+{	// Close the server alive message
+	::CloseHandle( m_hServerAlive );
+	
+	// Free the name
 	if ( m_p_name )
 		delete [] m_p_name;
+}
+
+// This will wait and determine whether the server is alive
+const bool server::is_server_alive( const DWORD time_out )
+{	// Look to the event to see if the server is alive
+	return ( ::WaitForSingleObject( m_hServerAlive, time_out ) == WAIT_OBJECT_0 );
 }
 
 // Reference counting
@@ -48,45 +62,35 @@ const wchar_t *server::name( void ) const
 }
 
 // This will add a message to the message_queue
-bool server::send_message( const DWORD block_id, const DWORD addr )
+const bool server::send_message( const DWORD block_id, const DWORD addr, const DWORD time_out )
 {	// Put the message on the queue
-	if ( !m_queue.push( block_id, addr ) ) return false;
-
-	// Trigger the event
-	m_event.set();
+	if ( !m_queue.push( block_id, addr, time_out ) ) return false;
 
 	// Success
 	return true;
+}
+
+// Would a send succeed
+const bool server::would_send_message_succeed( const DWORD time_out )
+{	return m_queue.would_push_succeed( time_out );
 }
 
 // Wait for a message (0 means time-out). If the time-out is 
 // zero we just "ping" the message_queue.
-bool server::get_message( const DWORD time_out, DWORD &block_id, DWORD &addr )
-{	// Wait for the event if wanted
-	if ( time_out ) 
-		m_event.wait( time_out );
-
-	// Now get the message from the queue
-	return m_queue.pop( block_id, addr );
+const bool server::get_message( DWORD &block_id, DWORD &addr, const DWORD time_out )
+{	// Now get the message from the queue
+	return m_queue.pop( block_id, addr, time_out );
 }
 
 // This will lock the write queue, this is used when flushing a queue
 const DWORD server::lock_write( void )
-{	// Lock the queue
+{	// Lock the writer
 	return m_queue.lock_write();
 }
 
-void server::unlock_write( const DWORD lock_write_return )
-{	// Unlock the queue
-	m_queue.unlock_write( lock_write_return );
-}
-
-bool server::abort_get_message( void )
-{	// Trigger the event
-	m_event.set();
-
-	// Success
-	return true;
+void server::unlock_write( const DWORD prev_value )
+{	// Unlock the writer
+	m_queue.unlock_write( prev_value );
 }
 
 // Get the current instantenous queue depth
@@ -96,19 +100,5 @@ const DWORD server::queue_depth( void ) const
 
 // Error ?
 const bool server::error( void ) const
-{	return m_queue.error() || m_event.error();
-}
-
-// Get and set the heart-beat.
-const __int64 server::heart_beat( void ) const
-{	return m_queue.heart_beat();
-}
-
-void server::update_heart_beat( void )
-{	m_queue.update_heart_beat();
-}
-
-// Reset the heard beat
-void server::reset_heart_beat( void )
-{	m_queue.reset_heart_beat();
+{	return m_queue.error();
 }

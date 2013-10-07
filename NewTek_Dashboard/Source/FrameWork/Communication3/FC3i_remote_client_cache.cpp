@@ -1,8 +1,8 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-namespace FC3i  = FrameWork::Communication3::implementation;
-namespace FC3ir = FrameWork::Communication3::implementation::remote;
+namespace FC3i  = FC3i;
+namespace FC3ir = FC3i::remote;
 
 using namespace FC3ir;
 

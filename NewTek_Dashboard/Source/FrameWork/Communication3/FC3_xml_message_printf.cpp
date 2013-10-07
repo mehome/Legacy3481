@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::xml;
+using namespace FC3::xml;
 
 FC3::xml::message* FC3::xml::printf( const wchar_t* p_format, ... )
 {	// Get the arguments

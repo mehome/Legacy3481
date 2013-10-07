@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 // Constructors
 message::message( const DWORD size )
@@ -17,7 +17,7 @@ message::message( const DWORD block_id, const DWORD addr )
 }
 
 // Try sending a message
-bool message::send( const wchar_t destination[] ) const
+const bool message::send( const wchar_t destination[], const DWORD time_out ) const
 {	// Debugging
 	assert( !error() );
 	if ( error() ) return false;
@@ -43,7 +43,7 @@ bool message::send( const wchar_t destination[] ) const
 
 		// Was there a port number ?
 		wchar_t *p_port_no = ::wcschr( p_server_name, L':' );
-		int port_no = FrameWork::Communication3::config::remote_port_number;
+		int port_no = FC3::config::remote_port_number;
 		if ( p_port_no )
 		{	// Just in case
 			if ( p_server_name == p_port_no )
@@ -66,7 +66,8 @@ bool message::send( const wchar_t destination[] ) const
 		// Now try sending the message
 		return remote::client_cache::get_cache().send( p_server_name, port_no, p_dst_name, m_p_header, allocation_size( size() ) );
 	}
-	else
+	// Handle empty strings. 3P does this currently which is not cool.
+	else if ( destination[0] )
 	{	// Get the server to send this message too.
 		server *p_server = server_cache::get_cache().get_server( destination );
 		if ( !p_server ) return false;	
@@ -78,7 +79,7 @@ bool message::send( const wchar_t destination[] ) const
 		::_InterlockedIncrement( (long*)&m_p_header->m_ref );
 
 		// Now try sending the message
-		const bool success = p_server->send_message( m_p_block->block_id(), m_p_block->addr( (BYTE*)m_p_header ) );
+		const bool success = p_server->send_message( m_p_block->block_id(), m_p_block->addr( (BYTE*)m_p_header ), time_out );
 
 		// If it was not succesful, we undo the send count
 		if ( !success ) 
@@ -88,20 +89,35 @@ bool message::send( const wchar_t destination[] ) const
 			// Undo the reference count
 			::_InterlockedDecrement( (long*)&m_p_header->m_ref );
 		}
-		else
-		{	
-	#ifndef	FC3_VERSION_3_5
-			// Time-stamp the memory block so that we know it should remain active for some time
-			m_p_block->time_stamp();
-	#endif	FC3_VERSION_3_5
-		}
 
 		// Release the server lock
-		p_server->release();	
+		p_server->release();
+
+		// Display send errors for debugging
+#ifdef	_DEBUG
+		if ( ( !success ) && ( m_p_header->m_type != message_type_debug ) )
+			FC3::debug::debug_output( L"FC3", L"Send to %s failed.", destination );
+#endif	_DEBUG
 
 		// Return the results
 		return success;
 	}
+	else
+	{	// No string
+		return false;
+	}
+}
+
+const DWORD message::addr( void ) const
+{	return m_p_block->addr( (BYTE*)m_p_header );
+}
+
+const DWORD message::block_id( void ) const
+{	return m_p_block->block_id();
+}
+
+const LONGLONG message::addr_64( void ) const
+{	return ( ( (LONGLONG)m_p_block->block_id() ) << 32 ) | ( (LONGLONG)m_p_block->addr( (BYTE*)m_p_header ) );
 }
 
 // Setup
@@ -175,16 +191,21 @@ bool message::setup( memory_block* p_block, BYTE *p_ptr )
 		
 		// The data pointer
 		m_p_header = (header*)p_ptr;
-		m_p_data   = p_ptr + header_size;
+		m_p_data = p_ptr + header_size;
+
+		// OMFG
+		if ( type() == message_type_crash ) 
+			*(int*)NULL = rand();
 
 		// Check we succeeded
-		if ( type() != message_type_error ) return true;
+		if ( type() != message_type_error ) 
+			return true;		
 
 		// Release the block and reset
 		m_p_block->release();
-		m_p_block  = NULL;
+		m_p_block = NULL;
 		m_p_header = NULL;
-		m_p_data   = NULL;
+		m_p_data = NULL;
 	}
 
 	// Error

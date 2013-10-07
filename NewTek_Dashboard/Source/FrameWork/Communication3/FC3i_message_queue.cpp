@@ -1,46 +1,9 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 DWORD message_queue::g_debug_no_objects = 0;
-
-#ifdef _M_IX86 
-
-__forceinline __int64 __cdecl c_InterlockedCompareExchange64( __int64 volatile *Destination, __int64 Exchange, __int64 Comparand )
-{	__int64 Result_;
-
-	__asm
-	{	mov  edx, DWORD PTR [Comparand+4]
-		mov  eax, DWORD PTR [Comparand+0]
-		mov  ecx, DWORD PTR [Exchange+4]
-		mov  ebx, DWORD PTR [Exchange+0]
-		mov  edi, Destination
-
-		lock cmpxchg8b qword ptr [edi]
-
-		mov  DWORD PTR [Result_+0], eax
-		mov  DWORD PTR [Result_+4], edx
-	}
-
-	return Result_;
-} 
-
-__forceinline __int64 c_InterlockedExchange64( __int64 volatile *Target, __int64 Value )
-{
-    __int64 Old;
-
-    do {
-        Old = *Target;
-    } while (c_InterlockedCompareExchange64(Target, Value, Old) != Old);
-
-    return Old;
-}
-
-#define _InterlockedCompareExchange64		c_InterlockedCompareExchange64
-#define _InterlockedExchange64				c_InterlockedExchange64
-
-#endif
 
 //for internal use only
 void debug_output( const wchar_t *p_category , const wchar_t *p_format, ... )
@@ -70,158 +33,223 @@ void debug_output( const wchar_t *p_category , const wchar_t *p_format, ... )
 // Constructor
 message_queue::message_queue( const wchar_t name[] ) 
 	: m_p_header( NULL ), 
-	  m_p_msg_message_queue( NULL )
-{	// Create the memory map
-	const size_t len_pre  = ::wcslen( FrameWork::Communication3::config::name_message_queue_map );
-	const size_t len_name = ::wcslen( name );
-	wchar_t *p_map_name   = (wchar_t*)_alloca( ( len_pre + len_name + 1 ) * sizeof( wchar_t ) );
-	::wcscpy( p_map_name, FrameWork::Communication3::config::name_message_queue_map );
-	::wcscat( p_map_name, name );
-	mapped_file::setup( p_map_name, header_size + message_queue_size, true, false );
+	  m_p_msg_message_queue( NULL ),
+	  m_h_queue_empty( NULL ),
+	  m_h_queue_full( NULL )
+{	// This one is important
+	assert( ::wcslen( name ) );
+	
+	// Create the handle names
+	std::wstring	map_name	= config::name_memory_map;
+	std::wstring	empty_name	= config::name_message_queue_event1;
+	std::wstring	full_name	= config::name_message_queue_event2;
+
+	map_name   += name;
+	empty_name += name;
+	full_name  += name;
+
+	mapped_file::setup( map_name.c_str(), header_size + message_queue_size, true, false );
 	assert( !mapped_file::error() );
 
 	// We now setup the pointers
 	m_p_header	  = (header*)mapped_file::ptr();
 	m_p_msg_message_queue = (LONGLONG*)mapped_file::ptr( header_size );
 
+	// Create a name
+	m_h_queue_empty = ::CreateEventW( NULL, FALSE, FALSE, empty_name.c_str() );
+	m_h_queue_full  = ::CreateEventW( NULL, FALSE, FALSE, full_name.c_str() );
+
 	// Debugging
-	if ( FrameWork::Communication3::config::debug_object_creation )
+	if ( FC3::config::debug_object_creation )
 	{	::_InterlockedIncrement( (LONG*)&g_debug_no_objects );
-		debug_output( FrameWork::Communication3::config::debug_category, L"New queue (%d) : %s\n", g_debug_no_objects, p_map_name );
+		debug_output( FC3::config::debug_category, L"New queue (%d) : %s\n", g_debug_no_objects, map_name.c_str() );
 	}
 }
 
 // Destructor
 message_queue::~message_queue( void )
 {	// Debugging
-	if ( FrameWork::Communication3::config::debug_object_creation )
-	{	debug_output( FrameWork::Communication3::config::debug_category, L"Del queue (%d)\n", g_debug_no_objects );
+	if ( FC3::config::debug_object_creation )
+	{	debug_output( FC3::config::debug_category, L"Del queue (%d)\n", g_debug_no_objects );
 		::_InterlockedDecrement( (LONG*)&g_debug_no_objects );
 	}
-}
 
-// Is this message queue running
-void message_queue::update_heart_beat( void )
-{	// Set the value
-	::QueryPerformanceCounter( (LARGE_INTEGER*)&m_p_header->m_running );
-}
+	// Free up the semaphores
+	if ( m_h_queue_empty ) 
+		::CloseHandle( m_h_queue_empty );
 
-void message_queue::reset_heart_beat( void )
-{	m_p_header->m_running = 0;
-}
-
-const __int64 message_queue::heart_beat( void ) const
-{	// Mark the running state
-	return (__int64)m_p_header->m_running;
+	if ( m_h_queue_full ) 
+		::CloseHandle( m_h_queue_full );
 }
 
 // Error
 const bool message_queue::error( void ) const
-{	return mapped_file::error();
-}	
-
-
-// This will lock the write queue, this is used when flushing a queue
-const DWORD message_queue::lock_write( void )
-{	// Spin lock helper
-	spinhelp	spin_help;
-
-	// Try to lock the queue
-	while( true )
-	{	// We need to try to lock the write position
-		DWORD write_posn = (DWORD)::_InterlockedExchange( (LONG*)&m_p_header->m_write_posn, -1 );
-
-		// If we could not lock the write position, try again.
-		if ( write_posn != -1 ) return write_posn;
-
-		// Spin
-		spin_help++;
-	}
+{	// Has there been an error
+	return mapped_file::error();
 }
 
-void message_queue::unlock_write( const DWORD lock_write_return )
-{	// Simply reset the value
-	m_p_header->m_write_posn = lock_write_return;
+// Would a send succeed
+const bool message_queue::would_push_succeed( const DWORD time_out )
+{	// A local helper
+	spinhelp spin;
+
+	// Aquire the writer lock	
+	// If we could not acquire it. We spin until we can. Note that the spin helper avoids
+	// thread priority inversion problems by allowing lower priority threads to gain access
+	// every 16 passes through the lock.
+acquire_lock:
+	LONG write_posn;
+	while( ( write_posn = ::_InterlockedExchange( &m_p_header->m_write_posn, -1 ) ) == -1 ) spin++;
+
+	// Is this slot empty for writing too ?
+	if ( _InterlockedCompareExchange64( &m_p_msg_message_queue[ write_posn ], 0LL, 0LL ) != 0 )
+	{	// Release the lock by returning the lock to the old value.
+		::_InterlockedExchange( &m_p_header->m_write_posn, write_posn );
+
+		// We now wait on there being a spare slot to see if we can try to get access again
+		// Kernel transition here unfortunately.
+		if ( ::WaitForSingleObject( m_h_queue_empty, time_out ) == WAIT_TIMEOUT ) return false;
+
+		// Try to acquire the lock again
+		goto acquire_lock;
+	}
+
+	// Increment the write position and unlock
+	::_InterlockedExchange( &m_p_header->m_write_posn, write_posn );
+
+	// Finished
+	return true;
 }
 
 // This will add a message to the message_queue
-bool message_queue::push( const DWORD block_id, const DWORD addr )
-{	// We first break the message down into a LONGLONG
+const bool message_queue::push( const DWORD block_id, const DWORD addr, const DWORD time_out )
+{	// A local helper
+	spinhelp spin;
+	
+	// We first break the message down into a LONGLONG
 	const LONGLONG this_msg = ( ( (LONGLONG)block_id ) << 32 ) | ( (LONGLONG)addr );
 
-	// This must be valid
-	assert( this_msg );
+	// Aquire the writer lock	
+	// If we could not acquire it. We spin until we can. Note that the spin helper avoids
+	// thread priority inversion problems by allowing lower priority threads to gain access
+	// every 16 passes through the lock.
+acquire_lock:
+	LONG write_posn;
+	while( ( write_posn = ::_InterlockedExchange( &m_p_header->m_write_posn, -1 ) ) == -1 ) spin++;
 
-	// Spin lock helper
-	spinhelp	spin_help;
+	// Is this slot empty for writing too ?
+	if ( _InterlockedCompareExchange64( &m_p_msg_message_queue[ write_posn ], this_msg, 0 ) != 0 )
+	{	// Release the lock by returning the lock to the old value.
+		::_InterlockedExchange( &m_p_header->m_write_posn, write_posn );
 
-	// This is quite complex. We try to write into the current message_queue
-	// position. The code below is significantly more difficult to get correct
-	// that it actually looks like
-	while( true )
-	{	// We need to try to lock the write position
-		DWORD write_posn = (DWORD)::_InterlockedExchange( (LONG*)&m_p_header->m_write_posn, -1 );
+		// We now wait on there being a spare slot to see if we can try to get access again
+		// Kernel transition here unfortunately. No need for a kernel transition with no time-out
+		// we already determined that it will not work.
+		if ( ( !time_out ) || ( ::WaitForSingleObject( m_h_queue_empty, time_out ) == WAIT_TIMEOUT ) ) return false;
 
-		// If we could not lock the write position, try again.
-		if ( write_posn == -1 ) 
-		{	spin_help++;
-			continue;
-		}
-
-		// If the destination value is 0, then we can put this entry into it
-		if ( ::_InterlockedCompareExchange64( &m_p_msg_message_queue[ write_posn ], this_msg, 0LL ) == 0LL )
-		{	// Store the write position
-			m_p_header->m_write_posn = ( write_posn + 1 ) & ( FrameWork::Communication3::config::message_queue_length - 1 );
-			
-			// We where able to write the value
-			// One more message added. We do not care about message_queue depth timing to much. We do have to do this before
-			// the event is set because otherwise there is a small chance that the receiving thread might see a negative
-			// message_queue depth.
-			::_InterlockedIncrement( (LONG*)&m_p_header->m_queue_depth );	
-
-			// We where successful
-			return true;
-		}
-		else
-		{	// We where not able to write the value,
-			// So we restore the write position
-			m_p_header->m_write_posn = write_posn;
-
-			// And return
-			return false;
-		}
+		// Try to acquire the lock again
+		goto acquire_lock;
 	}
+
+	// Increment the write position and unlock
+	::_InterlockedExchange( &m_p_header->m_write_posn, ( write_posn + 1 ) & ( FC3::config::message_queue_length - 1 ) );
+
+	// Increase the queue depth
+	::_InterlockedIncrement( (LONG*)&m_p_header->m_queue_depth );
+
+	// If there happen to be any consumer threads that need waking up because there is data, we do it.
+	::SetEvent( m_h_queue_full );	
+	
+	// Finished
+	return true;
 }
 
-bool message_queue::pop( DWORD &block_id, DWORD &addr )
-{	// Get the read position
-	const long read_posn = ( m_p_header->m_read_posn ) & ( FrameWork::Communication3::config::message_queue_length - 1 );
+const bool message_queue::pop( DWORD &block_id, DWORD &addr, const DWORD time_out )
+{	// A local helper
+	spinhelp spin;
 
-	// We assume that only one thread will be reading from the message_queue at once since there is only
-	// one server. This allows us to read from the message_queue with regular memory operations. We do not
-	// make this assumption on writing to the message_queue
-	const LONGLONG new_msg = ::_InterlockedExchange64( &m_p_msg_message_queue[ read_posn ], 0LL );
+	// Aquire the read position lock. We normally do not need to support concurrent access
+	// here, but we do it anyway for good measure. The chances of a lock are pretty much
+	// non existant in any of the current implementation.
+acquire_lock:
+	LONG read_posn;
+	while( ( read_posn = ::_InterlockedExchange( &m_p_header->m_read_posn, -1 ) ) == -1 ) spin++;
 
-	// if there was no message, just return
-	if ( !new_msg ) return false;
+	// We take the item off the queue
+	const LONGLONG new_msg = _InterlockedExchange64( &m_p_msg_message_queue[ read_posn ], 0LL );
 
-	// Increment thte read position. See comment above on why this need not be interlocked
-	m_p_header->m_read_posn++;
+	// If there was no new message to take, then we 
+	if ( new_msg == 0LL )
+	{	// We unlock the read queue
+		::_InterlockedExchange( &m_p_header->m_read_posn, read_posn );
 
-	// Reduce the message_queue depth, since this is ahared with senders it must be interlocked. I do this right after
-	// we have decided to increment the position. 
+		// We need to wait until it looks like there is a new item to consider.
+		// There is no need for a kernel transition if the timeout is zero. We already know that there
+		// is nothing to get.
+		if ( ( !time_out ) || ( ::WaitForSingleObject( m_h_queue_full, time_out ) == WAIT_TIMEOUT ) ) return false;
+
+		// Try to re-aquire the lock. Hopefully his happens first go
+		goto acquire_lock;
+	}
+
+	// Increment the read position and unlock
+	::_InterlockedExchange( &m_p_header->m_read_posn, ( read_posn + 1 ) & ( FC3::config::message_queue_length - 1 ) );
+
+	// Decrease the queue depth
 	::_InterlockedDecrement( (LONG*)&m_p_header->m_queue_depth );
+
+	// Trigger anyone attempting to write into the queue. It is worth a go since we have now just emptied a slot up.
+	::SetEvent( m_h_queue_empty );	
 
 	// The results. We write these at the end when any possible rights back to main memory have occured; this way
 	// the time that is crucial to avoid a potential future restart problem in the case of a crash is minimized.
-	block_id = (DWORD)( new_msg >> 32 );	
-	addr     = (DWORD)( new_msg );
+	if ( new_msg == -1 )
+	{	// This acts like a message failure, but we got worken up !
+		return false;
+	}
+	else
+	{	// Return the message values
+		block_id = (DWORD)( new_msg >> 32 );	
+		addr     = (DWORD)( new_msg );
 
-	// Return the message
-	return true;
+		// Success
+		return true;
+	}
 }
 
 // Get the current instantenous queue depth
 const DWORD message_queue::queue_depth( void ) const
-{	return m_p_header->m_queue_depth;
+{	// Get the current queue depth
+	LONG ret = m_p_header->m_queue_depth;
+
+	// Because we do not lock adding and releasing threads it is slightly possible that the queue
+	// values can sometimes return out of range values. We guard against that to avoid higher
+	// level code doing unexpected things
+		 if ( ret < 0 ) ret = 0;
+	else if ( ret > FC3::config::message_queue_length ) ret = FC3::config::message_queue_length;
+
+	// Return the result. It will now safely case without problems
+	return (DWORD)ret;
+}
+
+// This will lock the write queue, this is used when flushing a queue
+const DWORD message_queue::lock_write( void )
+{	// A local helper
+	spinhelp spin;
+
+	// Aquire the writer lock	
+	// If we could not acquire it. We spin until we can. Note that the spin helper avoids
+	// thread priority inversion problems by allowing lower priority threads to gain access
+	// every 16 passes through the lock.
+	LONG write_posn;
+	while( ( write_posn = ::_InterlockedExchange( &m_p_header->m_write_posn, -1 ) ) == -1 ) spin++;
+
+	// Return the position
+	return write_posn;
+}
+
+void message_queue::unlock_write( const DWORD old_write_posn )
+{	// Unlock again
+	const LONG should_be_locked = ::_InterlockedExchange( &m_p_header->m_write_posn, old_write_posn );
+	assert( should_be_locked == -1 );
 }

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 // Get the cache
 struct global_server_cache : public server_cache {} g_server_cache;
@@ -78,14 +78,14 @@ server*	server_cache::get_server( const wchar_t name[] )
 		return p_ret;
 }
 
-// This will clean up the cache of items that are no longer accessed and are outdated.
+/*// This will clean up the cache of items that are no longer accessed and are outdated.
 void server_cache::clean( void )
 {	// We cycle over all the items
 	int dst = 0;
 	for( int i=0; i<(int)m_servers.size(); i++ )
 	{	// If this item has only one reference count and is old enough
 		if ( ( m_servers[ i ].m_p_server->refcount() == 1 ) &&
-			 ( (long)( m_time_stamp - m_servers[ i ].m_time_stamp ) >= (long)FrameWork::Communication3::config::server_cache_history ) )
+			 ( (long)( m_time_stamp - m_servers[ i ].m_time_stamp ) >= (long)FC3::config::server_cache_history ) )
 					// Remove the item
 					m_servers[ i ].m_p_server->release();
 		else		// Keep it
@@ -94,4 +94,4 @@ void server_cache::clean( void )
 
 	// Shorten the list
 	m_servers.resize( dst );
-}
+}*/

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::audio;
+using namespace FC3::audio;
 
 // Constructor
 pull::pull( const wchar_t name[], const bool flush_queue )
@@ -11,7 +11,7 @@ pull::pull( const wchar_t name[], const bool flush_queue )
 
 	// Flush the queue
 	if ( config::debug_receive_creation )
-		FrameWork::Communication3::debug::debug_output( FrameWork::Communication3::config::debug_category, L"Audio server created, %s", name );	
+		FC3::debug::debug_output( FC3::config::debug_category, L"Audio server created, %s", name );	
 }
 
 // Destructor
@@ -22,13 +22,13 @@ pull::~pull( void )
 }
 
 // The client implementation
-const FrameWork::Communication3::audio::message* pull::operator() ( const DWORD timeout )
+const FC3::audio::message* pull::operator() ( const DWORD time_out )
 {	// Get a message
 	DWORD block_id, addr;
-	if ( !__super::pull( timeout, block_id, addr ) ) return false;
+	if ( !__super::pull( block_id, addr, time_out ) ) return false;
 
 	// Create a message
-	FrameWork::Communication3::audio::message	*p_new_msg = new FrameWork::Communication3::audio::message( block_id, addr );
+	FC3::audio::message	*p_new_msg = new FC3::audio::message( block_id, addr );
 
 	// Check for errors
 	if ( p_new_msg->error() ) { p_new_msg->release(); p_new_msg = NULL; }

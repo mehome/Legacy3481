@@ -20,5 +20,5 @@ private:	// Send a message to a client
 			std::vector< client* >	m_p_clients;
 
 			// A friend
-			friend FrameWork::Communication3::implementation::message;
+			friend FC3i::message;
 };

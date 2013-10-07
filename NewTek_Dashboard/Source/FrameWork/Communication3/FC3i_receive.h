@@ -39,12 +39,19 @@ struct FRAMEWORKCOMMUNICATION3_API receive
 			// Get the server name
 			const wchar_t* name( void ) const;
 
+			// This is complicated, and if you do not understand what it is, then chances are you do not need it.
+			// If you are inside a FC3 callback, and you wish to receive no more messages so that you can be deleted
+			// you can call this. The purpose of the call is primarily to ensure that if you got a message that caused
+			// you to need to exit, that you can exit in a way that no other messages are ever delivered, and hence
+			// would also not be dropped.
+			void disable_callback( void );
+
 protected:	// Start and stop the server. Pull servers specify client as NULL
 			const bool start( const wchar_t name[], client *p_client, const bool flush_queue, const DWORD stack_size = 16 * 1024 );
 			const bool stop( void );
 
 			// This is only used by pull servers and allows you to poll for frames with a time-out
-			const bool pull( const DWORD timeout, DWORD& block_id, DWORD& addr );
+			const bool pull( DWORD& block_id, DWORD& addr, const DWORD timeout );
 
 			// Constructor and destructor
 			 receive( void );

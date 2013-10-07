@@ -1,12 +1,11 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 // Constructor
 spinhelp::spinhelp( void )
-	:	m_spins( spinhelp_count ), 
-		m_no_sleeps( 0 )
+	:	m_spins( spinhelp_count )
 {
 }
 
@@ -20,7 +19,7 @@ void spinhelp::operator++ ( void )
 	// lock up if we are a time-critical thread.
 	if ( ! (--m_spins) ) 
 	{	// Defer to other threads for a tiny bit
-		::Sleep( ( m_no_sleeps++ ) ? 1 : 0 );
+		SwitchToThread();
 
 		// Reset the spin count
 		m_spins = spinhelp_count;

@@ -16,7 +16,7 @@ server::server( void )
 	}
 	else
 	{	// Create the server
-		m_p_server = new FrameWork::Communication3::implementation::remote::server();
+		m_p_server = new FC3i::remote::server();
 
 		// Check for errors
 		if ( m_p_server->error() )

@@ -16,42 +16,41 @@ struct server
 			const wchar_t *name( void ) const;
 
 			// This will add a message to the message_queue
-			bool send_message( const DWORD block_id, const DWORD addr );
+			const bool send_message( const DWORD block_id, const DWORD addr, const DWORD time_out );
+
+			// Would a send succeed
+			const bool would_send_message_succeed( const DWORD time_out );
 
 			// Wait for a message (0 means time-out). If the time-out is 
 			// zero we just "ping" the message_queue.
-			bool get_message( const DWORD time_out, DWORD &block_id, DWORD &addr );
-
-			// This will lock the write queue, this is used when flushing a queue
-			const DWORD lock_write( void );
-			void unlock_write( const DWORD lock_write_return );
-
-			// This will abort a get message call by triggering the event. This is important
-			// when trying to destoy a server
-			bool abort_get_message( void );
+			const bool get_message( DWORD &block_id, DWORD &addr, const DWORD time_out );
 
 			// Get the current instantenous queue depth
-			const DWORD queue_depth( void ) const;			
+			const DWORD queue_depth( void ) const;
 
-			// Get and set the heart-beat.
-			const __int64 heart_beat( void ) const;
-			void update_heart_beat( void );
-
-			// Reset the heard beat
-			void reset_heart_beat( void );
+			// This will lock the write queue, this is used when flushing a queue.
+			// This must be handled with great care.
+			const DWORD lock_write( void );
+			void unlock_write( const DWORD prev_lock_posn );
 
 			// Error
 			const bool error( void ) const;
+
+			// This will wait and determine whether the server is alive
+			const bool is_server_alive( const DWORD timeout = 0 );
 
 private:	// Destructor
 			~server( void );
 				
 			// We have a message event and queue
 			message_queue m_queue;
-			message_event m_event;
 
 			// Everything is reference counted
 			mutable volatile long m_ref;
+
+			// We maintain an event that can be used to wait and determine whether the
+			// server is actually running. 
+			HANDLE	m_hServerAlive;
 
 			// We maintain an allocation for the name of the object
 			wchar_t *m_p_name;

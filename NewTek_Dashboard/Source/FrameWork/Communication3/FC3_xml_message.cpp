@@ -1,13 +1,13 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::xml;
+using namespace FC3::xml;
 
 message::message( const FrameWork::xml::tree &xml_tree, const DWORD extra_data_size )
-	:	m_ref( 1 ), FrameWork::Communication3::implementation::message( ( extra_data_size ? ( extra_data_size + sizeof(header) ) : 0 ) +  
+	:	m_ref( 1 ), FC3i::message( ( extra_data_size ? ( extra_data_size + sizeof(header) ) : 0 ) +  
 																		(DWORD)( ( xml_tree.output_length() + 1 ) * sizeof( wchar_t ) ) )
 {	// Copy the data
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	if ( extra_data_size )
 		{	// Set the type
 			type() = message_type_xml2;
@@ -39,10 +39,10 @@ message::message( const FrameWork::xml::tree &xml_tree, const DWORD extra_data_s
 }
 
 message::message( const FrameWork::xml::node2 &xml_tree, const DWORD extra_data_size )
-	:	m_ref( 1 ), FrameWork::Communication3::implementation::message( ( extra_data_size ? ( extra_data_size + sizeof(header) ) : 0 ) +  
+	:	m_ref( 1 ), FC3i::message( ( extra_data_size ? ( extra_data_size + sizeof(header) ) : 0 ) +  
 																		(DWORD)( ( xml_tree.output_length() ) * sizeof( wchar_t ) ) )
 {	// Copy the data
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	if ( extra_data_size )
 		{	// Set the type
 			type() = message_type_xml2;
@@ -75,10 +75,10 @@ message::message( const FrameWork::xml::node2 &xml_tree, const DWORD extra_data_
 
 // Constructor
 message::message( const wchar_t xml_data[], const DWORD extra_data_size )
-	:	m_ref( 1 ), FrameWork::Communication3::implementation::message( ( extra_data_size ? ( extra_data_size + sizeof(header) ) : 0 ) +  
+	:	m_ref( 1 ), FC3i::message( ( extra_data_size ? ( extra_data_size + sizeof(header) ) : 0 ) +  
 																		(DWORD)( ( ::wcslen( xml_data ) + 1 ) * sizeof( wchar_t ) ) )
 {	// Copy the data
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	if ( extra_data_size )
 		{	// Set the type
 			type() = message_type_xml2;
@@ -110,10 +110,10 @@ message::message( const wchar_t xml_data[], const DWORD extra_data_size )
 }
 
 message::message( const char xml_data[], const DWORD extra_data_size )
-	:	m_ref( 1 ), FrameWork::Communication3::implementation::message( ( extra_data_size ? ( extra_data_size + sizeof(header) ) : 0 ) + 
+	:	m_ref( 1 ), FC3i::message( ( extra_data_size ? ( extra_data_size + sizeof(header) ) : 0 ) + 
 																		(DWORD)( ( ::strlen( xml_data ) + 1 ) * sizeof( char ) ) )
 {	// Copy the data
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	if ( extra_data_size )
 		{	// Set the type
 			type() = message_type_xml2;
@@ -145,9 +145,9 @@ message::message( const char xml_data[], const DWORD extra_data_size )
 }
 
 message::message( const DWORD size_in_bytes )
-	:	m_ref( 1 ), FrameWork::Communication3::implementation::message( size_in_bytes )
+	:	m_ref( 1 ), FC3i::message( size_in_bytes )
 {	// Set the type
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	// Set the type
 		type() = message_type_xml;
 
@@ -160,13 +160,14 @@ message::message( const DWORD size_in_bytes )
 
 // Internal use only :)
 message::message( const DWORD block_id, const DWORD addr )
-	:	m_ref( 1 ), FrameWork::Communication3::implementation::message( block_id, addr )
+	:	m_ref( 1 ), FC3i::message( block_id, addr )
 {	// Setup the debugging string
 	switch( type() )
 	{	case message_type_xml:
 			// The data is the whole message
-			m_p_data_A = (char*)ptr();
-			m_p_header = NULL;
+			m_p_data_A	   = (char*)ptr();
+			m_p_header	   = NULL;
+			m_p_extra_data = NULL;
 			break;
 
 		case message_type_xml2:
@@ -193,7 +194,7 @@ message::~message( void )
 
 // Is there an error in this message, most likely caused by a failed allocation or transmission
 bool message::error( void ) const
-{	if ( FrameWork::Communication3::implementation::message::error() ) return true;
+{	if ( FC3i::message::error() ) return true;
 	return ( ( type() != message_type_xml ) && ( type() != message_type_xml2 ) );
 }
 
@@ -243,7 +244,7 @@ const bool message::parse( FrameWork::xml::node *p_node ) const
 }
 
 // This ensures that people can delete the read_with_info structs returned above correctly
-static FC3::implementation::memory_pool< sizeof( message ) > g_mem_alloc;
+static FC3i::memory_pool< sizeof( message ) > g_mem_alloc;
 
 void* message::operator new ( const size_t size )
 {	assert( sizeof( message ) == size );

@@ -21,7 +21,7 @@ struct FRAMEWORKCOMMUNICATION3_API read_write_lock
 			__forceinline void read_unlock( void )				{ fcn_ReleaseSRWLockShared( &m_lock ); }
 
 			// Lock this object for writing
-			__forceinline void write_lock( void )				{ const DWORD thread = ::GetCurrentThreadId();  if ( m_thread != thread ) { fcn_AcquireSRWLockExclusive( &m_lock );	assert( m_thread == 0 ); m_thread = thread; } else m_recursion++; }
+			__forceinline void write_lock( void )				{ const DWORD thread = ::GetCurrentThreadId(); if ( m_thread != thread ) { fcn_AcquireSRWLockExclusive( &m_lock );	assert( m_thread == 0 ); m_thread = thread; } else m_recursion++; }
 
 			// Try to lock this object for writing
 			__forceinline const bool try_write_lock( void )		{ const DWORD thread = ::GetCurrentThreadId(); if ( m_thread != thread ) { if ( !fcn_TryAcquireSRWLockExclusive( &m_lock ) ) return false; assert( m_thread == 0 ); m_thread = thread; } else m_recursion++; return true; }

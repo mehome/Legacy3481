@@ -1,6 +1,6 @@
 #pragma once
 
-struct FRAMEWORKCOMMUNICATION3_API message : public FrameWork::Communication3::implementation::message
+struct FRAMEWORKCOMMUNICATION3_API message : public FC3i::message
 {			// Constructor
 			message( const std::pair< DWORD, DWORD > sizes );
 
@@ -56,4 +56,5 @@ private:	// Everything is reference counted
 			// A friend
 			friend receive;
 			friend pull;
+			friend FC3i::message_slot;
 };

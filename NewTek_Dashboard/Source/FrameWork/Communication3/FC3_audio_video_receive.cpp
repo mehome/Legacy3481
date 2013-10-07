@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::audio_video;
+using namespace FC3::audio_video;
 
 // Constructor
 receive::receive( const wchar_t name[], client *p_dst, const bool flush_queue )
@@ -12,31 +12,31 @@ receive::receive( const wchar_t name[], client *p_dst, const bool flush_queue )
 	assert( m_p_destination );	
 
 	// Start the server
-	const bool _check = FrameWork::Communication3::implementation::receive::start( name, this, flush_queue );
+	const bool _check = FC3i::receive::start( name, this, flush_queue );
 	assert( _check );
 
 	if ( config::debug_receive_creation )
-		FrameWork::Communication3::debug::debug_output( FrameWork::Communication3::config::debug_category, L"Audio/Video server created, %s", name );
+		FC3::debug::debug_output( FC3::config::debug_category, L"Audio/Video server created, %s", name );
 }
 
 // Destructor
 receive::~receive( void )
 {	// Stop the server
-	const bool _check = FrameWork::Communication3::implementation::receive::stop();
+	const bool _check = FC3i::receive::stop();
 	assert( _check );
 }
 
 // The client implementation
 void receive::deliver( const DWORD block_id, const DWORD addr )
 {	// Try to create an audio message
-	FrameWork::Communication3::audio::message	*p_aud_msg = new FrameWork::Communication3::audio::message( block_id, addr );
+	FC3::audio::message	*p_aud_msg = new FC3::audio::message( block_id, addr );
 
 #define RELEASE( a ) { a->release(); a=NULL; }
 
 	// If it was not audio, it was video
-	FrameWork::Communication3::video::message	*p_vid_msg = NULL;
+	FC3::video::message	*p_vid_msg = NULL;
 	if ( p_aud_msg->error() )
-	{	p_vid_msg = new FrameWork::Communication3::video::message( block_id, addr );
+	{	p_vid_msg = new FC3::video::message( block_id, addr );
 		p_vid_msg->simulate_send();
 		RELEASE( p_aud_msg );
 

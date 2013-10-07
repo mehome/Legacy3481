@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::raw;
+using namespace FC3::raw;
 
 // Constructor
 receive::receive( const wchar_t name[], client *p_dst, const bool flush_queue )
@@ -10,12 +10,12 @@ receive::receive( const wchar_t name[], client *p_dst, const bool flush_queue )
 	assert( m_p_destination );	
 
 	// Start the server
-	const bool _check = FrameWork::Communication3::implementation::receive::start( name, this, flush_queue );
+	const bool _check = FC3i::receive::start( name, this, flush_queue );
 	assert( _check );	
 
 	// Flush the queue
 	if ( config::debug_receive_creation )
-		FrameWork::Communication3::debug::debug_output( FrameWork::Communication3::config::debug_category, L"raw server created, %s", name );	
+		FC3::debug::debug_output( FC3::config::debug_category, L"raw server created, %s", name );	
 
 	// If this gets triggered we have a bug in the code.
 #ifdef	_DEBUG
@@ -39,14 +39,14 @@ receive::receive( const wchar_t name[], client *p_dst, const bool flush_queue )
 // Destructor
 receive::~receive( void )
 {	// Stop the server
-	const bool _check = FrameWork::Communication3::implementation::receive::stop();
+	const bool _check = FC3i::receive::stop();
 	assert( _check );
 }
 
 // The client implementation
 void receive::deliver( const DWORD block_id, const DWORD addr )
 {	// Create a message
-	FrameWork::Communication3::raw::message	*p_new_msg = new FrameWork::Communication3::raw::message( block_id, addr );
+	FC3::raw::message	*p_new_msg = new FC3::raw::message( block_id, addr );
 	assert( p_new_msg );
 	
 	// We check the type

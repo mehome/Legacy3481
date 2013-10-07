@@ -2,7 +2,7 @@
 
 struct FRAMEWORKCOMMUNICATION3_API server
 {			// Constructor
-			server( const int port_no = FrameWork::Communication3::config::remote_port_number );
+			server( const int port_no = FC3::config::remote_port_number );
 
 			// Destructor
 			~server( void );
@@ -63,7 +63,7 @@ private:		// Listen for data
 
 			// We need to implement our own kind of message since we are just
 			// transferring these on without even understanding what they are.
-			struct remote_message : public FrameWork::Communication3::implementation::message
+			struct remote_message : public FC3i::message
 			{		// Constructor
 					remote_message( const DWORD size );
 

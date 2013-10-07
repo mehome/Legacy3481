@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::video;
+using namespace FC3::video;
 
 const message::frame_rate_type	message::frame_rate_type_60   ( 60000, 1000 );
 const message::frame_rate_type	message::frame_rate_type_59_94( 60000, 1001 );

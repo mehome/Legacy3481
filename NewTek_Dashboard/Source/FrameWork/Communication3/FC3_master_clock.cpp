@@ -16,7 +16,8 @@ master_clock::master_clock( // The audio and video FC3 server destinations to se
 							// distance ahead of output) the calls to add new frames will block until
 							// the queue depths are correct.
 							const int video_queue_depth, 
-							const int audio_queue_depth )
+							const int audio_queue_depth, 
+							master_clock_idle_interface *p_idle )
 	:	// Allocate the name
 		m_p_video_dst( p_video_dst ? ( new wchar_t [ ::wcslen( p_video_dst ) + 1 ] ) : NULL ),
 		m_p_audio_dst( p_audio_dst ? ( new wchar_t [ ::wcslen( p_audio_dst ) + 1 ] ) : NULL ),
@@ -31,7 +32,7 @@ master_clock::master_clock( // The audio and video FC3 server destinations to se
 		// The events
 		m_event_video_available( ::CreateEvent( NULL, TRUE, TRUE, NULL ) ),
 		m_event_audio_available( ::CreateEvent( NULL, TRUE, TRUE, NULL ) ),
-		m_frames_available( ::CreateEvent( NULL, TRUE, TRUE, NULL ) ),
+		m_frames_available( ::CreateEvent( NULL, TRUE, FALSE, NULL ) ),
 		m_clock_updated( ::CreateEvent( NULL, FALSE, FALSE, NULL ) ),
 
 		// The clock thread is still running
@@ -47,7 +48,12 @@ master_clock::master_clock( // The audio and video FC3 server destinations to se
 		m_state( state_paused ),
 
 		// The add call is blocking by default
-		m_add_is_blocking( true )
+		m_add_is_blocking( true ),
+
+		// Store the idle interface
+		m_last_send_time( ::GetTickCount() ),
+		m_p_idle( p_idle ),
+		m_idle_sent( true )
 
 {	// The default clock
 	m_clock.m_p_data = NULL;
@@ -76,10 +82,20 @@ master_clock::master_clock( // The audio and video FC3 server destinations to se
 
 // Destructor
 master_clock::~master_clock( void )
-{	// Exit the clock thread
+{	// Exit the clock thread	
 	m_clock_thread_must_exit = true;
+	::SetEvent( m_frames_available );
 	::WaitForSingleObject( m_clock_thread, INFINITE );
 	m_clock_thread = NULL;
+
+	// Go idle
+	if ( m_p_idle )
+	{	FC3i::auto_lock	idle_lock( m_idle_lock );					
+		if ( !m_idle_sent )
+		{	m_p_idle->clock_idle();
+			m_idle_sent = true;
+		}
+	}
 	
 	// Free the names
 	if ( m_p_video_dst ) delete [] m_p_video_dst;
@@ -135,18 +151,53 @@ void master_clock::play( void )
 		m_stream_playback_started_at = time;
 
 		// Perform a reset ?
-		if ( m_audio_frames.empty() && m_video_frames.empty() )
+		if ( queues_empty() )
 		{	m_stream_reference_time = 0;
 			m_stream_time_video = 0;
 			m_stream_time_audio = 0;
 		}
 
+		// Make sure that these events are set correctly
+		if ( (int)m_video_frames.size() >= m_queue_depth_video )
+				::ResetEvent( m_event_video_available );
+		else	::SetEvent( m_event_video_available );
+
+		if ( (int)m_audio_frames.size() >= m_queue_depth_audio )
+				::ResetEvent( m_event_audio_available );
+		else	::SetEvent( m_event_audio_available );
+
+		// Unlock the queue
+		m_queue_lock.unlock();
+	}
+	else
+	{	// Unlock the queue
+		m_queue_lock.unlock();
+	}
+}
+
+void master_clock::pause( void )
+{	// Lock the queue
+	m_queue_lock.lock();
+
+	// If we where previous playing
+	if ( m_state == state_playing )
+	{	// We are now in paused state
+		m_state = state_paused;
+
+		// If the stream was playing, we store the ammount of time that 
+		// has passed since it was started. This must be less than zero
+		if ( m_stream_reference_time )
+		{	m_stream_reference_time -= get_clock();
+			assert( m_stream_reference_time < 0 );
+		}
+
 		// Unlock the queue
 		m_queue_lock.unlock();
 
-		// Start playback if required
-		::SetEvent( m_frames_available );
-	}
+		// There are always buffers free to go
+		::SetEvent( m_event_video_available );
+		::SetEvent( m_event_audio_available );
+	}	
 	else
 	{	// Unlock the queue
 		m_queue_lock.unlock();
@@ -202,35 +253,6 @@ void master_clock::insert_sync_point( void )
 	m_queue_lock.unlock();
 }
 
-void master_clock::pause( void )
-{	// Lock the queue
-	m_queue_lock.lock();
-
-	// If we where previous playing
-	if ( m_state == state_playing )
-	{	// We are now in paused state
-		m_state = state_paused;
-
-		// If the stream was playing, we store the ammount of time that 
-		// has passed since it was started. This must be less than zero
-		if ( m_stream_reference_time )
-		{	m_stream_reference_time -= get_clock();
-			assert( m_stream_reference_time < 0 );
-		}
-
-		// Unlock the queue
-		m_queue_lock.unlock();
-
-		// There are always buffers free to go
-		::SetEvent( m_event_video_available );
-		::SetEvent( m_event_audio_available );
-	}	
-	else
-	{	// Unlock the queue
-		m_queue_lock.unlock();
-	}
-}
-
 bool master_clock::is_paused( void ) const		
 {	return ( m_state == state_paused );
 }
@@ -259,6 +281,9 @@ void master_clock::add( const __int64 time_stamp, const void* p_data, const bool
 	// Lock the queue
 	m_queue_lock.lock();
 
+	// Are both queues empty ?
+	const bool both_queues_empty = queues_empty();
+
 	// Check the state
 	if ( m_state == state_paused )
 	{	// We need to flush any pending queue items
@@ -282,18 +307,56 @@ void master_clock::add( const __int64 time_stamp, const void* p_data, const bool
 		}
 	}
 
+	// Trigger there as items on the queue if this is the first item that makes them both available
+	if ( both_queues_empty ) 
+		::SetEvent( m_frames_available );
+
 	// Unlock the queue
 	m_queue_lock.unlock();
-
-	// There are going to be frames available now. Note that we
-	// need to do this outside the lock.
-	::SetEvent( m_frames_available );
 }
 
 // Add a video or audio frame to the queue
-void master_clock::add( const FrameWork::Communication3::video::message &msg, const void* p_data, const bool used_with_clock, const bool display_frame )
+const bool master_clock::add_direct( const FC3::video::message &msg )
 {	// Quick exit
+	if ( !m_p_video_dst ) return true;
+
+	// Flush the queues
+	flush();
+
+	// Send the frame
+	send_frame();
+	return msg.send( m_p_video_dst );
+}
+
+const bool master_clock::add_direct( const FC3::audio::message &msg )
+{	// Quick exit
+	if ( !m_p_audio_dst ) return true;
+
+	// Flush the queues
+	flush();
+
+	// Send the frame
+	send_frame();
+	return msg.send( m_p_audio_dst );
+}
+
+// Add a video or audio frame to the queue
+void master_clock::add( const FC3::video::message &msg, const void* p_data, const bool used_with_clock, const bool display_frame )
+{	// Send it directly
+	if ( !m_queue_depth_video ) 
+	{	// If the frame is to be displayed
+		if ( display_frame )
+		{	add_direct( msg );
+			assert( !p_data );
+		}
+		return;
+	}
+	
+	// Quick exit
 	if ( !m_p_video_dst ) return;
+
+	// Start things up as needed
+	send_frame();
 
 	// Data is only used for the clock
 	if ( !used_with_clock ) p_data = NULL;
@@ -309,6 +372,9 @@ void master_clock::add( const FrameWork::Communication3::video::message &msg, co
 
 	// Lock the queue
 	m_queue_lock.lock();
+
+	// Are both queues empty ?
+	const bool both_queues_empty = queues_empty();
 
 	// Do we want to trigger frames ?
 	if ( display_frame ) msg.addref();
@@ -333,17 +399,30 @@ void master_clock::add( const FrameWork::Communication3::video::message &msg, co
 			::ResetEvent( m_event_video_available );
 	}
 
+	// Trigger there as items on the queue if this is the first item that makes them both available
+	if ( both_queues_empty ) 
+		::SetEvent( m_frames_available );
+
 	// Unlock the queue
 	m_queue_lock.unlock();
-
-	// There are going to be frames available now. Note that we
-	// need to do this outside the lock.
-	::SetEvent( m_frames_available );
 }
 
-void master_clock::add( const FrameWork::Communication3::audio::message &msg, const void* p_data, const bool used_with_clock, const bool display_frame )
-{	// Quick exit
+void master_clock::add( const FC3::audio::message &msg, const void* p_data, const bool used_with_clock, const bool display_frame )
+{	// Send it directly
+	if ( !m_queue_depth_audio ) 
+	{	// If the frame is to be displayed
+		if ( display_frame )
+		{	add_direct( msg );
+			assert( !p_data );
+		}
+		return;
+	}
+
+	// Quick exit
 	if ( !m_p_audio_dst ) return;
+
+	// Start things up as needed
+	send_frame();
 
 	// Data is only used for the clock
 	if ( !used_with_clock ) p_data = NULL;
@@ -356,13 +435,9 @@ void master_clock::add( const FrameWork::Communication3::audio::message &msg, co
 		// Add the raw buffer
 		add_raw( msg, p_data, used_with_clock, display_frame );
 	}
-
-	// There are going to be frames available now. Note that we
-	// need to do this outside the lock.
-	::SetEvent( m_frames_available );
 }
 
-void master_clock::add_raw( const FrameWork::Communication3::audio::message &msg, const void* p_data, const bool used_with_clock, const bool display_frame )
+void master_clock::add_raw( const FC3::audio::message &msg, const void* p_data, const bool used_with_clock, const bool display_frame )
 {	// Get the frame length (note that this does integer rounding)
 	const int no_samples  = msg.no_samples();
 	const int sample_rate = abs( msg.sample_rate() );
@@ -370,6 +445,9 @@ void master_clock::add_raw( const FrameWork::Communication3::audio::message &msg
 	
 	// Lock the queue
 	m_queue_lock.lock();
+
+	// Are both queues empty ?
+	const bool both_queues_empty = queues_empty();
 
 	// Do we want to trigger frames ?
 	if ( display_frame ) msg.addref();
@@ -393,6 +471,10 @@ void master_clock::add_raw( const FrameWork::Communication3::audio::message &msg
 		if ( (int)m_audio_frames.size() >= m_queue_depth_audio ) 
 			::ResetEvent( m_event_audio_available );
 	}
+
+	// Trigger there as items on the queue if this is the first item that makes them both available
+	if ( both_queues_empty ) 
+		::SetEvent( m_frames_available );
 
 	// Unlock the queue
 	m_queue_lock.unlock();
@@ -425,7 +507,7 @@ const DWORD master_clock::send_all_frames( void )
 {	// Give this thread a name to help in debugging
 	{ char temp[ 1024 ];
 	  ::sprintf( temp, "master_clock[%ls,%ls]", m_p_video_dst, m_p_audio_dst );
-	  FC3::implementation::set_thread_name( temp );
+	  FC3i::set_thread_name( temp );
 	}	// Make sure temp does not stay on the stack
 	
 	// While we still need to be running
@@ -433,7 +515,17 @@ const DWORD master_clock::send_all_frames( void )
 	{	// If there are no frames available, this efficiently sleeps, which avoids
 		// this spinning in a loop doing nothing when there are no frames. This also
 		// reduces thread contention around the locks
-		::WaitForSingleObject( m_frames_available, 500 );
+		if ( ::WaitForSingleObject( m_frames_available, 500 ) == WAIT_TIMEOUT )
+		{	// If there was no frame sent directly we should probably consider ourselves idle
+			if ( ( m_p_idle ) && ( ::GetTickCount() - m_last_send_time > idle_time_out ) )
+			{	// We are idle
+				FC3i::auto_lock	idle_lock( m_idle_lock );					
+				if ( !m_idle_sent )
+				{	m_p_idle->clock_idle();
+					m_idle_sent = true;
+				}
+			}
+		}
 
 		// Keep track of whether the audio and video are going to have newly free queues.
 		bool trigger_video = false;

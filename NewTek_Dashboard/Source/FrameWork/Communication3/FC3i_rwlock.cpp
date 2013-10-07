@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 // Because we have out of date SDKs
 BOOLEAN (WINAPI *read_write_lock::fcn_TryAcquireSRWLockShared) ( PSRWLOCK SRWLock ) = NULL;

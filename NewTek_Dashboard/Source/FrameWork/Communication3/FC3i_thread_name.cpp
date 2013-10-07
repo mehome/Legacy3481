@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 #define MS_VC_EXCEPTION 0x406D1388
 
@@ -16,12 +16,12 @@ typedef struct tagTHREADNAME_INFO
 
 #pragma pack(pop)
 
-bool FrameWork::Communication3::implementation::set_thread_name( const char *p_name )
+bool FC3i::set_thread_name( const char *p_name )
 {
 	return set_thread_name( ::GetCurrentThreadId(), p_name );
 }
 
-bool FrameWork::Communication3::implementation::set_thread_name( const DWORD dwThreadID, const char *p_name )
+bool FC3i::set_thread_name( const DWORD dwThreadID, const char *p_name )
 {	// Set the information
 	THREADNAME_INFO info = { 0x1000, p_name, dwThreadID, 0 };
 

@@ -1,13 +1,13 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::debug;
+using namespace FC3::debug;
 
 message::message( const std::pair< DWORD, DWORD > sizes )
 	:	m_ref( 1 ), m_p_category( NULL ), m_p_message( NULL ),
-		FrameWork::Communication3::implementation::message( header_size + ( sizes.first + sizes.second + 2 ) * sizeof( wchar_t ) )
+		FC3i::message( header_size + ( sizes.first + sizes.second + 2 ) * sizeof( wchar_t ) )
 {	// Error
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	// Set the size
 		type() = message_type_debug;
 
@@ -27,9 +27,9 @@ message::message( const std::pair< DWORD, DWORD > sizes )
 // Internal use only :)
 message::message( const DWORD block_id, const DWORD addr )
 	:	m_ref( 1 ), m_p_category( NULL ), m_p_message( NULL ),
-		FrameWork::Communication3::implementation::message( block_id, addr )
+		FC3i::message( block_id, addr )
 {	// Check the size and the type
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	// If the type is correct, set it up.
 		if ( type() == message_type_debug )
 		{	// Get the header pointer
@@ -48,7 +48,7 @@ message::~message( void )
 
 // Is there an error in this message, most likely caused by a failed allocation or transmission
 bool message::error( void ) const
-{	if ( FrameWork::Communication3::implementation::message::error() ) return true;
+{	if ( FC3i::message::error() ) return true;
 	return ( type() != message_type_debug );
 }
 

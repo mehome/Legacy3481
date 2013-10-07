@@ -6,7 +6,7 @@ struct FRAMEWORKCOMMUNICATION3_API message
 			// to fail; in which case it is fair to assume that something is going to need to be dropped.
 			// There is no longer an async flag, all messages are sent asyncronously without the issues that existed in the previous 
 			// API. 
-				bool send( const wchar_t destination[] ) const;
+				const bool send( const wchar_t destination[], const DWORD time_out = 0 ) const;
 
 			// Outstanding send support
 				// Set the outstanding sents trigger
@@ -83,6 +83,11 @@ protected:	// Data access
 
 				static const message_type message_type_debug  = 5;		// A debug message
 
+				// Do not use this. It is for debugging only !
+				static const message_type message_type_crash  = -1;		// This message is designed to crash a host module at will.
+																		// The purpose of it is to ensure that we can remotely test
+																		// the ability to recover from crashes.
+
 				static const message_type message_type_custom = 10;		// Here on up is open range !			
 
 				// Get and set the message type
@@ -105,6 +110,8 @@ protected:	// Data access
 
 			// Set this message as being from the network
 			void set_from_network( const DWORD size /* Just in case people did not populate this right */ );
+
+			// Get the IDs, etc...
 	
 private:	// Setup of the item
 			bool setup( memory_block* p_block, BYTE *p_ptr, const DWORD size );
@@ -140,6 +147,10 @@ private:	// Setup of the item
 				DWORD	m_from_network;
 			};
 
+			const DWORD addr( void ) const;
+			const DWORD block_id( void ) const;
+			const LONGLONG addr_64( void ) const;
+
 protected:	static const int header_size = fc3_size_align( sizeof( header ) );
 private:
 			// We have a pointer back to the block that allocated me, which
@@ -155,4 +166,5 @@ private:
 
 			// A friend
 			friend memory_cache;
+			friend message_slot;
 };

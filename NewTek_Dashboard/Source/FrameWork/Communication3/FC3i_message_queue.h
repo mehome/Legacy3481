@@ -7,16 +7,19 @@ struct message_queue : private mapped_file
 			// Destructor
 			~message_queue( void );
 
-			// This will add a message to the message_queue
-			bool push( const DWORD block_id, const DWORD addr );
+			// This will flush the queue and is considered a very dangerous function !
+			// Since it can lock other processes.
+			void flush_queue( const DWORD max_queue_depth );
 
-			// This will lock the write queue, this is used when flushing a queue
-			const DWORD lock_write( void );
-			void unlock_write( const DWORD lock_write_return );
+			// This will add a message to the message_queue
+			const bool push( const DWORD block_id, const DWORD addr, const DWORD time_out );
+
+			// Would a send succeed
+			const bool would_push_succeed( const DWORD time_out );
 
 			// Wait for a message (0 means time-out). If the time-out is 
 			// zero we just "ping" the message_queue.
-			bool pop( DWORD &block_id, DWORD &addr );
+			const bool pop( DWORD &block_id, DWORD &addr, const DWORD time_out );
 
 			// Get the message_queue name
 			const wchar_t *name( void ) const;
@@ -24,27 +27,28 @@ struct message_queue : private mapped_file
 			// Get the current instantenous queue depth
 			const DWORD queue_depth( void ) const;
 
+			// This will lock the write queue, this is used when flushing a queue
+			const DWORD lock_write( void );
+			void unlock_write( const DWORD prev_lock_posn );
+
 			// Error
 			const bool error( void ) const;
 
-			// Get and set the heart-beat.
-			const __int64 heart_beat( void ) const;
-			void update_heart_beat( void );
-
-			// This is only called when the object is closed to 
-			// reset the heart-beat to zero.
-			void reset_heart_beat( void );
-
 private:	// The header
 			struct header
-			{	volatile DWORD		m_read_posn;
-				volatile DWORD		m_write_posn;
-				volatile DWORD		m_queue_depth;
-				volatile LONGLONG	m_running;
+			{	volatile LONG		m_read_posn;
+				volatile LONG		m_write_posn;
+				volatile LONG		m_queue_depth;
+				volatile LONG		m_write_lock;
 			};
 
 			static const int header_size = fc3_size_align( sizeof( header ) );
-			static const int message_queue_size = fc3_size_align( sizeof( LONGLONG ) * FrameWork::Communication3::config::message_queue_length );
+			static const int message_queue_size = fc3_size_align( sizeof( LONGLONG ) * FC3::config::message_queue_length );
+
+			// We maintain two semaphores, one to signal that the queue is empty,
+			// and one to maintain that the queue is full.
+			HANDLE	m_h_queue_empty;
+			HANDLE	m_h_queue_full;
 
 			// The number of pools in this process
 			static DWORD g_debug_no_objects;

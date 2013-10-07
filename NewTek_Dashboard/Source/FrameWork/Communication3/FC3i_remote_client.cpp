@@ -1,8 +1,8 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-namespace FC3i  = FrameWork::Communication3::implementation;
-namespace FC3ir = FrameWork::Communication3::implementation::remote;
+namespace FC3i  = FC3i;
+namespace FC3ir = FC3i::remote;
 
 using namespace FC3ir;
 
@@ -43,7 +43,7 @@ const int client::port_no( void ) const
 // Send a message of a given type
 const bool client::send( const wchar_t* p_dst_name, const void* p_data, const DWORD data_size )
 {	// We cannot have two threads in the same process using the same socket at the same time
-	FC3::implementation::auto_lock	lock( m_lock );
+	FC3i::auto_lock	lock( m_lock );
 
 	// Allow one reconnection attempt
 	for( int i=0; i<2; i++ )
@@ -78,10 +78,9 @@ const bool client::send( const wchar_t* p_dst_name, const void* p_data, const DW
 		const DWORD dst_size  = (DWORD)( ::wcslen( p_dst_name ) + 1 ) * sizeof( wchar_t );
 
 		// Build the header packet.
-		const FC3ir::tcpip_message_header hdr = {	FC3ir::tcpip_message_header::current_version, 
-													FC3ir::tcpip_message_header::message_type_send,
-													dst_size, 
-													data_size };
+		const FC3ir::tcpip_message_header hdr = { FC3ir::tcpip_message_header::current_version, 
+												  FC3ir::tcpip_message_header::message_type_send,
+												  dst_size, data_size };
 
 		// Send the header
 		if ( !m_p_socket->send( (char*)&hdr, sizeof(hdr), 0 ) ) goto error;

@@ -144,28 +144,60 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Video"
+			Name="XML"
 			>
 			<Filter
 				Name="Header Files"
 				>
 				<File
-					RelativePath=".\FC3_video_frame_rate.h"
+					RelativePath=".\FC3_xml_message.h"
 					>
 				</File>
 				<File
-					RelativePath=".\FC3_video_message.h"
+					RelativePath=".\FC3_xml_message_printf.h"
 					>
 				</File>
 				<File
-					RelativePath=".\FC3_video_pull.h"
+					RelativePath=".\FC3_xml_pull.h"
 					>
 				</File>
 				<File
-					RelativePath=".\FC3_video_receive.h"
+					RelativePath=".\FC3_xml_receive.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_slot.h"
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\FC3_xml_message.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_message_printf.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_pull.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_receive.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_xml_slot.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Video"
+			>
 			<Filter
 				Name="Source Files"
 				>
@@ -185,24 +217,38 @@
 					RelativePath=".\FC3_video_receive.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\FC3_video_slot.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\FC3_video_frame_rate.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_video_message.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_video_pull.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_video_receive.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_video_slot.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
-			Name="Video / Audio"
-			>
-			<File
-				RelativePath=".\FC3_audio_video_receive.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\FC3_audio_video_receive.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="Audio"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<Filter
 				Name="Header Files"
@@ -217,6 +263,10 @@
 				</File>
 				<File
 					RelativePath=".\FC3_audio_receive.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_audio_slot.h"
 					>
 				</File>
 			</Filter>
@@ -235,189 +285,17 @@
 					RelativePath=".\FC3_audio_receive.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\FC3_audio_slot.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
 			Name="private"
 			>
 			<Filter
-				Name="Source Files"
-				Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-				UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-				>
-				<File
-					RelativePath=".\FC3i.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\FC3i_critical_section.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_event.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_mapped_file.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_memory_allocator.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_memory_block.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\FC3i_memory_block_35.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_memory_cache.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\FC3i_memory_cache_35.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_message.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_message_event.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_message_queue.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_receive.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_remote.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_remote_client.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_remote_client_cache.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_remote_server.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_rwlock.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_server.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_server_cache.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_spinhelp.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_thread_name.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_trigger.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_trigger_cache.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_trigger_event.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\stdafx.cpp"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="1"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="1"
-						/>
-					</FileConfiguration>
-				</File>
-			</Filter>
-			<Filter
 				Name="Header Files"
-				Filter="h;hpp;hxx;hm;inl;inc;xsd"
-				UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 				>
 				<File
 					RelativePath=".\FC3i_critical_section.h"
@@ -425,6 +303,10 @@
 				</File>
 				<File
 					RelativePath=".\FC3i_event.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_intrinsics.h"
 					>
 				</File>
 				<File
@@ -440,15 +322,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\FC3i_memory_block_35.h"
-					>
-				</File>
-				<File
 					RelativePath=".\FC3i_memory_cache.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3i_memory_cache_35.h"
 					>
 				</File>
 				<File
@@ -460,11 +334,15 @@
 					>
 				</File>
 				<File
-					RelativePath=".\FC3i_message_event.h"
+					RelativePath=".\FC3i_message_queue.h"
 					>
 				</File>
 				<File
-					RelativePath=".\FC3i_message_queue.h"
+					RelativePath=".\FC3i_message_slot.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_message_slot_cache.h"
 					>
 				</File>
 				<File
@@ -532,60 +410,180 @@
 					>
 				</File>
 			</Filter>
-		</Filter>
-		<Filter
-			Name="Video / Audio / XML"
-			>
-			<File
-				RelativePath=".\FC3_audio_video_xml_receive.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\FC3_audio_video_xml_receive.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="XML"
-			>
-			<Filter
-				Name="Header Files"
-				>
-				<File
-					RelativePath=".\FC3_xml_message.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3_xml_message_printf.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3_xml_pull.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FC3_xml_receive.h"
-					>
-				</File>
-			</Filter>
 			<Filter
 				Name="Source Files"
 				>
 				<File
-					RelativePath=".\FC3_xml_message.cpp"
+					RelativePath=".\FC3i.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\FC3_xml_message_printf.cpp"
+					RelativePath=".\FC3i_critical_section.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\FC3_xml_pull.cpp"
+					RelativePath=".\FC3i_dllmain.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							CompileAsManaged="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							CompileAsManaged="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							CompileAsManaged="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							CompileAsManaged="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\FC3i_event.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\FC3_xml_receive.cpp"
+					RelativePath=".\FC3i_mapped_file.cpp"
 					>
+				</File>
+				<File
+					RelativePath=".\FC3i_memory_allocator.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_memory_block.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_memory_cache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_message.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_message_queue.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_message_slot.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_message_slot_cache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_receive.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_remote.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_remote_client.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_remote_client_cache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_remote_server.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_rwlock.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_server.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_server_cache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_spinhelp.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_thread_name.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_trigger.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_trigger_cache.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3i_trigger_event.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\stdafx.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="1"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="1"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="1"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="1"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 		</Filter>
@@ -622,16 +620,24 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="Remote"
+			Name="Video / Audio"
 			>
-			<File
-				RelativePath=".\FC3_remote.cpp"
+			<Filter
+				Name="Header Files"
 				>
-			</File>
-			<File
-				RelativePath=".\FC3_remote.h"
+				<File
+					RelativePath=".\FC3_audio_video_receive.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
 				>
-			</File>
+				<File
+					RelativePath=".\FC3_audio_video_receive.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Debug"
@@ -659,6 +665,10 @@
 					RelativePath=".\FC3_debug_receive.h"
 					>
 				</File>
+				<File
+					RelativePath=".\FC3_debug_slot.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source Files"
@@ -677,6 +687,94 @@
 				</File>
 				<File
 					RelativePath=".\FC3_debug_receive.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_debug_slot.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Video / Audio / XML"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\FC3_audio_video_xml_receive.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\FC3_audio_video_xml_receive.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Remote"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\FC3_remote.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\FC3_remote.cpp"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Raw"
+			>
+			<Filter
+				Name="Header Files"
+				>
+				<File
+					RelativePath=".\FC3_raw_message.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_raw_pull.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_raw_receive.h"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_raw_slot.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Source Files"
+				>
+				<File
+					RelativePath=".\FC3_raw_message.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_raw_pull.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_raw_receive.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\FC3_raw_slot.cpp"
 					>
 				</File>
 			</Filter>

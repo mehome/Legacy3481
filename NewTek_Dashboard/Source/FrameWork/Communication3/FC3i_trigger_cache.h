@@ -4,17 +4,17 @@ struct trigger_cache
 {			// Get the global cache
 			static trigger_cache& get_cache( void );
 
+			// This will get a event of known id
+			bool new_trigger( trigger *p_dst );
+
+			// This will get a new event
+			bool ref_trigger( trigger *p_dst, const DWORD event_id );
+
 protected:	// Constructor
 			trigger_cache( void );
 
 			// Destructor
 			~trigger_cache( void );
-
-private:	// This will get a event of known id
-			bool new_trigger( trigger *p_dst );
-
-			// This will get a new event
-			bool ref_trigger( trigger *p_dst, const DWORD event_id );
 
 			// This will clean up the cache of items that are no longer accessed and are outdated.
 			void clean( void );

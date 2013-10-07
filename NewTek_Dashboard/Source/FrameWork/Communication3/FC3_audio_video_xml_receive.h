@@ -1,16 +1,16 @@
 #pragma once
 
-struct FRAMEWORKCOMMUNICATION3_API receive : private FrameWork::Communication3::implementation::receive::client,
-											 public FrameWork::Communication3::implementation::receive
+struct FRAMEWORKCOMMUNICATION3_API receive : private FC3i::receive::client,
+											 public FC3i::receive
 {			// This is how you receive items
 			struct FRAMEWORKCOMMUNICATION3_API client : // Overload the functions used here
-														public FrameWork::Communication3::video::receive::client,
+														public FC3::video::receive::client,
 														// Overload the functions used here
-														public FrameWork::Communication3::audio::receive::client,
+														public FC3::audio::receive::client,
 														// Overload the functions used here
-														public FrameWork::Communication3::xml::receive::client,
+														public FC3::xml::receive::client,
 														// Overload the functions
-														public FrameWork::Communication3::raw::receive::client
+														public FC3::raw::receive::client
 			{	
 			};
 

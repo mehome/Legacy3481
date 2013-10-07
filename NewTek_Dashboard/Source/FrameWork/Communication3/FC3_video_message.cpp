@@ -1,15 +1,15 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::video;
+using namespace FC3::video;
 
 // Constructur for compressed data formats
 message::message( const e_data_format format, const int xres, const int yres, const int compressed_data_size, const int extra_data_size_max )
 	:	m_ref( 1 ), m_p_header( NULL ), m_p_compressed_data( NULL ),
-		FrameWork::Communication3::implementation::message( message_size( format, xres, yres, compressed_data_size, extra_data_size_max ) )
+		FC3i::message( message_size( format, xres, yres, compressed_data_size, extra_data_size_max ) )
 
 {	// Set the type
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	// Set the size
 		type() = message_type_video;
 
@@ -21,10 +21,10 @@ message::message( const e_data_format format, const int xres, const int yres, co
 // Constructur for compressed data formats
 message::message( const e_data_format format, const int xres, const int yres )
 	:	m_ref( 1 ), m_p_header( NULL ), m_p_compressed_data( NULL ),
-		FrameWork::Communication3::implementation::message( message_size( format, xres, yres, 0, 0 ) )
+		FC3i::message( message_size( format, xres, yres, 0, 0 ) )
 
 {	// Set the type
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	// Set the size
 		type() = message_type_video;
 
@@ -36,10 +36,10 @@ message::message( const e_data_format format, const int xres, const int yres )
 // Internal use only :)
 message::message( const DWORD block_id, const DWORD addr )
 	:	m_ref( 1 ), m_p_header( NULL ), m_p_compressed_data( NULL ),
-		FrameWork::Communication3::implementation::message( block_id, addr )
+		FC3i::message( block_id, addr )
 
 {	// Check the size and the type
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	// If the type is correct, set it up.
 		if ( type() == message_type_video )
 			setup_memory();
@@ -117,8 +117,10 @@ const int message::message_size( const e_data_format format, const int xres, con
 		case data_format_m2v1_422:
 		case data_format_m2v1_420:
 		case data_format_shq_4444:
+		case data_format_shq_4444_ex:
 		case data_format_shq_444:
 		case data_format_shq_4224:
+		case data_format_shq_4224_ex:
 		case data_format_shq_422:
 		case data_format_shq_4204:
 		case data_format_shq_420:
@@ -567,8 +569,10 @@ void message::setup_memory( void )
 
 		case data_format_m2v1_422:
 		case data_format_m2v1_420:
+		case data_format_shq_4444_ex:
 		case data_format_shq_4444:
 		case data_format_shq_444:
+		case data_format_shq_4224_ex:
 		case data_format_shq_4224:
 		case data_format_shq_422:
 		case data_format_shq_4204:
@@ -626,7 +630,7 @@ const int message::extra_data_size( void ) const
 }
 
 // This ensures that people can delete the read_with_info structs returned above correctly
-static FC3::implementation::memory_pool< sizeof( message ) > g_mem_alloc;
+static FC3i::memory_pool< sizeof( message ) > g_mem_alloc;
 
 void* message::operator new ( const size_t size )
 {	assert( sizeof( message ) == size );

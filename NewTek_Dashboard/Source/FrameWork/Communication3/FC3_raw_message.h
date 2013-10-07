@@ -1,6 +1,6 @@
 #pragma once
 
-struct FRAMEWORKCOMMUNICATION3_API message : public FrameWork::Communication3::implementation::message
+struct FRAMEWORKCOMMUNICATION3_API message : public FC3i::message
 {			// Constructor
 			message( const DWORD size_in_bytes );
 			message( const BYTE* p_data, const DWORD size_in_bytes );
@@ -44,5 +44,6 @@ private:	// Everything is reference counted
 			// A friend
 			friend receive;
 			friend pull;
-			friend FrameWork::Communication3::audio_video_xml::receive;
+			friend FC3::audio_video_xml::receive;
+			friend FC3i::message_slot;
 };

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 // Constructor
 trigger::trigger( void ) : m_p_event( NULL ), m_ref( 1 )

@@ -2,7 +2,7 @@
 #include "FrameWork.Communication3.h"
 
 // Use the namespace
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 // The shared data segment
 #pragma bss_seg( ".fc3" )
@@ -43,7 +43,12 @@ bool trigger_cache::new_trigger( trigger *p_dst )
 {	// We are always going to create a new event here.
 	// Note that we cannot have an ID of 0
 	DWORD new_id = (DWORD)::_InterlockedIncrement( (LONG*)&g_next_event_id );
-	while( !new_id ) new_id = (DWORD)::_InterlockedIncrement( (LONG*)&g_next_event_id );
+	assert( new_id );
+
+	// We need to make sure that the globals for 32 and 64bit do not clash
+#ifndef	_M_X64
+	new_id += 0x00080000;
+#endif	_M_X64
 
 	// Create the event ID
 	trigger_event* p_new_event = new trigger_event( new_id );
@@ -123,7 +128,7 @@ void trigger_cache::clean( void )
 	{	if ( // And it still not referenced outside of me
 			 ( m_events[ i ].m_p_trigger_event->refcount() == 1 ) &&
 			 // The item has not been recovered from the cache in the time that the this number of items where added
-			 ( (long)( m_time_stamp - m_events[ i ].m_time_stamp ) >= (long)FrameWork::Communication3::config::trigger_cache_history )
+			 ( (long)( m_time_stamp - m_events[ i ].m_time_stamp ) >= (long)FC3::config::trigger_cache_history )
 		   )
 		{	// Release the item
 			m_events[ i ].m_p_trigger_event->release();

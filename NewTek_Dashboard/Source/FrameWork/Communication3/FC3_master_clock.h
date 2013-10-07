@@ -1,5 +1,10 @@
 #pragma once
 
+struct master_clock_idle_interface
+{			virtual void clock_idle( void ) = 0;
+			virtual void clock_active( void ) = 0;
+};
+
 struct FRAMEWORKCOMMUNICATION3_API master_clock
 {			// Constructor
 			master_clock( // The audio and video FC3 server destinations to send frames too.
@@ -13,7 +18,8 @@ struct FRAMEWORKCOMMUNICATION3_API master_clock
 						  // distance ahead of output) the calls to add new frames will block until
 						  // the queue depths are correct.
 						  const int video_queue_depth = 8, 
-						  const int audio_queue_depth = 8);
+						  const int audio_queue_depth = 8,
+						  master_clock_idle_interface *p_idle_interface = NULL );
 
 			// Destructor
 			~master_clock( void );
@@ -31,12 +37,17 @@ struct FRAMEWORKCOMMUNICATION3_API master_clock
 			void insert_sync_point( void );
 
 			// Add a video or audio frame to the queue
-			void operator += ( const FrameWork::Communication3::video::message &msg );
-			void operator += ( const FrameWork::Communication3::audio::message &msg );			
+			void operator += ( const FC3::video::message &msg );
+			void operator += ( const FC3::audio::message &msg );			
 
 			// Add a video and audio frame with a identifier.			
-			void add( const FrameWork::Communication3::video::message &msg, const void* p_data = NULL, const bool used_with_clock = true, const bool display_frame = true );
-			void add( const FrameWork::Communication3::audio::message &msg, const void* p_data = NULL, const bool used_with_clock = true, const bool display_frame = true );
+			void add( const FC3::video::message &msg, const void* p_data = NULL, const bool used_with_clock = true, const bool display_frame = true );
+			void add( const FC3::audio::message &msg, const void* p_data = NULL, const bool used_with_clock = true, const bool display_frame = true );
+
+			// If you wish to bypass the queue, you can use these functions to send video directly to the destination. These implicitely flush the queue
+			// to avoid fighting between sources.
+			const bool add_direct( const FC3::video::message &msg );
+			const bool add_direct( const FC3::audio::message &msg );
 
 			// This adds a "dummy" frame the queue that you will see notification of in the clock callback.
 			// This frame has no duration and is just a marker in the queue and so is not used for clocking (etc...)
@@ -68,8 +79,10 @@ private:	// The start graph delay. This ensures that the first and second sample
 			// The maximum length we want for audio buffers
 			static const int audio_buffer_len = 75;		// ms
 
+			static const DWORD idle_time_out  = 5000;	// ms
+
 			// Raw adding of audio
-			void add_raw( const FrameWork::Communication3::audio::message &msg, const void* p_data = NULL, const bool used_with_clock = true, const bool display_frame = true );
+			void add_raw( const FC3::audio::message &msg, const void* p_data = NULL, const bool used_with_clock = true, const bool display_frame = true );
 	
 			// The destinations
 			wchar_t *m_p_video_dst;
@@ -90,8 +103,8 @@ private:	// The start graph delay. This ensures that the first and second sample
 			__int64 m_time_out;
 
 			// The lock on the audio queue
-			typedef FrameWork::Communication3::implementation::critical_section critical_section;
-			typedef FrameWork::Communication3::implementation::auto_lock auto_lock;
+			typedef FC3i::critical_section critical_section;
+			typedef FC3i::auto_lock auto_lock;
 			mutable critical_section m_queue_lock;
 
 			// Audio and video frame descriptions
@@ -99,19 +112,22 @@ private:	// The start graph delay. This ensures that the first and second sample
 			{	__int64	m_time, m_time_stamp;
 				void*	m_p_data;
 				bool	m_used_with_clock;
-				const FrameWork::Communication3::audio::message *m_p_frame;
+				const FC3::audio::message *m_p_frame;
 			};
 
 			struct	video_desc
 			{	__int64	m_time, m_time_stamp;
 				void*	m_p_data;
 				bool	m_used_with_clock;
-				const FrameWork::Communication3::video::message *m_p_frame;
+				const FC3::video::message *m_p_frame;
 			};
 
 			// The audio and video queues
 			std::deque< audio_desc >	m_audio_frames;
 			std::deque< video_desc >	m_video_frames;
+
+			// Are both queues empty
+			const bool queues_empty( void ) const { return m_audio_frames.empty() && m_video_frames.empty(); }
 
 			// The reference clock time
 			__int64	m_stream_playback_started_at;
@@ -169,5 +185,15 @@ private:	// The start graph delay. This ensures that the first and second sample
 			void update_reference_time( void );
 
 			// This will dice audio buffers into smaller pieces
-			const bool dice_audio_buffers( const FrameWork::Communication3::audio::message &msg, const void* p_data, const bool used_with_clock );
+			const bool dice_audio_buffers( const FC3::audio::message &msg, const void* p_data, const bool used_with_clock );
+
+			// The idle interface
+			void send_frame( void );
+
+			FC3i::critical_section		m_idle_lock;
+
+			DWORD	m_last_send_time;
+			bool	m_idle_sent;
+
+			master_clock_idle_interface *m_p_idle;
 };

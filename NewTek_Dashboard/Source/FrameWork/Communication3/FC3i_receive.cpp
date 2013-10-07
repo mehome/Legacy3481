@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::implementation;
+using namespace FC3i;
 
 receive::receive( void )
 	: m_p_server( NULL ), m_p_client( NULL ), m_should_exit( false ),
@@ -22,9 +22,6 @@ const bool receive::start( const wchar_t name[], client *p_client, const bool fl
 	// Create the server
 	m_p_server = server_cache::get_cache().get_server( name );
 	if ( !m_p_server ) return false;	
-
-	// This ensures that even before the thread starts that the server apears alive
-	m_p_server->update_heart_beat();
 
 	// Set the vlient
 	m_p_client = p_client;
@@ -55,9 +52,9 @@ const bool receive::stop( void )
 		if ( m_h_thread ) 
 		{	// Wait for the thread to exit
 			while( true )
-			{	// Signal the event
+			{	// Signal the event. We send a specially ignored message
 				m_should_exit = true;
-				m_p_server->abort_get_message();
+				m_p_server->send_message( (DWORD)-1, (DWORD)-1, 250 );
 
 				// Try seeing if we are done
 				if ( ::WaitForSingleObject( m_h_thread, 100 ) != WAIT_TIMEOUT ) 
@@ -131,33 +128,29 @@ const DWORD receive::queue_depth( void ) const
 // This will flush the server queue
 void receive::flush_queue( void )
 {	// We first need to lock the queue
-	const DWORD write_pos = m_p_server->lock_write();
+	const DWORD old_val = m_p_server->lock_write();
 
 	// While the queue is not empty
 	DWORD	block_id, addr;
-	while( m_p_server->get_message( 0, block_id, addr ) )
+	while( m_p_server->get_message( block_id, addr, 0 ) )
 		struct null_message : public message { null_message( const DWORD block_id, const DWORD addr ) : message( block_id, addr ) {} }
 			// We just instantiate a message on the stack so that it is freed
 			a_message( block_id, addr );
 
 	// Unlock the queue
-	m_p_server->unlock_write( write_pos );
+	m_p_server->unlock_write( old_val );
 }
 
 // This is only used by pull servers and allows you to poll for frames with a time-out
-const bool receive::pull( const DWORD timeout, DWORD& block_id, DWORD& addr )
+const bool receive::pull( DWORD& block_id, DWORD& addr, const DWORD time_out )
 {	// Pull servers are not running if there is a thread.
 	if ( m_h_thread ) return false;
 
 	// There must be a server
 	if ( !m_p_server ) return false;
 
-	// Update the heary-beat. This is not as much a guarantee as it is for
-	// receive servers.
-	m_p_server->update_heart_beat();
-
 	// Wait for an item, or time-out
-	if ( !m_p_server->get_message( timeout, block_id, addr ) )
+	if ( !m_p_server->get_message( block_id, addr, time_out ) )
 	{	// Error
 		block_id = (DWORD)-1;
 		addr     = (DWORD)-1;
@@ -168,13 +161,20 @@ const bool receive::pull( const DWORD timeout, DWORD& block_id, DWORD& addr )
 	return true;
 }
 
+void receive::disable_callback( void )
+{	// This will ensure that no more messages are going to be delivered
+	// because the thread is no longer running.
+	assert( ::GetCurrentThreadId() == m_thread_id );
+	m_should_exit = true;
+}
+
 // The thread proc
 DWORD WINAPI receive::threadproc( void* lpParameter )
 {	// Checking
 	receive *p_this = (receive*)lpParameter;
 
 	// Debugging
-	FrameWork::Communication3::debug::debug_output( FrameWork::Communication3::config::debug_category, L"Server thread started, %s", p_this->name() );		
+	FC3::debug::debug_output( FC3::config::debug_category, L"Server thread started, %s", p_this->name() );		
 
 	// A thread name
 	wchar_t thread_name_w[ 1024 ];
@@ -183,35 +183,35 @@ DWORD WINAPI receive::threadproc( void* lpParameter )
 	::wcstombs( thread_name_a, thread_name_w, sizeof( thread_name_a )-1 );
 	set_thread_name( p_this->m_thread_id, thread_name_a );
 
+	// Lets signal that we are runnng
+	std::wstring l_server_name( FC3::config::name_server_alive );
+	l_server_name += p_this->name();
+
+	// Create the event. Note that we do not create it enabled because this is not guranrateed
+	// to trigger another thread that might already be waiting on it.
+	// Trigger anyone that might be waiting.
+	HANDLE hThreadRunning = ::CreateEventW( NULL, TRUE, FALSE, l_server_name.c_str() );
+	assert( hThreadRunning );
+	::SetEvent( hThreadRunning );
+
 	// The current sleep time
-	DWORD wait_time = 250;
+	static const DWORD default_wait_time = 1000;
 
 	// While we are not being asked to exit
 	while( !p_this->m_should_exit )
-	{	// Update the heard-beat
-		p_this->m_p_server->update_heart_beat();
-		
-		// Wait for a message to be delivered
+	{	// Wait for a message to be delivered
 		DWORD	block_id, addr;
-		if ( p_this->m_p_server->get_message( wait_time, block_id, addr ) )
-		{	// We deliver the message
+		if ( p_this->m_p_server->get_message( block_id, addr, default_wait_time ) )
+			// We deliver the message
 			p_this->m_p_client->deliver( block_id, addr );
-
-			// Temporarily do not wait for messages
-			wait_time = 0;
-		}
-		else
-		{	// Reset the sleep time to something more reasonable now we have
-			// burst received all messages.
-			wait_time = 250;
-		}		
 	}
 
 	// Debugging
-	FrameWork::Communication3::debug::debug_output( FrameWork::Communication3::config::debug_category, L"Server thread stopped, %s", p_this->name() );
+	FC3::debug::debug_output( FC3::config::debug_category, L"Server thread stopped, %s", p_this->name() );
 
-	// Reset the heard beat
-	p_this->m_p_server->reset_heart_beat();
+	// Mark ourselves as no longer running and close the event
+	::ResetEvent( hThreadRunning );
+	::CloseHandle( hThreadRunning );
 
 	// Finished
 	return 0;

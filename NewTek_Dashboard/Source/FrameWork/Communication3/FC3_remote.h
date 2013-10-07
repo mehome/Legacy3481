@@ -16,5 +16,5 @@ private:	// The handle
 			HANDLE m_hNamed;
 
 			// A pointer
-			FrameWork::Communication3::implementation::remote::server	*m_p_server;
+			FC3i::remote::server	*m_p_server;
 };

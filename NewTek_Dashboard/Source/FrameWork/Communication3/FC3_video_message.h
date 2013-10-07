@@ -1,6 +1,6 @@
 #pragma once
 
-struct FRAMEWORKCOMMUNICATION3_API message : public FrameWork::Communication3::implementation::message
+struct FRAMEWORKCOMMUNICATION3_API message : public FC3i::message
 {			// The frame format to use
 			typedef enum e_data_format
 			{	// Support the existing formats in an alterntive enumeration
@@ -13,18 +13,20 @@ struct FRAMEWORKCOMMUNICATION3_API message : public FrameWork::Communication3::i
 				data_format_bgra_4444_u8    =  4,			// This is regular BGRA
 				
 				// MPEG-2
-				data_format_m2v1_422		 = '1v2m',		// Compressed MPEG-2, High profile, 4:2:2, I-Frame only, normally interleaved data for fielded sources.
-				data_format_m2v1_420		 = '2v2m',		// Compressed MPEG-2, Normal profile, 4:2:2, I-Frame only, normally interleaved data for fielded sources.
+				data_format_m2v1_422		= '1V2M',		// Compressed MPEG-2, High profile, 4:2:2, I-Frame only, normally interleaved data for fielded sources.
+				data_format_m2v1_420		= '1v2m',		// Compressed MPEG-2, Normal profile, 4:2:0, I-Frame only, normally interleaved data for fielded sources.
 
-				// SpeedHQ
-				data_format_shq_4444		 = '5QHS',		// SpeedHQ 5, 4:4:4:4, I-Frame only, normally interleaved data for fielded sources.
-				data_format_shq_444 		 = '4QHS',		// SpeedHQ 4, 4:4:4  , I-Frame only, normally interleaved data for fielded sources.
-				data_format_shq_4224		 = '3QHS',		// SpeedHQ 3, 4:2:2:4, I-Frame only, normally interleaved data for fielded sources.
-				data_format_shq_422 		 = '2QHS',		// SpeedHQ 2, 4:2:2  , I-Frame only, normally interleaved data for fielded sources.
-				data_format_shq_4204		 = '1QHS',		// SpeedHQ 1, 4:2:0:4, I-Frame only, normally interleaved data for fielded sources.
-				data_format_shq_420 		 = '0QHS',		// SpeedHQ 0, 4:2:0  , I-Frame only, normally interleaved data for fielded sources.
+				// SpeedHQ				
+				data_format_shq_4444_ex		= '9QHS',		// SpeedHQ 9, 4:4:4:4, I-Frame only, normally interleaved data for fielded sources.
+				data_format_shq_4444		= '5QHS',		// SpeedHQ 5, 4:4:4:4, I-Frame only, normally interleaved data for fielded sources.
+				data_format_shq_444 		= '4QHS',		// SpeedHQ 4, 4:4:4  , I-Frame only, normally interleaved data for fielded sources.
+				data_format_shq_4224_ex		= '7QHS',		// SpeedHQ 7, 4:2:2:4, I-Frame only, normally interleaved data for fielded sources.
+				data_format_shq_4224		= '3QHS',		// SpeedHQ 3, 4:2:2:4, I-Frame only, normally interleaved data for fielded sources.
+				data_format_shq_422 		= '2QHS',		// SpeedHQ 2, 4:2:2  , I-Frame only, normally interleaved data for fielded sources.
+				data_format_shq_4204		= '1QHS',		// SpeedHQ 1, 4:2:0:4, I-Frame only, normally interleaved data for fielded sources.
+				data_format_shq_420 		= '0QHS',		// SpeedHQ 0, 4:2:0  , I-Frame only, normally interleaved data for fielded sources.
 
-				data_format_size			 = 0xFFFFFFFF	// Force a size
+				data_format_size			= 0xFFFFFFFF	// Force a size
 			};
 
 			// The field types
@@ -257,6 +259,7 @@ private:	// This is the data header
 			// A friend
 			friend receive;
 			friend pull;
-			friend FrameWork::Communication3::audio_video::receive;
-			friend FrameWork::Communication3::audio_video_xml::receive;
+			friend FC3::audio_video::receive;
+			friend FC3::audio_video_xml::receive;
+			friend FC3i::message_slot;
 };

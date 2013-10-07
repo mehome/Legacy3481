@@ -1,8 +1,8 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-namespace FC3i  = FrameWork::Communication3::implementation;
-namespace FC3ir = FrameWork::Communication3::implementation::remote;
+namespace FC3i  = FC3i;
+namespace FC3ir = FC3i::remote;
 
 using namespace FC3ir;
 
@@ -76,7 +76,7 @@ DWORD server::thread_proc( void )
 		setsockopt( client_socket, SOL_SOCKET, SO_LINGER, (const char *) &linger_, sizeof(linger_) );
 		
 		// Lock the list of connections
-		FC3::implementation::auto_lock	lock( m_connections_lock );
+		FC3i::auto_lock	lock( m_connections_lock );
 		
 		// Create a new connection
 		m_connections_list.push_back( new connection( this, client_socket ) );

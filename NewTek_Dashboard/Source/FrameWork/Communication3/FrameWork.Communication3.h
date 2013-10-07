@@ -22,60 +22,45 @@
 #include "..\Audio2\FrameWork.Audio2.h"
 
 // The namespace
+namespace FrameWork { namespace Communication3 { namespace implementation {}; }; }; 
+
+// Useful defines
+namespace FC3  = FrameWork::Communication3;
+namespace FC3i = FC3::implementation;
+
+// The namespace
 namespace FrameWork
 {
 	namespace Communication3
 	{
 		namespace config
-		{	// There is a FC3.5 version that handles memory very differently. In general this is much more space
-			// efficient, and handles general purpose use much better than previous versions. In general this 
-			// works better on typical memory usuages than previous versions.
-			#define	FC3_VERSION_3_5
-			
-			// The windows handle names
-			static const wchar_t	name_trigger[]             = L"ntk_fc3_tgr_";
-			static const wchar_t	name_memory_map[]          = L"ntk_fc3_mmp_";
-			static const wchar_t	name_memory_map_event[]    = L"ntk_fc3_met_";
-			static const wchar_t	name_message_queue_map[]   = L"ntk_fc3_que_";
-			static const wchar_t	name_message_queue_event[] = L"ntk_fc3_evt_";
+		{	// The windows handle names
+			static const wchar_t	name_trigger[]              = L"ntk_fc3_tgr_";
+			static const wchar_t	name_memory_map[]           = L"ntk_fc3_mmp_";
+			static const wchar_t	name_memory_map_event[]     = L"ntk_fc3_met_";
+			static const wchar_t	name_server_alive[]			= L"ntk_fc3_alv_";
+			static const wchar_t	name_message_queue_map[]    = L"ntk_fc3_que_";
+			static const wchar_t	name_message_queue_event1[] = L"ntk_fc3_evt1_";
+			static const wchar_t	name_message_queue_event2[] = L"ntk_fc3_evt2_";
+			static const wchar_t	name_slot_queue[]			= L"ntk_fc3_slot_";			
 
 			// is there a server running
 			static const wchar_t	name_remote_server[] = L"ntk_fc3_remote_server";
 
-			// The default block size
-			#ifdef	FC3_VERSION_3_5
 			// In FC3.5 there is no real down-size to having a larger number of blocks, but the flip
 			// side of having more items in the pool is less thread contention, which is advantageous.
 			// ADJC : I have increased this because video frames can get so huge so quickly.
-			static const DWORD		memory_block_size     = 64 * 1024 * 1024;
-			#else	FC3_VERSION_3_5
-			static const DWORD		memory_block_size     = 64 * 1024 * 1024;
-			static const DWORD		memory_max_alloc_size = 64 * 1024 * 1024;
-			#endif	FC3_VERSION_3_5
+			static const DWORD		memory_block_size     = 64 * 1024 * 1024;			
 
-			// A new implementation of the 
-
-			// This is the length of the message message_queue. This must be a power of two.
-			#ifdef	FC3_VERSION_3_5
 			// Because we do not free old blocks that are in flight, we need to have shorter
 			// queue lengths, which has some inherant scary side-effects.
-			static const DWORD		message_queue_length  = 16;
-			#else	FC3_VERSION_3_5
-			static const DWORD		message_queue_length  = 512;
-			#endif	FC3_VERSION_3_5
+			static const DWORD		message_queue_length  = 16;			
 
 			// This is how old we allow unreferenced triggers to exist for. This is not necessarily the number
 			// of items in the cache itself. It represents the number that have not been accessed since this
 			// number have been created. This does serve to keep the number of triggers at a reasonable number
 			// while also ensuring that we do keep triggers around forever.
 			static const DWORD		trigger_cache_history = 32;
-			static const DWORD		server_cache_history  = 32;			
-
-			// We always keep blocks for at least 250ms beyond when messages are send from them.
-			#ifndef	FC3_VERSION_3_5
-			static const DWORD		memory_cache_history = 4;
-			static const DWORD		memory_cache_time	 = 250;
-			#endif	FC3_VERSION_3_5
 
 			// The number of times we retry allocations
 			// I have bumped this number up because on startup there are a lot of frame allocations at the same time that tend
@@ -93,7 +78,7 @@ namespace FrameWork
 			// The data alignment. Probably risky to mess with these. It might be possible to increase them, but
 			// decreasing them sounds quite risky.
 			static const int		alignment = 16;
-			#define					fc3_size_align( a )	(((a)+(FrameWork::Communication3::config::alignment-1))&(~(FrameWork::Communication3::config::alignment-1)))
+			#define					fc3_size_align( a )	(((a)+(FC3::config::alignment-1))&(~(FC3::config::alignment-1)))
 
 			// Debugging tools
 			static const wchar_t*	debug_category = L"FC3";
@@ -104,9 +89,14 @@ namespace FrameWork
 
 			// When running as a server, what port number do we work on
 			static const int		remote_port_number = 5950;
+
+			// The number of slots per named grou
+			static const int		slots_items_per_group = 16;
 		};
 
 		#include "FC3i_predecl.h"
+
+		#include "FC3i_intrinsics.h"
 
 		namespace utilities
 		{
@@ -114,9 +104,7 @@ namespace FrameWork
 		};
 
 		namespace implementation
-		{
-			#include "FC3i_predecl.h"
-
+		{	
 			#include "FC3i_memory_allocator.h"
 
 			#include "FC3i_rwlock.h"
@@ -139,7 +127,9 @@ namespace FrameWork
 			#include "FC3i_memory_cache.h"			
 
 			#include "FC3i_message_queue.h"
-			#include "FC3i_message_event.h"
+
+			#include "FC3i_message_slot.h"
+			#include "FC3i_message_slot_cache.h"
 
 			#include "FC3i_server.h"
 			#include "FC3i_server_cache.h"
@@ -162,6 +152,7 @@ namespace FrameWork
 			#include "FC3_raw_message.h"
 			#include "FC3_raw_receive.h"
 			#include "FC3_raw_pull.h"
+			#include "FC3_raw_slot.h"
 		};
 
 		namespace xml
@@ -170,6 +161,7 @@ namespace FrameWork
 			#include "FC3_xml_message_printf.h"
 			#include "FC3_xml_receive.h"
 			#include "FC3_xml_pull.h"
+			#include "FC3_xml_slot.h"
 		};
 
 		namespace audio_video
@@ -182,6 +174,7 @@ namespace FrameWork
 			#include "FC3_video_message.h"
 			#include "FC3_video_receive.h"
 			#include "FC3_video_pull.h"
+			#include "FC3_video_slot.h"
 		};
 
 		namespace audio
@@ -189,6 +182,7 @@ namespace FrameWork
 			#include "FC3_audio_message.h"
 			#include "FC3_audio_receive.h"
 			#include "FC3_audio_pull.h"
+			#include "FC3_audio_slot.h"
 		};
 
 		namespace debug
@@ -198,6 +192,7 @@ namespace FrameWork
 			#include "FC3_debug_message.h"
 			#include "FC3_debug_receive.h"
 			#include "FC3_debug_pull.h"
+			#include "FC3_debug_slot.h"
 		};
 
 		namespace audio_video_xml
@@ -215,9 +210,6 @@ namespace FrameWork
 			#include "FC3_remote.h"
 		};
 
-		typedef FrameWork::Communication3::implementation::trigger	trigger;
+		typedef FC3i::trigger	trigger;
 	};
 };
-
-// A useful define
-namespace FC3 = FrameWork::Communication3;

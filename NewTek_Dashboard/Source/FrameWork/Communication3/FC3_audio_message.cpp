@@ -1,15 +1,15 @@
 #include "StdAfx.h"
 #include "FrameWork.Communication3.h"
 
-using namespace FrameWork::Communication3::audio;
+using namespace FC3::audio;
 
 // Constructor
 message::message( const int no_samples, const int no_channels, const int extra_data_size )
 	:	m_ref( 1 ), 
-		FrameWork::Communication3::implementation::message( message_size( no_samples, no_channels, extra_data_size ) ),
+		FC3i::message( message_size( no_samples, no_channels, extra_data_size ) ),
 		m_p_header( NULL )
 {	// Set the type
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	// Set the size
 		type() = message_type_audio;
 
@@ -21,10 +21,10 @@ message::message( const int no_samples, const int no_channels, const int extra_d
 // Internal use only :)
 message::message( const DWORD block_id, const DWORD addr )
 	:	m_ref( 1 ), 
-		FrameWork::Communication3::implementation::message( block_id, addr ),
+		FC3i::message( block_id, addr ),
 		m_p_header( NULL )
 {	// Check the size and the type
-	if ( !FrameWork::Communication3::implementation::message::error() )
+	if ( !FC3i::message::error() )
 	{	// If the type is correct, set it up.
 		if ( type() == message_type_audio )
 			setup_memory();
@@ -208,7 +208,7 @@ DWORD &message::extra_data_fourCC( void )
 }
 
 // This ensures that people can delete the read_with_info structs returned above correctly
-static FC3::implementation::memory_pool< sizeof( message ) > g_mem_alloc;
+static FC3i::memory_pool< sizeof( message ) > g_mem_alloc;
 
 void* message::operator new ( const size_t size )
 {	assert( sizeof( message ) == size );

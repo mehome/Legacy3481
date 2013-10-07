@@ -4,17 +4,17 @@ struct server_cache
 {			// Get the cache
 			static server_cache& get_cache( void );
 
+			// This will recover a particular server pointer
+			server*	get_server( const wchar_t name[] );
+
 protected:	// Constructor
 			server_cache( void );
 
 			// Destructor
-			~server_cache( void );
-
-public:		// This will recover a particular server pointer
-			server*	get_server( const wchar_t name[] );
+			~server_cache( void );			
 
 			// Clean up the list
-			void clean( void );
+			//void clean( void );
 			
 			// Read and write locks
 			read_write_lock	m_cache_lock;
@@ -34,5 +34,5 @@ public:		// This will recover a particular server pointer
 
 			// Friends
 			friend message;
-			friend const DWORD FrameWork::Communication3::utilities::queue_depth( const wchar_t server_name[] );
+			friend const DWORD FC3::utilities::queue_depth( const wchar_t server_name[] );
 };

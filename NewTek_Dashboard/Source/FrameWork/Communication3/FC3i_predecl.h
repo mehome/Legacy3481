@@ -15,6 +15,7 @@ namespace implementation
 	struct trigger;
 	struct trigger_cache;
 	struct trigger_event;
+	struct message_slot;
 };
 
 namespace xml

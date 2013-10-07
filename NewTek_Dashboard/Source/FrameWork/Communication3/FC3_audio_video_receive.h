@@ -1,7 +1,7 @@
 #pragma once
 
-struct FRAMEWORKCOMMUNICATION3_API receive : private FrameWork::Communication3::implementation::receive::client,
-											 public FrameWork::Communication3::implementation::receive
+struct FRAMEWORKCOMMUNICATION3_API receive : private FC3i::receive::client,
+											 public FC3i::receive
 {			// This is how you receive items
 			struct FRAMEWORKCOMMUNICATION3_API client
 			{	// Process the message here. If there is no audio or video
@@ -9,8 +9,8 @@ struct FRAMEWORKCOMMUNICATION3_API receive : private FrameWork::Communication3::
 				// The virtual function names reflect the format delivered so multiple ingeritance from multiple client types is possible.
 				// If this asserts, then you have probably got a race condition in setting up the vtable of this function. Ask Andrew
 				// if this confuses you.
-				virtual void deliver_video_audio( const FrameWork::Communication3::video::message* p_vid_msg,
-												  const FrameWork::Communication3::audio::message* p_aud_msg ) { assert( false ); }
+				virtual void deliver_video_audio( const FC3::video::message* p_vid_msg,
+												  const FC3::audio::message* p_aud_msg ) { assert( false ); }
 			};
 	
 			// Constructor
@@ -20,7 +20,7 @@ struct FRAMEWORKCOMMUNICATION3_API receive : private FrameWork::Communication3::
 			~receive( void );
 
 			// This allows you to get and set the ability for this server to run in low latency mode. When this is enabled then
-			// you will never have FrameWork::Communication3::video::message and FrameWork::Communication3::audio::message at the same time. Instead one will always be NULL.
+			// you will never have FC3::video::message and FC3::audio::message at the same time. Instead one will always be NULL.
 			// This takes out the potential for one field of latency that is caused by trying to sync the timestamps from A+V
 			void set_av_sync( const bool flag );
 			bool get_av_sync( void ) const;
@@ -36,6 +36,6 @@ private:	// The client implementation
 			bool m_sync_av;
 
 			// We need to store the last frame.
-			const FrameWork::Communication3::video::message* m_p_vid_msg;
-			const FrameWork::Communication3::audio::message* m_p_aud_msg;
+			const FC3::video::message* m_p_vid_msg;
+			const FC3::audio::message* m_p_aud_msg;
 };

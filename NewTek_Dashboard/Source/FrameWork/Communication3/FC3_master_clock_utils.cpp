@@ -25,11 +25,11 @@ const __int64 master_clock::clock( void* p_data ) const
 }
 
 // These are just utility functions that add frames with no data
-void master_clock::operator += ( const FrameWork::Communication3::video::message &msg )
+void master_clock::operator += ( const FC3::video::message &msg )
 {	add( msg );
 }
 
-void master_clock::operator += ( const FrameWork::Communication3::audio::message &msg )
+void master_clock::operator += ( const FC3::audio::message &msg )
 {	add( msg );
 }
 
@@ -67,6 +67,10 @@ void master_clock::flush_queues( void )
 		if ( frame_desc.m_p_frame ) 
 			frame_desc.m_p_frame->release();
 	}
+
+	// If both of the queues are now empty
+	if ( queues_empty() )
+		::ResetEvent( m_frames_available );
 }
 
 void master_clock::flush_play_queue( void )
@@ -92,6 +96,10 @@ void master_clock::flush_play_queue( void )
 		if ( frame_desc.m_p_frame ) 
 			frame_desc.m_p_frame->release();
 	}
+
+	// If both of the queues are now empty
+	if ( queues_empty() )
+		::ResetEvent( m_frames_available );
 }
 
 void master_clock::flush_seek_queue( void )
@@ -117,6 +125,10 @@ void master_clock::flush_seek_queue( void )
 		if ( frame_desc.m_p_frame ) 
 			frame_desc.m_p_frame->release();
 	}
+
+	// If both of the queues are now empty
+	if ( queues_empty() )
+		::ResetEvent( m_frames_available );
 }
 
 // Send the front video frame
@@ -126,8 +138,10 @@ const bool master_clock::send_video( void )
 	m_video_frames.pop_front();
 	
 	// Send the frame
-	if ( frame_desc.m_p_frame ) 
-		FC3::utilities::safe_send_message( *frame_desc.m_p_frame, m_p_video_dst, 1 );
+	if ( frame_desc.m_p_frame )
+	{	send_frame();
+		frame_desc.m_p_frame->send( m_p_video_dst );
+	}
 
 	// Keep the clock if it is newer than what we had
 	if ( frame_desc.m_used_with_clock )
@@ -147,6 +161,10 @@ const bool master_clock::send_video( void )
 	if ( frame_desc.m_p_frame ) 
 		frame_desc.m_p_frame->release();
 
+	// If both of the queues are now empty
+	if ( queues_empty() )
+		::ResetEvent( m_frames_available );
+
 	// Should we trigger available buffers
 	return ( m_video_frames.size() == m_queue_depth_video-1 );
 }
@@ -158,7 +176,9 @@ const bool master_clock::send_audio( void )
 	
 	// Send the frame
 	if ( frame_desc.m_p_frame ) 
-		FC3::utilities::safe_send_message( *frame_desc.m_p_frame, m_p_audio_dst, 1 );	
+	{	send_frame();
+		frame_desc.m_p_frame->send( m_p_audio_dst );
+	}
 
 	// Keep the clock if it is newer than what we had
 	if ( frame_desc.m_used_with_clock )
@@ -177,6 +197,10 @@ const bool master_clock::send_audio( void )
 	// Release the frame
 	if ( frame_desc.m_p_frame ) 
 		frame_desc.m_p_frame->release();
+
+	// If both of the queues are now empty
+	if ( queues_empty() )
+		::ResetEvent( m_frames_available );
 
 	// Should we trigger available buffers
 	return ( m_audio_frames.size() == m_queue_depth_audio-1 );
@@ -258,7 +282,7 @@ void master_clock::update_reference_time( void )
 	else
 	{	// The clock is running
 		// If the queues are empty, then we have dropped frames
-		if ( ( m_audio_frames.empty() ) && ( m_video_frames.empty() ) )
+		if ( queues_empty() )
 		{	// We stop the playback clock to allow the buffers to fill up again
 			m_stream_reference_time = 0;
 
@@ -282,7 +306,7 @@ void master_clock::update_reference_time( void )
 	}
 }
 
-const bool master_clock::dice_audio_buffers( const FrameWork::Communication3::audio::message &msg, const void* p_data, const bool used_with_clock )
+const bool master_clock::dice_audio_buffers( const FC3::audio::message &msg, const void* p_data, const bool used_with_clock )
 {	// Get the no samples and sample-rate
 	const int no_samples  = msg.no_samples();
 	const int sample_rate = msg.sample_rate();
@@ -319,7 +343,7 @@ const bool master_clock::dice_audio_buffers( const FrameWork::Communication3::au
 		const int sample_start = ( sample_rate < 0 ) ? ( no_samples - i - no_samples_to_copy ) : i;
 
 		// Allocate a new message
-		FrameWork::Communication3::audio::message* p_msg = new FrameWork::Communication3::audio::message( no_samples_to_copy, no_channels, 0 );
+		FC3::audio::message* p_msg = new FC3::audio::message( no_samples_to_copy, no_channels, 0 );
 		
 		// Store buffer properties
 		p_msg->sample_rate() = sample_rate;		
@@ -341,4 +365,19 @@ const bool master_clock::dice_audio_buffers( const FrameWork::Communication3::au
 
 	// We used diced buffers
 	return true;
+}
+
+void master_clock::send_frame( void )
+{	// Quick exit
+	if ( !m_p_idle ) return;
+
+	// Get the current time
+	m_last_send_time = ::GetTickCount();
+	
+	// If we had previously idled, then we wake it up !
+	FC3i::auto_lock	idle_lock( m_idle_lock );
+	if ( m_idle_sent )
+	{	m_p_idle->clock_active();
+		m_idle_sent = false;
+	}	
 }

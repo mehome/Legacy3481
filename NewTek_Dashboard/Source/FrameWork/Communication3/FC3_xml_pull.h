@@ -1,6 +1,6 @@
 #pragma once
 
-struct FRAMEWORKCOMMUNICATION3_API pull : public FrameWork::Communication3::implementation::receive
+struct FRAMEWORKCOMMUNICATION3_API pull : public FC3i::receive
 {			// Constructor
 			pull( const wchar_t name[], const bool flush_queue = false );
 
@@ -12,5 +12,5 @@ struct FRAMEWORKCOMMUNICATION3_API pull : public FrameWork::Communication3::impl
 			//	pull		hello( L"blah" );
 			//	message*	p_msg = hello();
 			//	if ( p_msg ) p_msg->release();
-			const FrameWork::Communication3::xml::message* operator() ( const DWORD timeout = INFINITE );
+			const FC3::xml::message* operator() ( const DWORD timeout = INFINITE );
 };

@@ -4,8 +4,14 @@ struct FRAMEWORKCOMMUNICATION3_API trigger
 {			// Constructor
 			trigger( void );
 
+			// Constructor when referenting another ID, this is done by messages.
+			trigger( const DWORD id );
+
 			// Destructor
 			~trigger( void );			
+
+			// Get the trigger ID. This is so that you can pass triggers in your own messages.
+			const DWORD trigger_id( void ) const;
 
 			// Reference counting
 			const long addref( void ) const;
@@ -23,17 +29,11 @@ struct FRAMEWORKCOMMUNICATION3_API trigger
 			// Get the handle. Treat this with utmost care !
 			HANDLE get_handle( void ) const;
 
-private:	// Constructor when referenting another ID, this is done by messages.
-			trigger( const DWORD id );
-			
-			// Setup the item (called by the cache)
+private:	// Setup the item (called by the cache)
 			bool setup( trigger_event *p_event );
 
 			// Set and reset the event
 			void set( const bool flag = true );
-
-			// Get the trigger ID
-			const DWORD trigger_id( void ) const;			
 	
 			// The ID of this trigger
 			trigger_event *m_p_event;
