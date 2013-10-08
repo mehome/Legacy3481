@@ -34,18 +34,19 @@ const std::pair< const wchar_t*, const wchar_t* > node2::parameter( const int id
 }
 
 // Get parameter by name, NULL if not found.
-const wchar_t* node2::parameter( const wchar_t name[], const wchar_t *p_default ) const
+const wchar_t* const node2::parameter( const wchar_t name[], wchar_t * const p_default ) const
 {	// Get the attributes
 	attribute_type* p_attribs = (attribute_type*)( sizeof(node2) + (BYTE*)this );
 
 	// Cycle over the item
 	for( int i=0; i<m_no_attributes; i++ )
-	if ( ! ::wcscmp( name, p_attribs[ i ].first ) )
-		return p_attribs[ i ].second;
+		if ( ! ::wcscmp( name, p_attribs[ i ].first ) )
+			return p_attribs[ i ].second;
 
 	// Return the default
 	return p_default;
 }
+
 
 // Get the number of children
 const int node2::no_children( void ) const
@@ -286,6 +287,24 @@ const int node2::output( wchar_t destination[], const int depth ) const
 	return ret;
 }
 
+// Convert a string to a boolean value.
+bool node2::convert_to_bool( wchar_t const * const p_param )
+{	bool ret = false;
+	
+	if ( p_param )
+	{
+		if ( !::wcsicmp( p_param, L"true" ) ) ret = true;
+		else if ( !::wcsicmp( p_param, L"yes" ) ) ret = true;
+		else if ( !::wcsicmp( p_param, L"1" ) ) ret = true;
+		else if ( !::wcsicmp( p_param, L"false" ) ) ret = false;
+		else if ( !::wcsicmp( p_param, L"no" ) ) ret = false;
+		else if ( !::wcsicmp( p_param, L"0" ) ) ret = false;
+		else assert( false );
+	}
+	
+	return ret;
+}
+
 
 //*******************************************************************************************************************************
 // Constructor
@@ -390,12 +409,12 @@ const int tree2::no_parameters( void ) const
 
 // If you access a parameter past the end, NULl, NULL is returned.
 const std::pair< const wchar_t*, const wchar_t* > tree2::parameter( const int idx ) const
-{	return ( m_used ? ( (node2*)&m_nodes[ 0 ] ) : &m_empty ) -> parameter( idx );
+{	return ( m_used ? ( (node2 const* const)&m_nodes[ 0 ] ) : &m_empty ) -> parameter( idx );
 }
 
 // Get parameter by name, NULL if not found.
 const wchar_t* tree2::parameter( const wchar_t name[], const wchar_t *p_default ) const
-{	return ( m_used ? ( (node2*)&m_nodes[ 0 ] ) : &m_empty ) -> parameter( name, p_default );
+{	return ( m_used ? ( (node2 const* const)&m_nodes[ 0 ] ) : &m_empty ) -> parameter( name, p_default );
 }
 
 // Get the number of children
@@ -467,7 +486,58 @@ void tree2::setup( const void* p_data, const int size_in_bytes )
 	}
 	else
 	{	// Probably ASCII
-        // UTF-8?
+#if 1
+		// change by konno
+		UINT encoding = 0;
+		char* p_data = (char*)p_dataA;
+		xml_document<char> declaration_parser;
+		xml_node<char>* p_node = declaration_parser.get_declaration_node<parse_declaration_node>( p_data );
+		if ( p_node )
+		{
+			xml_attribute<char>* p_attribute = p_node->first_attribute();
+			while ( p_attribute )
+			{
+				const char* attrib = p_attribute->name();
+				const char* value = p_attribute->value();
+				if ( ! stricmp( attrib, "encoding" ) )
+				{
+					if ( ! stricmp( value, "utf-8" ) ) encoding = CP_UTF8;
+					else if ( ! stricmp( value, "utf-7" ) ) encoding = CP_UTF7;
+					else if ( ! stricmp( value, "shift_jis" ) ) encoding = CP_ACP;
+					else if ( ! stricmp( value, "big5" ) ) encoding = CP_ACP;
+					else if ( ! stricmp( value, "ascii" ) ) encoding = CP_ACP;
+				}
+				if ( p_attribute == p_node->last_attribute() ) break;
+				p_attribute = p_attribute->next_attribute();
+			}
+		}
+
+       if ( encoding != 0 )
+        {
+			const size_t length = 1 + ( ( size_in_bytes > 0 ) ? size_in_bytes : ::strlen( p_data ) );
+
+			// Expand the string pool if needed
+			if ( length > m_str.size() ) m_str.resize( length );
+
+			// Convert the string & terminate if there is an error.
+			if ( ::MultiByteToWideChar( encoding, 0, p_data, -1, &m_str[ 0 ], (int)length ) == 0 ) 
+				m_str[ 0 ] = 0;
+
+        }
+		else
+		{	// Get the length
+			const size_t length = 1 + ( ( size_in_bytes > 0 ) ? size_in_bytes : ::mbstowcs( NULL, p_data, 0 ) );
+		
+			// Expand the string pool if needed
+			if ( length > m_str.size() ) m_str.resize( length );
+
+			// Convert the string
+			::mbstowcs( &m_str[ 0 ], p_data, length );
+
+			// Terminate the string
+			m_str[ length-1 ] = 0;
+		}
+#else
         if ( ((unsigned char)p_dataA[ 0 ]) == 0xEF && ((unsigned char)p_dataA[ 1 ]) == 0xBB && ((unsigned char)p_dataA[ 2 ]) == 0xBF )
         {	// Skup utf-8 bom
 			p_dataA += 3;      
@@ -492,6 +562,7 @@ void tree2::setup( const void* p_data, const int size_in_bytes )
 			// Terminate the string
 			m_str[ length-1 ] = 0;
 		}
+#endif
 	}
 
 	// Parse the object
@@ -517,8 +588,6 @@ void tree2::setup( const void* p_data, const int size_in_bytes )
 	catch( ... )
 	{
 	}
-
-	
 }
 
 // Get the output length of the XML, *** excluding termination ***

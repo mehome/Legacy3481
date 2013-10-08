@@ -1410,6 +1410,46 @@ namespace rapidxml
 
         }
 
+		// add by konno
+		template<int Flags>
+        xml_node<Ch> *get_declaration_node(Ch*& text)
+        {
+            assert(text);
+            
+            // Remove current contents
+            this->remove_all_nodes();
+            this->remove_all_attributes();
+            
+            // Parse BOM, if any
+            parse_bom<Flags>(text);
+            
+            // Skip whitespace before node
+            skip<whitespace_pred, Flags>(text);
+            if (*text == 0)
+                return NULL;
+
+                // Parse and append new child
+            if ( text[0] != Ch('<') || text[1] != Ch('?'))
+				return NULL;
+			text += 2;
+
+            skip<whitespace_pred, Flags>(text);
+            if (*text == 0)
+                return NULL;
+
+			if ((text[0] == Ch('x') || text[0] == Ch('X')) &&
+                (text[1] == Ch('m') || text[1] == Ch('M')) && 
+                (text[2] == Ch('l') || text[2] == Ch('L')) &&
+                whitespace_pred::test(text[3]))
+            {
+                // '<?xml ' - xml declaration
+                text += 4;      // Skip 'xml '
+                return parse_xml_declaration<Flags>(text);
+            }
+
+			return NULL;
+        }
+
         //! Clears the document by deleting all nodes and clearing the memory pool.
         //! All nodes owned by document pool are destroyed.
         void clear()
