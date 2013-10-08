@@ -1,5 +1,15 @@
 
 CompositorProps = {
+	settings =
+	{
+		x_scalar=0.05,
+		y_scalar=0.05,
+		square_reticle =
+		{
+			thickness=5,
+			r=0,g=255,b=100
+		}
+	},
 	controls =
 	{
 		Joystick_1 =

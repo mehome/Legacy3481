@@ -12,8 +12,13 @@ event frameSync;
 
 struct Compositor_Props
 {
-	public:	
-
+	double X_Scalar;
+	double Y_Scalar;
+	struct SquareReticle_Props
+	{
+		size_t Thickness;
+		BYTE rgb[3];
+	} square_reticle;
 };
 
 class Compositor_Properties
@@ -60,7 +65,14 @@ Compositor_Properties::ControlEvents Compositor_Properties::s_ControlsEvents;
 
 Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_ControlsEvents)
 {
-
+	Compositor_Props props;
+	props.X_Scalar=0.025;
+	props.Y_Scalar=0.025;
+	Compositor_Props::SquareReticle_Props &sqr_props=props.square_reticle;
+	sqr_props.Thickness=5;
+	sqr_props.rgb[0]=sqr_props.rgb[2]=0;
+	sqr_props.rgb[1]=255;
+	m_CompositorProps=props;
 }
 
 void Compositor_Properties::LoadFromScript(Scripting::Script& script)
@@ -73,6 +85,34 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 			printf ("Version=%.2f\n",version);
 	}
 	//note: call super here if we derived from other props
+	err = script.GetFieldTable("settings");
+	if (!err)
+	{
+		Compositor_Props &props=m_CompositorProps;
+		script.GetField("x_scalar", NULL, NULL, &props.X_Scalar);
+		script.GetField("y_scalar", NULL, NULL, &props.Y_Scalar);
+		err = script.GetFieldTable("square_reticle");
+		if (!err)
+		{
+			Compositor_Props::SquareReticle_Props &sqr_props=props.square_reticle;
+			double value;
+			err=script.GetField("thickness", NULL, NULL, &value);
+			if (!err)
+				sqr_props.Thickness=(size_t)value;
+			err=script.GetField("r", NULL, NULL, &value);
+			if (!err)
+				sqr_props.rgb[0]=(BYTE)value;
+			err=script.GetField("g", NULL, NULL, &value);
+			if (!err)
+				sqr_props.rgb[1]=(BYTE)value;
+			err=script.GetField("b", NULL, NULL, &value);
+			if (!err)
+				sqr_props.rgb[2]=(BYTE)value;
+				
+			script.Pop();
+		}
+		script.Pop();
+	}
 
 	err = script.GetFieldTable("controls");
 	if (!err)
@@ -98,7 +138,7 @@ static void AimingSystem_to_PixelSystem(int &Px,int &Py,double Ax,double Ay,doub
 	Py=(int)(-(((Ay-1)*YRes) / 2.0));
 }
 
-static Bitmap_Frame *RenderGreenReticle(Bitmap_Frame *Frame,double XPos,double YPos)
+static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double YPos,const Compositor_Props::SquareReticle_Props &props)
 {
 	if (g_Framework)
 	{
@@ -107,22 +147,36 @@ static Bitmap_Frame *RenderGreenReticle(Bitmap_Frame *Frame,double XPos,double Y
 		g_Framework->UYVY_to_BGRA(Frame,&bgra_frame);
 		#if 0
 		//Test... make a green box in the center of the frame
-		const size_t PositionY=bgra_frame.YRes / 2;
-		const size_t PositionX=bgra_frame.XRes / 2;
+		size_t PositionY=bgra_frame.YRes / 2;
+		size_t PositionX=bgra_frame.XRes / 2;
 		#else
 		int Px,Py;
 		AimingSystem_to_PixelSystem(Px,Py,XPos,YPos,bgra_frame.XRes,bgra_frame.YRes,((double)bgra_frame.XRes/(double)bgra_frame.YRes));
-		const size_t PositionY=(size_t)Py;
-		const size_t PositionX=(size_t)Px;
+		size_t PositionY=(size_t)Py;
+		size_t PositionX=(size_t)Px;
 		#endif
+
+		//Test bounds
+		const size_t Thickness=props.Thickness;
+
+		if (PositionX<Thickness)
+			PositionX=Thickness;
+		else if (PositionX>bgra_frame.XRes-Thickness)
+			PositionX=bgra_frame.XRes-Thickness;
+		if (PositionY<0)
+			PositionY=0;
+		else if (PositionY>bgra_frame.YRes-Thickness)
+			PositionY=bgra_frame.YRes-Thickness;
+
+
 		size_t LineWidthInBytes=bgra_frame.Stride * 4;
-		for (size_t y=PositionY-5;y<PositionY+5;y++)
+		for (size_t y=PositionY-Thickness;y<PositionY+Thickness;y++)
 		{
-			for (size_t x=PositionX-5; x<PositionX+5; x++)
+			for (size_t x=PositionX-Thickness; x<PositionX+Thickness; x++)
 			{
-				*(bgra_frame.Memory+ (x*4 + 0) + (LineWidthInBytes * y))=0;
-				*(bgra_frame.Memory+ (x*4 + 1) + (LineWidthInBytes * y))=255;
-				*(bgra_frame.Memory+ (x*4 + 2) + (LineWidthInBytes * y))=0;
+				*(bgra_frame.Memory+ (x*4 + 0) + (LineWidthInBytes * y))=props.rgb[2];  //blue
+				*(bgra_frame.Memory+ (x*4 + 1) + (LineWidthInBytes * y))=props.rgb[1];  //green
+				*(bgra_frame.Memory+ (x*4 + 2) + (LineWidthInBytes * y))=props.rgb[0];  //red
 			}
 		}
 		g_Framework->BGRA_to_UYVY(&bgra_frame,Frame);
@@ -138,26 +192,28 @@ class Compositor
 		{
 			if (m_IsEditable)
 			{
-				//Temp testing
+				const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 				SmartDashboard::PutNumber("X Position",value);
-				m_Xpos+= (value * 0.025);
-				if (m_Xpos>1.0)
-					m_Xpos=1.0;
-				else if (m_Xpos<-1.0)
-					m_Xpos=-1.0;
+				m_Xpos+= (value * props.X_Scalar);
+				const double x_limit=(m_Frame->XRes>m_Frame->YRes)?(double)m_Frame->XRes/(double)m_Frame->YRes : 1.0;
+				if (m_Xpos>x_limit)
+					m_Xpos=x_limit;
+				else if (m_Xpos<-x_limit)
+					m_Xpos=-x_limit;
 			}
 		}
 		void SetYAxis(double value)
 		{
 			if (m_IsEditable)
 			{
-				//Temp testing
+				const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 				SmartDashboard::PutNumber("Y Position",value);
-				m_Ypos+= (value * 0.025);
-				if (m_Ypos>0.8)
-					m_Ypos=0.8;
-				else if (m_Ypos<-0.8)
-					m_Ypos=-0.8;
+				m_Ypos+= (value * props.Y_Scalar);
+				const double y_limit=(m_Frame->YRes>m_Frame->XRes)?(double)m_Frame->YRes/(double)m_Frame->XRes : 1.0;
+				if (m_Ypos>y_limit)
+					m_Ypos=y_limit;
+				else if (m_Ypos<-y_limit)
+					m_Ypos=-y_limit;
 			}
 		}
 
@@ -192,13 +248,15 @@ class Compositor
 		Bitmap_Frame *TimeChange(Bitmap_Frame *Frame)
 		{
 
+			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 			const time_type current_time=time_type::get_current_time();
 			const double dTime_s=(double)(current_time-m_LastTime);
 			m_LastTime=current_time;
+			m_Frame=Frame; //to access frame properties during the event callback
 			m_JoyBinder.UpdateJoyStick(dTime_s);
 
 			m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
-			return RenderGreenReticle(Frame,m_Xpos,m_Ypos);
+			return RenderSquareReticle(Frame,m_Xpos,m_Ypos,props.square_reticle);
 		}
 
 	private:
@@ -206,43 +264,11 @@ class Compositor
 		FrameWork::UI::JoyStick_Binder m_JoyBinder;
 		FrameWork::EventMap m_EventMap;
 		Compositor_Properties m_CompositorProperties;
+		Bitmap_Frame *m_Frame;
 		double m_Xpos,m_Ypos;
 		bool m_IsEditable;
 } *g_pCompositor;
 
-//Give something cool to look at
-class SineWaveMaker
-{
-	public:
-		SineWaveMaker() : m_rho(0.0),m_rho2(0.0) {}
-		void operator()(double &Sample,double &Sample2,double freq_hz=1000,double SampleRate=48000,double amplitude=1.0)
-		{
-			double			 theta,theta2;
-			size_t index=0; //array index of buffer
-
-			const double pi2 = 3.1415926 * 2.0;
-			//Compute the angle ratio unit we are going to use
-			//Multiply times pi 2 to Convert the angle ratio unit into radians
-			theta = (freq_hz / SampleRate) * pi2;
-			theta2 = ((freq_hz*0.5) / SampleRate) * pi2;
-
-			Sample = sin( m_rho ) * amplitude;
-			Sample2 = sin (m_rho2) * amplitude;
-
-			//Find Y given the hypotenuse (scale) and the angle (rho)
-			//Note: using sin will solve for Y, and give us an initial 0 size
-			//increase our angular measurement
-			m_rho += theta;
-			m_rho2 += theta2;
-			//bring back the angular measurement by the length of the circle when it has completed a revolution
-			if ( m_rho > pi2 )
-				m_rho -= pi2;
-			if ( m_rho2 > pi2 )
-				m_rho2 -= pi2;
-		}
-	private:
-		double m_rho,m_rho2;
-} g_TestSample;
 
 extern "C" COMPOSITER_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 {
@@ -251,8 +277,6 @@ extern "C" COMPOSITER_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 	else
 		return Frame;
 }
-
-
 
 extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
 {
