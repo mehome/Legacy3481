@@ -4,10 +4,20 @@ CompositorProps = {
 	{
 		x_scalar=0.05,
 		y_scalar=0.05,
-		square_reticle =
+		square_reticle_0 =
 		{
-			thickness=5,
+			thickness_x=5,thickness_y=5,
 			r=0,g=255,b=100
+		},
+		square_reticle_1 =
+		{
+			thickness_x=3,thickness_y=40,
+			r=255,g=255,b=100
+		},
+		square_reticle_2 =
+		{
+			thickness_x=40,thickness_y=3,
+			r=0,g=255,b=255
 		}
 	},
 	controls =

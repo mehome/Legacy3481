@@ -9,7 +9,7 @@ using namespace FrameWork;
 event frameSync;
 
 
-
+const size_t c_NoSquareReticleProps=5;
 struct Compositor_Props
 {
 	double X_Scalar;
@@ -18,7 +18,7 @@ struct Compositor_Props
 	{
 		size_t ThicknessX,ThicknessY;
 		BYTE rgb[3];
-	} square_reticle;
+	} square_reticle[c_NoSquareReticleProps];
 };
 
 class Compositor_Properties
@@ -68,11 +68,49 @@ Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_Control
 	Compositor_Props props;
 	props.X_Scalar=0.025;
 	props.Y_Scalar=0.025;
-	Compositor_Props::SquareReticle_Props &sqr_props=props.square_reticle;
-	sqr_props.ThicknessX=sqr_props.ThicknessY=5;
-	sqr_props.rgb[0]=sqr_props.rgb[2]=0;
-	sqr_props.rgb[1]=255;
+	for (size_t i=0;i<c_NoSquareReticleProps;i++)
+	{
+		Compositor_Props::SquareReticle_Props &sqr_props=props.square_reticle[i];
+		sqr_props.ThicknessX=sqr_props.ThicknessY=5;
+		sqr_props.rgb[0]=sqr_props.rgb[2]=0;
+		sqr_props.rgb[1]=255;
+	}
 	m_CompositorProps=props;
+}
+
+static void LoadSquareReticleProps(Scripting::Script& script,size_t index,Compositor_Props &props)
+{
+	const char* err=NULL;
+	char Buffer[128];
+	sprintf_s(Buffer,128,"square_reticle_%d",index);
+	err = script.GetFieldTable(Buffer);
+	if (!err)
+	{
+		Compositor_Props::SquareReticle_Props &sqr_props=props.square_reticle[index];
+		double value;
+		err=script.GetField("thickness", NULL, NULL, &value);
+		if (!err)
+			sqr_props.ThicknessX=sqr_props.ThicknessY=(size_t)value;
+		{
+			err=script.GetField("thickness_x", NULL, NULL, &value);
+			if (!err)
+				sqr_props.ThicknessX=(size_t)value;
+			err=script.GetField("thickness_y", NULL, NULL, &value);
+			if (!err)
+				sqr_props.ThicknessY=(size_t)value;
+		}
+		err=script.GetField("r", NULL, NULL, &value);
+		if (!err)
+			sqr_props.rgb[0]=(BYTE)value;
+		err=script.GetField("g", NULL, NULL, &value);
+		if (!err)
+			sqr_props.rgb[1]=(BYTE)value;
+		err=script.GetField("b", NULL, NULL, &value);
+		if (!err)
+			sqr_props.rgb[2]=(BYTE)value;
+			
+		script.Pop();
+	}
 }
 
 void Compositor_Properties::LoadFromScript(Scripting::Script& script)
@@ -91,34 +129,8 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 		Compositor_Props &props=m_CompositorProps;
 		script.GetField("x_scalar", NULL, NULL, &props.X_Scalar);
 		script.GetField("y_scalar", NULL, NULL, &props.Y_Scalar);
-		err = script.GetFieldTable("square_reticle");
-		if (!err)
-		{
-			Compositor_Props::SquareReticle_Props &sqr_props=props.square_reticle;
-			double value;
-			err=script.GetField("thickness", NULL, NULL, &value);
-			if (!err)
-				sqr_props.ThicknessX=sqr_props.ThicknessY=(size_t)value;
-			{
-				err=script.GetField("thickness_x", NULL, NULL, &value);
-				if (!err)
-					sqr_props.ThicknessX=(size_t)value;
-				err=script.GetField("thickness_y", NULL, NULL, &value);
-				if (!err)
-					sqr_props.ThicknessY=(size_t)value;
-			}
-			err=script.GetField("r", NULL, NULL, &value);
-			if (!err)
-				sqr_props.rgb[0]=(BYTE)value;
-			err=script.GetField("g", NULL, NULL, &value);
-			if (!err)
-				sqr_props.rgb[1]=(BYTE)value;
-			err=script.GetField("b", NULL, NULL, &value);
-			if (!err)
-				sqr_props.rgb[2]=(BYTE)value;
-				
-			script.Pop();
-		}
+		for (size_t i=0;i<c_NoSquareReticleProps;i++)
+			LoadSquareReticleProps(script,i,props);
 		script.Pop();
 	}
 
@@ -172,8 +184,8 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 			PositionX=ThicknessX;
 		else if (PositionX>bgra_frame.XRes-ThicknessX)
 			PositionX=bgra_frame.XRes-ThicknessX;
-		if (PositionY<0)
-			PositionY=0;
+		if (PositionY<ThicknessY)
+			PositionY=ThicknessY;
 		else if (PositionY>bgra_frame.YRes-ThicknessY)
 			PositionY=bgra_frame.YRes-ThicknessY;
 
@@ -265,7 +277,7 @@ class Compositor
 			m_JoyBinder.UpdateJoyStick(dTime_s);
 
 			m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
-			return RenderSquareReticle(Frame,m_Xpos,m_Ypos,props.square_reticle);
+			return RenderSquareReticle(Frame,m_Xpos,m_Ypos,props.square_reticle[0]);
 		}
 
 	private:
