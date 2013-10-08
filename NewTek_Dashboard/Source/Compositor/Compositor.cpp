@@ -16,7 +16,7 @@ struct Compositor_Props
 	double Y_Scalar;
 	struct SquareReticle_Props
 	{
-		size_t Thickness;
+		size_t ThicknessX,ThicknessY;
 		BYTE rgb[3];
 	} square_reticle;
 };
@@ -69,7 +69,7 @@ Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_Control
 	props.X_Scalar=0.025;
 	props.Y_Scalar=0.025;
 	Compositor_Props::SquareReticle_Props &sqr_props=props.square_reticle;
-	sqr_props.Thickness=5;
+	sqr_props.ThicknessX=sqr_props.ThicknessY=5;
 	sqr_props.rgb[0]=sqr_props.rgb[2]=0;
 	sqr_props.rgb[1]=255;
 	m_CompositorProps=props;
@@ -98,7 +98,15 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 			double value;
 			err=script.GetField("thickness", NULL, NULL, &value);
 			if (!err)
-				sqr_props.Thickness=(size_t)value;
+				sqr_props.ThicknessX=sqr_props.ThicknessY=(size_t)value;
+			{
+				err=script.GetField("thickness_x", NULL, NULL, &value);
+				if (!err)
+					sqr_props.ThicknessX=(size_t)value;
+				err=script.GetField("thickness_y", NULL, NULL, &value);
+				if (!err)
+					sqr_props.ThicknessY=(size_t)value;
+			}
 			err=script.GetField("r", NULL, NULL, &value);
 			if (!err)
 				sqr_props.rgb[0]=(BYTE)value;
@@ -157,22 +165,23 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 		#endif
 
 		//Test bounds
-		const size_t Thickness=props.Thickness;
+		const size_t ThicknessX=props.ThicknessX;
+		const size_t ThicknessY=props.ThicknessY;
 
-		if (PositionX<Thickness)
-			PositionX=Thickness;
-		else if (PositionX>bgra_frame.XRes-Thickness)
-			PositionX=bgra_frame.XRes-Thickness;
+		if (PositionX<ThicknessX)
+			PositionX=ThicknessX;
+		else if (PositionX>bgra_frame.XRes-ThicknessX)
+			PositionX=bgra_frame.XRes-ThicknessX;
 		if (PositionY<0)
 			PositionY=0;
-		else if (PositionY>bgra_frame.YRes-Thickness)
-			PositionY=bgra_frame.YRes-Thickness;
+		else if (PositionY>bgra_frame.YRes-ThicknessY)
+			PositionY=bgra_frame.YRes-ThicknessY;
 
 
 		size_t LineWidthInBytes=bgra_frame.Stride * 4;
-		for (size_t y=PositionY-Thickness;y<PositionY+Thickness;y++)
+		for (size_t y=PositionY-ThicknessY;y<PositionY+ThicknessY;y++)
 		{
-			for (size_t x=PositionX-Thickness; x<PositionX+Thickness; x++)
+			for (size_t x=PositionX-ThicknessX; x<PositionX+ThicknessX; x++)
 			{
 				*(bgra_frame.Memory+ (x*4 + 0) + (LineWidthInBytes * y))=props.rgb[2];  //blue
 				*(bgra_frame.Memory+ (x*4 + 1) + (LineWidthInBytes * y))=props.rgb[1];  //green
