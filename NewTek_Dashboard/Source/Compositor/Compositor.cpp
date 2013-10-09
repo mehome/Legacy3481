@@ -83,17 +83,13 @@ static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &p
 {
 	const char* err=NULL;
 	char Buffer[128];
-	size_t index=0;
+	size_t index=1;  //keep the lists cardinal in LUA
 	do 
 	{
 		sprintf_s(Buffer,128,"square_reticle_%d",index);
 		err = script.GetFieldTable(Buffer);
 		if (!err)
 		{
-			//if we have at least one defined then clear out the default one
-			if (index==0)
-				props.square_reticle.clear();
-
 			Compositor_Props::SquareReticle_Props sqr_props;
 			double value;
 			err=script.GetField("thickness", NULL, NULL, &value);
@@ -140,7 +136,14 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 		Compositor_Props &props=m_CompositorProps;
 		script.GetField("x_scalar", NULL, NULL, &props.X_Scalar);
 		script.GetField("y_scalar", NULL, NULL, &props.Y_Scalar);
-		LoadSquareReticleProps(script,props);
+		err = script.GetFieldTable("square_reticle_props");
+		if (!err)
+		{
+			//clear the default one
+			props.square_reticle.clear();
+			LoadSquareReticleProps(script,props);
+			script.Pop();
+		}
 		script.Pop();
 	}
 
