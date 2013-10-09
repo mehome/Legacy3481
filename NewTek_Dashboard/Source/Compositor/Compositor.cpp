@@ -16,6 +16,7 @@ struct Compositor_Props
 	struct SquareReticle_Props
 	{
 		size_t ThicknessX,ThicknessY;
+		double opacity;
 		BYTE rgb[3];
 	};
 	std::vector<SquareReticle_Props> square_reticle;
@@ -72,6 +73,7 @@ Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_Control
 	//Make one default
 	Compositor_Props::SquareReticle_Props sqr_props;
 	sqr_props.ThicknessX=sqr_props.ThicknessY=5;
+	sqr_props.opacity=1.0;
 	sqr_props.rgb[0]=sqr_props.rgb[2]=0;
 	sqr_props.rgb[1]=255;
 	props.square_reticle.push_back(sqr_props);
@@ -102,6 +104,9 @@ static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &p
 				err=script.GetField("thickness_y", NULL, NULL, &value);
 				if (!err)
 					sqr_props.ThicknessY=(size_t)value;
+				err=script.GetField("opacity", NULL, NULL, &value);
+				if (!err)
+					sqr_props.opacity=value;
 			}
 			err=script.GetField("r", NULL, NULL, &value);
 			if (!err)
@@ -192,6 +197,7 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 		//Test bounds
 		const size_t ThicknessX=props.ThicknessX;
 		const size_t ThicknessY=props.ThicknessY;
+		const double Opacity=props.opacity;
 
 		if (PositionX<ThicknessX)
 			PositionX=ThicknessX;
@@ -208,9 +214,12 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 		{
 			for (size_t x=PositionX-ThicknessX; x<PositionX+ThicknessX; x++)
 			{
-				*(bgra_frame.Memory+ (x*4 + 0) + (LineWidthInBytes * y))=props.rgb[2];  //blue
-				*(bgra_frame.Memory+ (x*4 + 1) + (LineWidthInBytes * y))=props.rgb[1];  //green
-				*(bgra_frame.Memory+ (x*4 + 2) + (LineWidthInBytes * y))=props.rgb[0];  //red
+				PBYTE pBlue=(bgra_frame.Memory+ (x*4 + 0) + (LineWidthInBytes * y));
+				PBYTE pGreen=(bgra_frame.Memory+ (x*4 + 1) + (LineWidthInBytes * y));
+				PBYTE pRed=(bgra_frame.Memory+ (x*4 + 2) + (LineWidthInBytes * y));
+				*pBlue =(BYTE)((Opacity*(double)props.rgb[2])+((1.0-Opacity)* (double)(*pBlue )));  //blue
+				*pGreen=(BYTE)((Opacity*(double)props.rgb[1])+((1.0-Opacity)* (double)(*pGreen)));  //green
+				*pRed  =(BYTE)((Opacity*(double)props.rgb[0])+((1.0-Opacity)* (double)(*pRed  )));  //red
 			}
 		}
 		g_Framework->BGRA_to_UYVY(&bgra_frame,Frame);
