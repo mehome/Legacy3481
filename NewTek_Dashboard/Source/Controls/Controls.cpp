@@ -21,16 +21,16 @@ Plugin_Controller_Interface *g_plugin = NULL;
 
 DialogBase *g_pProcamp=NULL;
 DialogBase *g_pFileControls=NULL;
-DialogBase *g_pVisionControls=NULL;  //cjt
-DialogBase *g_pTargetEnableControls=NULL;
 
 DialogBase *CreateProcampDialog();
 DialogBase *CreateFileControlsDialog();
-DialogBase *CreateVisionControlsDialog();  //cjt
-DialogBase *CreateTargetEnableDialog();
 
 void ProcAmp_Initialize(HWND pParent);
 void Vision_Initialize(HWND pParent,Plugin_Controller_Interface *plugin);
+//Returns number of menu items added
+size_t Vision_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset);
+void Vision_On_Selection(int selection,HWND pParent);
+void Vision_Shutdown();
 
 const char *DashBoard_GetWindowText(wchar_t *StartUp)
 {
@@ -166,8 +166,6 @@ enum MenuSelection
 	eMenu_NoSelection,
 	eMenu_Controls,
 	eMenu_Procamp,
-	eMenu_Vision,	//cjt
-	eMenu_Targeting,
 	eMenu_NoEntries
 };
 
@@ -204,11 +202,9 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPop
 		InsertMenu(hPopupMenu, -1, (g_pFileControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Controls+StartingOffset, L"File Controls...");
 		InsertMenu(hPopupMenu, -1, (g_pProcamp?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Procamp+StartingOffset, L"Procamp...");
 	}
+	StartingOffset+=3;
 	if (( g_plugin )&&(strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0))
-	{
-		InsertMenu(hPopupMenu, -1, (g_pVisionControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Vision+StartingOffset, L"Vision...");  //cjt
-		InsertMenu(hPopupMenu, -1, (g_pTargetEnableControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Targeting+StartingOffset, L"Targeting...");
-	}
+		StartingOffset+=Vision_AddMenuItems(hPopupMenu,StartingOffset);
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selection,HWND pParent)
@@ -216,6 +212,8 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 	DebugOutput("Selection=%d\n",selection);
 	switch (selection)
 	{
+		case  eMenu_NoSelection:
+			break;
 		case eMenu_Controls:
 			if (!g_pFileControls)
 			{
@@ -240,32 +238,10 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 				assert(false);
 			}
 			break;
-#if 1	//cjt
-		case eMenu_Vision:
-			if (!g_pVisionControls)
-			{
-				g_pVisionControls=CreateVisionControlsDialog();
-				g_pVisionControls->Run(pParent);
-			}
-			else
-			{
-				DebugOutput("Vision Dialog already running\n");
-				assert(false);
-			}
-			break;
-		case eMenu_Targeting:
-			if (!g_pTargetEnableControls)
-			{
-				g_pTargetEnableControls=CreateTargetEnableDialog();
-				g_pTargetEnableControls->Run(pParent);
-			}
-			else
-			{
-				DebugOutput("Target Dialog already running\n");
-				assert(false);
-			}
-			break;
-#endif			
+		default:
+			assert(selection>eMenu_NoSelection);
+			if (( g_plugin )&&(strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0))
+				Vision_On_Selection(selection-eMenu_NoEntries,pParent);
 	}
 }
 
@@ -276,8 +252,6 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_Shutdown()
 		g_pFileControls->OnEndDialog();
 	if (g_pProcamp)
 		g_pProcamp->OnEndDialog();
-	if (g_pVisionControls)	//cjt
-		g_pVisionControls->OnEndDialog();
-	if (g_pTargetEnableControls)
-		g_pTargetEnableControls->OnEndDialog();
+	if ((g_plugin)&&(strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0))
+		Vision_Shutdown();
 }

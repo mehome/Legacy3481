@@ -5,10 +5,11 @@
 #include "Resource.h"
 #include "../ProcessingVision/Plugin_Control_Interface.h"
 
-extern DialogBase *g_pVisionControls;
+DialogBase *g_pVisionControls=NULL;  //cjt
+DialogBase *g_pTargetEnableControls=NULL;
+
 extern Dashboard_Controller_Interface *g_Controller;
 static Plugin_SquareTargeting *g_plugin_SquareTargeting=NULL;
-extern DialogBase *g_pTargetEnableControls;
 
 
   /***********************************************************************************************************************/
@@ -140,6 +141,60 @@ static void GetVisionFilename(std::string &Output)
 	Output = csz_Filename;
 	Output += DashBoard_GetWindowText();
 	Output += ".ini";
+}
+
+
+enum MenuSelection
+{
+	eMenu_Vision,	//cjt
+	eMenu_Targeting,
+	eMenu_NoEntries
+};
+
+size_t Vision_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
+{
+	InsertMenu(hPopupMenu, -1, (g_pVisionControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Vision+StartingOffset, L"Vision...");  //cjt
+	InsertMenu(hPopupMenu, -1, (g_pTargetEnableControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Targeting+StartingOffset, L"Targeting...");
+	return 2;
+}
+
+void Vision_On_Selection(int selection,HWND pParent)
+{
+	switch (selection)
+	{
+	case eMenu_Vision:
+		if (!g_pVisionControls)
+		{
+			g_pVisionControls=CreateVisionControlsDialog();
+			g_pVisionControls->Run(pParent);
+		}
+		else
+		{
+			DebugOutput("Vision Dialog already running\n");
+			assert(false);
+		}
+		break;
+	case eMenu_Targeting:
+		if (!g_pTargetEnableControls)
+		{
+			g_pTargetEnableControls=CreateTargetEnableDialog();
+			g_pTargetEnableControls->Run(pParent);
+		}
+		else
+		{
+			DebugOutput("Target Dialog already running\n");
+			assert(false);
+		}
+		break;
+	}
+}
+
+void Vision_Shutdown()
+{
+	if (g_pVisionControls)	//cjt
+		g_pVisionControls->OnEndDialog();
+	if (g_pTargetEnableControls)
+		g_pTargetEnableControls->OnEndDialog();
 }
 
   /***********************************************************************************************************************/
