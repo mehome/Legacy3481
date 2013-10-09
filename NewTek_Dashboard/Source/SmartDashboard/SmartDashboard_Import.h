@@ -4,7 +4,7 @@
 #include <string>
 //we could include this if Sendable.h would declare the iTable class without including it
 //#include "SmartDashboard/NamedSendable.h"
-#include "NetworkTables/cpp/include/src/main/include/networktables2/type/ComplexData.h"
+#include "networktables2/type/ComplexData.h"
 //#include "NetworkTables/cpp/include/src/main/include/ErrorBase.h"
 
 class NamedSendable
