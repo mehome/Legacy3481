@@ -187,6 +187,7 @@ public:
 	 */
 	virtual void RemoveTableListener(ITableListener* listener) = 0;
         
+	virtual bool IsConnected() = 0;
 
 };
 
