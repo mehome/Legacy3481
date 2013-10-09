@@ -2,7 +2,37 @@
 #define __IncludeInputBase__
 #include "../FrameWork/FrameWork.h"
 #include "Compositor.h"
-#include "../SmartDashboard2/SmartDashboard_Import.h"
+
+//#define __DisableSmartDashboard__ //used to quickly disable the smart dashboard
+#ifndef __DisableSmartDashboard__
+#include "../SmartDashboard/SmartDashboard_import.h"
+#else
+class SmartDashboard //: public SensorBase
+{
+public:
+	static void init() {}
+	static void shutdown() {}
+
+	//static void PutData(std::string key, Sendable *data) {}
+	//static void PutData(NamedSendable *value){}
+	//static Sendable* GetData(std::string keyName);
+
+	static void PutBoolean(std::string keyName, bool value) {}
+	static bool GetBoolean(std::string keyName) {return false;}
+
+	static void PutNumber(std::string keyName, double value) {}
+	static double GetNumber(std::string keyName) {return 0.0;}
+
+	static void PutString(std::string keyName, std::string value) {}
+	static int GetString(std::string keyName, char *value, unsigned int valueLen) {return 0;}
+	static std::string GetString(std::string keyName) {return "";} 
+
+	//static void PutValue(std::string keyName, ComplexData& value) {}
+	//static void RetrieveValue(std::string keyName, ComplexData& value) {}
+};
+#endif
+
+
 
 Dashboard_Framework_Interface *g_Framework=NULL;
 using namespace FrameWork;
