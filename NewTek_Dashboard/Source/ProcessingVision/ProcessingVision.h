@@ -29,6 +29,8 @@ extern "C"
 	PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper);
 	/// This is called when we are about to close will all for creation and destruction of classes
 	PROCESSINGVISION_API void Callback_SmartCppDashboard_Shutdown();
+	PROCESSINGVISION_API Plugin_Controller_Interface *Callback_CreatePluginControllerInterface();
+	PROCESSINGVISION_API void Callback_DestroyPluginControllerInterface(Plugin_Controller_Interface *plugin);
 
 	/// \param Frame this will contain incoming frames from a stream (e.g. a camera) and can analyze the frames for targeting inquiry.
 	/// \ret This gives the ability to control what gets shown on the video feed (i.e. preview) This makes it possible to make composite overlaying 

@@ -81,3 +81,9 @@ public:
 	virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)=0;
 };
 
+class Plugin_Controller_Interface
+{
+	public:
+		virtual const char *GetPlugInName() const=0;
+		virtual ~Plugin_Controller_Interface() {}
+};

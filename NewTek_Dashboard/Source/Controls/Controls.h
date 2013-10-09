@@ -1,6 +1,5 @@
 #pragma once
 #include "../Dashboard/Dashboard_Interfaces.h"
-#include "../ProcessingVision/Plugin_Control_Interface.h"
 
 #ifdef CONTROLS_EXPORTS
 #define CONTROLS_API __declspec(dllexport)

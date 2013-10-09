@@ -3,6 +3,8 @@
 #include "Controls.h"
 #include "Resource.h"
 
+const char *csz_Plugin_SquareTargeting="Plugin_SquareTargeting";
+
 void DebugOutput(const char *format, ... )
 {	char Temp[2048];
 	va_list marker;
@@ -28,7 +30,7 @@ DialogBase *CreateVisionControlsDialog();  //cjt
 DialogBase *CreateTargetEnableDialog();
 
 void ProcAmp_Initialize(HWND pParent);
-void Vision_Initialize(HWND pParent);
+void Vision_Initialize(HWND pParent,Plugin_Controller_Interface *plugin);
 
 const char *DashBoard_GetWindowText(wchar_t *StartUp)
 {
@@ -189,8 +191,8 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_StartedStreaming(HWND pP
 	}
 	if (g_Controller)
 		ProcAmp_Initialize(pParent);
-	if (g_plugin)
-		Vision_Initialize(pParent);
+	if ((g_plugin)&&(strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0))
+		Vision_Initialize(pParent,g_plugin);
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
@@ -202,7 +204,7 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPop
 		InsertMenu(hPopupMenu, -1, (g_pFileControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Controls+StartingOffset, L"File Controls...");
 		InsertMenu(hPopupMenu, -1, (g_pProcamp?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Procamp+StartingOffset, L"Procamp...");
 	}
-	if( g_plugin )
+	if (( g_plugin )&&(strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0))
 	{
 		InsertMenu(hPopupMenu, -1, (g_pVisionControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Vision+StartingOffset, L"Vision...");  //cjt
 		InsertMenu(hPopupMenu, -1, (g_pTargetEnableControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Targeting+StartingOffset, L"Targeting...");

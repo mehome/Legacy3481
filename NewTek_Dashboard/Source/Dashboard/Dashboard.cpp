@@ -12,7 +12,6 @@
 #include "../FrameWork/FrameWork.h"
 #include "../FrameWork/Window.h"
 #include "../FrameWork/Preview.h"
-#include "../ProcessingVision/ProcessingVision.h"
 #include "../FFMpeg121125/FrameGrabber.h"
 #pragma comment (lib,"shell32")
 #pragma comment (lib,"winhttp.lib")
@@ -94,11 +93,17 @@ class Dashboard_Framework_Helper : public Dashboard_Framework_Interface
 class ProcessingVision : public FrameWork::Outstream_Interface
 {
 	public:
-		ProcessingVision(FrameWork::Outstream_Interface *Preview=NULL) : m_DriverProc(NULL),m_PlugIn(NULL),m_Outstream(Preview) {}
+		ProcessingVision(FrameWork::Outstream_Interface *Preview=NULL) : m_DriverProc(NULL),
+			m_PlugIn(NULL),m_Outstream(Preview),m_pPluginControllerInterface(NULL) {}
 		void Callback_Initialize(char *IPAddress) {if (m_PlugIn) (*m_fpInitialize)(IPAddress,&m_DashboardHelper);}
 		void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
 		~ProcessingVision()
 		{
+			if (m_pPluginControllerInterface)
+			{
+				(*m_DestroyPluginControllerInterface)(m_pPluginControllerInterface);
+				m_pPluginControllerInterface=NULL;
+			}
 			//Note: we can move this earlier if necessary
 			Callback_Shutdown();
 			FlushPlugin();
@@ -111,9 +116,8 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 			m_DriverProc = NULL;  //this will avoid crashing if others fail
 			m_fpInitialize = NULL;
 			m_fpShutdown = NULL;
-			m_fpGetSettings = NULL;
-			m_fpSetSettings = NULL;
-			m_fpResetThreshholds = NULL;
+			m_CreatePluginControllerInterface=NULL;
+			m_DestroyPluginControllerInterface=NULL;
 
 			m_PlugIn=LoadLibrary(Plugin);
 
@@ -129,13 +133,12 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 					m_fpShutdown=(function_void) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
 					if (!m_fpShutdown) throw 3;
 					size_t Tally=0;
-					//These may be NULL
-					m_fpGetSettings=(function_get) GetProcAddress(m_PlugIn,"Get_VisionSettings");
-					if (m_fpGetSettings) Tally++;
-					m_fpSetSettings=(function_set) GetProcAddress(m_PlugIn,"Set_VisionSettings");
-					if (m_fpSetSettings) Tally++;
-					m_fpResetThreshholds=(function_void) GetProcAddress(m_PlugIn, "ResetDefaults");
-					if (m_fpResetThreshholds) Tally++;
+					//This may be NULL if there are no controls for it
+					m_CreatePluginControllerInterface=
+						(function_create_plugin_controller_interface) GetProcAddress(m_PlugIn,"Callback_CreatePluginControllerInterface");
+					m_DestroyPluginControllerInterface=
+						(function_destroy_plugin_controller_interface) GetProcAddress(m_PlugIn,"Callback_DestroyPluginControllerInterface");
+
 					//either all or nothing of this group of functions
 					if ((Tally!=0)&&(Tally!=3))
 					{
@@ -148,9 +151,6 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 					m_DriverProc = NULL;  //this will avoid crashing if others fail
 					m_fpInitialize = NULL;
 					m_fpShutdown = NULL;
-					m_fpGetSettings = NULL;
-					m_fpSetSettings = NULL;
-					m_fpResetThreshholds = NULL;
 					FrameWork::DebugOutput("ProcessingVision Plugin failed error code=%d",ErrorCode);
 					FlushPlugin();
 				}
@@ -178,10 +178,9 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 
 		Plugin_Controller_Interface* GetPluginInterface(void) 
 		{
-			Plugin_Controller_Interface *ret=NULL;
-			if (m_fpGetSettings && m_fpGetSettings && m_fpResetThreshholds)
-				ret=new Plugin_Controller_Interface(m_fpGetSettings, m_fpSetSettings, m_fpResetThreshholds);
-			return ret;
+			if ((m_pPluginControllerInterface==NULL)&&(m_CreatePluginControllerInterface))
+				m_pPluginControllerInterface=(*m_CreatePluginControllerInterface)();
+			return m_pPluginControllerInterface;
 		}
 
 	private:
@@ -193,15 +192,12 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 
 		typedef void (*function_void) ();
 		function_void m_fpShutdown;
-		function_void m_fpResetThreshholds;
 
-		typedef bool (*function_set) (VisionSetting_enum Setting, double value);
-		function_set m_fpSetSettings;
-
-		typedef double (*function_get) (VisionSetting_enum Setting);
-		function_get m_fpGetSettings;
-
-
+		typedef Plugin_Controller_Interface * (*function_create_plugin_controller_interface) ();
+		function_create_plugin_controller_interface m_CreatePluginControllerInterface;
+		typedef  void (*function_destroy_plugin_controller_interface)(Plugin_Controller_Interface *);
+		function_destroy_plugin_controller_interface m_DestroyPluginControllerInterface;
+	
 		void FlushPlugin()
 		{
 			if (m_PlugIn)
@@ -215,6 +211,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		FrameWork::Outstream_Interface * m_Outstream; //I'm not checking for NULL so stream must be stopped while pointer is invalid
 		bool m_IsStreaming;
 		Dashboard_Framework_Helper m_DashboardHelper;
+		Plugin_Controller_Interface *m_pPluginControllerInterface;
 };
 
 

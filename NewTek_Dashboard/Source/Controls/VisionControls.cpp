@@ -3,10 +3,98 @@
 #include "stdafx.h"
 #include "Controls.h"
 #include "Resource.h"
+#include "../ProcessingVision/Plugin_Control_Interface.h"
 
 extern DialogBase *g_pVisionControls;
 extern Dashboard_Controller_Interface *g_Controller;
-extern Plugin_Controller_Interface *g_plugin;
+static Plugin_SquareTargeting *g_plugin_SquareTargeting=NULL;
+extern DialogBase *g_pTargetEnableControls;
+
+
+  /***********************************************************************************************************************/
+ /*													TargetEnableControls												*/
+/***********************************************************************************************************************/
+
+void VisionControls_SaveChanges();
+
+class TargetEnableControls : public DialogBase
+{
+public:
+	TargetEnableControls() : m_IgnoreUpdate(false) {}
+	~TargetEnableControls();
+	virtual bool Run(HWND pParent);
+protected:
+	virtual size_t GetDialogResource() const {return IDD_Target_DIALOG;}
+	virtual LPARAM GetInstance() const {return (LPARAM) this;}
+	virtual const wchar_t * const GetTitlePrefix() const  {return L"Target Enabling";}
+	virtual long Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam);
+private:
+	void UpdateControls();
+	bool m_IgnoreUpdate;
+};
+
+DialogBase *CreateTargetEnableDialog() {return new TargetEnableControls;}
+
+TargetEnableControls::~TargetEnableControls()
+{
+	g_pTargetEnableControls=NULL;
+	VisionControls_SaveChanges();  //the targeting is bundled in this file
+}
+
+void TargetEnableControls::UpdateControls()
+{
+	const bool IsTargeting=g_plugin_SquareTargeting->Get_Vision_Settings(eIsTargeting)==0.0?false:true;
+	SendDlgItemMessage(m_hDlg, IDC_DisableTarget, BM_SETCHECK, (!IsTargeting), 0);
+	SendDlgItemMessage(m_hDlg, IDC_EnableTarget, BM_SETCHECK,  ( IsTargeting), 0);
+}
+
+bool TargetEnableControls::Run(HWND pParent)
+{
+	m_IgnoreUpdate=true;
+	bool ret=__super::Run(pParent);
+	m_IgnoreUpdate=false;
+	UpdateControls();
+	return ret;
+}
+
+long TargetEnableControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_COMMAND: 
+		{
+			WORD notifycode = HIWORD(wParam);
+			WORD buttonid = LOWORD(wParam);
+			if (notifycode==BN_CLICKED) 
+			{
+				if (m_IgnoreUpdate) break;
+				//Handle our button up
+				switch (buttonid) 
+				{
+				case IDC_DisableTarget:
+					printf("Disable Target\n");
+					g_plugin_SquareTargeting->Set_Vision_Settings(eIsTargeting,(double)false);
+					break;
+				case IDC_EnableTarget:
+					printf("Enable Target\n");
+					g_plugin_SquareTargeting->Set_Vision_Settings(eIsTargeting,(double)true);
+					break;
+				}
+			}
+		}
+		break;
+	default:
+		return __super::Dispatcher(w_ptr,uMsg,wParam,lParam);
+	}
+	UpdateControls();  //for this simple dialog everything we capture we'll want an update
+	return TRUE;
+}
+
+
+  /***********************************************************************************************************************/
+ /*														VisionControls													*/
+/***********************************************************************************************************************/
+
 
 class VisionControls : public DialogBase
 {
@@ -79,9 +167,10 @@ static size_t s_ThresholdResourceTable_Edit[]=
 	IDC_BLMax_Ed 
 };
 
-void Vision_Initialize(HWND pParent)
+void Vision_Initialize(HWND pParent,Plugin_Controller_Interface *plugin)
 {
-	if( g_plugin == NULL ) return;
+	g_plugin_SquareTargeting=dynamic_cast<Plugin_SquareTargeting *>(plugin);
+	if( g_plugin_SquareTargeting == NULL ) return;
 
 	using namespace std;
 	string InFile;
@@ -92,35 +181,35 @@ void Vision_Initialize(HWND pParent)
 	{
 		string StringEntry;
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eTrackerType, (double)(TrackerType)atoi(StringEntry.c_str()));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, (double)(TrackerType)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eDisplayType, (double)(DisplayType)atoi(StringEntry.c_str()));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eDisplayType, (double)(DisplayType)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eSolidMask, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eSolidMask, (double)(bool)(atoi(StringEntry.c_str()) > 0));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eOverlays, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eOverlays, (double)(bool)(atoi(StringEntry.c_str()) > 0));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eAimingText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eAimingText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eBoundsText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eBoundsText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(e3PtGoal, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, (double)(bool)(atoi(StringEntry.c_str()) > 0));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eThresholdMode, (double)(ThresholdColorSpace)atoi(StringEntry.c_str()));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, (double)(ThresholdColorSpace)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eThresholdPlane1Min, (double)atoi(StringEntry.c_str()));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane1Min, (double)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eThresholdPlane2Min, (double)atoi(StringEntry.c_str()));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane2Min, (double)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eThresholdPlane3Min, (double)atoi(StringEntry.c_str()));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane3Min, (double)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eThresholdPlane1Max, (double)atoi(StringEntry.c_str()));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane1Max, (double)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eThresholdPlane2Max, (double)atoi(StringEntry.c_str()));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane2Max, (double)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eThresholdPlane3Max, (double)atoi(StringEntry.c_str()));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane3Max, (double)atoi(StringEntry.c_str()));
 		in >> StringEntry; in >> StringEntry;
-		g_plugin->Set_Vision_Settings(eIsTargeting, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+		g_plugin_SquareTargeting->Set_Vision_Settings(eIsTargeting, (double)(bool)(atoi(StringEntry.c_str()) > 0));
 		in.close();
 	}
 }
@@ -138,7 +227,7 @@ bool VisionControls::Run(HWND pParent)
 {
 	bool ret=__super::Run(pParent);
 
-	if( g_plugin == NULL ) return ret;
+	if( g_plugin_SquareTargeting == NULL ) return ret;
 
 	for( int i = 0; i < eNumThresholdSettings; i++ )
 	{
@@ -159,48 +248,48 @@ bool VisionControls::Run(HWND pParent)
 		if( CurrentSettings.vsTrackerType != (TrackerType)atoi(StringEntry.c_str()) )
 		{
 			CurrentSettings.vsTrackerType = (TrackerType)atoi(StringEntry.c_str());
-			g_plugin->Set_Vision_Settings(eTrackerType, (double)CurrentSettings.vsTrackerType);
+			g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, (double)CurrentSettings.vsTrackerType);
 			GetVisionSettings();	// need to update the rest.
 		}
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsDisplayType = (DisplayType)atoi(StringEntry.c_str());
-		g_plugin->Set_Vision_Settings(eDisplayType, (double)CurrentSettings.vsDisplayType);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eDisplayType, (double)CurrentSettings.vsDisplayType);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsSolidMask = (bool)(atoi(StringEntry.c_str()) > 0);
-		g_plugin->Set_Vision_Settings(eSolidMask, (double)CurrentSettings.vsSolidMask);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eSolidMask, (double)CurrentSettings.vsSolidMask);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsOverlays = (bool)(atoi(StringEntry.c_str()) > 0);
-		g_plugin->Set_Vision_Settings(eOverlays, (double)CurrentSettings.vsOverlays);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eOverlays, (double)CurrentSettings.vsOverlays);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsAimingText = (bool)(atoi(StringEntry.c_str()) > 0);
-		g_plugin->Set_Vision_Settings(eAimingText, (double)CurrentSettings.vsAimingText);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eAimingText, (double)CurrentSettings.vsAimingText);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsBoundsText = (bool)(atoi(StringEntry.c_str()) > 0);
-		g_plugin->Set_Vision_Settings(eBoundsText, (double)CurrentSettings.vsBoundsText);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eBoundsText, (double)CurrentSettings.vsBoundsText);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vs3ptGoal = (bool)(atoi(StringEntry.c_str()) > 0);
-		g_plugin->Set_Vision_Settings(e3PtGoal, (double)CurrentSettings.vs3ptGoal);
+		g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, (double)CurrentSettings.vs3ptGoal);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsThresholdMode = (ThresholdColorSpace)atoi(StringEntry.c_str());
-		g_plugin->Set_Vision_Settings(eThresholdMode, (double)CurrentSettings.vsThresholdMode);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, (double)CurrentSettings.vsThresholdMode);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[0] = atoi(StringEntry.c_str());
-		g_plugin->Set_Vision_Settings(eThresholdPlane1Min, (double)CurrentSettings.ThresholdValues[0]);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane1Min, (double)CurrentSettings.ThresholdValues[0]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[1] = atoi(StringEntry.c_str());
-		g_plugin->Set_Vision_Settings(eThresholdPlane2Min, (double)CurrentSettings.ThresholdValues[1]);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane2Min, (double)CurrentSettings.ThresholdValues[1]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[2] = atoi(StringEntry.c_str());
-		g_plugin->Set_Vision_Settings(eThresholdPlane3Min, (double)CurrentSettings.ThresholdValues[2]);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane3Min, (double)CurrentSettings.ThresholdValues[2]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[3] = atoi(StringEntry.c_str());
-		g_plugin->Set_Vision_Settings(eThresholdPlane1Max, (double)CurrentSettings.ThresholdValues[3]);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane1Max, (double)CurrentSettings.ThresholdValues[3]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[4] = atoi(StringEntry.c_str());
-		g_plugin->Set_Vision_Settings(eThresholdPlane2Max, (double)CurrentSettings.ThresholdValues[4]);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane2Max, (double)CurrentSettings.ThresholdValues[4]);
 		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.ThresholdValues[5] = atoi(StringEntry.c_str());
-		g_plugin->Set_Vision_Settings(eThresholdPlane3Max, (double)CurrentSettings.ThresholdValues[5]);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane3Max, (double)CurrentSettings.ThresholdValues[5]);
 		in.close();
 	}
 
@@ -216,21 +305,21 @@ void VisionControls_SaveChanges()
 	GetVisionFilename(OutFile);
 	ofstream out(OutFile.c_str(), std::ios::out );
 	//this is unrolled to look pretty... :)
-	out << "TrackerType= " << (int)g_plugin->Get_Vision_Settings(eTrackerType) << endl;
-	out << "DisplayType= " << (int)g_plugin->Get_Vision_Settings(eDisplayType) << endl;
-	out << "SolidMask= " <<   (int)g_plugin->Get_Vision_Settings(eSolidMask) << endl;
-	out << "Overlays= " <<    (int)g_plugin->Get_Vision_Settings(eOverlays) << endl;
-	out << "Aiming= " <<      (int)g_plugin->Get_Vision_Settings(eAimingText) << endl;
-	out << "Bounds= " <<      (int)g_plugin->Get_Vision_Settings(eBoundsText) << endl;
-	out << "3ptgoal= " <<     (int)g_plugin->Get_Vision_Settings(e3PtGoal) << endl;
-	out << "ThresholdType= "<<(int)g_plugin->Get_Vision_Settings(eThresholdMode) << endl;
-	out << "Plane1Min= " << g_plugin->Get_Vision_Settings(eThresholdPlane1Min) << endl;
-	out << "Plane2Min= " << g_plugin->Get_Vision_Settings(eThresholdPlane2Min) << endl;
-	out << "Plane3Min= " << g_plugin->Get_Vision_Settings(eThresholdPlane3Min) << endl;
-	out << "Plane1Max= " << g_plugin->Get_Vision_Settings(eThresholdPlane1Max) << endl;
-	out << "Plane2Max= " << g_plugin->Get_Vision_Settings(eThresholdPlane2Max) << endl;
-	out << "Plane3Max= " << g_plugin->Get_Vision_Settings(eThresholdPlane3Max) << endl;
-	out << "IsTargeting= " << (int)g_plugin->Get_Vision_Settings(eIsTargeting) << endl;
+	out << "TrackerType= " << (int)g_plugin_SquareTargeting->Get_Vision_Settings(eTrackerType) << endl;
+	out << "DisplayType= " << (int)g_plugin_SquareTargeting->Get_Vision_Settings(eDisplayType) << endl;
+	out << "SolidMask= " <<   (int)g_plugin_SquareTargeting->Get_Vision_Settings(eSolidMask) << endl;
+	out << "Overlays= " <<    (int)g_plugin_SquareTargeting->Get_Vision_Settings(eOverlays) << endl;
+	out << "Aiming= " <<      (int)g_plugin_SquareTargeting->Get_Vision_Settings(eAimingText) << endl;
+	out << "Bounds= " <<      (int)g_plugin_SquareTargeting->Get_Vision_Settings(eBoundsText) << endl;
+	out << "3ptgoal= " <<     (int)g_plugin_SquareTargeting->Get_Vision_Settings(e3PtGoal) << endl;
+	out << "ThresholdType= "<<(int)g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdMode) << endl;
+	out << "Plane1Min= " << g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdPlane1Min) << endl;
+	out << "Plane2Min= " << g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdPlane2Min) << endl;
+	out << "Plane3Min= " << g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdPlane3Min) << endl;
+	out << "Plane1Max= " << g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdPlane1Max) << endl;
+	out << "Plane2Max= " << g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdPlane2Max) << endl;
+	out << "Plane3Max= " << g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdPlane3Max) << endl;
+	out << "IsTargeting= " << (int)g_plugin_SquareTargeting->Get_Vision_Settings(eIsTargeting) << endl;
 	out.close();
 }
 
@@ -242,19 +331,19 @@ VisionControls::~VisionControls()
 
 void VisionControls::GetVisionSettings()
 {
-	if( g_plugin == NULL ) return;
+	if( g_plugin_SquareTargeting == NULL ) return;
 
-	CurrentSettings.vsTrackerType = (TrackerType)(int)g_plugin->Get_Vision_Settings(eTrackerType);
-	CurrentSettings.vsDisplayType = (DisplayType)(int)g_plugin->Get_Vision_Settings(eDisplayType);
-	CurrentSettings.vsSolidMask = (bool)((int)g_plugin->Get_Vision_Settings(eSolidMask) > 0);
-	CurrentSettings.vsOverlays = (bool)((int)g_plugin->Get_Vision_Settings(eOverlays) > 0);
-	CurrentSettings.vsAimingText = (bool)((int)g_plugin->Get_Vision_Settings(eAimingText) > 0);
-	CurrentSettings.vsBoundsText = (bool)((int)g_plugin->Get_Vision_Settings(eBoundsText) > 0);
-	CurrentSettings.vs3ptGoal = (bool)((int)g_plugin->Get_Vision_Settings(e3PtGoal) > 0);
-	CurrentSettings.vsThresholdMode = (ThresholdColorSpace)(int)g_plugin->Get_Vision_Settings(eThresholdMode);
+	CurrentSettings.vsTrackerType = (TrackerType)(int)g_plugin_SquareTargeting->Get_Vision_Settings(eTrackerType);
+	CurrentSettings.vsDisplayType = (DisplayType)(int)g_plugin_SquareTargeting->Get_Vision_Settings(eDisplayType);
+	CurrentSettings.vsSolidMask = (bool)((int)g_plugin_SquareTargeting->Get_Vision_Settings(eSolidMask) > 0);
+	CurrentSettings.vsOverlays = (bool)((int)g_plugin_SquareTargeting->Get_Vision_Settings(eOverlays) > 0);
+	CurrentSettings.vsAimingText = (bool)((int)g_plugin_SquareTargeting->Get_Vision_Settings(eAimingText) > 0);
+	CurrentSettings.vsBoundsText = (bool)((int)g_plugin_SquareTargeting->Get_Vision_Settings(eBoundsText) > 0);
+	CurrentSettings.vs3ptGoal = (bool)((int)g_plugin_SquareTargeting->Get_Vision_Settings(e3PtGoal) > 0);
+	CurrentSettings.vsThresholdMode = (ThresholdColorSpace)(int)g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdMode);
 	for( int i = 0; i < eNumThresholdSettings; i++ )
 	{
-		CurrentSettings.ThresholdValues[i] = (int)g_plugin->Get_Vision_Settings((VisionSetting_enum)(eThresholdPlane1Min + i));
+		CurrentSettings.ThresholdValues[i] = (int)g_plugin_SquareTargeting->Get_Vision_Settings((VisionSetting_enum)(eThresholdPlane1Min + i));
 	}
 }
 
@@ -333,7 +422,7 @@ void VisionControls::EnableGBSVSliders(bool bEnable)
 long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	assert(g_Controller);
-	assert(g_plugin);
+	assert(g_plugin_SquareTargeting);
 
 	switch(uMsg)
 	{
@@ -350,77 +439,77 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 					switch (buttonid) 
 					{
 					case IDC_TargetGoal:
-						g_plugin->Set_Vision_Settings(eTrackerType, eGoalTracker);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, eGoalTracker);
 						GetVisionSettings();
 						UpdateControls();
 						break;
 					case IDC_TargetFrisbe:
-						g_plugin->Set_Vision_Settings(eTrackerType, eFrisbeTracker);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, eFrisbeTracker);
 						GetVisionSettings();
 						UpdateControls();
 						break;
 					case IDC_DisplayNormal:
-						g_plugin->Set_Vision_Settings(eDisplayType, eNormal);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eDisplayType, eNormal);
 						CurrentSettings.vsDisplayType = eNormal;
 						break;
 					case IDC_DisplayThreshold:
-						g_plugin->Set_Vision_Settings(eDisplayType, eThreshold);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eDisplayType, eThreshold);
 						CurrentSettings.vsDisplayType = eThreshold;
 						break;
 					case IDC_DisplayMask:
-						g_plugin->Set_Vision_Settings(eDisplayType, eMasked);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eDisplayType, eMasked);
 						CurrentSettings.vsDisplayType = eMasked;
 						break;
 					case IDC_SOLID:
 						bChecked = SendDlgItemMessage(m_hDlg, IDC_SOLID, BM_GETCHECK, 0, 0) > 0;
-						g_plugin->Set_Vision_Settings(eSolidMask, bChecked);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eSolidMask, bChecked);
 						CurrentSettings.vsSolidMask = bChecked;
 						break;
 					case IDC_ShowOverlay:
 						bChecked = SendDlgItemMessage(m_hDlg, IDC_ShowOverlay, BM_GETCHECK, 0, 0) > 0;
-						g_plugin->Set_Vision_Settings(eOverlays, bChecked);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eOverlays, bChecked);
 						CurrentSettings.vsOverlays = bChecked;
 						break;
 					case IDC_ShowAiming:
 						bChecked = SendDlgItemMessage(m_hDlg, IDC_ShowAiming, BM_GETCHECK, 0, 0) > 0;
-						g_plugin->Set_Vision_Settings(eAimingText, bChecked);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eAimingText, bChecked);
 						CurrentSettings.vsAimingText = bChecked;
 						break;
 					case IDC_ShowBounds:
 						bChecked = SendDlgItemMessage(m_hDlg, IDC_ShowBounds, BM_GETCHECK, 0, 0) > 0;
-						g_plugin->Set_Vision_Settings(eBoundsText, bChecked);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eBoundsText, bChecked);
 						CurrentSettings.vsBoundsText = bChecked;
 						break;
 					case IDC_3PT:
 						bChecked = SendDlgItemMessage(m_hDlg, IDC_3PT, BM_GETCHECK, 0, 0) > 0;
-						g_plugin->Set_Vision_Settings(e3PtGoal, bChecked);
+						g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, bChecked);
 						CurrentSettings.vs3ptGoal = bChecked;
 						break;
 					case IDC_2PT:
 						bChecked = SendDlgItemMessage(m_hDlg, IDC_2PT, BM_GETCHECK, 0, 0) > 0;
-						g_plugin->Set_Vision_Settings(e3PtGoal, !bChecked);
+						g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, !bChecked);
 						CurrentSettings.vs3ptGoal = !bChecked;
 						break;
 					case IDC_ThresholdRGB:
-						g_plugin->Set_Vision_Settings(eThresholdMode, eThreshRGB);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, eThreshRGB);
 						GetVisionSettings();
 						UpdateControls();
 						EnableGBSVSliders(true);
 						break;
 					case IDC_ThresholdHSV:
-						g_plugin->Set_Vision_Settings(eThresholdMode, eThreshHSV);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, eThreshHSV);
 						GetVisionSettings();
 						UpdateControls();
 						EnableGBSVSliders(true);
 						break;
 					case IDC_ThresholdLuma:
-						g_plugin->Set_Vision_Settings(eThresholdMode, eThreshLuma);
+						g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, eThreshLuma);
 						GetVisionSettings();
 						UpdateControls();
 						EnableGBSVSliders(false);
 						break;
 					case IDC_ResetThreshold:
-						g_plugin->ResetThresholds();
+						g_plugin_SquareTargeting->ResetThresholds();
 						GetVisionSettings();
 						UpdateControls();
 					}
@@ -442,7 +531,7 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 
 								CurrentSettings.ThresholdValues[i] = value;
 								//DebugOutput("Edit[%d]= %.3f\n",i,value);
-								g_plugin->Set_Vision_Settings((VisionSetting_enum)(eThresholdPlane1Min + i), value);
+								g_plugin_SquareTargeting->Set_Vision_Settings((VisionSetting_enum)(eThresholdPlane1Min + i), value);
 								UpdateSlider((VisionSetting_enum)(eThresholdPlane1Min + i)); //implicitly checks for flood control
 							}
 							else
@@ -462,7 +551,7 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 					if ((!m_UpdatingSlider[i]) && (hWndScroller == GetDlgItem(m_hDlg, s_ThresholdResourceTable_TrackerBar[i])))
 					{
 						CurrentSettings.ThresholdValues[i] = SendMessage(hWndScroller, TBM_GETPOS, 0, 0);
-						g_plugin->Set_Vision_Settings((VisionSetting_enum)(eThresholdPlane1Min + i), CurrentSettings.ThresholdValues[i]);
+						g_plugin_SquareTargeting->Set_Vision_Settings((VisionSetting_enum)(eThresholdPlane1Min + i), CurrentSettings.ThresholdValues[i]);
 						UpdateText((VisionSetting_enum)(eThresholdPlane1Min + i));		//implicitly checks for flood control
 						break;
 					}

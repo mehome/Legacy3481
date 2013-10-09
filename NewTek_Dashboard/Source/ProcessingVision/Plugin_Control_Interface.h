@@ -50,17 +50,16 @@ typedef bool (*function_set) (VisionSetting_enum Setting, double value);
 typedef double (*function_get) (VisionSetting_enum Setting);
 typedef void (*function_reset) (void);
 
-class Plugin_Controller_Interface
+class Plugin_SquareTargeting : public Plugin_Controller_Interface
 {
 public:
-	Plugin_Controller_Interface(function_get pGetFunc, function_set pSetFunc, function_reset pResetFunc )
+
+	Plugin_SquareTargeting(function_get pGetFunc, function_set pSetFunc, function_reset pResetFunc )
 	{
 		m_fpGetSettings = pGetFunc;
 		m_fpSetSettings = pSetFunc;
 		m_fpResetThreshholds = pResetFunc;
 	}
-
-	~Plugin_Controller_Interface() {}
 
 	bool Set_Vision_Settings(VisionSetting_enum Setting, double value) 
 	{ 
@@ -81,6 +80,8 @@ public:
 		if (m_fpResetThreshholds)
 			m_fpResetThreshholds();
 	}
+protected:
+	virtual const char *GetPlugInName() const {return "Plugin_SquareTargeting";}
 private:
 	function_get m_fpGetSettings;
 

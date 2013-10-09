@@ -328,3 +328,15 @@ extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Shutdown()
 	SmartDashboard::shutdown();
 	#endif
 }
+
+extern "C" PROCESSINGVISION_API Plugin_Controller_Interface *Callback_CreatePluginControllerInterface()
+{
+	Plugin_SquareTargeting *plugin=new Plugin_SquareTargeting(Get_VisionSettings,Set_VisionSettings,ResetDefaults);
+	return plugin;
+}
+
+//we must delete where we create especially in a plugin environment
+extern "C" PROCESSINGVISION_API void Callback_DestroyPluginControllerInterface(Plugin_Controller_Interface *plugin)
+{
+	delete plugin;
+}
