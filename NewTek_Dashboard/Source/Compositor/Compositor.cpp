@@ -29,6 +29,9 @@ public:
 
 	//static void PutValue(std::string keyName, ComplexData& value) {}
 	//static void RetrieveValue(std::string keyName, ComplexData& value) {}
+
+	static void SetClientMode() {}
+	static void SetIPAddress(const char* address) {}
 };
 #endif
 
