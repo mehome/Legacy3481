@@ -29,6 +29,14 @@ CompositorProps = {
 				thickness_x=40,thickness_y=3,
 				r=0,g=255,b=255
 			}
+		},
+		
+		sequence =
+		{
+			sequence_1 = {	type="square", selection=1	},
+			sequence_2 = {	type="square", selection=2	},
+			sequence_3 = {	type="square", selection=3	},
+			sequence_4 = {	type="none" }
 		}
 	},
 	controls =

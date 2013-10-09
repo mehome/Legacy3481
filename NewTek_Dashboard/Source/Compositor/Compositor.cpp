@@ -43,6 +43,25 @@ using namespace FrameWork;
 event frameSync;
 
 
+
+template<class T>
+__inline T Enum_GetValue(const char *value,const char * const Table[],size_t NoItems)
+{
+	assert(value);  //If this fails... somebody forgot to enter a value 
+	T ret=(T) 0;
+	for (size_t i=0;i<NoItems;i++)
+	{
+		if (strcmp(value,Table[i])==0)
+			ret=(T)i;
+	}
+	return ret;
+}
+
+const char * const csz_ReticleType_Enum[] =
+{
+	"none","square","composite","bypass"
+};
+
 struct Compositor_Props
 {
 	double X_Scalar;
@@ -61,6 +80,29 @@ struct Compositor_Props
 		bool UsingShadow;
 	};
 	std::vector<SquareReticle_Container_Props> square_reticle;
+	enum ReticleType
+	{
+		eNone,
+		eDefault,
+		eComposite,
+		eBypass
+	};
+	static ReticleType GetReticleType_Enum (const char *value)
+	{	return Enum_GetValue<ReticleType> (value,csz_ReticleType_Enum,_countof(csz_ReticleType_Enum));
+	}
+
+	struct Sequence_Packet;
+	typedef std::vector<Sequence_Packet> Sequence_List;
+	struct Sequence_Packet
+	{
+		ReticleType type;
+		union type_specifics
+		{
+			size_t SquareReticle_SelIndex;
+			Sequence_List *Composite;
+		} specific_data;
+	};
+	Sequence_List Sequence;
 };
 
 class Compositor_Properties
@@ -122,6 +164,10 @@ Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_Control
 	sqr_pkt.UsingShadow=false;
 	props.square_reticle.push_back(sqr_pkt);
 
+	Compositor_Props::Sequence_Packet seq_pkt;
+	seq_pkt.type=Compositor_Props::eDefault;
+	seq_pkt.specific_data.SquareReticle_SelIndex=0;
+	props.Sequence.push_back(seq_pkt);
 	m_CompositorProps=props;
 }
 
@@ -157,13 +203,14 @@ static void LoadSquareReticleProps_Internal(Scripting::Script& script,Compositor
 static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &props)
 {
 	const char* err=NULL;
+	const char* fieldtable_err=NULL;
 	char Buffer[128];
 	size_t index=1;  //keep the lists cardinal in LUA
 	do 
 	{
 		sprintf_s(Buffer,128,"square_reticle_%d",index);
-		err = script.GetFieldTable(Buffer);
-		if (!err)
+		fieldtable_err = script.GetFieldTable(Buffer);
+		if (!fieldtable_err)
 		{
 			Compositor_Props::SquareReticle_Props sqr_props;
 			LoadSquareReticleProps_Internal(script,props,sqr_props);
@@ -199,6 +246,44 @@ static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &p
 
 			script.Pop();
 		}
+	} while (!fieldtable_err);
+}
+
+static void LoadSequenceProps(Scripting::Script& script,Compositor_Props &props)
+{
+	const char* err=NULL;
+	char Buffer[128];
+	size_t index=1;  //keep the lists cardinal in LUA
+	do 
+	{
+		sprintf_s(Buffer,128,"sequence_%d",index);
+		err = script.GetFieldTable(Buffer);
+		if (!err)
+		{
+			Compositor_Props::Sequence_Packet seq_pkt;
+
+			std::string sTest;
+			err = script.GetField("type",&sTest,NULL,NULL);
+			assert(!err);  //gotta have it if we are making a sequence
+			seq_pkt.type=Compositor_Props::GetReticleType_Enum(sTest.c_str());
+			switch (seq_pkt.type)
+			{
+			case Compositor_Props::eDefault:
+				{
+					double fTest;
+
+					err = script.GetField("selection",NULL,NULL,&fTest);
+					seq_pkt.specific_data.SquareReticle_SelIndex=(size_t)fTest;
+					seq_pkt.specific_data.SquareReticle_SelIndex--;  // translate cardinal to ordinal 
+				}
+				break;
+			}
+
+			props.Sequence.push_back(seq_pkt);
+			index++;
+
+			script.Pop();
+		}
 	} while (!err);
 }
 
@@ -224,6 +309,14 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 			//clear the default one
 			props.square_reticle.clear();
 			LoadSquareReticleProps(script,props);
+			script.Pop();
+		}
+		err = script.GetFieldTable("sequence");
+		if (!err)
+		{
+			//clear defaults
+			props.Sequence.clear();  //for now it is assumed the default will not allocate a composite
+			LoadSequenceProps(script,props);
 			script.Pop();
 		}
 		script.Pop();
@@ -339,7 +432,7 @@ class Compositor
 		}
 
 		IEvent::HandlerList ehl;
-		Compositor() : m_JoyBinder(FrameWork::GetDirectInputJoystick()),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false)
+		Compositor() : m_JoyBinder(FrameWork::GetDirectInputJoystick()),m_SequenceIndex(0),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
@@ -392,10 +485,20 @@ class Compositor
 			if (SmartDashboard::IsConnected())
 				m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
 
-			const Compositor_Props::SquareReticle_Container_Props &sqr_props=props.square_reticle[0];
-			if (sqr_props.UsingShadow)
-				RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.shadow,sqr_props.PixelOffsetX,sqr_props.PixelOffsetY);
-			return RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.primary);
+
+			Bitmap_Frame *ret=Frame;
+			switch (props.Sequence[m_SequenceIndex].type)
+			{
+			case Compositor_Props::eDefault:
+				{
+					const Compositor_Props::SquareReticle_Container_Props &sqr_props=props.square_reticle[props.Sequence[m_SequenceIndex].specific_data.SquareReticle_SelIndex];
+					if (sqr_props.UsingShadow)
+						RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.shadow,sqr_props.PixelOffsetX,sqr_props.PixelOffsetY);
+					ret=RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.primary);
+				}
+			};
+
+			return ret;
 		}
 
 	private:
@@ -404,6 +507,7 @@ class Compositor
 		FrameWork::EventMap m_EventMap;
 		Compositor_Properties m_CompositorProperties;
 		Bitmap_Frame *m_Frame;
+		size_t m_SequenceIndex;
 		double m_Xpos,m_Ypos;
 		bool m_IsEditable;
 } *g_pCompositor;
