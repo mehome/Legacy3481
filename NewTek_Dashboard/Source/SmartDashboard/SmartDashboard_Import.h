@@ -52,6 +52,7 @@ public:
 	static void SetTeam(int team);
 	 /// @param address the address that network tables will connect to in client mode
 	static void SetIPAddress(const char* address);
+	static  bool IsConnected();
 private:
 	SmartDashboard();
 	virtual ~SmartDashboard();

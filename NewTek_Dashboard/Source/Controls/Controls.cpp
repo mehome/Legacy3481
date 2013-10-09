@@ -4,6 +4,7 @@
 #include "Resource.h"
 
 const char *csz_Plugin_SquareTargeting="Plugin_SquareTargeting";
+const char *csz_Plugin_Compositor="Plugin_Compositor";
 
 void DebugOutput(const char *format, ... )
 {	char Temp[2048];
@@ -27,9 +28,15 @@ DialogBase *CreateFileControlsDialog();
 
 void ProcAmp_Initialize(HWND pParent);
 void Vision_Initialize(HWND pParent,Plugin_Controller_Interface *plugin);
+void Compositor_Initialize(HWND pParent,Plugin_Controller_Interface *plugin);
+
 //Returns number of menu items added
 size_t Vision_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset);
+size_t Compositor_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset);
+
 void Vision_On_Selection(int selection,HWND pParent);
+void Compositor_On_Selection(int selection,HWND pParent);
+
 void Vision_Shutdown();
 
 const char *DashBoard_GetWindowText(wchar_t *StartUp)
@@ -189,8 +196,13 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_StartedStreaming(HWND pP
 	}
 	if (g_Controller)
 		ProcAmp_Initialize(pParent);
-	if ((g_plugin)&&(strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0))
-		Vision_Initialize(pParent,g_plugin);
+	if (g_plugin)
+	{
+		if (strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
+			Vision_Initialize(pParent,g_plugin);
+		else if (strcmp(g_plugin->GetPlugInName(),csz_Plugin_Compositor)==0)
+			Compositor_Initialize(pParent,g_plugin);
+	}
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
@@ -203,8 +215,13 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPop
 		InsertMenu(hPopupMenu, -1, (g_pProcamp?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Procamp+StartingOffset, L"Procamp...");
 	}
 	StartingOffset+=3;
-	if (( g_plugin )&&(strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0))
-		StartingOffset+=Vision_AddMenuItems(hPopupMenu,StartingOffset);
+	if (g_plugin)
+	{
+		if  (strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
+			StartingOffset+=Vision_AddMenuItems(hPopupMenu,StartingOffset);
+		else if  (strcmp(g_plugin->GetPlugInName(),csz_Plugin_Compositor)==0)
+			StartingOffset+=Compositor_AddMenuItems(hPopupMenu,StartingOffset);
+	}
 }
 
 extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selection,HWND pParent)
@@ -240,8 +257,13 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 			break;
 		default:
 			assert(selection>eMenu_NoSelection);
-			if (( g_plugin )&&(strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0))
-				Vision_On_Selection(selection-eMenu_NoEntries,pParent);
+			if (g_plugin)
+			{
+				if  (strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
+					Vision_On_Selection(selection-eMenu_NoEntries,pParent);
+				else if  (strcmp(g_plugin->GetPlugInName(),csz_Plugin_Compositor)==0)
+					Compositor_On_Selection(selection-eMenu_NoEntries,pParent);
+			}
 	}
 }
 

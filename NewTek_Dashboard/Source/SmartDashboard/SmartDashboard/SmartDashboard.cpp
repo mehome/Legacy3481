@@ -168,6 +168,10 @@ void SmartDashboard::PutString(std::string keyName, std::string value)
 	m_table->PutString(keyName, value);
 }
 
+bool SmartDashboard::IsConnected()
+{
+	return m_table->IsConnected();
+}
 /**
  * Returns the value at the specified key.
  * @param keyName the key

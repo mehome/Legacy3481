@@ -32,6 +32,7 @@ public:
 
 	static void SetClientMode() {}
 	static void SetIPAddress(const char* address) {}
+	static  bool IsConnected() {return false;}
 };
 #endif
 
@@ -294,7 +295,7 @@ class Compositor
 		}
 
 		IEvent::HandlerList ehl;
-		Compositor() : m_JoyBinder(FrameWork::GetDirectInputJoystick()),m_Xpos(0.0),m_Ypos(0.0)
+		Compositor() : m_JoyBinder(FrameWork::GetDirectInputJoystick()),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
@@ -321,6 +322,19 @@ class Compositor
 		}
 		FrameWork::EventMap &GetEventMap_rw() {return m_EventMap;}
 
+		void SetIsEditable(bool Edit)
+		{
+			if (SmartDashboard::IsConnected())
+				SmartDashboard::PutBoolean("Edit Position",Edit);
+			else
+				m_IsEditable=Edit;
+		}
+
+		bool GetIsEditable() const
+		{
+			return m_IsEditable;
+		}
+
 		Bitmap_Frame *TimeChange(Bitmap_Frame *Frame)
 		{
 
@@ -331,7 +345,8 @@ class Compositor
 			m_Frame=Frame; //to access frame properties during the event callback
 			m_JoyBinder.UpdateJoyStick(dTime_s);
 
-			m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
+			if (SmartDashboard::IsConnected())
+				m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
 			return RenderSquareReticle(Frame,m_Xpos,m_Ypos,props.square_reticle[0]);
 		}
 
@@ -388,4 +403,37 @@ extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Shutdown()
 	delete g_pCompositor;
 	g_pCompositor=NULL;
 	SmartDashboard::shutdown();
+}
+
+class Plugin_Compositor_Interface : public Plugin_Controller_Interface
+{
+	public:
+		virtual void SetIsEditable(bool Edit)=0;
+		virtual bool GetIsEditable() const=0;
+};
+
+class Plugin_Compositor : public Plugin_Compositor_Interface
+{
+	public:
+		Plugin_Compositor(Compositor *implementation) : m_internal(implementation) 	{assert(implementation);}
+	protected:
+		void SetIsEditable(bool Edit)
+		{
+			m_internal->SetIsEditable(Edit);
+		}
+		bool GetIsEditable() const {return m_internal->GetIsEditable();}
+		virtual const char *GetPlugInName() const {return "Plugin_Compositor";}
+	private:
+		Compositor *m_internal;
+};
+
+extern "C" COMPOSITER_API Plugin_Controller_Interface *Callback_CreatePluginControllerInterface()
+{
+	Plugin_Compositor *plugin=new Plugin_Compositor(g_pCompositor);
+	return plugin;
+}
+
+extern "C" COMPOSITER_API void Callback_DestroyPluginControllerInterface(Plugin_Controller_Interface *plugin)
+{
+	delete plugin;
 }

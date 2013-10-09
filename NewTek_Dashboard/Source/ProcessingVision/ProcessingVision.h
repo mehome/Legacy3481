@@ -40,12 +40,5 @@ extern "C"
 	/// \note The color space BGRA 32 has been chosen since this is what NI_Vision uses, we can however change this to some other format (e.g YUV 4.2.2)
 	/// if necessary.  The m1011 camera in h264 mode produces YUV 420p by default, and this gets converted to desired colorspace.
 	PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame);
-
-	/// this is for changing settings - generally via controls.
-	PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum VisionSetting, double value);
-
-	PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum VisionSetting );
-
-	PROCESSINGVISION_API void ResetDefaults( void );
 };
 
