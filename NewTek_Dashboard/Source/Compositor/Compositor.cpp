@@ -53,7 +53,14 @@ struct Compositor_Props
 		double opacity;
 		BYTE rgb[3];
 	};
-	std::vector<SquareReticle_Props> square_reticle;
+	struct SquareReticle_Container_Props
+	{
+		SquareReticle_Props primary;
+		SquareReticle_Props shadow;
+		int PixelOffsetX,PixelOffsetY;
+		bool UsingShadow;
+	};
+	std::vector<SquareReticle_Container_Props> square_reticle;
 };
 
 class Compositor_Properties
@@ -110,9 +117,41 @@ Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_Control
 	sqr_props.opacity=1.0;
 	sqr_props.rgb[0]=sqr_props.rgb[2]=0;
 	sqr_props.rgb[1]=255;
-	props.square_reticle.push_back(sqr_props);
+	Compositor_Props::SquareReticle_Container_Props sqr_pkt;
+	sqr_pkt.primary=sqr_props;
+	sqr_pkt.UsingShadow=false;
+	props.square_reticle.push_back(sqr_pkt);
 
 	m_CompositorProps=props;
+}
+
+static void LoadSquareReticleProps_Internal(Scripting::Script& script,Compositor_Props &props,Compositor_Props::SquareReticle_Props &sqr_props)
+{
+	const char* err=NULL;
+	double value;
+	err=script.GetField("thickness", NULL, NULL, &value);
+	if (!err)
+		sqr_props.ThicknessX=sqr_props.ThicknessY=(size_t)value;
+	{
+		err=script.GetField("thickness_x", NULL, NULL, &value);
+		if (!err)
+			sqr_props.ThicknessX=(size_t)value;
+		err=script.GetField("thickness_y", NULL, NULL, &value);
+		if (!err)
+			sqr_props.ThicknessY=(size_t)value;
+		err=script.GetField("opacity", NULL, NULL, &value);
+		if (!err)
+			sqr_props.opacity=value;
+	}
+	err=script.GetField("r", NULL, NULL, &value);
+	if (!err)
+		sqr_props.rgb[0]=(BYTE)value;
+	err=script.GetField("g", NULL, NULL, &value);
+	if (!err)
+		sqr_props.rgb[1]=(BYTE)value;
+	err=script.GetField("b", NULL, NULL, &value);
+	if (!err)
+		sqr_props.rgb[2]=(BYTE)value;
 }
 
 static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &props)
@@ -127,34 +166,38 @@ static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &p
 		if (!err)
 		{
 			Compositor_Props::SquareReticle_Props sqr_props;
-			double value;
-			err=script.GetField("thickness", NULL, NULL, &value);
+			LoadSquareReticleProps_Internal(script,props,sqr_props);
+
+			Compositor_Props::SquareReticle_Container_Props sqr_pkt;
+			std::string sTest;
+			err = script.GetField("use_shadow",&sTest,NULL,NULL);
+			sqr_pkt.UsingShadow=false;
 			if (!err)
-				sqr_props.ThicknessX=sqr_props.ThicknessY=(size_t)value;
 			{
-				err=script.GetField("thickness_x", NULL, NULL, &value);
-				if (!err)
-					sqr_props.ThicknessX=(size_t)value;
-				err=script.GetField("thickness_y", NULL, NULL, &value);
-				if (!err)
-					sqr_props.ThicknessY=(size_t)value;
-				err=script.GetField("opacity", NULL, NULL, &value);
-				if (!err)
-					sqr_props.opacity=value;
+				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
+					sqr_pkt.UsingShadow=true;
 			}
-			err=script.GetField("r", NULL, NULL, &value);
+			err = script.GetFieldTable("shadow");
 			if (!err)
-				sqr_props.rgb[0]=(BYTE)value;
-			err=script.GetField("g", NULL, NULL, &value);
+			{
+				Compositor_Props::SquareReticle_Props shadow_props;
+				LoadSquareReticleProps_Internal(script,props,shadow_props);	
+				sqr_pkt.shadow=shadow_props;
+				script.Pop();
+			}
+			double fTest;
+			err = script.GetField("x_offset",NULL,NULL,&fTest);
 			if (!err)
-				sqr_props.rgb[1]=(BYTE)value;
-			err=script.GetField("b", NULL, NULL, &value);
+				sqr_pkt.PixelOffsetX=(int)fTest;
+			err = script.GetField("y_offset",NULL,NULL,&fTest);
 			if (!err)
-				sqr_props.rgb[2]=(BYTE)value;
-				
-			script.Pop();
+				sqr_pkt.PixelOffsetY=(int)fTest;
+			
+			sqr_pkt.primary=sqr_props;
+			props.square_reticle.push_back(sqr_pkt);
 			index++;
-			props.square_reticle.push_back(sqr_props);
+
+			script.Pop();
 		}
 	} while (!err);
 }
@@ -210,7 +253,8 @@ static void AimingSystem_to_PixelSystem(int &Px,int &Py,double Ax,double Ay,doub
 	Py=(int)(-(((Ay-1)*YRes) / 2.0));
 }
 
-static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double YPos,const Compositor_Props::SquareReticle_Props &props)
+static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double YPos,const Compositor_Props::SquareReticle_Props &props,
+										 int PixelOffsetX=0,int PixelOffsetY=0)
 {
 	if (g_Framework)
 	{
@@ -224,8 +268,8 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 		#else
 		int Px,Py;
 		AimingSystem_to_PixelSystem(Px,Py,XPos,YPos,bgra_frame.XRes,bgra_frame.YRes,((double)bgra_frame.XRes/(double)bgra_frame.YRes));
-		size_t PositionY=(size_t)Py;
-		size_t PositionX=(size_t)Px;
+		size_t PositionY=(size_t)(Py + PixelOffsetY);
+		size_t PositionX=(size_t)(Px + PixelOffsetX);
 		#endif
 
 		//Test bounds
@@ -347,7 +391,11 @@ class Compositor
 
 			if (SmartDashboard::IsConnected())
 				m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
-			return RenderSquareReticle(Frame,m_Xpos,m_Ypos,props.square_reticle[0]);
+
+			const Compositor_Props::SquareReticle_Container_Props &sqr_props=props.square_reticle[0];
+			if (sqr_props.UsingShadow)
+				RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.shadow,sqr_props.PixelOffsetX,sqr_props.PixelOffsetY);
+			return RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.primary);
 		}
 
 	private:
