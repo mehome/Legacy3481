@@ -96,6 +96,7 @@ struct Compositor_Props
 	struct Sequence_Packet
 	{
 		ReticleType type;
+		double PositionX,PositionY;  //These will be written dynamically properties will initialize with zero
 		union type_specifics
 		{
 			size_t SquareReticle_SelIndex;
@@ -122,6 +123,7 @@ class Compositor_Properties
 		virtual void LoadFromScript(Scripting::Script& script);
 
 		const Compositor_Props &GetCompositorProps() const {return m_CompositorProps;}
+		Compositor_Props &GetCompositorProps_rw() {return m_CompositorProps;}
 		const LUA_Controls_Properties &Get_CompositorControls() const {return m_CompositorControls;}
 	private:
 		Compositor_Props m_CompositorProps;
@@ -167,6 +169,8 @@ Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_Control
 	Compositor_Props::Sequence_Packet seq_pkt;
 	seq_pkt.type=Compositor_Props::eDefault;
 	seq_pkt.specific_data.SquareReticle_SelIndex=0;
+	seq_pkt.PositionX=0.0;
+	seq_pkt.PositionY=0.0;
 	props.Sequence.push_back(seq_pkt);
 	m_CompositorProps=props;
 }
@@ -280,6 +284,10 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props &props)
 				}
 				break;
 			}
+
+			//These always start out zero'd
+			seq_pkt.PositionX=0.0;
+			seq_pkt.PositionY=0.0;
 
 			props.Sequence.push_back(seq_pkt);
 			index++;
@@ -451,22 +459,39 @@ class Compositor
 					m_Ypos=-y_limit;
 			}
 		}
+		void SequenceUpdatePre()
+		{
+			Compositor_Props &props=m_CompositorProperties.GetCompositorProps_rw();
+			//Save current position to this sequence packet
+			props.Sequence[m_SequenceIndex].PositionX=m_Xpos;
+			props.Sequence[m_SequenceIndex].PositionY=m_Ypos;
+		}
+		void SequenceUpdatePost()
+		{
+			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
+			SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+			//Modify position to last saved
+			m_Xpos=props.Sequence[m_SequenceIndex].PositionX;
+			m_Ypos=props.Sequence[m_SequenceIndex].PositionY;
+		}
 
 		void NextSequence()
 		{
+			SequenceUpdatePre();
 			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 			m_SequenceIndex++;
 			if (m_SequenceIndex>=props.Sequence.size())
 				m_SequenceIndex=0;
-			SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+			SequenceUpdatePost();
 		}
 		void PreviousSequence()
 		{
+			SequenceUpdatePre();
 			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 			m_SequenceIndex--;
 			if (m_SequenceIndex==-1)
 				m_SequenceIndex=props.Sequence.size()-1;
-			SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+			SequenceUpdatePost();
 		}
 		void SetPOV (double value)
 		{
