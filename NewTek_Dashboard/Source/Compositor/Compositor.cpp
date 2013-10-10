@@ -3,7 +3,7 @@
 #include "../FrameWork/FrameWork.h"
 #include "Compositor.h"
 
-#define __DisableSmartDashboard__ //used to quickly disable the smart dashboard
+//#define __DisableSmartDashboard__ //used to quickly disable the smart dashboard
 #ifndef __DisableSmartDashboard__
 #include "../SmartDashboard/SmartDashboard_import.h"
 #else
@@ -138,7 +138,7 @@ class Compositor_Properties
 //declared as global to avoid allocation on stack each iteration
 const char * const g_Compositor_Controls_Events[] = 
 {
-	"SetXAxis","SetYAxis","NextSequence","PreviousSequence"
+	"SetXAxis","SetYAxis","NextSequence","PreviousSequence","SequencePOV"
 };
 
 const char *Compositor_Properties::ControlEvents::LUA_Controls_GetEvents(size_t index) const
@@ -188,6 +188,8 @@ static void LoadSquareReticleProps_Internal(Scripting::Script& script,Compositor
 		err=script.GetField("opacity", NULL, NULL, &value);
 		if (!err)
 			sqr_props.opacity=value;
+		else
+			sqr_props.opacity=1.0;
 	}
 	err=script.GetField("r", NULL, NULL, &value);
 	if (!err)
@@ -397,7 +399,7 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 				PBYTE pU =(Frame->Memory+ (x*2 + 0) + (LineWidthInBytes * y));
 				PBYTE pY =(Frame->Memory+ (x*2 + 1) + (LineWidthInBytes * y));
 				PBYTE pV =(Frame->Memory+ (x*2 + 2) + (LineWidthInBytes * y));
-				PBYTE pY2=(Frame->Memory+ (x*2 + 2) + (LineWidthInBytes * y));
+				PBYTE pY2=(Frame->Memory+ (x*2 + 3) + (LineWidthInBytes * y));
 
 
 				*pU =(BYTE)((Opacity*U)+((1.0-Opacity)* (double)(*pU)));
@@ -442,19 +444,73 @@ class Compositor
 			}
 		}
 
+		void NextSequence()
+		{
+			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
+			m_SequenceIndex++;
+			if (m_SequenceIndex>=props.Sequence.size())
+				m_SequenceIndex=0;
+			SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+		}
+		void PreviousSequence()
+		{
+			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
+			m_SequenceIndex--;
+			if (m_SequenceIndex==-1)
+				m_SequenceIndex=props.Sequence.size()-1;
+			SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+		}
+		void SetPOV (double value)
+		{
+			//We put the typical case first (save the amount of branching)
+			if (value!=-1)
+			{
+				if (!m_POVSetValve)
+				{
+					m_POVSetValve=true;
+					//so breaking down the index
+					//0 = up
+					//1 = up right
+					//2 = right
+					//3 = down right
+					//4 = down
+					//5 = down left
+					//6 = left
+					//7 = left up
+					size_t index=(size_t)(value/45.0);
+					switch (index)
+					{
+					case 2: NextSequence();	break;
+					case 6: PreviousSequence();	break;
+					}
+				}
+			}
+			else 
+				m_POVSetValve=false;
+		}
+
 		IEvent::HandlerList ehl;
 		Compositor() : m_JoyBinder(FrameWork::GetDirectInputJoystick()),m_SequenceIndex(0),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
 			em->EventValue_Map["SetYAxis"].Subscribe(ehl,*this, &Compositor::SetYAxis);
+			em->Event_Map["NextSequence"].Subscribe(ehl, *this, &Compositor::NextSequence);
+			em->Event_Map["PreviousSequence"].Subscribe(ehl, *this, &Compositor::PreviousSequence);
+			em->EventValue_Map["SequencePOV"].Subscribe(ehl,*this, &Compositor::SetPOV);
 		}
 		~Compositor()
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Remove(*this, &Compositor::SetXAxis);
 			em->EventValue_Map["SetYAxis"].Remove(*this, &Compositor::SetYAxis);
+			em->Event_Map["NextSequence"].Remove(*this, &Compositor::NextSequence);
+			em->Event_Map["PreviousSequence"].Remove(*this, &Compositor::PreviousSequence);
+			em->EventValue_Map["SequencePOV"].Remove(*this, &Compositor::SetPOV);
+			
 			m_CompositorProperties.Get_CompositorControls().BindAdditionalUIControls(false,&m_JoyBinder,NULL);
+			//For now limit the sequence to advance and previous calls to save network bandwidth... we can move this to the time change if necessary
+			SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
 		}
 		virtual void Initialize(EventMap& em, const Compositor_Properties *props=NULL)
 		{
@@ -529,6 +585,7 @@ class Compositor
 		size_t m_BlinkCounter; //very simple blink mechanism
 		double m_Xpos,m_Ypos;
 		bool m_IsEditable;
+		bool m_POVSetValve;
 } *g_pCompositor;
 
 
