@@ -3,7 +3,7 @@
 #include "../FrameWork/FrameWork.h"
 #include "Compositor.h"
 
-//#define __DisableSmartDashboard__ //used to quickly disable the smart dashboard
+#define __DisableSmartDashboard__ //used to quickly disable the smart dashboard
 #ifndef __DisableSmartDashboard__
 #include "../SmartDashboard/SmartDashboard_import.h"
 #else
@@ -432,7 +432,7 @@ class Compositor
 		}
 
 		IEvent::HandlerList ehl;
-		Compositor() : m_JoyBinder(FrameWork::GetDirectInputJoystick()),m_SequenceIndex(0),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false)
+		Compositor() : m_JoyBinder(FrameWork::GetDirectInputJoystick()),m_SequenceIndex(0),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
@@ -487,9 +487,16 @@ class Compositor
 
 
 			Bitmap_Frame *ret=Frame;
+			bool Display=true;
+			if (m_IsEditable)
+			{
+				Display=(m_BlinkCounter++&0x10)!=0;
+				m_BlinkCounter=(m_BlinkCounter&0x1f);
+			}
 			switch (props.Sequence[m_SequenceIndex].type)
 			{
 			case Compositor_Props::eDefault:
+				if (Display)
 				{
 					const Compositor_Props::SquareReticle_Container_Props &sqr_props=props.square_reticle[props.Sequence[m_SequenceIndex].specific_data.SquareReticle_SelIndex];
 					if (sqr_props.UsingShadow)
@@ -508,6 +515,7 @@ class Compositor
 		Compositor_Properties m_CompositorProperties;
 		Bitmap_Frame *m_Frame;
 		size_t m_SequenceIndex;
+		size_t m_BlinkCounter; //very simple blink mechanism
 		double m_Xpos,m_Ypos;
 		bool m_IsEditable;
 } *g_pCompositor;

@@ -8,7 +8,7 @@ CompositorProps = {
 		{
 			square_reticle_1 =
 			{
-				thickness_x=5,thickness_y=5,opacity=0.4,
+				thickness_x=5,thickness_y=5,opacity=0.6,
 				r=0,g=255,b=100,
 
 				use_shadow='y',
