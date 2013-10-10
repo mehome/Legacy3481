@@ -351,16 +351,15 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 {
 	if (g_Framework)
 	{
-		Bitmap_Handle *bgra_handle=g_Framework->CreateBGRA(Frame);
-		Bitmap_Frame &bgra_frame=bgra_handle->frame;
-		g_Framework->UYVY_to_BGRA(Frame,&bgra_frame);
+		const size_t XRes=Frame->XRes;
+		const size_t YRes=Frame->YRes;
 		#if 0
 		//Test... make a green box in the center of the frame
 		size_t PositionY=bgra_frame.YRes / 2;
 		size_t PositionX=bgra_frame.XRes / 2;
 		#else
 		int Px,Py;
-		AimingSystem_to_PixelSystem(Px,Py,XPos,YPos,bgra_frame.XRes,bgra_frame.YRes,((double)bgra_frame.XRes/(double)bgra_frame.YRes));
+		AimingSystem_to_PixelSystem(Px,Py,XPos,YPos,XRes,YRes,((double)XRes/(double)YRes));
 		size_t PositionY=(size_t)(Py + PixelOffsetY);
 		size_t PositionX=(size_t)(Px + PixelOffsetX);
 		#endif
@@ -372,29 +371,41 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 
 		if (PositionX<ThicknessX)
 			PositionX=ThicknessX;
-		else if (PositionX>bgra_frame.XRes-ThicknessX)
-			PositionX=bgra_frame.XRes-ThicknessX;
+		else if (PositionX>XRes-ThicknessX)
+			PositionX=XRes-ThicknessX;
 		if (PositionY<ThicknessY)
 			PositionY=ThicknessY;
-		else if (PositionY>bgra_frame.YRes-ThicknessY)
-			PositionY=bgra_frame.YRes-ThicknessY;
+		else if (PositionY>YRes-ThicknessY)
+			PositionY=YRes-ThicknessY;
 
 
-		size_t LineWidthInBytes=bgra_frame.Stride * 4;
+		size_t LineWidthInBytes=Frame->Stride * 4;
+
+		const double R = (double)props.rgb[0];
+		const double G = (double)props.rgb[1];
+		const double B = (double)props.rgb[2];
+
+		//http://softpixel.com/~cwright/programming/colorspace/yuv/
+		const double Y = R *  .299000 + G *  .587000 + B *  .114000;
+		const double U = R * -.168736 + G * -.331264 + B *  .500000 + 128;
+		const double V = R *  .500000 + G * -.418688 + B * -.081312 + 128;
+
 		for (size_t y=PositionY-ThicknessY;y<PositionY+ThicknessY;y++)
 		{
 			for (size_t x=PositionX-ThicknessX; x<PositionX+ThicknessX; x++)
 			{
-				PBYTE pBlue=(bgra_frame.Memory+ (x*4 + 0) + (LineWidthInBytes * y));
-				PBYTE pGreen=(bgra_frame.Memory+ (x*4 + 1) + (LineWidthInBytes * y));
-				PBYTE pRed=(bgra_frame.Memory+ (x*4 + 2) + (LineWidthInBytes * y));
-				*pBlue =(BYTE)((Opacity*(double)props.rgb[2])+((1.0-Opacity)* (double)(*pBlue )));  //blue
-				*pGreen=(BYTE)((Opacity*(double)props.rgb[1])+((1.0-Opacity)* (double)(*pGreen)));  //green
-				*pRed  =(BYTE)((Opacity*(double)props.rgb[0])+((1.0-Opacity)* (double)(*pRed  )));  //red
+				PBYTE pU =(Frame->Memory+ (x*2 + 0) + (LineWidthInBytes * y));
+				PBYTE pY =(Frame->Memory+ (x*2 + 1) + (LineWidthInBytes * y));
+				PBYTE pV =(Frame->Memory+ (x*2 + 2) + (LineWidthInBytes * y));
+				PBYTE pY2=(Frame->Memory+ (x*2 + 2) + (LineWidthInBytes * y));
+
+
+				*pU =(BYTE)((Opacity*U)+((1.0-Opacity)* (double)(*pU)));
+				*pY =(BYTE)((Opacity*Y)+((1.0-Opacity)* (double)(*pY)));
+				*pV =(BYTE)((Opacity*V)+((1.0-Opacity)* (double)(*pV)));
+				*pY2 =(BYTE)((Opacity*Y)+((1.0-Opacity)* (double)(*pY2)));
 			}
 		}
-		g_Framework->BGRA_to_UYVY(&bgra_frame,Frame);
-		g_Framework->DestroyBGRA(bgra_handle);
 	}
 	return Frame;
 }
