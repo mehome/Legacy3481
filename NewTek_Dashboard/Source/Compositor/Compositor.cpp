@@ -387,17 +387,14 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 		const double G = (double)props.rgb[1];
 		const double B = (double)props.rgb[2];
 
-		#if 1
+		//These coefficients can work, but I'm using ones that I have tested before
 		//http://softpixel.com/~cwright/programming/colorspace/yuv/
-		const double Y =  R *  .299000 + G *  .587000 + B *  .114000;
-		const double U = (R * -.168736 + G * -.331264 + B *  .500000) + 128.0;
-		const double V = (R *  .500000 + G * -.418688 + B * -.081312) + 128.0;
-		#else
 		//http://msdn.microsoft.com/en-us/library/aa917087.aspx
-		const double Y = ( (  66 * R + 129 * G +  25 * B + 128) / 256) +  16;
-		const double U = ( ( -38 * R -  74 * G + 112 * B + 128) / 256) + 128;
-		const double V = ( ( 112 * R -  94 * G -  18 * B + 128) / 256) + 128;
-		#endif
+		
+		//These come from old code in the TargaReader plugin
+		const double Y = (0.257 * R + 0.504 * G + 0.098 * B) + 16.0;
+		const double U =(-0.148 * R - 0.291 * G + 0.439 * B) + 128.0;
+		const double V = (0.439 * R - 0.368 * G - 0.071 * B) + 128.0;
 
 		//for UVYV x has to be even
 		PositionX=PositionX&0xFFFE; 
@@ -405,7 +402,7 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 
 		for (size_t y=PositionY-ThicknessY;y<PositionY+ThicknessY;y++)
 		{
-			for (size_t x=PositionX-ThicknessX; x<PositionX+ThicknessX; x++)
+			for (size_t x=PositionX-ThicknessX; x<PositionX+ThicknessX; x+=2)
 			{
 				PBYTE pU =(Frame->Memory+ (x*2 + 0) + (LineWidthInBytes * y));
 				PBYTE pY =(Frame->Memory+ (x*2 + 1) + (LineWidthInBytes * y));
@@ -565,20 +562,25 @@ class Compositor
 
 
 			Bitmap_Frame *ret=Frame;
-			bool Display=true;
+			bool Flash=true;
 			if (m_IsEditable)
 			{
-				Display=(m_BlinkCounter++&0x10)!=0;
+				Flash=(m_BlinkCounter++&0x10)!=0;
 				m_BlinkCounter=(m_BlinkCounter&0x1f);
 			}
 			switch (props.Sequence[m_SequenceIndex].type)
 			{
 			case Compositor_Props::eDefault:
-				if (Display)
 				{
-					const Compositor_Props::SquareReticle_Container_Props &sqr_props=props.square_reticle[props.Sequence[m_SequenceIndex].specific_data.SquareReticle_SelIndex];
+					//copy the props to alter the opacity for blinking
+					Compositor_Props::SquareReticle_Container_Props sqr_props=props.square_reticle[props.Sequence[m_SequenceIndex].specific_data.SquareReticle_SelIndex];
+					if (!Flash)
+						sqr_props.primary.opacity*=0.5;
 					if (sqr_props.UsingShadow)
+					{
+						sqr_props.shadow.opacity*=0.5;
 						RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.shadow,sqr_props.PixelOffsetX,sqr_props.PixelOffsetY);
+					}
 					ret=RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.primary);
 				}
 			};
