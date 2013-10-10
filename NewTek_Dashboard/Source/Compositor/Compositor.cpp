@@ -367,7 +367,7 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 		#endif
 
 		//Test bounds
-		const size_t ThicknessX=props.ThicknessX;
+		size_t ThicknessX=props.ThicknessX;
 		const size_t ThicknessY=props.ThicknessY;
 		const double Opacity=props.opacity;
 
@@ -387,10 +387,21 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 		const double G = (double)props.rgb[1];
 		const double B = (double)props.rgb[2];
 
+		#if 1
 		//http://softpixel.com/~cwright/programming/colorspace/yuv/
-		const double Y = R *  .299000 + G *  .587000 + B *  .114000;
-		const double U = R * -.168736 + G * -.331264 + B *  .500000 + 128;
-		const double V = R *  .500000 + G * -.418688 + B * -.081312 + 128;
+		const double Y =  R *  .299000 + G *  .587000 + B *  .114000;
+		const double U = (R * -.168736 + G * -.331264 + B *  .500000) + 128.0;
+		const double V = (R *  .500000 + G * -.418688 + B * -.081312) + 128.0;
+		#else
+		//http://msdn.microsoft.com/en-us/library/aa917087.aspx
+		const double Y = ( (  66 * R + 129 * G +  25 * B + 128) / 256) +  16;
+		const double U = ( ( -38 * R -  74 * G + 112 * B + 128) / 256) + 128;
+		const double V = ( ( 112 * R -  94 * G -  18 * B + 128) / 256) + 128;
+		#endif
+
+		//for UVYV x has to be even
+		PositionX=PositionX&0xFFFE; 
+		ThicknessX=ThicknessX&0xFFFE;
 
 		for (size_t y=PositionY-ThicknessY;y<PositionY+ThicknessY;y++)
 		{
