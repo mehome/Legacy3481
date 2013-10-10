@@ -1,3 +1,5 @@
+--This must stay here to load persistence of the coordinates last saved etc
+dofile("CompositorSave.lua")
 
 CompositorProps = {
 	settings =
@@ -36,7 +38,9 @@ CompositorProps = {
 			sequence_1 = {	type="square", selection=1	},
 			sequence_2 = {	type="square", selection=2	},
 			sequence_3 = {	type="square", selection=3	},
-			sequence_4 = {	type="none" }
+			sequence_4 = {	type="none" },
+			--TODO handle no file
+			--load_settings = sequence_load,			
 		}
 	},
 	controls =

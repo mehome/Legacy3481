@@ -297,6 +297,41 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props &props)
 	} while (!err);
 }
 
+static void LoadSequence_SaveData(Scripting::Script& script,Compositor_Props &props)
+{
+	const char* err=NULL;
+	char Buffer[128];
+	size_t index=1;  //keep the lists cardinal in LUA
+	do 
+	{
+		sprintf_s(Buffer,128,"sequence_%d",index);
+		err = script.GetFieldTable(Buffer);
+		if (!err)
+		{
+			Compositor_Props::Sequence_Packet &seq_pkt=props.Sequence[index-1]; //ordinal translation
+
+			std::string sTest;
+			err = script.GetField("type",&sTest,NULL,NULL);
+			assert(!err);  //gotta have it if we are making a sequence
+			assert(seq_pkt.type==Compositor_Props::GetReticleType_Enum(sTest.c_str()));  //handle recovery later
+
+			switch (seq_pkt.type)
+			{
+			case Compositor_Props::eDefault:
+				{
+					err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
+					err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
+				}
+				break;
+			}
+
+			index++;
+
+			script.Pop();
+		}
+	} while (!err);
+}
+
 void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 {
 	const char* err=NULL;
@@ -327,6 +362,16 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 			//clear defaults
 			props.Sequence.clear();  //for now it is assumed the default will not allocate a composite
 			LoadSequenceProps(script,props);
+
+			err = script.GetFieldTable("load_settings");
+			{
+				if (!err)
+				{
+					LoadSequence_SaveData(script,props);
+					script.Pop();
+				}
+			}
+
 			script.Pop();
 		}
 		script.Pop();
@@ -552,6 +597,14 @@ class Compositor
 			{
 				m_CompositorProperties=*props;
 				m_CompositorProperties.Get_CompositorControls().BindAdditionalUIControls(true,&m_JoyBinder,NULL);
+				//Setup the initial coordinates
+				const Compositor_Props::Sequence_List &sequence= props->GetCompositorProps().Sequence;
+
+				if (sequence.size())
+				{
+					m_Xpos=sequence[m_SequenceIndex].PositionX;
+					m_Ypos=sequence[m_SequenceIndex].PositionY;
+				}
 			}
 
 			//Bind the compositor's eventmap to the joystick
