@@ -1,5 +1,14 @@
---This must stay here to load persistence of the coordinates last saved etc
-dofile("CompositorSave.lua")
+
+--This is used load persistence of the coordinates last saved etc
+function GetSettings()
+	local loaded_file = loadfile("CompositorSave.lua")
+	if (loaded_file==nil) then
+		return nil
+	else
+		loaded_file()  --We can now make the call and it will succeed
+		return sequence_load
+	end
+end
 
 CompositorProps = {
 	settings =
@@ -39,8 +48,8 @@ CompositorProps = {
 			sequence_2 = {	type="square", selection=2	},
 			sequence_3 = {	type="square", selection=3	},
 			sequence_4 = {	type="none" },
-			--TODO handle no file
-			--load_settings = sequence_load,			
+			--This must stay here to load the settings
+			load_settings = GetSettings(),
 		}
 	},
 	controls =
