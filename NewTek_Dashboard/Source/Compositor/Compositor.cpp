@@ -91,6 +91,10 @@ struct Compositor_Props
 	{	return Enum_GetValue<ReticleType> (value,csz_ReticleType_Enum,_countof(csz_ReticleType_Enum));
 	}
 
+	static const char * const GetReticleType_String(ReticleType value)
+	{	return csz_ReticleType_Enum[value];
+	}
+
 	struct Sequence_Packet;
 	typedef std::vector<Sequence_Packet> Sequence_List;
 	struct Sequence_Packet
@@ -297,7 +301,7 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props &props)
 	} while (!err);
 }
 
-static void LoadSequence_SaveData(Scripting::Script& script,Compositor_Props &props)
+static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Props &props)
 {
 	const char* err=NULL;
 	char Buffer[128];
@@ -367,7 +371,7 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 			{
 				if (!err)
 				{
-					LoadSequence_SaveData(script,props);
+					LoadSequence_PersistentData(script,props);
 					script.Pop();
 				}
 			}
@@ -577,8 +581,40 @@ class Compositor
 			em->Event_Map["PreviousSequence"].Subscribe(ehl, *this, &Compositor::PreviousSequence);
 			em->EventValue_Map["SequencePOV"].Subscribe(ehl,*this, &Compositor::SetPOV);
 		}
+		void SaveData()
+		{
+			using namespace std;
+			string OutFile = "CompositorSave.lua";
+			string output;
+
+			ofstream out(OutFile.c_str(), std::ios::out );
+
+			out << "sequence_load = " << endl;    //header
+
+			out << "{" << endl;
+			const Compositor_Props::Sequence_List &sequence= m_CompositorProperties.GetCompositorProps().Sequence;
+			for (size_t i=0;i<sequence.size();i++)
+			{
+				const Compositor_Props::Sequence_Packet &seq_pkt=sequence[i];
+				out << "\t" << "sequence_" << (i+1) << " = {";
+				out << "type=" << "\"" << Compositor_Props::GetReticleType_String(seq_pkt.type) << "\", ";
+				//TODO write specific data types here... which should be the same expect for the composite type
+				out << "x=" << seq_pkt.PositionX << ", " << "y=" << seq_pkt.PositionY << " ";
+				out << "}," << endl;
+			}
+
+			out << "}" << endl;  //footer
+		}
 		~Compositor()
 		{
+			//ensure the current position is set on the properties
+			{
+				Compositor_Props::Sequence_List &sequence_rw= m_CompositorProperties.GetCompositorProps_rw().Sequence;
+				Compositor_Props::Sequence_Packet &seq_pkt_rw= sequence_rw[m_SequenceIndex];
+				seq_pkt_rw.PositionX=m_Xpos,  seq_pkt_rw.PositionY=m_Ypos;
+			}
+		
+			SaveData();
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Remove(*this, &Compositor::SetXAxis);
 			em->EventValue_Map["SetYAxis"].Remove(*this, &Compositor::SetYAxis);
@@ -600,11 +636,9 @@ class Compositor
 				//Setup the initial coordinates
 				const Compositor_Props::Sequence_List &sequence= props->GetCompositorProps().Sequence;
 
+				//Setup our sequence display and positions
 				if (sequence.size())
-				{
-					m_Xpos=sequence[m_SequenceIndex].PositionX;
-					m_Ypos=sequence[m_SequenceIndex].PositionY;
-				}
+					SequenceUpdatePost();
 			}
 
 			//Bind the compositor's eventmap to the joystick
