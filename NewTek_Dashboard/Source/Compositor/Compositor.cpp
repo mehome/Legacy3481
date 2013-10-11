@@ -638,7 +638,12 @@ class Compositor
 
 				//Setup our sequence display and positions
 				if (sequence.size())
+				{
+					const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
+					m_Xpos=props.Sequence[m_SequenceIndex].PositionX;
+					m_Ypos=props.Sequence[m_SequenceIndex].PositionY;
 					UpdateSequence(m_SequenceIndex,true);
+				}
 			}
 
 			//Bind the compositor's eventmap to the joystick
