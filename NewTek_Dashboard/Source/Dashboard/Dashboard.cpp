@@ -99,11 +99,6 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
 		~ProcessingVision()
 		{
-			if (m_pPluginControllerInterface)
-			{
-				(*m_DestroyPluginControllerInterface)(m_pPluginControllerInterface);
-				m_pPluginControllerInterface=NULL;
-			}
 			//Note: we can move this earlier if necessary
 			Callback_Shutdown();
 			FlushPlugin();
@@ -200,6 +195,12 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 	
 		void FlushPlugin()
 		{
+			if (m_pPluginControllerInterface)
+			{
+				(*m_DestroyPluginControllerInterface)(m_pPluginControllerInterface);
+				m_pPluginControllerInterface=NULL;
+			}
+
 			if (m_PlugIn)
 			{
 				FreeLibrary(m_PlugIn);
@@ -386,7 +387,7 @@ class DDraw_Window : public Window
 	public:
 		DDraw_Window(DDraw_Preview *pParent, HWND HWND_Parent=NULL , const bool IsPopup=true , 
 			const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL ) : Window(HWND_Parent,IsPopup,pWindowName,pWindowPosition), 
-			m_pParent(pParent),m_AspectRatio(16.0/9.0),m_Editable(false),m_IsDragging(false)
+			m_pParent(pParent),m_AspectRatio(4.0/3.0),m_Editable(false),m_IsDragging(false)
 		{
 		}
 		~DDraw_Window()
