@@ -508,39 +508,39 @@ class Compositor
 					m_Ypos=-y_limit;
 			}
 		}
-		void SequenceUpdatePre()
+		void UpdateSequence(size_t NewSequenceIndex,bool forceUpdate=false)
 		{
-			Compositor_Props &props=m_CompositorProperties.GetCompositorProps_rw();
-			//Save current position to this sequence packet
-			props.Sequence[m_SequenceIndex].PositionX=m_Xpos;
-			props.Sequence[m_SequenceIndex].PositionY=m_Ypos;
-		}
-		void SequenceUpdatePost()
-		{
-			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
-			SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
-			//Modify position to last saved
-			m_Xpos=props.Sequence[m_SequenceIndex].PositionX;
-			m_Ypos=props.Sequence[m_SequenceIndex].PositionY;
+			if ((m_SequenceIndex!=NewSequenceIndex)||forceUpdate)
+			{
+				Compositor_Props &props_rw=m_CompositorProperties.GetCompositorProps_rw();
+				//Save current position to this sequence packet
+				props_rw.Sequence[m_SequenceIndex].PositionX=m_Xpos;
+				props_rw.Sequence[m_SequenceIndex].PositionY=m_Ypos;
+
+				//issue the update
+				m_SequenceIndex=NewSequenceIndex;
+
+				const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
+				if (m_SequenceIndex==-1)
+					m_SequenceIndex=props.Sequence.size()-1;
+				else if (m_SequenceIndex>=props.Sequence.size())
+					m_SequenceIndex=0;
+
+				SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+				//Modify position to last saved
+				m_Xpos=props.Sequence[m_SequenceIndex].PositionX;
+				m_Ypos=props.Sequence[m_SequenceIndex].PositionY;
+
+			}
 		}
 
 		void NextSequence()
 		{
-			SequenceUpdatePre();
-			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
-			m_SequenceIndex++;
-			if (m_SequenceIndex>=props.Sequence.size())
-				m_SequenceIndex=0;
-			SequenceUpdatePost();
+			UpdateSequence(m_SequenceIndex+1);
 		}
 		void PreviousSequence()
 		{
-			SequenceUpdatePre();
-			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
-			m_SequenceIndex--;
-			if (m_SequenceIndex==-1)
-				m_SequenceIndex=props.Sequence.size()-1;
-			SequenceUpdatePost();
+			UpdateSequence(m_SequenceIndex-1);
 		}
 		void SetPOV (double value)
 		{
@@ -638,7 +638,7 @@ class Compositor
 
 				//Setup our sequence display and positions
 				if (sequence.size())
-					SequenceUpdatePost();
+					UpdateSequence(m_SequenceIndex,true);
 			}
 
 			//Bind the compositor's eventmap to the joystick
@@ -670,8 +670,10 @@ class Compositor
 			m_JoyBinder.UpdateJoyStick(dTime_s);
 
 			if (SmartDashboard::IsConnected())
+			{
 				m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
-
+				UpdateSequence((size_t)SmartDashboard::GetNumber("Sequence")-1); //convert to ordinal
+			}
 
 			Bitmap_Frame *ret=Frame;
 			bool Flash=true;
