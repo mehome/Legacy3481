@@ -325,7 +325,12 @@ static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Pro
 			std::string sTest;
 			err = script.GetField("type",&sTest,NULL,NULL);
 			assert(!err);  //gotta have it if we are making a sequence
-			assert(seq_pkt.type==Compositor_Props::GetReticleType_Enum(sTest.c_str()));  //handle recovery later
+			//If someone modifies the lua and the types do not match break out
+			if (seq_pkt.type!=Compositor_Props::GetReticleType_Enum(sTest.c_str()))
+			{
+				script.Pop();
+				break;
+			}
 
 			switch (seq_pkt.type)
 			{
@@ -488,8 +493,9 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 	return Frame;
 }
 
-struct Bypass_Reticle
+class Bypass_Reticle
 {
+	private:
 	HMODULE m_PlugIn;
 	std::string IPAddress;
 	Dashboard_Framework_Interface *DashboardHelper;
@@ -510,6 +516,7 @@ struct Bypass_Reticle
 
 	Plugin_Controller_Interface *m_pPluginControllerInterface;
 
+	public:
 	Bypass_Reticle(const char *_IPAddress,Dashboard_Framework_Interface *_DashboardHelper) : m_PlugIn(NULL),IPAddress(_IPAddress),DashboardHelper(_DashboardHelper), 
 		m_DriverProc(NULL),m_pPluginControllerInterface(NULL)
 	{
@@ -537,6 +544,14 @@ struct Bypass_Reticle
 		//Note: we can move this earlier if necessary
 		Callback_Shutdown();
 		FlushPlugin();
+	}
+
+	Bitmap_Frame *Callback_ProcessFrame_UYVY(Bitmap_Frame *Frame)
+	{
+		Bitmap_Frame *ret=Frame;
+			if (m_PlugIn)
+				ret=(*m_DriverProc)(Frame);
+		return ret;
 	}
 
 	void LoadPlugIn(const char Plugin[])
@@ -756,7 +771,10 @@ class Compositor
 					UpdateSequence(m_SequenceIndex,true);
 				}
 				if (props->GetCompositorProps().BypassPlugin.c_str()[0]!=0)
+				{
 					m_Bypass.LoadPlugIn(props->GetCompositorProps().BypassPlugin.c_str());					
+					m_Bypass.Callback_Initialize();  //will implicitly handle error
+				}
 			}
 
 			//Bind the compositor's eventmap to the joystick
@@ -815,6 +833,10 @@ class Compositor
 					}
 					ret=RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.primary);
 				}
+				break;
+			case Compositor_Props::eBypass:
+				ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
+				break;
 			};
 
 			return ret;

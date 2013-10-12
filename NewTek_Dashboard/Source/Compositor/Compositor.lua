@@ -43,12 +43,14 @@ CompositorProps = {
 			}
 		},
 		
+		--Types	"none","square","composite","bypass"
+		--TODO composite, and perhaps alpha bitmap and vector from NIVision
 		sequence =
 		{
 			sequence_1 = {	type="square", selection=1	},
 			sequence_2 = {	type="square", selection=2	},
 			sequence_3 = {	type="square", selection=3	},
-			sequence_4 = {	type="none" },
+			sequence_4 = {	type="bypass" },
 			--This must stay here to load the settings
 			load_settings = GetSettings(),
 		}
