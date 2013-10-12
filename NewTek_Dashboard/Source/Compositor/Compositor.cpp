@@ -554,6 +554,13 @@ class Bypass_Reticle
 		return ret;
 	}
 
+	Plugin_Controller_Interface* GetPluginInterface(void) 
+	{
+		if ((m_PlugIn)&&(m_pPluginControllerInterface==NULL)&&(m_CreatePluginControllerInterface))
+			m_pPluginControllerInterface=(*m_CreatePluginControllerInterface)();
+		return m_pPluginControllerInterface;
+	}
+
 	void LoadPlugIn(const char Plugin[])
 	{
 		FlushPlugin();  //ensure its not already loaded
@@ -842,6 +849,7 @@ class Compositor
 			return ret;
 		}
 
+		Plugin_Controller_Interface* GetBypassPluginInterface(void) {return m_Bypass.GetPluginInterface();}
 	private:
 		time_type m_LastTime;
 		FrameWork::UI::JoyStick_Binder m_JoyBinder;
@@ -907,6 +915,7 @@ class Plugin_Compositor_Interface : public Plugin_Controller_Interface
 	public:
 		virtual void SetIsEditable(bool Edit)=0;
 		virtual bool GetIsEditable() const=0;
+		virtual Plugin_Controller_Interface* GetBypassPluginInterface(void)=0;
 };
 
 class Plugin_Compositor : public Plugin_Compositor_Interface
@@ -920,6 +929,8 @@ class Plugin_Compositor : public Plugin_Compositor_Interface
 		}
 		bool GetIsEditable() const {return m_internal->GetIsEditable();}
 		virtual const char *GetPlugInName() const {return "Plugin_Compositor";}
+
+		virtual Plugin_Controller_Interface* GetBypassPluginInterface(void)  {return m_internal->GetBypassPluginInterface();}
 	private:
 		Compositor *m_internal;
 };
