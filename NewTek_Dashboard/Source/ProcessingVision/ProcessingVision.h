@@ -26,7 +26,7 @@ protected:
 extern "C" 
 {
 	/// \param IPAddress- this may be null if user does not wish to send out UDP packets
-	PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper);
+	PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper);
 	/// This is called when we are about to close will all for creation and destruction of classes
 	PROCESSINGVISION_API void Callback_SmartCppDashboard_Shutdown();
 	PROCESSINGVISION_API Plugin_Controller_Interface *Callback_CreatePluginControllerInterface();

@@ -66,6 +66,8 @@ struct Compositor_Props
 {
 	double X_Scalar;
 	double Y_Scalar;
+
+	//Reticle type:  default  (a.k.a square)
 	struct SquareReticle_Props
 	{
 		size_t ThicknessX,ThicknessY;
@@ -80,6 +82,11 @@ struct Compositor_Props
 		bool UsingShadow;
 	};
 	std::vector<SquareReticle_Container_Props> square_reticle;
+
+	//Reticle type: Bypass
+	std::string BypassPlugin;
+
+	//Reticle type definitions
 	enum ReticleType
 	{
 		eNone,
@@ -95,6 +102,7 @@ struct Compositor_Props
 	{	return csz_ReticleType_Enum[value];
 	}
 
+	//Sequence
 	struct Sequence_Packet;
 	typedef std::vector<Sequence_Packet> Sequence_List;
 	struct Sequence_Packet
@@ -345,11 +353,14 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 		if (!err)
 			printf ("Version=%.2f\n",version);
 	}
+
+	Compositor_Props &props=m_CompositorProps;
+	script.GetField("bypass_plugin",&props.BypassPlugin);  //just get it here... implement later
+
 	//note: call super here if we derived from other props
 	err = script.GetFieldTable("settings");
 	if (!err)
 	{
-		Compositor_Props &props=m_CompositorProps;
 		script.GetField("x_scalar", NULL, NULL, &props.X_Scalar);
 		script.GetField("y_scalar", NULL, NULL, &props.Y_Scalar);
 		err = script.GetFieldTable("square_reticle_props");
@@ -477,6 +488,105 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 	return Frame;
 }
 
+struct Bypass_Reticle
+{
+	HMODULE m_PlugIn;
+	std::string IPAddress;
+	Dashboard_Framework_Interface *DashboardHelper;
+
+	typedef Bitmap_Frame * (*DriverProc_t)(Bitmap_Frame *Frame);
+	DriverProc_t m_DriverProc;
+
+	typedef void (*function_Initialize) (const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper);
+	function_Initialize m_fpInitialize;
+
+	typedef void (*function_void) ();
+	function_void m_fpShutdown;
+
+	typedef Plugin_Controller_Interface * (*function_create_plugin_controller_interface) ();
+	function_create_plugin_controller_interface m_CreatePluginControllerInterface;
+	typedef  void (*function_destroy_plugin_controller_interface)(Plugin_Controller_Interface *);
+	function_destroy_plugin_controller_interface m_DestroyPluginControllerInterface;
+
+	Plugin_Controller_Interface *m_pPluginControllerInterface;
+
+	Bypass_Reticle(const char *_IPAddress,Dashboard_Framework_Interface *_DashboardHelper) : m_PlugIn(NULL),IPAddress(_IPAddress),DashboardHelper(_DashboardHelper), 
+		m_DriverProc(NULL),m_pPluginControllerInterface(NULL)
+	{
+	}
+
+	void FlushPlugin()
+	{
+		if (m_pPluginControllerInterface)
+		{
+			(*m_DestroyPluginControllerInterface)(m_pPluginControllerInterface);
+			m_pPluginControllerInterface=NULL;
+		}
+
+		if (m_PlugIn)
+		{
+			FreeLibrary(m_PlugIn);
+			m_PlugIn = NULL;
+		}
+	}
+
+	void Callback_Initialize() {if (m_PlugIn) (*m_fpInitialize)(IPAddress.c_str(),DashboardHelper);}
+	void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
+	~Bypass_Reticle()
+	{
+		//Note: we can move this earlier if necessary
+		Callback_Shutdown();
+		FlushPlugin();
+	}
+
+	void LoadPlugIn(const char Plugin[])
+	{
+		FlushPlugin();  //ensure its not already loaded
+		m_DriverProc = NULL;  //this will avoid crashing if others fail
+		m_fpInitialize = NULL;
+		m_fpShutdown = NULL;
+		m_CreatePluginControllerInterface=NULL;
+		m_DestroyPluginControllerInterface=NULL;
+
+		m_PlugIn=LoadLibraryA(Plugin);
+
+		if (m_PlugIn)
+		{
+			try
+			{
+
+				m_DriverProc=(DriverProc_t) GetProcAddress(m_PlugIn,"ProcessFrame_UYVY");
+				if (!m_DriverProc) throw 1;
+				m_fpInitialize=(function_Initialize) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Initialize");
+				if (!m_fpInitialize) throw 2;
+				m_fpShutdown=(function_void) GetProcAddress(m_PlugIn,"Callback_SmartCppDashboard_Shutdown");
+				if (!m_fpShutdown) throw 3;
+				size_t Tally=0;
+				//This may be NULL if there are no controls for it
+				m_CreatePluginControllerInterface=
+					(function_create_plugin_controller_interface) GetProcAddress(m_PlugIn,"Callback_CreatePluginControllerInterface");
+				m_DestroyPluginControllerInterface=
+					(function_destroy_plugin_controller_interface) GetProcAddress(m_PlugIn,"Callback_DestroyPluginControllerInterface");
+
+				//either all or nothing of this group of functions
+				if ((Tally!=0)&&(Tally!=3))
+				{
+					assert(false);
+					throw 4;
+				}
+			}
+			catch (int ErrorCode)
+			{
+				m_DriverProc = NULL;  //this will avoid crashing if others fail
+				m_fpInitialize = NULL;
+				m_fpShutdown = NULL;
+				FrameWork::DebugOutput("ProcessingVision Plugin failed error code=%d",ErrorCode);
+				FlushPlugin();
+			}
+		}
+	}
+};
+
 class Compositor
 {
 	public:
@@ -572,7 +682,8 @@ class Compositor
 		}
 
 		IEvent::HandlerList ehl;
-		Compositor() : m_JoyBinder(FrameWork::GetDirectInputJoystick()),m_SequenceIndex(0),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false)
+		Compositor(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
+			m_SequenceIndex(0),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
@@ -644,6 +755,8 @@ class Compositor
 					m_Ypos=props.Sequence[m_SequenceIndex].PositionY;
 					UpdateSequence(m_SequenceIndex,true);
 				}
+				if (props->GetCompositorProps().BypassPlugin.c_str()[0]!=0)
+					m_Bypass.LoadPlugIn(props->GetCompositorProps().BypassPlugin.c_str());					
 			}
 
 			//Bind the compositor's eventmap to the joystick
@@ -716,6 +829,8 @@ class Compositor
 		size_t m_SequenceIndex;
 		size_t m_BlinkCounter; //very simple blink mechanism
 		double m_Xpos,m_Ypos;
+		Bypass_Reticle m_Bypass;
+
 		bool m_IsEditable;
 		bool m_POVSetValve;
 } *g_pCompositor;
@@ -729,7 +844,7 @@ extern "C" COMPOSITER_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 		return Frame;
 }
 
-extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
+extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
 {
 	g_Framework=DashboardHelper;
 	SmartDashboard::SetClientMode();
@@ -737,7 +852,7 @@ extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(char *IPAdd
 	SmartDashboard::init();
 	SmartDashboard::PutBoolean("Edit Position",false);
 
-	g_pCompositor = new Compositor();
+	g_pCompositor = new Compositor(IPAddress,DashboardHelper);
 	{
 		Compositor_Properties props;
 		Scripting::Script script;

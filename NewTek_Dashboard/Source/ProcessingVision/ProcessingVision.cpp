@@ -306,7 +306,7 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 	return 0.0;
 }
 
-extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
+extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
 {
 	g_Framework=DashboardHelper;
 	#ifdef __Using_UDP__

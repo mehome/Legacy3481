@@ -182,7 +182,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		typedef Bitmap_Frame * (*DriverProc_t)(Bitmap_Frame *Frame);
 		DriverProc_t m_DriverProc;
 
-		typedef void (*function_Initialize) (char *IPAddress,Dashboard_Framework_Helper *DashboardHelper);
+		typedef void (*function_Initialize) (const char *IPAddress,Dashboard_Framework_Helper *DashboardHelper);
 		function_Initialize m_fpInitialize;
 
 		typedef void (*function_void) ();

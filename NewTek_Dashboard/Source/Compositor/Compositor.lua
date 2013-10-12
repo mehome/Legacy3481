@@ -11,6 +11,7 @@ function GetSettings()
 end
 
 CompositorProps = {
+	bypass_plugin="ProcessingVision.dll",
 	settings =
 	{
 		x_scalar=0.05,
