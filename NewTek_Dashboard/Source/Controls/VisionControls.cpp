@@ -144,50 +144,103 @@ static void GetVisionFilename(std::string &Output)
 }
 
 
-enum MenuSelection
-{
-	eMenu_Vision,	//cjt
-	eMenu_Targeting,
-	eMenu_NoEntries
-};
 
-size_t Vision_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
+class MenuSelection_Vision : public MenuSelection_Interface
 {
-	InsertMenu(hPopupMenu, -1, (g_pVisionControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Vision+StartingOffset, L"Vision...");  //cjt
-	InsertMenu(hPopupMenu, -1, (g_pTargetEnableControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Targeting+StartingOffset, L"Targeting...");
-	return 2;
-}
-
-void Vision_On_Selection(int selection,HWND pParent)
-{
-	switch (selection)
+	virtual void Initialize(HWND pParent,Plugin_Controller_Interface *plugin)
 	{
-	case eMenu_Vision:
-		if (!g_pVisionControls)
+		g_plugin_SquareTargeting=dynamic_cast<Plugin_SquareTargeting *>(plugin);
+		if( g_plugin_SquareTargeting == NULL ) return;
+
+		using namespace std;
+		string InFile;
+		GetVisionFilename(InFile);
+
+		std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
+		if (in.is_open())
 		{
-			g_pVisionControls=CreateVisionControlsDialog();
-			g_pVisionControls->Run(pParent);
+			string StringEntry;
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, (double)(TrackerType)atoi(StringEntry.c_str()));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eDisplayType, (double)(DisplayType)atoi(StringEntry.c_str()));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eSolidMask, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eOverlays, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eAimingText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eBoundsText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, (double)(ThresholdColorSpace)atoi(StringEntry.c_str()));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane1Min, (double)atoi(StringEntry.c_str()));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane2Min, (double)atoi(StringEntry.c_str()));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane3Min, (double)atoi(StringEntry.c_str()));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane1Max, (double)atoi(StringEntry.c_str()));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane2Max, (double)atoi(StringEntry.c_str()));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane3Max, (double)atoi(StringEntry.c_str()));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eIsTargeting, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+			in.close();
 		}
-		else
-		{
-			DebugOutput("Vision Dialog already running\n");
-			assert(false);
-		}
-		break;
-	case eMenu_Targeting:
-		if (!g_pTargetEnableControls)
-		{
-			g_pTargetEnableControls=CreateTargetEnableDialog();
-			g_pTargetEnableControls->Run(pParent);
-		}
-		else
-		{
-			DebugOutput("Target Dialog already running\n");
-			assert(false);
-		}
-		break;
 	}
-}
+
+	enum MenuSelection
+	{
+		eMenu_Vision,	//cjt
+		eMenu_Targeting,
+		eMenu_NoEntries
+	};
+
+	virtual size_t AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)
+	{
+		InsertMenu(hPopupMenu, -1, (g_pVisionControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Vision+StartingOffset, L"Vision...");  //cjt
+		InsertMenu(hPopupMenu, -1, (g_pTargetEnableControls?MF_DISABLED|MF_GRAYED:0) | MF_BYPOSITION | MF_STRING, eMenu_Targeting+StartingOffset, L"Targeting...");
+		return 2;
+	}
+
+	virtual void On_Selection(int selection,HWND pParent)
+	{
+		switch (selection)
+		{
+		case eMenu_Vision:
+			if (!g_pVisionControls)
+			{
+				g_pVisionControls=CreateVisionControlsDialog();
+				g_pVisionControls->Run(pParent);
+			}
+			else
+			{
+				DebugOutput("Vision Dialog already running\n");
+				assert(false);
+			}
+			break;
+		case eMenu_Targeting:
+			if (!g_pTargetEnableControls)
+			{
+				g_pTargetEnableControls=CreateTargetEnableDialog();
+				g_pTargetEnableControls->Run(pParent);
+			}
+			else
+			{
+				DebugOutput("Target Dialog already running\n");
+				assert(false);
+			}
+			break;
+		}
+	}
+} g_MenuSelection_Vision_Instance;
+
+MenuSelection_Interface *g_MenuSelection_Vision=&g_MenuSelection_Vision_Instance;
 
 void Vision_Shutdown()
 {
@@ -221,53 +274,6 @@ static size_t s_ThresholdResourceTable_Edit[]=
 	IDC_GSMax_Ed,
 	IDC_BLMax_Ed 
 };
-
-void Vision_Initialize(HWND pParent,Plugin_Controller_Interface *plugin)
-{
-	g_plugin_SquareTargeting=dynamic_cast<Plugin_SquareTargeting *>(plugin);
-	if( g_plugin_SquareTargeting == NULL ) return;
-
-	using namespace std;
-	string InFile;
-	GetVisionFilename(InFile);
-
-	std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
-	if (in.is_open())
-	{
-		string StringEntry;
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, (double)(TrackerType)atoi(StringEntry.c_str()));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eDisplayType, (double)(DisplayType)atoi(StringEntry.c_str()));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eSolidMask, (double)(bool)(atoi(StringEntry.c_str()) > 0));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eOverlays, (double)(bool)(atoi(StringEntry.c_str()) > 0));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eAimingText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eBoundsText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, (double)(bool)(atoi(StringEntry.c_str()) > 0));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, (double)(ThresholdColorSpace)atoi(StringEntry.c_str()));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane1Min, (double)atoi(StringEntry.c_str()));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane2Min, (double)atoi(StringEntry.c_str()));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane3Min, (double)atoi(StringEntry.c_str()));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane1Max, (double)atoi(StringEntry.c_str()));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane2Max, (double)atoi(StringEntry.c_str()));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdPlane3Max, (double)atoi(StringEntry.c_str()));
-		in >> StringEntry; in >> StringEntry;
-		g_plugin_SquareTargeting->Set_Vision_Settings(eIsTargeting, (double)(bool)(atoi(StringEntry.c_str()) > 0));
-		in.close();
-	}
-}
 
 VisionControls::VisionControls() 
 {

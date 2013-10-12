@@ -63,3 +63,12 @@ class DialogBase : public MessageBase_Interface
         int OnInitDialog( UINT uMsg, WPARAM wParam, LPARAM lParam );
 		bool m_IsClosing;
 };
+
+
+class MenuSelection_Interface
+{
+	public:
+		virtual void Initialize(HWND pParent,Plugin_Controller_Interface *plugin)=0;
+		virtual size_t AddMenuItems (HMENU hPopupMenu,size_t StartingOffset)=0;
+		virtual void On_Selection(int selection,HWND pParent)=0;
+};

@@ -27,15 +27,9 @@ DialogBase *CreateProcampDialog();
 DialogBase *CreateFileControlsDialog();
 
 void ProcAmp_Initialize(HWND pParent);
-void Vision_Initialize(HWND pParent,Plugin_Controller_Interface *plugin);
-void Compositor_Initialize(HWND pParent,Plugin_Controller_Interface *plugin);
 
-//Returns number of menu items added
-size_t Vision_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset);
-size_t Compositor_AddMenuItems (HMENU hPopupMenu,size_t StartingOffset);
-
-void Vision_On_Selection(int selection,HWND pParent);
-void Compositor_On_Selection(int selection,HWND pParent);
+extern MenuSelection_Interface *g_MenuSelection_Compositor;
+extern MenuSelection_Interface *g_MenuSelection_Vision;
 
 void Vision_Shutdown();
 
@@ -199,9 +193,9 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_StartedStreaming(HWND pP
 	if (g_plugin)
 	{
 		if (strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
-			Vision_Initialize(pParent,g_plugin);
+			g_MenuSelection_Vision->Initialize(pParent,g_plugin);
 		else if (strcmp(g_plugin->GetPlugInName(),csz_Plugin_Compositor)==0)
-			Compositor_Initialize(pParent,g_plugin);
+			g_MenuSelection_Compositor->Initialize(pParent,g_plugin);
 	}
 }
 
@@ -218,9 +212,9 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_AddMenuItems (HMENU hPop
 	if (g_plugin)
 	{
 		if  (strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
-			StartingOffset+=Vision_AddMenuItems(hPopupMenu,StartingOffset);
+			StartingOffset+=g_MenuSelection_Vision->AddMenuItems(hPopupMenu,StartingOffset);
 		else if  (strcmp(g_plugin->GetPlugInName(),csz_Plugin_Compositor)==0)
-			StartingOffset+=Compositor_AddMenuItems(hPopupMenu,StartingOffset);
+			StartingOffset+=g_MenuSelection_Compositor->AddMenuItems(hPopupMenu,StartingOffset);
 	}
 }
 
@@ -260,9 +254,9 @@ extern "C" CONTROLS_API void Callback_SmartCppDashboard_On_Selection(int selecti
 			if (g_plugin)
 			{
 				if  (strcmp(g_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
-					Vision_On_Selection(selection-eMenu_NoEntries,pParent);
+					g_MenuSelection_Vision->On_Selection(selection-eMenu_NoEntries,pParent);
 				else if  (strcmp(g_plugin->GetPlugInName(),csz_Plugin_Compositor)==0)
-					Compositor_On_Selection(selection-eMenu_NoEntries,pParent);
+					g_MenuSelection_Compositor->On_Selection(selection-eMenu_NoEntries,pParent);
 			}
 	}
 }
