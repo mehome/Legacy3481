@@ -322,8 +322,10 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 				err = script.GetFieldTable("composite");
 				if (!err)
 				{
+					Compositor_Props::Sequence_List *NewList=props.CreateCompositeList();
+					seq_pkt.specific_data.Composite=NewList;
 					//recursively call this with a new composite list to be used as the sequence
-					LoadSequenceProps(script,*props.CreateCompositeList(),props,true);
+					LoadSequenceProps(script,*NewList,props,true);
 					script.Pop();
 				}
 				break;
@@ -835,22 +837,10 @@ class Compositor
 			return m_IsEditable;
 		}
 
-		Bitmap_Frame *TimeChange(Bitmap_Frame *Frame)
+
+		Bitmap_Frame *Render_Reticle(Bitmap_Frame *Frame,const Compositor_Props::Sequence_List &sequence,size_t SequenceIndex)
 		{
-
 			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
-			const time_type current_time=time_type::get_current_time();
-			const double dTime_s=(double)(current_time-m_LastTime);
-			m_LastTime=current_time;
-			m_Frame=Frame; //to access frame properties during the event callback
-			m_JoyBinder.UpdateJoyStick(dTime_s);
-
-			if (SmartDashboard::IsConnected())
-			{
-				m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
-				UpdateSequence((size_t)SmartDashboard::GetNumber("Sequence")-1); //convert to ordinal
-			}
-
 			Bitmap_Frame *ret=Frame;
 			bool Flash=true;
 			if (m_IsEditable)
@@ -858,12 +848,13 @@ class Compositor
 				Flash=(m_BlinkCounter++&0x10)!=0;
 				m_BlinkCounter=(m_BlinkCounter&0x1f);
 			}
-			switch (props.Sequence[m_SequenceIndex].type)
+			const Compositor_Props::Sequence_Packet &seq_pkt=sequence[SequenceIndex];
+			switch (seq_pkt.type)
 			{
 			case Compositor_Props::eDefault:
 				{
 					//copy the props to alter the opacity for blinking
-					Compositor_Props::SquareReticle_Container_Props sqr_props=props.square_reticle[props.Sequence[m_SequenceIndex].specific_data.SquareReticle_SelIndex];
+					Compositor_Props::SquareReticle_Container_Props sqr_props=props.square_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
 					if (!Flash)
 						sqr_props.primary.opacity*=0.5;
 					if (sqr_props.UsingShadow)
@@ -877,9 +868,33 @@ class Compositor
 			case Compositor_Props::eBypass:
 				ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
 				break;
+			case Compositor_Props::eComposite:
+				{
+					const Compositor_Props::Sequence_List &composite=*seq_pkt.specific_data.Composite;
+					for (size_t i=0;i<composite.size();i++)
+						ret=Render_Reticle(Frame,composite,i);
+				}
+				break;
 			};
 
 			return ret;
+		}
+
+		Bitmap_Frame *TimeChange(Bitmap_Frame *Frame)
+		{
+			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
+			const time_type current_time=time_type::get_current_time();
+			const double dTime_s=(double)(current_time-m_LastTime);
+			m_LastTime=current_time;
+			m_Frame=Frame; //to access frame properties during the event callback
+			m_JoyBinder.UpdateJoyStick(dTime_s);
+
+			if (SmartDashboard::IsConnected())
+			{
+				m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
+				UpdateSequence((size_t)SmartDashboard::GetNumber("Sequence")-1); //convert to ordinal
+			}
+			return Render_Reticle(Frame,props.Sequence,m_SequenceIndex);
 		}
 
 		Plugin_Controller_Interface* GetBypassPluginInterface(void) {return m_Bypass.GetPluginInterface();}
