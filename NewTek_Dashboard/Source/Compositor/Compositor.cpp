@@ -850,6 +850,7 @@ class Compositor
 		}
 
 		Plugin_Controller_Interface* GetBypassPluginInterface(void) {return m_Bypass.GetPluginInterface();}
+		Compositor_Props::ReticleType GetCurrentReticalType() const {return m_CompositorProperties.GetCompositorProps().Sequence[m_SequenceIndex].type;}
 	private:
 		time_type m_LastTime;
 		FrameWork::UI::JoyStick_Binder m_JoyBinder;
@@ -916,6 +917,7 @@ class Plugin_Compositor_Interface : public Plugin_Controller_Interface
 		virtual void SetIsEditable(bool Edit)=0;
 		virtual bool GetIsEditable() const=0;
 		virtual Plugin_Controller_Interface* GetBypassPluginInterface(void)=0;
+		virtual Compositor_Props::ReticleType GetCurrentReticalType() const=0;
 };
 
 class Plugin_Compositor : public Plugin_Compositor_Interface
@@ -931,6 +933,7 @@ class Plugin_Compositor : public Plugin_Compositor_Interface
 		virtual const char *GetPlugInName() const {return "Plugin_Compositor";}
 
 		virtual Plugin_Controller_Interface* GetBypassPluginInterface(void)  {return m_internal->GetBypassPluginInterface();}
+		Compositor_Props::ReticleType GetCurrentReticalType() const {return m_internal->GetCurrentReticalType();}
 	private:
 		Compositor *m_internal;
 };
