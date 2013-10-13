@@ -40,7 +40,7 @@ protected:
 	{
 		m_plugin_Composite=dynamic_cast<Plugin_Compositor_Interface *>(plugin);
 		Plugin_Controller_Interface *bypass_plugin=m_plugin_Composite->GetBypassPluginInterface();
-		if (strcmp(bypass_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
+		if ((bypass_plugin)&&(strcmp(bypass_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0))
 			g_MenuSelection_Vision->Initialize(pParent,bypass_plugin);
 	}
 
@@ -62,8 +62,11 @@ protected:
 		else
 		{
 			Plugin_Controller_Interface *bypass_plugin=m_plugin_Composite->GetBypassPluginInterface();
-			if (strcmp(bypass_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
-				ret+=g_MenuSelection_Vision->AddMenuItems(hPopupMenu,StartingOffset+ret);
+			if (bypass_plugin)  //plugin can choose whether or not to have this
+			{
+				if (strcmp(bypass_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
+					ret+=g_MenuSelection_Vision->AddMenuItems(hPopupMenu,StartingOffset+ret);
+			}
 		}
 		return ret;
 	}
@@ -82,8 +85,11 @@ protected:
 		else
 		{
 			Plugin_Controller_Interface *bypass_plugin=m_plugin_Composite->GetBypassPluginInterface();
-			if (strcmp(bypass_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
-				g_MenuSelection_Vision->On_Selection(selection,pParent);
+			if (bypass_plugin)  //plugin can choose whether or not to have this
+			{
+				if (strcmp(bypass_plugin->GetPlugInName(),csz_Plugin_SquareTargeting)==0)
+					g_MenuSelection_Vision->On_Selection(selection,pParent);
+			}
 		}
 	}
 } g_MenuSelection_Compositor_Instance;
