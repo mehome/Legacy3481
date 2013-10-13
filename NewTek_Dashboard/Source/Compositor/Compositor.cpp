@@ -116,6 +116,25 @@ struct Compositor_Props
 		} specific_data;
 	};
 	Sequence_List Sequence;
+
+	//This takes care of creating the deletion list implicitly
+	Sequence_List *CreateCompositeList() 
+	{
+		Sequence_List *NewList=new Sequence_List;
+		Composite_List.push_back(NewList);
+		return NewList;
+	}
+	//This must be only called from within compositor's destructor
+	void DestroyCompositeList()
+	{
+		for (size_t i=0;i<Composite_List.size();i++)
+		{
+			delete Composite_List[i];
+			Composite_List[i]=NULL;
+		}
+	}
+
+	std::vector<Sequence_List *> Composite_List;  //keep track of all composite lists created for deletion
 };
 
 class Compositor_Properties
@@ -267,14 +286,17 @@ static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &p
 	} while (!fieldtable_err);
 }
 
-static void LoadSequenceProps(Scripting::Script& script,Compositor_Props &props)
+static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequence_List &sequence,Compositor_Props &props,bool IsRecursive=false)
 {
 	const char* err=NULL;
 	char Buffer[128];
 	size_t index=1;  //keep the lists cardinal in LUA
 	do 
 	{
-		sprintf_s(Buffer,128,"sequence_%d",index);
+		if (!IsRecursive)
+			sprintf_s(Buffer,128,"sequence_%d",index);
+		else
+			sprintf_s(Buffer,128,"composite_%d",index);
 		err = script.GetFieldTable(Buffer);
 		if (!err)
 		{
@@ -295,13 +317,23 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props &props)
 					seq_pkt.specific_data.SquareReticle_SelIndex--;  // translate cardinal to ordinal 
 				}
 				break;
+			case Compositor_Props::eComposite:
+
+				err = script.GetFieldTable("composite");
+				if (!err)
+				{
+					//recursively call this with a new composite list to be used as the sequence
+					LoadSequenceProps(script,*props.CreateCompositeList(),props,true);
+					script.Pop();
+				}
+				break;
 			}
 
 			//These always start out zero'd
 			seq_pkt.PositionX=0.0;
 			seq_pkt.PositionY=0.0;
 
-			props.Sequence.push_back(seq_pkt);
+			sequence.push_back(seq_pkt);
 			index++;
 
 			script.Pop();
@@ -381,7 +413,7 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 		{
 			//clear defaults
 			props.Sequence.clear();  //for now it is assumed the default will not allocate a composite
-			LoadSequenceProps(script,props);
+			LoadSequenceProps(script,props.Sequence,props);
 
 			err = script.GetFieldTable("load_settings");
 			{
@@ -758,6 +790,7 @@ class Compositor
 			m_CompositorProperties.Get_CompositorControls().BindAdditionalUIControls(false,&m_JoyBinder,NULL);
 			//For now limit the sequence to advance and previous calls to save network bandwidth... we can move this to the time change if necessary
 			SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+			m_CompositorProperties.GetCompositorProps_rw().DestroyCompositeList();
 		}
 		virtual void Initialize(EventMap& em, const Compositor_Properties *props=NULL)
 		{
