@@ -79,7 +79,7 @@ struct Compositor_Props
 		SquareReticle_Props primary;
 		SquareReticle_Props shadow;
 		int PixelOffsetX,PixelOffsetY;
-		bool UsingShadow;
+		bool UsingShadow,ExcludeRegion;
 	};
 	std::vector<SquareReticle_Container_Props> square_reticle;
 
@@ -195,6 +195,7 @@ Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_Control
 	Compositor_Props::SquareReticle_Container_Props sqr_pkt;
 	sqr_pkt.primary=sqr_props;
 	sqr_pkt.UsingShadow=false;
+	sqr_pkt.ExcludeRegion=true;
 	props.square_reticle.push_back(sqr_pkt);
 
 	Compositor_Props::Sequence_Packet seq_pkt;
@@ -260,6 +261,13 @@ static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &p
 			{
 				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
 					sqr_pkt.UsingShadow=true;
+			}
+			err = script.GetField("exclude_region",&sTest,NULL,NULL);
+			sqr_pkt.ExcludeRegion=true;
+			if (!err)
+			{
+				if ((sTest.c_str()[0]=='n')||(sTest.c_str()[0]=='N')||(sTest.c_str()[0]=='0'))
+					sqr_pkt.ExcludeRegion=false;
 			}
 			err = script.GetFieldTable("shadow");
 			if (!err)
@@ -473,7 +481,7 @@ static void AimingSystem_to_PixelSystem(int &Px,int &Py,double Ax,double Ay,doub
 }
 
 static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double YPos,const Compositor_Props::SquareReticle_Props &props,
-										 int PixelOffsetX=0,int PixelOffsetY=0)
+										 int PixelOffsetX=0,int PixelOffsetY=0,RECT *ExcludeRegion=NULL)
 {
 	if (g_Framework)
 	{
@@ -523,11 +531,16 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 		//for UVYV x has to be even
 		PositionX=PositionX&0xFFFE; 
 		ThicknessX=ThicknessX&0xFFFE;
+		bool ExcludeRowDetected=false;
 
 		for (size_t y=PositionY-ThicknessY;y<PositionY+ThicknessY;y++)
 		{
+			if (ExcludeRegion)
+				ExcludeRowDetected=(((LONG)y>ExcludeRegion->top) && ((LONG)y<ExcludeRegion->bottom)) ? true : false;
+
 			for (size_t x=PositionX-ThicknessX; x<PositionX+ThicknessX; x+=2)
 			{
+				if ((ExcludeRegion) && (ExcludeRowDetected) && ((LONG)x>ExcludeRegion->left) && ((LONG)x<ExcludeRegion->right)) continue;
 				PBYTE pU =(Frame->Memory+ (x*2 + 0) + (LineWidthInBytes * y));
 				PBYTE pY =(Frame->Memory+ (x*2 + 1) + (LineWidthInBytes * y));
 				PBYTE pV =(Frame->Memory+ (x*2 + 2) + (LineWidthInBytes * y));
@@ -1026,7 +1039,24 @@ class Compositor
 					if (sqr_props.UsingShadow)
 					{
 						sqr_props.shadow.opacity*=0.5;
-						RenderSquareReticle(Frame,Xpos,Ypos,sqr_props.shadow,sqr_props.PixelOffsetX,sqr_props.PixelOffsetY);
+						RECT ExcludeRegion,*pExcludeRegion=NULL;
+						if (sqr_props.ExcludeRegion)
+						{
+							const size_t XRes=Frame->XRes;
+							const size_t YRes=Frame->YRes;
+							int Px,Py;
+							AimingSystem_to_PixelSystem(Px,Py,Xpos,Ypos,XRes,YRes,((double)XRes/(double)YRes));
+							pExcludeRegion=&ExcludeRegion;
+							size_t PositionY=(size_t)(Py);
+							size_t PositionX=(size_t)(Px) & 0xFFFE;
+							size_t ThicknessX=sqr_props.primary.ThicknessX & 0xFFFE;
+							ExcludeRegion.top=(LONG)(PositionY-sqr_props.primary.ThicknessY);
+							ExcludeRegion.bottom=(LONG)(PositionY+sqr_props.primary.ThicknessY);
+							ExcludeRegion.left=(LONG)(PositionX-ThicknessX);
+							ExcludeRegion.right=(LONG)(PositionX+ThicknessX);
+						}
+						
+						RenderSquareReticle(Frame,Xpos,Ypos,sqr_props.shadow,sqr_props.PixelOffsetX,sqr_props.PixelOffsetY,pExcludeRegion);
 					}
 					ret=RenderSquareReticle(Frame,Xpos,Ypos,sqr_props.primary);
 				}

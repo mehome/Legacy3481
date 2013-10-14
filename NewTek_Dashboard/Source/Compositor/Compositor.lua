@@ -20,16 +20,16 @@ CompositorProps = {
 		{
 			square_reticle_1 =
 			{
-				thickness_x=5,thickness_y=5,opacity=0.6,
+				thickness_x=5,thickness_y=5,opacity=0.5,
 				r=0,g=255,b=100,
 
-				use_shadow='y',
+				use_shadow='y', exclude_region='y',
 				shadow =
 				{
-					thickness_x=5,thickness_y=5,opacity=0.2,
+					thickness_x=5,thickness_y=5,opacity=0.3,
 					r=0,g=0,b=0
 				},
-				x_offset=1,y_offset=1
+				x_offset=2,y_offset=1
 			},
 			square_reticle_2 =
 			{
