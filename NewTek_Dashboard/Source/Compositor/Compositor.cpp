@@ -992,6 +992,13 @@ class Compositor
 					{
 						Xpos=EnableFlash?m_Xpos+XOffset:seq_pkt.PositionX+XOffset;
 						Ypos=EnableFlash?m_Ypos+YOffset:seq_pkt.PositionY+YOffset;
+						if (EnableFlash)
+						{
+							Xpos=CheckX(Xpos);
+							m_Xpos=Xpos-XOffset;
+							Ypos=CheckY(Ypos);
+							m_Ypos=Ypos-YOffset;
+						}
 					}
 					else
 					{
@@ -999,14 +1006,22 @@ class Compositor
 						bool UseInput=(&sequence==&props.Sequence) && EnableFlash;
 						Xpos=UseInput?m_Xpos:seq_pkt.PositionX+XOffset;
 						Ypos=UseInput?m_Ypos:seq_pkt.PositionY+YOffset;
+						if (EnableFlash)
+						{
+							Xpos=CheckX(Xpos);
+							double TempXpos=UseInput?Xpos:Xpos-seq_pkt.PositionX;
+							m_Xpos=(TempXpos<0)?std::max(TempXpos,m_Xpos):std::min(TempXpos,m_Xpos);
+
+							Ypos=CheckY(Ypos);
+							double TempYpos=UseInput?Ypos:Ypos-seq_pkt.PositionY;
+							m_Ypos=(TempXpos<0)?std::max(TempYpos,m_Ypos):std::min(TempYpos,m_Ypos);
+						}
 					}
 
 					if (EnableFlash)
 					{
 						if (!m_Flash)
 							sqr_props.primary.opacity*=0.5;
-						Xpos=CheckX(Xpos);
-						Ypos=CheckY(Ypos);
 					}
 					if (sqr_props.UsingShadow)
 					{
