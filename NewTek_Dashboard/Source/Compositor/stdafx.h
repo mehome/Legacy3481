@@ -19,3 +19,4 @@
 #include <windows.h>
 #include <winbase.h>
 #include <map>
+#include <stack>

@@ -678,25 +678,76 @@ class Compositor
 		{
 			if ((m_SequenceIndex!=NewSequenceIndex)||forceUpdate)
 			{
-				Compositor_Props &props_rw=m_CompositorProperties.GetCompositorProps_rw();
+				Compositor_Props::Sequence_List &Sequence=*(const_cast<Compositor_Props::Sequence_List *>(m_pSequence));
+				const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 				//Save current position to this sequence packet
-				props_rw.Sequence[m_SequenceIndex].PositionX=m_Xpos;
-				props_rw.Sequence[m_SequenceIndex].PositionY=m_Ypos;
+				Sequence[m_SequenceIndex].PositionX=m_Xpos;
+				Sequence[m_SequenceIndex].PositionY=m_Ypos;
 
+				//For recursive stepping we can determine if we start the index from the end or beginning from looking at the old and new value
+				const bool FromNext=NewSequenceIndex<m_SequenceIndex;
 				//issue the update
 				m_SequenceIndex=NewSequenceIndex;
-
-				const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
+				const Compositor_Props::Sequence_Packet &seq_pkt=Sequence[m_SequenceIndex];
+				bool CompositeUpdate=false;
+				if ((m_IsEditable)&&(m_RecurseIntoComposite)&&(seq_pkt.type==Compositor_Props::eComposite))
+				{
+					//check this before pushing onto the stack
+					if (m_PositionTracker.empty())
+						SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+					PositionPacket pkt;
+					pkt.pSequence=m_pSequence;
+					pkt.SequenceIndex=m_SequenceIndex;
+					m_PositionTracker.push(pkt);  //keep track of where we were we can pop out once we hit the ends
+					//Now to step in to the sub sequence
+					m_pSequence=seq_pkt.specific_data.Composite;
+					//set the index to the begin or end based on the direction it happened
+					assert(m_pSequence->size()); //we should not have any empty sequences! (LUA need to have at least one per level)
+					m_SequenceIndex=FromNext?m_pSequence->size()-1:0;
+					NewSequenceIndex=m_SequenceIndex;
+					CompositeUpdate=true;
+				}
+		
 				if (m_SequenceIndex==-1)
-					m_SequenceIndex=props.Sequence.size()-1;
-				else if (m_SequenceIndex>=props.Sequence.size())
-					m_SequenceIndex=0;
-
-				SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
-				//Modify position to last saved
-				m_Xpos=props.Sequence[m_SequenceIndex].PositionX;
-				m_Ypos=props.Sequence[m_SequenceIndex].PositionY;
-
+				{
+					//reached beginning
+					if (!m_PositionTracker.empty())
+					{
+						const PositionPacket &pkt=m_PositionTracker.top();
+						m_PositionTracker.pop();
+						//restore to parent
+						m_pSequence=pkt.pSequence;
+						m_SequenceIndex=pkt.SequenceIndex;  //go back where we were in a previous case
+						NewSequenceIndex=m_SequenceIndex-1;
+						CompositeUpdate=true;
+					}
+					else
+						m_SequenceIndex=Sequence.size()-1;
+				}
+				else if (m_SequenceIndex>=Sequence.size())
+				{
+					//reached end
+					if (!m_PositionTracker.empty())
+					{
+						const PositionPacket &pkt=m_PositionTracker.top();
+						m_PositionTracker.pop();
+						//restore to parent
+						m_pSequence=pkt.pSequence;
+						m_SequenceIndex=pkt.SequenceIndex;  
+						//advance to next
+						NewSequenceIndex=m_SequenceIndex+1;
+						CompositeUpdate=true;
+					}
+					else
+						m_SequenceIndex=0;
+				}
+				if (m_PositionTracker.empty())
+					SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+				//Modify position to last saved... using m_pSequence... since this may change when stepping into composite
+				m_Xpos=(*m_pSequence)[m_SequenceIndex].PositionX;
+				m_Ypos=(*m_pSequence)[m_SequenceIndex].PositionY;
+				if (CompositeUpdate)
+					UpdateSequence(NewSequenceIndex,true);
 			}
 		}
 
@@ -739,7 +790,7 @@ class Compositor
 
 		IEvent::HandlerList ehl;
 		Compositor(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
-			m_SequenceIndex(0),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false)
+			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false),m_RecurseIntoComposite(false),m_Flash(false)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
@@ -747,6 +798,8 @@ class Compositor
 			em->Event_Map["NextSequence"].Subscribe(ehl, *this, &Compositor::NextSequence);
 			em->Event_Map["PreviousSequence"].Subscribe(ehl, *this, &Compositor::PreviousSequence);
 			em->EventValue_Map["SequencePOV"].Subscribe(ehl,*this, &Compositor::SetPOV);
+
+			//m_RecurseIntoComposite=true; //testing  (TODO implement in menu)
 		}
 		void SaveData()
 		{
@@ -803,7 +856,7 @@ class Compositor
 				m_CompositorProperties.Get_CompositorControls().BindAdditionalUIControls(true,&m_JoyBinder,NULL);
 				//Setup the initial coordinates
 				const Compositor_Props::Sequence_List &sequence= props->GetCompositorProps().Sequence;
-
+				m_pSequence=&m_CompositorProperties.GetCompositorProps().Sequence;
 				//Setup our sequence display and positions
 				if (sequence.size())
 				{
@@ -842,11 +895,12 @@ class Compositor
 		{
 			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 			Bitmap_Frame *ret=Frame;
-			bool Flash=true;
-			if (m_IsEditable)
+			bool EnableFlash=false;
+			if ((m_IsEditable)&&(&sequence==m_pSequence)&&(SequenceIndex==m_SequenceIndex))
 			{
-				Flash=(m_BlinkCounter++&0x10)!=0;
+				m_Flash=(m_BlinkCounter++&0x10)!=0;
 				m_BlinkCounter=(m_BlinkCounter&0x1f);
+				EnableFlash=true;
 			}
 			const Compositor_Props::Sequence_Packet &seq_pkt=sequence[SequenceIndex];
 			switch (seq_pkt.type)
@@ -855,14 +909,17 @@ class Compositor
 				{
 					//copy the props to alter the opacity for blinking
 					Compositor_Props::SquareReticle_Container_Props sqr_props=props.square_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
-					if (!Flash)
+					const double Xpos=EnableFlash?m_Xpos:seq_pkt.PositionX;
+					const double Ypos=EnableFlash?m_Ypos:seq_pkt.PositionY;
+
+					if ((EnableFlash)&&(!m_Flash))
 						sqr_props.primary.opacity*=0.5;
 					if (sqr_props.UsingShadow)
 					{
 						sqr_props.shadow.opacity*=0.5;
-						RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.shadow,sqr_props.PixelOffsetX,sqr_props.PixelOffsetY);
+						RenderSquareReticle(Frame,Xpos,Ypos,sqr_props.shadow,sqr_props.PixelOffsetX,sqr_props.PixelOffsetY);
 					}
-					ret=RenderSquareReticle(Frame,m_Xpos,m_Ypos,sqr_props.primary);
+					ret=RenderSquareReticle(Frame,Xpos,Ypos,sqr_props.primary);
 				}
 				break;
 			case Compositor_Props::eBypass:
@@ -889,12 +946,21 @@ class Compositor
 			m_Frame=Frame; //to access frame properties during the event callback
 			m_JoyBinder.UpdateJoyStick(dTime_s);
 
-			if (SmartDashboard::IsConnected())
+			if (SmartDashboard::IsConnected() && (m_PositionTracker.empty()))
 			{
 				m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
 				UpdateSequence((size_t)SmartDashboard::GetNumber("Sequence")-1); //convert to ordinal
 			}
-			return Render_Reticle(Frame,props.Sequence,m_SequenceIndex);
+			
+			Bitmap_Frame *ret=Frame;
+			if (m_PositionTracker.empty())
+				ret=Render_Reticle(Frame,*m_pSequence,m_SequenceIndex);
+			else
+			{
+				for (size_t i=0;i<m_pSequence->size();i++)
+					ret=Render_Reticle(ret,*m_pSequence,i);
+			}
+			return ret;
 		}
 
 		Plugin_Controller_Interface* GetBypassPluginInterface(void) {return m_Bypass.GetPluginInterface();}
@@ -906,12 +972,21 @@ class Compositor
 		Compositor_Properties m_CompositorProperties;
 		Bitmap_Frame *m_Frame;
 		size_t m_SequenceIndex;
+		const Compositor_Props::Sequence_List *m_pSequence;  //keep track of which sequence level where we are
+		struct PositionPacket
+		{
+			size_t SequenceIndex;
+			const Compositor_Props::Sequence_List *pSequence;
+		};
+		std::stack<PositionPacket> m_PositionTracker;  //used to recurse into the sequence
 		size_t m_BlinkCounter; //very simple blink mechanism
 		double m_Xpos,m_Ypos;
 		Bypass_Reticle m_Bypass;
 
 		bool m_IsEditable;
 		bool m_POVSetValve;
+		bool m_RecurseIntoComposite;  //If true it will step into composite list for edit during previous/next sequence
+		bool m_Flash;  //Making this a member makes it possible to enable flash for a whole group in composite
 } *g_pCompositor;
 
 
