@@ -698,9 +698,14 @@ class Compositor
 					PositionPacket pkt;
 					pkt.pSequence=m_pSequence;
 					pkt.SequenceIndex=m_SequenceIndex;
+					pkt.m_Xpos=m_Xpos_Offset;
+					pkt.m_Ypos=m_Ypos_Offset;
 					m_PositionTracker.push(pkt);  //keep track of where we were we can pop out once we hit the ends
 					//Now to step in to the sub sequence
 					m_pSequence=seq_pkt.specific_data.Composite;
+					//add the overall parent offset
+					m_Xpos_Offset+=seq_pkt.PositionX;
+					m_Ypos_Offset+=seq_pkt.PositionY;
 					//set the index to the begin or end based on the direction it happened
 					assert(m_pSequence->size()); //we should not have any empty sequences! (LUA need to have at least one per level)
 					m_SequenceIndex=FromNext?m_pSequence->size()-1:0;
@@ -718,6 +723,8 @@ class Compositor
 						//restore to parent
 						m_pSequence=pkt.pSequence;
 						m_SequenceIndex=pkt.SequenceIndex;  //go back where we were in a previous case
+						m_Xpos_Offset=pkt.m_Xpos;
+						m_Ypos_Offset=pkt.m_Ypos;
 						NewSequenceIndex=m_SequenceIndex-1;
 						CompositeUpdate=true;
 					}
@@ -734,6 +741,8 @@ class Compositor
 						//restore to parent
 						m_pSequence=pkt.pSequence;
 						m_SequenceIndex=pkt.SequenceIndex;  
+						m_Xpos_Offset=pkt.m_Xpos;
+						m_Ypos_Offset=pkt.m_Ypos;
 						//advance to next
 						NewSequenceIndex=m_SequenceIndex+1;
 						CompositeUpdate=true;
@@ -790,7 +799,8 @@ class Compositor
 
 		IEvent::HandlerList ehl;
 		Compositor(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
-			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_IsEditable(false),m_RecurseIntoComposite(false),m_Flash(false)
+			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),m_IsEditable(false),
+			m_RecurseIntoComposite(false),m_Flash(false)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
@@ -891,16 +901,21 @@ class Compositor
 		}
 
 
-		Bitmap_Frame *Render_Reticle(Bitmap_Frame *Frame,const Compositor_Props::Sequence_List &sequence,size_t SequenceIndex)
+		Bitmap_Frame *Render_Reticle(Bitmap_Frame *Frame,const Compositor_Props::Sequence_List &sequence,size_t SequenceIndex,double XOffset=0.0,double YOffset=0.0)
 		{
 			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 			Bitmap_Frame *ret=Frame;
 			bool EnableFlash=false;
-			if ((m_IsEditable)&&(&sequence==m_pSequence)&&(SequenceIndex==m_SequenceIndex))
+			if (m_IsEditable)
 			{
-				m_Flash=(m_BlinkCounter++&0x10)!=0;
-				m_BlinkCounter=(m_BlinkCounter&0x1f);
-				EnableFlash=true;
+				if ((&sequence==m_pSequence)&&(SequenceIndex==m_SequenceIndex))
+				{
+					m_Flash=(m_BlinkCounter++&0x10)!=0;
+					m_BlinkCounter=(m_BlinkCounter&0x1f);
+					EnableFlash=true;
+				}
+				else if (!m_RecurseIntoComposite)
+					EnableFlash=true;
 			}
 			const Compositor_Props::Sequence_Packet &seq_pkt=sequence[SequenceIndex];
 			switch (seq_pkt.type)
@@ -909,8 +924,19 @@ class Compositor
 				{
 					//copy the props to alter the opacity for blinking
 					Compositor_Props::SquareReticle_Container_Props sqr_props=props.square_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
-					const double Xpos=EnableFlash?m_Xpos:seq_pkt.PositionX;
-					const double Ypos=EnableFlash?m_Ypos:seq_pkt.PositionY;
+					double Xpos,Ypos;
+					if (m_RecurseIntoComposite)
+					{
+						Xpos=EnableFlash?m_Xpos+XOffset:seq_pkt.PositionX+XOffset;
+						Ypos=EnableFlash?m_Ypos+YOffset:seq_pkt.PositionY+YOffset;
+					}
+					else
+					{
+						//If we are not the top layer then we are always locked down if we are not recursing
+						bool UseInput=(&sequence==&props.Sequence) && EnableFlash;
+						Xpos=UseInput?m_Xpos:seq_pkt.PositionX+XOffset;
+						Ypos=UseInput?m_Ypos:seq_pkt.PositionY+YOffset;
+					}
 
 					if ((EnableFlash)&&(!m_Flash))
 						sqr_props.primary.opacity*=0.5;
@@ -928,8 +954,13 @@ class Compositor
 			case Compositor_Props::eComposite:
 				{
 					const Compositor_Props::Sequence_List &composite=*seq_pkt.specific_data.Composite;
+					//For group mode the specific offsets are locked down, we just need to make sure we are not inside recursion... otherwise refer to the locked down value
+					bool UseInput=(&sequence==&props.Sequence) && EnableFlash;
+					const double Xpos=UseInput?m_Xpos+XOffset:seq_pkt.PositionX+XOffset;
+					const double Ypos=UseInput?m_Ypos+YOffset:seq_pkt.PositionY+YOffset;
+
 					for (size_t i=0;i<composite.size();i++)
-						ret=Render_Reticle(Frame,composite,i);
+						ret=Render_Reticle(Frame,composite,i,Xpos,Ypos);
 				}
 				break;
 			};
@@ -946,10 +977,14 @@ class Compositor
 			m_Frame=Frame; //to access frame properties during the event callback
 			m_JoyBinder.UpdateJoyStick(dTime_s);
 
-			if (SmartDashboard::IsConnected() && (m_PositionTracker.empty()))
+			if (SmartDashboard::IsConnected())
 			{
 				m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
-				UpdateSequence((size_t)SmartDashboard::GetNumber("Sequence")-1); //convert to ordinal
+				//This is only read for cases like autonomous... so we'll cut to the quick during edit mode and not read it
+				//I could almost write back the value not changing, but I'd need to track the top level index... I don't think it is justifiable for this
+				//especially since the workflow should not be changing this in the java client
+				if (!m_IsEditable)
+					UpdateSequence((size_t)SmartDashboard::GetNumber("Sequence")-1); //convert to ordinal
 			}
 			
 			Bitmap_Frame *ret=Frame;
@@ -958,13 +993,41 @@ class Compositor
 			else
 			{
 				for (size_t i=0;i<m_pSequence->size();i++)
-					ret=Render_Reticle(ret,*m_pSequence,i);
+					ret=Render_Reticle(ret,*m_pSequence,i,m_Xpos_Offset,m_Ypos_Offset);
 			}
 			return ret;
 		}
 
 		Plugin_Controller_Interface* GetBypassPluginInterface(void) {return m_Bypass.GetPluginInterface();}
 		Compositor_Props::ReticleType GetCurrentReticalType() const {return m_CompositorProperties.GetCompositorProps().Sequence[m_SequenceIndex].type;}
+		void SetRecurseIntoComposite(bool enableRecursiveStep) 
+		{
+			m_RecurseIntoComposite=enableRecursiveStep;
+			//if we are no longer recursing... we'll need to get out of the recursion
+			if (!enableRecursiveStep)
+			{
+				{
+					Compositor_Props::Sequence_List &Sequence_rw=*(const_cast<Compositor_Props::Sequence_List *>(m_pSequence));
+					Sequence_rw[m_SequenceIndex].PositionX=m_Xpos;
+					Sequence_rw[m_SequenceIndex].PositionY=m_Ypos;
+				}
+				while(!m_PositionTracker.empty())
+				{
+					const PositionPacket &pkt=m_PositionTracker.top();
+					m_PositionTracker.pop();
+					//restore to parent
+					m_pSequence=pkt.pSequence;
+					m_SequenceIndex=pkt.SequenceIndex;  
+					m_Xpos_Offset=pkt.m_Xpos;
+					m_Ypos_Offset=pkt.m_Ypos;
+					m_Xpos=(*m_pSequence)[m_SequenceIndex].PositionX;
+					m_Ypos=(*m_pSequence)[m_SequenceIndex].PositionY;
+				}
+			}
+			else
+				UpdateSequence(m_SequenceIndex,true);  //this will check if we are on composite to break it up
+		}
+		bool GetRecurseIntoComposite() const {return m_RecurseIntoComposite;}
 	private:
 		time_type m_LastTime;
 		FrameWork::UI::JoyStick_Binder m_JoyBinder;
@@ -975,12 +1038,14 @@ class Compositor
 		const Compositor_Props::Sequence_List *m_pSequence;  //keep track of which sequence level where we are
 		struct PositionPacket
 		{
+			double m_Xpos,m_Ypos;  //Keep track of parent offset
 			size_t SequenceIndex;
 			const Compositor_Props::Sequence_List *pSequence;
 		};
 		std::stack<PositionPacket> m_PositionTracker;  //used to recurse into the sequence
 		size_t m_BlinkCounter; //very simple blink mechanism
 		double m_Xpos,m_Ypos;
+		double m_Xpos_Offset,m_Ypos_Offset;  //only used when stepping through recursion
 		Bypass_Reticle m_Bypass;
 
 		bool m_IsEditable;
@@ -1041,6 +1106,8 @@ class Plugin_Compositor_Interface : public Plugin_Controller_Interface
 		virtual bool GetIsEditable() const=0;
 		virtual Plugin_Controller_Interface* GetBypassPluginInterface(void)=0;
 		virtual Compositor_Props::ReticleType GetCurrentReticalType() const=0;
+		virtual void SetStepIntoComposite(bool enableRecursiveStep)=0;
+		virtual bool GetStepIntoComposite() const=0;
 };
 
 class Plugin_Compositor : public Plugin_Compositor_Interface
@@ -1057,6 +1124,8 @@ class Plugin_Compositor : public Plugin_Compositor_Interface
 
 		virtual Plugin_Controller_Interface* GetBypassPluginInterface(void)  {return m_internal->GetBypassPluginInterface();}
 		Compositor_Props::ReticleType GetCurrentReticalType() const {return m_internal->GetCurrentReticalType();}
+		virtual void SetStepIntoComposite(bool enableRecursiveStep) {m_internal->SetRecurseIntoComposite(enableRecursiveStep);}
+		virtual bool GetStepIntoComposite() const {return m_internal->GetRecurseIntoComposite();}
 	private:
 		Compositor *m_internal;
 };

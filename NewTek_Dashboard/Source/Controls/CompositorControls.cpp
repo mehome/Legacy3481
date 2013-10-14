@@ -26,6 +26,8 @@ public:
 		eBypass
 	};
 	virtual ReticleType GetCurrentReticalType() const=0;
+	virtual void SetStepIntoComposite(bool enableRecursiveStep)=0;
+	virtual bool GetStepIntoComposite() const=0;
 };
 
 
@@ -47,6 +49,7 @@ protected:
 	enum MenuSelection
 	{
 		eMenu_Editable,
+		eMenu_EditComposite,
 		eMenu_NoEntries
 	};
 
@@ -57,6 +60,7 @@ protected:
 		if (m_ReticleType!=Plugin_Compositor_Interface::eBypass)
 		{
 			InsertMenu(hPopupMenu, -1, ( m_plugin_Composite->GetIsEditable()?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Editable+StartingOffset, L"Edit Position"); 
+			InsertMenu(hPopupMenu, -1, ( !m_plugin_Composite->GetStepIntoComposite()?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_EditComposite+StartingOffset, L"Group Edit"); 
 			ret=eMenu_NoEntries;
 		}
 		else
@@ -79,6 +83,9 @@ protected:
 			{
 			case eMenu_Editable:
 				m_plugin_Composite->SetIsEditable(!m_plugin_Composite->GetIsEditable());
+				break;
+			case eMenu_EditComposite:
+				m_plugin_Composite->SetStepIntoComposite(!m_plugin_Composite->GetStepIntoComposite());
 				break;
 			}
 		}
