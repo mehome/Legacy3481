@@ -44,7 +44,6 @@ CompositorProps = {
 		},
 		
 		--Types	"none","square","composite","bypass"
-		--TODO composite, and perhaps alpha bitmap and vector from NIVision
 		sequence =
 		{
 			sequence_1 = {	type="square", selection=1	},
