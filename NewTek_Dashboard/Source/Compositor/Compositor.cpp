@@ -670,11 +670,6 @@ class Compositor
 				const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 				SmartDashboard::PutNumber("X Position",value);
 				m_Xpos+= (value * props.X_Scalar);
-				const double x_limit=(m_Frame->XRes>m_Frame->YRes)?(double)m_Frame->XRes/(double)m_Frame->YRes : 1.0;
-				if (m_Xpos>x_limit)
-					m_Xpos=x_limit;
-				else if (m_Xpos<-x_limit)
-					m_Xpos=-x_limit;
 			}
 		}
 		void SetYAxis(double value)
@@ -684,11 +679,6 @@ class Compositor
 				const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 				SmartDashboard::PutNumber("Y Position",value);
 				m_Ypos+= (value * props.Y_Scalar);
-				const double y_limit=(m_Frame->YRes>m_Frame->XRes)?(double)m_Frame->YRes/(double)m_Frame->XRes : 1.0;
-				if (m_Ypos>y_limit)
-					m_Ypos=y_limit;
-				else if (m_Ypos<-y_limit)
-					m_Ypos=-y_limit;
 			}
 		}
 		void UpdateSequence(size_t NewSequenceIndex,bool forceUpdate=false)
@@ -816,8 +806,8 @@ class Compositor
 
 		IEvent::HandlerList ehl;
 		Compositor(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
-			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),m_IsEditable(false),
-			m_RecurseIntoComposite(false),m_Flash(false)
+			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),
+			m_IsEditable(false),m_PreviousIsEditable(false),m_RecurseIntoComposite(false),m_Flash(false)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
@@ -953,6 +943,27 @@ class Compositor
 		}
 
 
+		
+		double CheckX(double Xpos) const
+		{
+			const double x_limit=(m_Frame->XRes>m_Frame->YRes)?(double)m_Frame->XRes/(double)m_Frame->YRes : 1.0;
+			if (Xpos>x_limit)
+				Xpos=x_limit;
+			else if (m_Xpos<-x_limit)
+				Xpos=-x_limit;
+			return Xpos;
+		}
+
+		double CheckY(double Ypos) const
+		{
+			const double y_limit=(m_Frame->YRes>m_Frame->XRes)?(double)m_Frame->YRes/(double)m_Frame->XRes : 1.0;
+			if (Ypos>y_limit)
+				Ypos=y_limit;
+			else if (Ypos<-y_limit)
+				Ypos=-y_limit;
+			return Ypos;
+		}
+
 		Bitmap_Frame *Render_Reticle(Bitmap_Frame *Frame,const Compositor_Props::Sequence_List &sequence,size_t SequenceIndex,double XOffset=0.0,double YOffset=0.0)
 		{
 			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
@@ -990,8 +1001,13 @@ class Compositor
 						Ypos=UseInput?m_Ypos:seq_pkt.PositionY+YOffset;
 					}
 
-					if ((EnableFlash)&&(!m_Flash))
-						sqr_props.primary.opacity*=0.5;
+					if (EnableFlash)
+					{
+						if (!m_Flash)
+							sqr_props.primary.opacity*=0.5;
+						Xpos=CheckX(Xpos);
+						Ypos=CheckY(Ypos);
+					}
 					if (sqr_props.UsingShadow)
 					{
 						sqr_props.shadow.opacity*=0.5;
@@ -1038,6 +1054,9 @@ class Compositor
 				if (!m_IsEditable)
 					UpdateSequence((size_t)SmartDashboard::GetNumber("Sequence")-1); //convert to ordinal
 			}
+			//If edit status changes... issue update this will ensure its in the right mode
+			if (m_PreviousIsEditable != m_IsEditable )
+				UpdateSequence(m_SequenceIndex,true);
 			
 			Bitmap_Frame *ret=Frame;
 			if (m_PositionTracker.empty())
@@ -1047,6 +1066,7 @@ class Compositor
 				for (size_t i=0;i<m_pSequence->size();i++)
 					ret=Render_Reticle(ret,*m_pSequence,i,m_Xpos_Offset,m_Ypos_Offset);
 			}
+			m_PreviousIsEditable=m_IsEditable;
 			return ret;
 		}
 
@@ -1101,6 +1121,7 @@ class Compositor
 		Bypass_Reticle m_Bypass;
 
 		bool m_IsEditable;
+		bool m_PreviousIsEditable;  //detect when Editable has switched to off to issue an update
 		bool m_POVSetValve;
 		bool m_RecurseIntoComposite;  //If true it will step into composite list for edit during previous/next sequence
 		bool m_Flash;  //Making this a member makes it possible to enable flash for a whole group in composite
