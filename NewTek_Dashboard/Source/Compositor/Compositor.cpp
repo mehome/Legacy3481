@@ -343,18 +343,21 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 	} while (!err);
 }
 
-static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Props &props)
+static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Props::Sequence_List &sequence,Compositor_Props &props,bool IsRecursive=false)
 {
 	const char* err=NULL;
 	char Buffer[128];
 	size_t index=1;  //keep the lists cardinal in LUA
 	do 
 	{
-		sprintf_s(Buffer,128,"sequence_%d",index);
+		if (!IsRecursive)
+			sprintf_s(Buffer,128,"sequence_%d",index);
+		else
+			sprintf_s(Buffer,128,"composite_%d",index);
 		err = script.GetFieldTable(Buffer);
 		if (!err)
 		{
-			Compositor_Props::Sequence_Packet &seq_pkt=props.Sequence[index-1]; //ordinal translation
+			Compositor_Props::Sequence_Packet &seq_pkt=sequence[index-1]; //ordinal translation
 
 			std::string sTest;
 			err = script.GetField("type",&sTest,NULL,NULL);
@@ -372,6 +375,20 @@ static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Pro
 				{
 					err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
 					err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
+				}
+				break;
+			case Compositor_Props::eComposite:
+				{
+					err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
+					err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
+					err = script.GetFieldTable("composite");
+					if (!err)
+					{
+						Compositor_Props::Sequence_List *Composite=seq_pkt.specific_data.Composite;
+						//recursively call this within the composite list to be used as the sequence
+						LoadSequence_PersistentData(script,*Composite,props,true);
+						script.Pop();
+					}
 				}
 				break;
 			}
@@ -421,7 +438,7 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 			{
 				if (!err)
 				{
-					LoadSequence_PersistentData(script,props);
+					LoadSequence_PersistentData(script,props.Sequence,props);
 					script.Pop();
 				}
 			}
@@ -811,6 +828,54 @@ class Compositor
 
 			//m_RecurseIntoComposite=true; //testing  (TODO implement in menu)
 		}
+
+		void SaveData_Sequence(std::ofstream &out,const Compositor_Props::Sequence_List &sequence,size_t RecursiveCount=0)
+		{
+			using namespace std;
+			if (RecursiveCount==0)
+				out << "sequence_load = " << endl;    //header
+			else
+			{
+				for (size_t i=0;i<RecursiveCount;i++)
+					out << "\t\t";
+				out << "composite = " << endl;    //header
+			}
+
+			for (size_t i=0;i<RecursiveCount;i++)
+				out << "\t\t";
+			out << "{" << endl;
+			for (size_t i=0;i<sequence.size();i++)
+			{
+				const Compositor_Props::Sequence_Packet &seq_pkt=sequence[i];
+				if (RecursiveCount==0)
+					out << "\t" << "sequence_" << (i+1) << " = {";
+				else
+				{
+					for (size_t j=0;j<RecursiveCount;j++)
+						out << "\t\t";
+					out << "\t" << "composite_" << (i+1) << " = {";
+				}
+				out << "type=" << "\"" << Compositor_Props::GetReticleType_String(seq_pkt.type) << "\", ";
+				//TODO write specific data types here... which should be the same expect for the composite type
+				out << "x=" << seq_pkt.PositionX << ", " << "y=" << seq_pkt.PositionY << " ";
+				if (seq_pkt.type == Compositor_Props::eComposite)
+				{
+					out << ",\n";
+					Compositor_Props::Sequence_List *Composite=seq_pkt.specific_data.Composite;
+					//recursively call this within the composite list to be used as the sequence
+					SaveData_Sequence(out,*Composite,RecursiveCount+1);
+				}
+				out << "}," << endl;
+			}
+
+			for (size_t i=0;i<RecursiveCount;i++)
+				out << "\t\t";
+			out << "}" << endl;  //footer
+
+			for (size_t j=0;j<RecursiveCount;j++)
+				out << "\t";
+		}
+
 		void SaveData()
 		{
 			using namespace std;
@@ -819,21 +884,8 @@ class Compositor
 
 			ofstream out(OutFile.c_str(), std::ios::out );
 
-			out << "sequence_load = " << endl;    //header
-
-			out << "{" << endl;
 			const Compositor_Props::Sequence_List &sequence= m_CompositorProperties.GetCompositorProps().Sequence;
-			for (size_t i=0;i<sequence.size();i++)
-			{
-				const Compositor_Props::Sequence_Packet &seq_pkt=sequence[i];
-				out << "\t" << "sequence_" << (i+1) << " = {";
-				out << "type=" << "\"" << Compositor_Props::GetReticleType_String(seq_pkt.type) << "\", ";
-				//TODO write specific data types here... which should be the same expect for the composite type
-				out << "x=" << seq_pkt.PositionX << ", " << "y=" << seq_pkt.PositionY << " ";
-				out << "}," << endl;
-			}
-
-			out << "}" << endl;  //footer
+			SaveData_Sequence(out,sequence);
 		}
 		~Compositor()
 		{
