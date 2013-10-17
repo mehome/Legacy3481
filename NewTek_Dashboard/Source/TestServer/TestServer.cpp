@@ -107,9 +107,28 @@ void CommandLineInterface()
 
 int main(int argc, char** argv)
 {
+	//There should never be a desired case for more than one instance of this server running, and for convenience I can have the
+	//configuration auto load this program when launching the dashboard.  Creating a system wide event is a way to ensure there
+	//is only one instance running
+
+	// Create a system wide named event
+	HANDLE	SystemWideNamedEvent = ::CreateEventW( NULL, FALSE, FALSE, L"SmartDashboard_LocalTestServer" );		
+	if ( SystemWideNamedEvent )
+	{	// Check for another app with the same name running
+		if ( ::GetLastError() == ERROR_ALREADY_EXISTS )
+		{
+			printf("Another copy of this application is already running.\n");
+			Sleep(1000); //allow user to see this message
+			return 1;
+		}
+	}
+
 	SmartDashboard::init();
 	printf("\n\n--------------------------------------\n");
 	DisplayHelp();
 	CommandLineInterface();
 	SmartDashboard::shutdown();
+
+	CloseHandle(SystemWideNamedEvent);
+	return 0;
 }
