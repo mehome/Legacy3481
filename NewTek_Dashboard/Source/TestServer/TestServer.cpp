@@ -42,8 +42,9 @@ void cls(HANDLE hConsole=NULL)
 void DisplayHelp()
 {
 	printf(
+		"cls clears screen\n"
 		"Sequence <#>\n"
-		"Edit <off on>"
+		"Edit <off on>\n"
 		"Help (displays this)\n"
 		"\nType \"Quit\" at anytime to exit this application\n"
 		);
@@ -107,6 +108,7 @@ void CommandLineInterface()
 int main(int argc, char** argv)
 {
 	SmartDashboard::init();
+	printf("\n\n--------------------------------------\n");
 	DisplayHelp();
 	CommandLineInterface();
 	SmartDashboard::shutdown();
