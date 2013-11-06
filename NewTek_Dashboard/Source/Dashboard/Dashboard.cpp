@@ -906,7 +906,7 @@ void DDraw_Preview::OpenResources()
 	{
 		m_ProcessingVision.LoadPlugIn(m_Props.plugin_file.c_str());
 		{
-			char *IpToUse=NULL;
+			char *IpToUse="localhost";
 			if (g_Robot_IP_Address.c_str()[0]!=0)
 			{
 				wchar2char(g_Robot_IP_Address.c_str());
