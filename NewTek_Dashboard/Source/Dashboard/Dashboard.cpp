@@ -719,9 +719,12 @@ void DDraw_Preview::StopStreaming()
 {
 	if (m_IsStreaming)
 	{
-		 //Make note of last state for client bls... as early as possible
-		m_InitRecord=m_FrameGrabber.GetDashboard_Controller_Interface()->GetRecordState();
-		m_RecordPath=m_FrameGrabber.GetDashboard_Controller_Interface()->GetRecordPath();
+		if (m_FrameGrabber.GetDashboard_Controller_Interface())
+		{
+			//Make note of last state for client bls... as early as possible
+			m_InitRecord=m_FrameGrabber.GetDashboard_Controller_Interface()->GetRecordState();
+			m_RecordPath=m_FrameGrabber.GetDashboard_Controller_Interface()->GetRecordPath();
+		}
 		//before closing the resources ensure the upstream is not streaming to us
 		m_FrameGrabber.StopStreaming();
 		m_ProcessingVision.StopStreaming();
@@ -790,10 +793,13 @@ void DDraw_Preview::StartStreaming()
 		m_FrameGrabber.StartStreaming();
 		m_ProcessingVision.StartStreaming();
 		Callback_StartedStreaming(*m_Window);
-		 //transfer the init state as late as possible
-		if (m_RecordPath.c_str()[0]!=0)
-			m_FrameGrabber.GetDashboard_Controller_Interface()->SetRecordPath(m_RecordPath.c_str());
-		m_FrameGrabber.GetDashboard_Controller_Interface()->Record(m_InitRecord);
+		if (m_FrameGrabber.GetDashboard_Controller_Interface())
+		{
+			 //transfer the init state as late as possible
+			if (m_RecordPath.c_str()[0]!=0)
+				m_FrameGrabber.GetDashboard_Controller_Interface()->SetRecordPath(m_RecordPath.c_str());
+			m_FrameGrabber.GetDashboard_Controller_Interface()->Record(m_InitRecord);
+		}
 	}
 
 }
@@ -828,6 +834,69 @@ size_t split_arguments(const std::string& str, std::vector<std::string>& argumen
 	return arguments.size();
 }
 
+
+//http://stackoverflow.com/questions/3922488/use-wildcards-with-findwindow-api-call-with-mfc
+//Added wildcard find window implementation to ensure all EuCon 3 versions dialog windows are found
+//This code is slightly modified to our coding conventions
+
+struct FindWindowData 
+{
+	FindWindowData(const wchar_t *windowTitle) : WindowTitle(windowTitle) , ResultHandle(0)
+	{}
+	std::wstring WindowTitle;
+	HWND ResultHandle;
+};
+
+BOOL CALLBACK FindWindowImpl( HWND hWnd, LPARAM lParam ) 
+{
+	FindWindowData * p = (FindWindowData *) lParam ;
+	if( !p ) 
+	{
+		// Finish enumerating we received an invalid parameter
+		return FALSE;
+	}
+
+	int length = GetWindowTextLength( hWnd ) + 1;
+	if( length > 0 ) 
+	{
+		std::vector<wchar_t> buffer( std::size_t( length ), 0 );      
+		if( GetWindowText( hWnd, &buffer[0], length ) ) 
+		{
+			// Comparing the string - If you want to add some features you can do it here
+			if( _wcsnicmp( &buffer[0], p->WindowTitle.c_str(), std::min( buffer.size(), p->WindowTitle.size() )  ) == 0 ) 
+			{
+				p->ResultHandle = hWnd;
+				// Finish enumerating we found what we need
+				return FALSE;
+			}
+		}
+	}
+	// Continue enumerating
+	return TRUE;
+}
+
+// Returns the window handle when found if it returns 0 GetLastError() will return more information
+HWND FindWindowStart( const wchar_t *windowTitle ) 
+{
+
+	if( !windowTitle ) 
+	{
+		SetLastError( ERROR_INVALID_PARAMETER );
+		return 0;
+	}
+
+	FindWindowData data( windowTitle );
+	if( !EnumWindows( FindWindowImpl, PtrToLong(&data) ) && data.ResultHandle != 0 ) 
+	{
+		SetLastError( ERROR_SUCCESS );
+		return data.ResultHandle;
+	}
+
+	// Return ERROR_FILE_NOT_FOUND in GetLastError
+	SetLastError( ERROR_FILE_NOT_FOUND );
+	return 0;
+}
+
 void DDraw_Preview::OpenResources()
 {
 	typedef DDraw_Preview::DDraw_Preview_Props PrevProps;
@@ -859,8 +928,13 @@ void DDraw_Preview::OpenResources()
 		if (!g_IsSmartDashboardStarted)
 		{
 			//Sanity check... see if the window already exists from a previous session:
+			#if 0
 			if (m_Props.WindowName.c_str()[0]!=0)
 				ParentHwnd=FindWindow(m_Props.ClassName.c_str(),m_Props.WindowName.c_str());
+			#else
+			if (m_Props.WindowName.c_str()[0]!=0)
+				ParentHwnd=FindWindowStart(m_Props.WindowName.c_str());
+			#endif
 
 			//No window found (typical case) launch one
 			if (!ParentHwnd)
@@ -902,9 +976,13 @@ void DDraw_Preview::OpenResources()
 		do 
 		{
 			Sleep(100);
+			#if 0
 			//SmartDashboard - /SunAwtFrame
 			//ParentHwnd=FindWindow(L"SunAwtFrame",L"SmartDashboard - ");
 			ParentHwnd=FindWindow(m_Props.ClassName.c_str(),m_Props.WindowName.c_str());
+			#else
+			ParentHwnd=FindWindowStart(m_Props.WindowName.c_str());
+			#endif
 		} while ((ParentHwnd==NULL)&&(TimeOut++<50)); //This may take a while on cold start
 		m_ParentHwnd=ParentHwnd;
 	}
