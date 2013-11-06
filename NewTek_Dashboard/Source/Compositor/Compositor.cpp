@@ -59,7 +59,7 @@ __inline T Enum_GetValue(const char *value,const char * const Table[],size_t NoI
 
 const char * const csz_ReticleType_Enum[] =
 {
-	"none","square","composite","bypass"
+	"none","square","composite","bypass","line_plot"
 };
 
 struct Compositor_Props
@@ -86,13 +86,30 @@ struct Compositor_Props
 	//Reticle type: Bypass
 	std::string BypassPlugin;
 
+	//Reticle type: LinePlot
+	struct LinePlotReticle_Container_Props
+	{
+		struct VariablePacket
+		{
+			std::string Variable_Name;
+			double Scalar;
+			double Offset;
+			BYTE rgb[3];
+		};
+		//List of all the variables we want to plot
+		std::vector<VariablePacket> VariablePacket_List;
+	};
+
+	std::vector<LinePlotReticle_Container_Props> lineplot_reticle;
+
 	//Reticle type definitions
 	enum ReticleType
 	{
 		eNone,
 		eDefault,
 		eComposite,
-		eBypass
+		eBypass,
+		eLinePlot
 	};
 	static ReticleType GetReticleType_Enum (const char *value)
 	{	return Enum_GetValue<ReticleType> (value,csz_ReticleType_Enum,_countof(csz_ReticleType_Enum));
@@ -294,6 +311,71 @@ static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &p
 	} while (!fieldtable_err);
 }
 
+static void LoadLinePlotProps_Internal(Scripting::Script& script,Compositor_Props &props,Compositor_Props::LinePlotReticle_Container_Props &lineplot_pkt)
+{
+	const char* err=NULL;
+	double value;
+	const char* fieldtable_err=NULL;
+	char Buffer[128];
+	size_t index=1;  //keep the lists cardinal in LUA
+	do 
+	{
+		sprintf_s(Buffer,128,"line_%d",index);
+		fieldtable_err = script.GetFieldTable(Buffer);
+		if (!fieldtable_err)
+		{
+			Compositor_Props::LinePlotReticle_Container_Props::VariablePacket variable_pkt;
+
+			err=script.GetField("name", &variable_pkt.Variable_Name, NULL, NULL);
+			assert (!err);
+			err=script.GetField("scalar",NULL , NULL, &variable_pkt.Scalar);
+			if (err)
+				variable_pkt.Scalar=1.0;
+			err=script.GetField("offset",NULL , NULL, &variable_pkt.Offset);
+			if (err)
+				variable_pkt.Offset=0.0;
+			err=script.GetField("r", NULL, NULL, &value);
+			assert (!err);
+			variable_pkt.rgb[0]=(BYTE)value;
+			err=script.GetField("g", NULL, NULL, &value);
+			assert (!err);
+			variable_pkt.rgb[1]=(BYTE)value;
+			err=script.GetField("b", NULL, NULL, &value);
+			assert (!err);
+			variable_pkt.rgb[2]=(BYTE)value;
+
+			lineplot_pkt.VariablePacket_List.push_back(variable_pkt);
+			index++;
+
+			script.Pop();
+		}
+	} while (!fieldtable_err);
+}
+
+
+static void LoadLinePlotProps(Scripting::Script& script,Compositor_Props &props)
+{
+	const char* err=NULL;
+	const char* fieldtable_err=NULL;
+	char Buffer[128];
+	size_t index=1;  //keep the lists cardinal in LUA
+	do 
+	{
+		sprintf_s(Buffer,128,"line_plot_list_%d",index);
+		fieldtable_err = script.GetFieldTable(Buffer);
+		if (!fieldtable_err)
+		{
+			Compositor_Props::LinePlotReticle_Container_Props lineplot_pkt;
+			LoadLinePlotProps_Internal(script,props,lineplot_pkt);
+
+			props.lineplot_reticle.push_back(lineplot_pkt);
+			index++;
+
+			script.Pop();
+		}
+	} while (!fieldtable_err);
+}
+
 static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequence_List &sequence,Compositor_Props &props,bool IsRecursive=false)
 {
 	const char* err=NULL;
@@ -317,6 +399,7 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 			switch (seq_pkt.type)
 			{
 			case Compositor_Props::eDefault:
+			case Compositor_Props::eLinePlot:  //line plot uses same selection mechanism
 				{
 					double fTest;
 
@@ -435,6 +518,15 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 			LoadSquareReticleProps(script,props);
 			script.Pop();
 		}
+		err = script.GetFieldTable("line_plot_props");
+		if (!err)
+		{
+			//clear the default one
+			props.lineplot_reticle.clear();
+			LoadLinePlotProps(script,props);
+			script.Pop();
+		}
+
 		err = script.GetFieldTable("sequence");
 		if (!err)
 		{
@@ -479,6 +571,138 @@ static void AimingSystem_to_PixelSystem(int &Px,int &Py,double Ax,double Ay,doub
 	Px=(int)((XRes*AspectRatio + XRes*Ax) / (2.0*AspectRatio));
 	Py=(int)(-(((Ay-1)*YRes) / 2.0));
 }
+
+const size_t c_RoundRobimBufferSize=2048; //so far 1920 xres is typically the number for a limit
+class LinePlot_Retical
+{
+private:
+	template<class T>
+	class RoundRobinBuffer
+	{
+		public:
+			RoundRobinBuffer() : m_Head(0), m_Tail(0)
+			{
+			}
+			void push(T value)
+			{
+				m_Buffer[m_Head++]=value;
+				if (m_Head>=c_RoundRobimBufferSize)
+					m_Head=0;
+			}
+			void pop()
+			{
+				m_Tail++;
+				if (m_Tail>=c_RoundRobimBufferSize)
+					m_Tail=0;
+			}
+			size_t size()
+			{
+				size_t ret=0;
+				if (m_Head>m_Tail)
+					ret=m_Head-m_Tail;
+				else if (m_Head<m_Tail)
+					ret=(c_RoundRobimBufferSize-m_Tail) + m_Head;  //wrap around
+				return ret;
+			}
+			inline T& operator [] (size_t index) 
+			{ 
+				size_t IndexOffset=m_Tail+index;
+				if (IndexOffset>=c_RoundRobimBufferSize)
+					IndexOffset-=c_RoundRobimBufferSize;
+				assert(IndexOffset<c_RoundRobimBufferSize);
+				return m_Buffer[IndexOffset];
+			}
+			inline T operator [] (size_t index) const 
+			{ 
+				size_t IndexOffset=m_Tail+index;
+				if (IndexOffset>=c_RoundRobimBufferSize)
+					IndexOffset-=c_RoundRobimBufferSize;
+				assert(IndexOffset<c_RoundRobimBufferSize);
+				return m_Buffer[IndexOffset];
+			}
+
+		private:
+			size_t m_Head;
+			size_t m_Tail;
+			T m_Buffer[c_RoundRobimBufferSize];
+	};
+	typedef RoundRobinBuffer<size_t> LineQueue;
+	struct LineData
+	{
+		DWORD pixel;
+		LineQueue line_queue;
+	};
+	std::vector<LineData> m_LineDataList;
+	bool m_PixelColorCache;
+public:
+	LinePlot_Retical() : m_PixelColorCache(false)
+	{
+	}
+
+	Bitmap_Frame *RenderLinePlotReticle(Bitmap_Frame *Frame,const Compositor_Props::LinePlotReticle_Container_Props &props,bool AddNewData=true)
+	{
+		typedef Compositor_Props::LinePlotReticle_Container_Props LineProps;
+
+		//first run loop
+		if (!m_PixelColorCache)
+		{
+			for (size_t i=0;i<props.VariablePacket_List.size();i++)
+			{
+				const LineProps::VariablePacket &variable_pkt=props.VariablePacket_List[i];
+
+				const double R = (double)variable_pkt.rgb[0];
+				const double G = (double)variable_pkt.rgb[1];
+				const double B = (double)variable_pkt.rgb[2];
+				const DWORD Y =(DWORD)( (0.257 * R + 0.504 * G + 0.098 * B) + 16.0);
+				const DWORD U =(DWORD)((-0.148 * R - 0.291 * G + 0.439 * B) + 128.0);
+				const DWORD V =(DWORD)( (0.439 * R - 0.368 * G - 0.071 * B) + 128.0);
+
+				LineData line_data;
+				DWORD &pixel=line_data.pixel;
+				pixel=U + (Y<<8) + (V<<16) + (Y<<24);
+				//pixel=Y + (V<<8) + (Y<<16) + (U<<24);
+				//Ensure the variable is initialized
+				SmartDashboard::PutNumber(variable_pkt.Variable_Name,0.0);
+				m_LineDataList.push_back(line_data);
+			}
+			m_PixelColorCache=true;
+		}
+		for (size_t i=0;i<props.VariablePacket_List.size();i++)
+		{
+			//push new read onto queue
+			const LineProps::VariablePacket &variable_pkt=props.VariablePacket_List[i];
+			LineData &line_data=m_LineDataList[i];
+			LineQueue &line_queue=line_data.line_queue;
+			//Now to compute value to push
+			double Value=SmartDashboard::GetNumber(variable_pkt.Variable_Name);
+			if (AddNewData)
+			{
+				size_t YHalfRes=Frame->YRes>>1;
+				//Note the Y coordinates have negative above so the scalar has a negative sign to compensate
+				size_t PositionY=((size_t)(((Value*-variable_pkt.Scalar)+variable_pkt.Offset)*(double)YHalfRes))+YHalfRes;
+				if (PositionY>=Frame->YRes)
+					PositionY=Frame->YRes-1;
+				line_queue.push(PositionY);
+			}
+
+			size_t eox=line_queue.size();
+			//Trim the size down to less than x res
+			while (eox>Frame->XRes)
+			{
+				line_queue.pop();
+				eox=line_queue.size();
+			}
+			size_t LineWidthInBytes=Frame->Stride * 4;
+			for (size_t x=0;x<eox;x+=2)
+			{
+				size_t y=line_queue[x];
+				DWORD *pPixel =(DWORD *)(Frame->Memory+ (x*2) + (LineWidthInBytes * y));
+				*pPixel=line_data.pixel;
+			}
+		}
+		return Frame;
+	}
+};
 
 static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double YPos,const Compositor_Props::SquareReticle_Props &props,
 										 int PixelOffsetX=0,int PixelOffsetY=0,RECT *ExcludeRegion=NULL)
@@ -1066,6 +1290,12 @@ class Compositor
 			case Compositor_Props::eBypass:
 				ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
 				break;
+			case Compositor_Props::eLinePlot:
+				{
+					Compositor_Props::LinePlotReticle_Container_Props lineplot_props=props.lineplot_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
+					ret=m_LinePlot.RenderLinePlotReticle(Frame,lineplot_props,m_IsEditable);
+					break;
+				}
 			case Compositor_Props::eComposite:
 				{
 					const Compositor_Props::Sequence_List &composite=*seq_pkt.specific_data.Composite;
@@ -1166,6 +1396,7 @@ class Compositor
 		double m_Xpos,m_Ypos;
 		double m_Xpos_Offset,m_Ypos_Offset;  //only used when stepping through recursion
 		Bypass_Reticle m_Bypass;
+		LinePlot_Retical m_LinePlot;
 
 		bool m_IsEditable;
 		bool m_PreviousIsEditable;  //detect when Editable has switched to off to issue an update

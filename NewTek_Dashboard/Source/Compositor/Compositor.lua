@@ -1,3 +1,4 @@
+Pi=3.14159265358979323846
 
 --This is used load persistence of the coordinates last saved etc
 function GetSettings()
@@ -43,6 +44,20 @@ CompositorProps = {
 			}
 		},
 		
+		line_plot_props =
+		{
+			--plot arm
+			line_plot_list_1 = 
+			{
+				line_1 = { name="voltage", r= 16,g=240,b= 16},
+				line_2 = { name="actual y",   r=128,g=128,b=128, scalar=1/(Pi/2) }, 
+				line_3 = { name="desired y",   r=240,g=10,b=10, scalar=1/(Pi/2) }, 
+				line_4 = { name="actual velocity",   r=10,g=240,b=240, scalar=1/5 }, 
+				line_5 = { name="desired velocity",   r=240,g=10,b=240, scalar=1/5 }, 
+				line_6 = { name="pid error offset",   r=240,g=240,b=128, scalar=1/3 }, 
+			}
+		},
+		
 		--Types	"none","square","composite","bypass"
 		sequence =
 		{
@@ -57,6 +72,7 @@ CompositorProps = {
 				}
 			},
 			sequence_3 = {	type="bypass" },
+			sequence_4 = {	type="line_plot", selection=1	},
 			--This must stay here to load the settings
 			load_settings = GetSettings(),
 		}
