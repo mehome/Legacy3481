@@ -85,6 +85,7 @@ CompositorProps = {
 			SetXAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			SetYAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
 			SequencePOV =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			ToggleLinePlot     = {type="joystick_button", key=6, on_off=false},
 		},
 		Joystick_2 =
 		{

@@ -188,7 +188,7 @@ class Compositor_Properties
 //declared as global to avoid allocation on stack each iteration
 const char * const g_Compositor_Controls_Events[] = 
 {
-	"SetXAxis","SetYAxis","NextSequence","PreviousSequence","SequencePOV"
+	"SetXAxis","SetYAxis","NextSequence","PreviousSequence","SequencePOV","ToggleLinePlot"
 };
 
 const char *Compositor_Properties::ControlEvents::LUA_Controls_GetEvents(size_t index) const
@@ -1040,11 +1040,14 @@ class Compositor
 			else 
 				m_POVSetValve=false;
 		}
-
+		void ToggleLinePlot()
+		{
+			m_ToggleLinePlot=!m_ToggleLinePlot;
+		}
 		IEvent::HandlerList ehl;
 		Compositor(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
 			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),
-			m_IsEditable(false),m_PreviousIsEditable(false),m_RecurseIntoComposite(false),m_Flash(false)
+			m_IsEditable(false),m_PreviousIsEditable(false),m_RecurseIntoComposite(false),m_Flash(false),m_ToggleLinePlot(true)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
@@ -1052,6 +1055,7 @@ class Compositor
 			em->Event_Map["NextSequence"].Subscribe(ehl, *this, &Compositor::NextSequence);
 			em->Event_Map["PreviousSequence"].Subscribe(ehl, *this, &Compositor::PreviousSequence);
 			em->EventValue_Map["SequencePOV"].Subscribe(ehl,*this, &Compositor::SetPOV);
+			em->Event_Map["ToggleLinePlot"].Subscribe(ehl,*this, &Compositor::ToggleLinePlot);
 
 			//m_RecurseIntoComposite=true; //testing  (TODO implement in menu)
 		}
@@ -1130,6 +1134,7 @@ class Compositor
 			em->Event_Map["NextSequence"].Remove(*this, &Compositor::NextSequence);
 			em->Event_Map["PreviousSequence"].Remove(*this, &Compositor::PreviousSequence);
 			em->EventValue_Map["SequencePOV"].Remove(*this, &Compositor::SetPOV);
+			em->Event_Map["ToggleLinePlot"].Remove(*this, &Compositor::ToggleLinePlot);
 			
 			m_CompositorProperties.Get_CompositorControls().BindAdditionalUIControls(false,&m_JoyBinder,NULL);
 			//For now limit the sequence to advance and previous calls to save network bandwidth... we can move this to the time change if necessary
@@ -1293,7 +1298,7 @@ class Compositor
 			case Compositor_Props::eLinePlot:
 				{
 					Compositor_Props::LinePlotReticle_Container_Props lineplot_props=props.lineplot_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
-					ret=m_LinePlot.RenderLinePlotReticle(Frame,lineplot_props,m_IsEditable);
+					ret=m_LinePlot.RenderLinePlotReticle(Frame,lineplot_props,m_ToggleLinePlot);
 					break;
 				}
 			case Compositor_Props::eComposite:
@@ -1403,6 +1408,7 @@ class Compositor
 		bool m_POVSetValve;
 		bool m_RecurseIntoComposite;  //If true it will step into composite list for edit during previous/next sequence
 		bool m_Flash;  //Making this a member makes it possible to enable flash for a whole group in composite
+		bool m_ToggleLinePlot;
 } *g_pCompositor;
 
 
