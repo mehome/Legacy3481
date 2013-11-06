@@ -936,6 +936,8 @@ class Compositor
 					m_Bypass.Callback_Initialize();  //will implicitly handle error
 				}
 			}
+			else
+				m_pSequence=&m_CompositorProperties.GetCompositorProps().Sequence;  //Assign pointer for default properties case
 
 			//Bind the compositor's eventmap to the joystick
 			m_JoyBinder.SetControlledEventMap(&m_EventMap);
