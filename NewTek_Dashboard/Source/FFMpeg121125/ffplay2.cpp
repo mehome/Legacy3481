@@ -3018,7 +3018,7 @@ FrameGrabber_FFMpeg::FrameGrabber_FFMpeg(Outstream_Interface *Preview,const wcha
 	m_VideoStream(NULL),m_TestPattern(Preview,IPAddress),m_Seekable(false)
 {
 	//If we have no IPAddress we have no work to do
-	if(IPAddress[0]==0)
+	if ((IPAddress[0]==0)||(wcsicmp(IPAddress,L"Black")==0))
 		return;
 
 	SetFileName(IPAddress);
@@ -3126,7 +3126,7 @@ FrameGrabber::FrameGrabber(Outstream_Interface *Preview,const wchar_t *IPAddress
 		FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
 
 	//determine which reader to use
-	if (IPAddress[0]==0)
+	if ((IPAddress[0]==0)||(wcsicmp(IPAddress,L"Black"))==0)
 		m_VideoStream=new FrameGrabber_TestPattern(Preview,IPAddress);
 	else
 	{

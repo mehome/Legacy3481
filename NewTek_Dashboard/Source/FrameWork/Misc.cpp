@@ -26,6 +26,19 @@ inline bool FrameWork::IsZero(double value,double tolerance)
 	return fabs(value)<tolerance;
 }
 
+void FrameWork::BlackField( PBYTE pField, const int FrameSize )
+{
+	if ( !pField ) return;
+
+	PWORD pField_ = (PWORD) pField, pEnd_ = pField_ + (FrameSize/sizeof(WORD));
+
+	while(pField_ != pEnd_)
+	{	
+		*pField_++ = 0x1080;
+		//*pField_++ = 0x2080;  //test
+	}
+}
+
 void FrameWork::DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber )
 {
 	{ // aka Black Field section

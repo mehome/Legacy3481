@@ -36,16 +36,6 @@ static bool DirectDrawLoaded = LoadDirectDraw();
 
 using namespace FrameWork;
 
-static void BlackField( PBYTE pField, const int FrameSize )
-{
-	if ( !pField ) return;
-	PWORD pField_ = (PWORD) pField, pEnd_ = pField_ + (FrameSize/sizeof(WORD));
-	while(pField_ != pEnd_)
-	{	
-		*pField_++ = 0x1080;
-	}
-}
-
 static void ShowTimeDelta(char label[]="",bool UsePrintF=false)
 {
 	using namespace FrameWork;

@@ -47,6 +47,7 @@ class Outstream_Interface
 		//virtual void process_audio(const FrameWork::Audio2::buffer_f32 *pBuffer,int SampleRate,double AudioClock)=0;
 };
 
+void BlackField( PBYTE pField, const int FrameSize );
 void DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const int FieldNumber );
 
 void DebugOutput(const char *format, ... );

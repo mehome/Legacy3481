@@ -19,8 +19,10 @@ public:
 class FrameGrabber_TestPattern : public FrameGrabber_Interface
 {
 public:
-	FrameGrabber_TestPattern(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : m_pThread(NULL),m_TestMap(720,480),m_Outstream(Preview)
+	FrameGrabber_TestPattern(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : m_pThread(NULL),m_TestMap(640,480),m_Outstream(Preview),m_UseBlackField(false)
 	{
+		if (IPAddress)
+			m_UseBlackField=wcsicmp(IPAddress,L"Black")==0;
 	}
 	//allow late binding of the output (hence start streaming exists for this delay)
 	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_Outstream=Preview;}
@@ -50,8 +52,13 @@ private:
 		Sleep(16);
 		//Sleep(33);
 		//Sleep(1000);
-		DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
-		m_Outstream->process_frame(&m_TestMap,true,(double)time_type::get_current_time(),4.0f/3.0f);
+		if (!m_UseBlackField)
+			DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
+		else
+			BlackField( (PBYTE) m_TestMap(),m_TestMap.xres() * m_TestMap.yres() * sizeof(WORD) );
+			
+		//Black field is progressive while the test pattern is interlaced
+		m_Outstream->process_frame(&m_TestMap,!m_UseBlackField,(double)time_type::get_current_time(),4.0f/3.0f);
 		//printf("%d\n",m_Counter++);
 	}
 	FrameWork::Threads::thread<FrameGrabber_TestPattern> *m_pThread;	// My worker thread that does something useful w/ a buffer after it's been filled
@@ -60,6 +67,7 @@ private:
 	FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
 	size_t m_Counter;
+	bool m_UseBlackField;
 };
 
 
