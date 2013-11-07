@@ -101,8 +101,9 @@ CompositorProps = {
 			SetYAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
 			--These sequence events happen whether or not you are in edit so choose what you want to use during the game
 			--The POV is not supported by the driver station so it is the perfect chose... I've added buttons here to show if you need to use them instead
-			NextSequence     = {type="joystick_button", key=2, keyboard='y', on_off=false},
-			PreviousSequence = {type="joystick_button", key=3, keyboard='y', on_off=false},
+			--NextSequence     = {type="joystick_button", key=2, keyboard='y', on_off=false},
+			--PreviousSequence = {type="joystick_button", key=3, keyboard='y', on_off=false},
+			ToggleLinePlot     = {type="joystick_button", key=6, on_off=false},
 			SequencePOV =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 		},
 
