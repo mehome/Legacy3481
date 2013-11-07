@@ -3,6 +3,8 @@
 #include "../Dashboard/Dashboard_Interfaces.h"
 #include "../ProcAmp/ProcAmp.h"
 
+size_t split_arguments(const std::string& str, std::vector<std::string>& arguments, const char *delimiter_list=" \t\n\r");
+
 class FrameGrabber_Interface
 {
 public:
@@ -19,10 +21,27 @@ public:
 class FrameGrabber_TestPattern : public FrameGrabber_Interface
 {
 public:
-	FrameGrabber_TestPattern(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : m_pThread(NULL),m_TestMap(640,480),m_Outstream(Preview),m_UseBlackField(false)
+	FrameGrabber_TestPattern(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"") : m_pThread(NULL),m_TestMap(640,480),m_Outstream(Preview),
+		m_SleepMs(16),m_UseBlackField(false)
 	{
 		if (IPAddress)
-			m_UseBlackField=wcsicmp(IPAddress,L"Black")==0;
+		{
+			m_UseBlackField=wcsnicmp(IPAddress,L"Black",5)==0;
+			if (IPAddress[5]=='_')
+			{
+				std::vector<std::string> Args;
+				wchar2char(IPAddress);
+				split_arguments(wchar2char_pchar,Args,"_");
+				if (Args.size()>1)
+					m_SleepMs=atoi(Args[1].c_str());
+				if (Args.size()>3)
+				{
+					const int xres=atoi(Args[2].c_str());
+					const int yres=atoi(Args[3].c_str());
+					m_TestMap.resize(xres,yres);
+				}
+			}
+		}
 	}
 	//allow late binding of the output (hence start streaming exists for this delay)
 	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_Outstream=Preview;}
@@ -49,9 +68,7 @@ private:
 	void operator() ( const void* )
 	{
 		using namespace FrameWork;
-		Sleep(16);
-		//Sleep(33);
-		//Sleep(1000);
+		Sleep(m_SleepMs);
 		if (!m_UseBlackField)
 			DrawField( (PBYTE) m_TestMap(),m_TestMap.xres(),m_TestMap.yres(),m_Counter++ );
 		else
@@ -66,6 +83,7 @@ private:
 private:
 	FrameWork::Bitmaps::bitmap_ycbcr_u8 m_TestMap;
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
+	DWORD m_SleepMs;
 	size_t m_Counter;
 	bool m_UseBlackField;
 };
@@ -95,7 +113,6 @@ protected:
 	void *m_VideoStream;
 	std::string m_URL;
 private:
-	size_t split_arguments(const std::string& str, std::vector<std::string>& arguments);
 	FrameWork::Outstream_Interface * m_Outstream; //could be dynamic, but most-likely just late binding per stream session
 	FrameGrabber_TestPattern m_TestPattern;  //handle the empty string with something useful
 	bool m_Seekable;

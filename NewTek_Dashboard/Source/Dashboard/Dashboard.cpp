@@ -804,35 +804,6 @@ void DDraw_Preview::StartStreaming()
 
 }
 
-size_t split_arguments(const std::string& str, std::vector<std::string>& arguments)
-{
-	arguments.clear();
-
-	if (str.empty())
-		return 0;
-
-	const std::string whitespace = " \t\n\r";
-	const char group_char = '"';
-	bool in_argument = false;
-
-	arguments.push_back(std::string());
-	for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
-	{
-		if (*it == group_char)
-			in_argument = !in_argument;
-		else if (in_argument || whitespace.find(*it) == std::string::npos)
-			arguments.back().push_back(*it);
-		else if (!arguments.back().empty())
-			arguments.push_back(std::string());
-	}
-
-	if (arguments.back().empty())
-		arguments.pop_back();
-
-	assert(!in_argument); // Uneven quotes?
-
-	return arguments.size();
-}
 
 
 //http://stackoverflow.com/questions/3922488/use-wildcards-with-findwindow-api-call-with-mfc
