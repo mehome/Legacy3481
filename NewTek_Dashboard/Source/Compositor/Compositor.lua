@@ -50,7 +50,7 @@ CompositorProps = {
 			line_plot_list_1 = 
 			{
 				line_1 = { name="voltage", r= 16,g=240,b= 16},
-				line_2 = { name="actual y",   r=128,g=128,b=128, scalar=1/(Pi/2) }, 
+				line_2 = { name="actual y",   r=10,g=128,b=240, scalar=1/(Pi/2) }, 
 				line_3 = { name="desired y",   r=240,g=10,b=10, scalar=1/(Pi/2) }, 
 				line_4 = { name="actual velocity",   r=10,g=240,b=240, scalar=1/5 }, 
 				line_5 = { name="desired velocity",   r=240,g=10,b=240, scalar=1/5 }, 
