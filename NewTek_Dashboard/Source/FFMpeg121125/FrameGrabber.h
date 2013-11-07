@@ -31,7 +31,7 @@ public:
 			{
 				std::vector<std::string> Args;
 				wchar2char(IPAddress);
-				split_arguments(wchar2char_pchar,Args,"_");
+				split_arguments(wchar2char_pchar,Args,"_xX");
 				if (Args.size()>1)
 					m_SleepMs=atoi(Args[1].c_str());
 				if (Args.size()>3)
