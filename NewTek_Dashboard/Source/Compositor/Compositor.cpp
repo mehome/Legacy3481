@@ -693,11 +693,32 @@ public:
 				eox=line_queue.size();
 			}
 			size_t LineWidthInBytes=Frame->Stride * 4;
+			union PixelUVYY
+			{
+				struct UYVY
+				{
+					BYTE U,Y,V,Y2;
+				} component;
+				DWORD raw;
+			};
 			for (size_t x=0;x<eox;x+=2)
 			{
+				PixelUVYY source_pixel;
 				size_t y=line_queue[x];
-				DWORD *pPixel =(DWORD *)(Frame->Memory+ (x*2) + (LineWidthInBytes * y));
-				*pPixel=line_data.pixel;
+				PixelUVYY *pPixel1 =(PixelUVYY *)(Frame->Memory+ (x*2) + (LineWidthInBytes * y));
+				source_pixel.raw=pPixel1->raw;
+				pPixel1->raw=line_data.pixel;
+				pPixel1->component.Y2=source_pixel.component.Y2;
+
+
+				if ((x+1) < eox)
+				{
+					size_t y2=line_queue[x+1];
+					PixelUVYY *pPixel2 =(PixelUVYY *)(Frame->Memory+ (x*2) + (LineWidthInBytes * y2));
+					source_pixel.raw=pPixel2->raw;
+					pPixel2->raw=line_data.pixel;
+					pPixel2->component.Y=source_pixel.component.Y;
+				}
 			}
 		}
 		return Frame;
