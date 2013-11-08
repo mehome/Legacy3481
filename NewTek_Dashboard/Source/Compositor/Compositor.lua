@@ -58,16 +58,31 @@ CompositorProps = {
 			},
 			line_plot_list_2 = 
 			{
-				line_1 = { name="actual y",   r=10,g=128,b=240, scalar=1/(Pi/2) }, 
-				line_2 = { name="LeftVoltage", r= 16,g=240,b= 16},
-				line_3 = { name="LeftEncoder",   r=10,g=240,b=240, scalar=1/5 }, 
-				line_4 = { name="desired velocity-left",   r=240,g=10,b=240, scalar=1/5 }, 
-				line_5 = { name="pid error offset-left",   r=240,g=240,b=128, scalar=1/3 }, 
-				line_6 = { name="pid cs-left",   r=240,g=240,b=128, scalar=1/3 }, 
-				line_7 = { name="RightEncoder",   r=10,g=240,b=240, scalar=1/5 }, 
-				line_8 = { name="desired velocity-right",   r=240,g=10,b=240, scalar=1/5 }, 
-				line_9 = { name="pid error offset-right",   r=240,g=240,b=128, scalar=1/3 }, 
-				line_10 = { name="pid cs-right",   r=240,g=240,b=128, scalar=1/3 }, 
+				line_1 = { name="actual y",					r=128,g=128,b=128, scalar=1/10, offset=   0}, 
+				line_2 = { name="LeftVoltage",				r= 16,g=240,b= 16, scalar= 0.5, offset=-1/2},
+				line_3 = { name="LeftEncoder",				r= 10,g=240,b=240, scalar= 1/8, offset=-1/2}, 
+				line_4 = { name="desired velocity-left",	r=240,g= 10,b=240, scalar= 1/8, offset=-1/2}, 
+				line_5 = { name="pid error offset-left",	r=240,g=240,b=128, scalar= 1/6, offset=-1/2}, 
+				line_6 = { name="pid cs-left",				r=240,g=153,b=16 , scalar= 1/6, offset=-1/2},
+				line_7 = { name="RightVoltage",				r= 16,g=240,b= 16, scalar= 0.5, offset= 1/2},				
+				line_8 = { name="RightEncoder",				r= 10,g=240,b=240, scalar= 1/8, offset= 1/2}, 
+				line_9 = { name="desired velocity-right",   r=240,g= 10,b=240, scalar= 1/8, offset= 1/2}, 
+				line_10 = { name="pid error offset-right",  r=240,g=240,b=128, scalar= 1/6, offset= 1/2}, 
+				line_11 = { name="pid cs-right",			r=240,g=153,b=16 , scalar= 1/6, offset= 1/2}, 
+			},
+			line_plot_list_3 = 
+			{
+				line_1 = { name="actual y",					r=128,g=128,b=128, scalar=1/10}, 
+				line_2 = { name="RightVoltage",				r= 16,g=140,b= 16, scalar= 0.5},
+				line_3 = { name="RightEncoder",				r= 10,g=128,b=240, scalar= 1/4}, 
+				line_4 = { name="desired velocity-right",   r=240,g= 10,b= 10, scalar= 1/4}, 
+				line_5 = { name="pid error offset-right",	r=140,g=140,b=128, scalar= 1/3}, 
+				line_6 = { name="pid cs-right",				r=140,g=153,b=16 , scalar= 1/3}, 
+				line_7 = { name="LeftVoltage",				r= 16,g=240,b= 16, scalar= 1.0},
+				line_8 = { name="LeftEncoder",				r= 10,g=240,b=240, scalar= 1/4}, 
+				line_9 = { name="desired velocity-left",	r=240,g= 10,b=240, scalar= 1/4}, 
+				line_10 = { name="pid error offset-left",	r=240,g=240,b=128, scalar= 1/3}, 
+				line_11 = { name="pid cs-left",				r=240,g=153,b=16 , scalar= 1/3},
 			}
 		},
 		
@@ -86,6 +101,8 @@ CompositorProps = {
 			},
 			sequence_3 = {	type="bypass" },
 			sequence_4 = {	type="line_plot", selection=1	},
+			sequence_5 = {	type="line_plot", selection=2	},
+			sequence_6 = {	type="line_plot", selection=3	},
 			--This must stay here to load the settings
 			load_settings = GetSettings(),
 		}
