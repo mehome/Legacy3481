@@ -639,6 +639,12 @@ public:
 	{
 	}
 
+	void FlushCache()
+	{
+		//Note: This does not need to be thread safe
+		m_PixelColorCache=false;
+		m_LineDataList.clear();
+	}
 	Bitmap_Frame *RenderLinePlotReticle(Bitmap_Frame *Frame,const Compositor_Props::LinePlotReticle_Container_Props &props,bool AddNewData=true)
 	{
 		typedef Compositor_Props::LinePlotReticle_Container_Props LineProps;
@@ -953,6 +959,7 @@ class Compositor
 				const bool FromNext=NewSequenceIndex<m_SequenceIndex;
 				//issue the update
 				m_SequenceIndex=NewSequenceIndex;
+				m_LinePlot.FlushCache();  //there may be a new list of colors on the next sequence
 				const Compositor_Props::Sequence_Packet &seq_pkt=Sequence[m_SequenceIndex];
 				bool CompositeUpdate=false;
 				if ((m_IsEditable)&&(m_RecurseIntoComposite)&&(seq_pkt.type==Compositor_Props::eComposite))
