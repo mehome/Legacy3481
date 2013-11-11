@@ -150,6 +150,8 @@ class coodinate_manager : public UDP_Listener_Interface
 				SmartDashboard::PutNumber("Auton Y",GetYpos());
 			}
 		}
+		__inline double GetXPos() const {return m_Xpos;}
+		
 	protected: //from UDP_Listener_Interface
 		
 		// This is call from within the UDP_Listener task/thread.  The convergence between this thread and client code can happen with need of any blocking by use of an atomic operation 
