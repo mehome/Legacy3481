@@ -311,6 +311,8 @@ class DDraw_Preview
 		void DisplayHelp();
 		void SetDefaults(LONG XRes,LONG YRes,LONG XPos,LONG YPos);
 		void UpdateDefaultsFromWindowPlacement();
+		void Deferred_AttachToParent();
+		void Deferred_AttachToParent_DPC();
 		FrameWork::event m_Terminate;
 		FrameWork::Work::thread m_thread;  //For DPC support
 
@@ -868,6 +870,31 @@ HWND FindWindowStart( const wchar_t *windowTitle )
 	return 0;
 }
 
+
+void DDraw_Preview::Deferred_AttachToParent()
+{
+	HWND ParentHwnd=NULL;
+	do 
+	{
+		Sleep(2000);  //keep a nice big interval since this is an idle check
+		ParentHwnd=FindWindowStart(m_Props.WindowName.c_str());
+	} while ((ParentHwnd==NULL)&&(m_IsStreaming)); //This may take a while on cold start
+	if ((ParentHwnd)&&(m_IsStreaming))
+	{
+		//This is pretty much the identical implementation as eMenu_Dockable
+		g_IsPopup=false;
+		Reset();  //since we are already in a DPC we can call this directly
+	}
+}
+
+void DDraw_Preview::Deferred_AttachToParent_DPC()
+{
+	using namespace FrameWork;
+	cpp::threadcall_ex( do_not_wait, m_thread, this, &DDraw_Preview::Deferred_AttachToParent);
+}
+
+
+
 void DDraw_Preview::OpenResources()
 {
 	typedef DDraw_Preview::DDraw_Preview_Props PrevProps;
@@ -933,15 +960,14 @@ void DDraw_Preview::OpenResources()
 				HINSTANCE test=ShellExecute(NULL,L"open",szCmdline,paramaters.c_str(),NULL,SW_SHOWNORMAL);
 			}
 			IsSmartDashboardStarted=true;
-			//I need about 500ms for LabView to setup before trying to attach myself as a child... this is really a non-issue for smart dashboard
-			//however, if teams have other dashboards that give issues (i.e. need more than 500ms) then we could look into having this as a paramter
-			//in the .ini file
-			//  [12/13/2012 JamesK]
-			Sleep(500);
+			//There was a sleep here, but we can offload the attach to a DPC
 		}
 	}
+
+	bool Enable_Deferred_AttachToParent=false;
 	if ((m_Props.WindowName.c_str()[0]!=0)&&(m_Props.window_type!=PrevProps::eStandAlone))
 	{
+		#if 0
 		//Give this some time to open
 		size_t TimeOut=0;
 		do 
@@ -956,6 +982,17 @@ void DDraw_Preview::OpenResources()
 			#endif
 		} while ((ParentHwnd==NULL)&&(TimeOut++<50)); //This may take a while on cold start
 		m_ParentHwnd=ParentHwnd;
+		#else
+		if (!ParentHwnd)
+		{
+			//See if we already attached to it from a previous session
+			ParentHwnd=FindWindowStart(m_Props.WindowName.c_str());
+			if (!ParentHwnd)
+				Enable_Deferred_AttachToParent=true;
+			else
+				m_ParentHwnd=ParentHwnd;
+		}
+		#endif
 	}
 
 	//If we don't have a parent window then we must be a Popup
@@ -978,7 +1015,10 @@ void DDraw_Preview::OpenResources()
 		assert((HWND)*m_Window);
 		hWnd_ForDDraw=(HWND)*m_Window;
 	}
-	
+
+	if (Enable_Deferred_AttachToParent)
+		Deferred_AttachToParent_DPC();
+
 	if (hWnd_ForDDraw)
 	{
 		assert (!m_DD_StreamOut);
