@@ -9,6 +9,7 @@
 #include <ddraw.h>
 #include <atlbase.h>
 #include <shellapi.h>
+#define __IncludeInputBase__  //we want lua
 #include "../FrameWork/FrameWork.h"
 #include "../FrameWork/Window.h"
 #include "../FrameWork/Preview.h"
@@ -1100,6 +1101,145 @@ void AssignOutput(string &output,const wchar_t *input)
 	if (output[0]==0)
 		output="none";
 }
+
+class DDraw_Preview_Properties
+{
+public:
+	struct AncillaryProps
+	{
+		std::wstring Robot_IP_Address;
+		std::wstring StreamProfile;
+		std::wstring RecordPath;
+		bool RecordFrames;
+		bool IsPopup;
+	};
+private:
+	DDraw_Preview::DDraw_Preview_Props m_PreviewProps;
+	AncillaryProps m_AncillaryProps;
+	void AssignWstring(Scripting::Script& script,const char *Parameter,const char *DefaultValue,std::wstring &Dest)
+	{
+		const char* err=NULL;
+		std::string s_value;
+		err=script.GetField(Parameter, &s_value, NULL, NULL );
+		if (!err)
+		{
+			char2wchar(s_value.c_str());
+			Dest=char2wchar_pwchar;
+		}
+		else
+		{
+			char2wchar(DefaultValue);
+			Dest=char2wchar_pwchar;
+		}
+	}
+
+public:
+	const DDraw_Preview::DDraw_Preview_Props &GetDDraw_Preview_Props() const {return m_PreviewProps;}
+	const AncillaryProps &GetAncillaryProps() const {return m_AncillaryProps;}
+
+	const char *SetUpGlobalTable(Scripting::Script& script)
+	{
+		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
+		const char* err;
+		//props.ShipType=Ship_Props::eDefault;
+		err = script.GetGlobalTable("Dashboard");
+		assert (!err);
+		return err;
+	}
+
+	virtual void LoadFromScript(Scripting::Script& script)
+	{
+		const char* err=NULL;
+		{
+			double version;
+			err=script.GetField("version", NULL, NULL, &version);
+			if (!err)
+				printf ("Version=%.2f\n",version);
+		}
+
+		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
+		err = script.GetFieldTable("settings");
+		if (!err)
+		{
+			std::string sTest;
+			double dTest;
+			//title= Main
+			AssignWstring(script,"title","Main",props.source_name);
+			//IP_Address= Black
+			AssignWstring(script,"IP_Address","Black",props.IP_Address);
+			//Robot_IP_Address= localhost
+			AssignWstring(script,"Robot_IP_Address","localhost",m_AncillaryProps.Robot_IP_Address);
+			//StreamProfile= default
+			AssignWstring(script,"StreamProfile","default",m_AncillaryProps.StreamProfile);
+			//left= 20
+			err = script.GetField("left",NULL,NULL,&dTest);
+			props.XPos=err?20:(LONG)dTest;
+			//top= 10
+			err = script.GetField("top",NULL,NULL,&dTest);
+			props.YPos=err?10:(LONG)dTest;
+			//right= 320
+			err = script.GetField("right",NULL,NULL,&dTest);
+			props.XRes=err?320:((LONG)dTest)-props.XPos;
+			//bottom= 240
+			err = script.GetField("bottom",NULL,NULL,&dTest);
+			props.YRes=err?240:((LONG)dTest)-props.YPos;
+			//SmartDashboard= "java -jar C:\WindRiver\WPILib\SmartDashboard.jar ip localhost"
+			AssignWstring(script,"SmartDashboard","java -jar C:\\WindRiver\\WPILib\\SmartDashboard.jar ip localhost",props.smart_file);
+			//ClassName= SunAwtFrame  --depreciated
+			//WindowName= "SmartDashboard"  //we have wildcard capabilities so we can omit endings
+			AssignWstring(script,"WindowName","SmartDashboard",props.WindowName);
+			//IsPopup= 0
+			err = script.GetField("IsPopup",&sTest,NULL,NULL);
+			if (!err)
+			{
+				if ((sTest.c_str()[0]=='n')||(sTest.c_str()[0]=='N')||(sTest.c_str()[0]=='0'))
+					m_AncillaryProps.IsPopup=false;
+				else
+					m_AncillaryProps.IsPopup=true;
+			}
+			else
+				m_AncillaryProps.IsPopup=true;
+			//PlugIn= Compositor.dll
+			AssignWstring(script,"PlugIn","",props.plugin_file);
+			//AuxStartupFile= TestServer.exe
+			AssignWstring(script,"AuxStartupFile","",props.aux_startup_file);
+			//AuxStartupFileArgs= none
+			AssignWstring(script,"AuxStartupFileArgs","",props.aux_startup_file_Args);
+			//RecordFrames= 0
+			err = script.GetField("RecordFrames",&sTest,NULL,NULL);
+			if (!err)
+			{
+				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
+					m_AncillaryProps.RecordFrames=true;
+				else
+					m_AncillaryProps.RecordFrames=false;
+			}
+			else
+				m_AncillaryProps.RecordFrames=false;
+
+			//RecordPath= D:/media/Robot_Capture/
+			AssignWstring(script,"RecordPath","D:/media/Robot_Capture/",m_AncillaryProps.RecordPath);
+
+			script.Pop();
+		}
+	}
+
+	DDraw_Preview_Properties::DDraw_Preview_Properties(const char *FileName=NULL)
+	{
+		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
+		Scripting::Script script;
+		const char *err;
+		if (FileName=NULL)
+			FileName="Video1.lua";
+		err=script.LoadScript(FileName,true);
+		if (err==NULL)
+		{
+			script.NameMap["EXISTING_DASHBOARD_MAIN"] = "EXISTING_DASHMAIN";
+			SetUpGlobalTable(script);
+			LoadFromScript(script);
+		}
+	}
+};
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
 					   HINSTANCE hPrevInstance,
