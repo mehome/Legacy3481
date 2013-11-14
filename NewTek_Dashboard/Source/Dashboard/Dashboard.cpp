@@ -1129,6 +1129,10 @@ public:
 private:
 	DDraw_Preview::DDraw_Preview_Props m_PreviewProps;
 	AncillaryProps m_AncillaryProps;
+	std::string m_FileName;
+	bool m_UsingLUA;
+	bool m_SaveOnExit;
+private:
 	void AssignWstring(Scripting::Script& script,const char *Parameter,const char *DefaultValue,std::wstring &Dest)
 	{
 		const char* err=NULL;
@@ -1145,10 +1149,6 @@ private:
 			Dest=char2wchar_pwchar;
 		}
 	}
-
-public:
-	const DDraw_Preview::DDraw_Preview_Props &GetDDraw_Preview_Props() const {return m_PreviewProps;}
-	const AncillaryProps &GetAncillaryProps() const {return m_AncillaryProps;}
 
 	const char *SetUpGlobalTable(Scripting::Script& script)
 	{
@@ -1179,7 +1179,7 @@ public:
 			//title= Main
 			AssignWstring(script,"title","Main",props.source_name);
 			//IP_Address= Black
-			AssignWstring(script,"IP_Address","Black",props.IP_Address);
+			AssignWstring(script,"url","Black",props.IP_Address);  //It was so confusing to call this IP_Address url should be a better name
 			//Robot_IP_Address= localhost
 			AssignWstring(script,"Robot_IP_Address","localhost",m_AncillaryProps.Robot_IP_Address);
 			//StreamProfile= default
@@ -1236,24 +1236,189 @@ public:
 			script.Pop();
 		}
 	}
+	void Load_INI()
+	{
+		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
+		AncillaryProps &props_anc=m_AncillaryProps;
 
-	DDraw_Preview_Properties::DDraw_Preview_Properties(const char *FileName=NULL)
+		wstring SmartDashboard=cwsz_DefaultSmartFile;
+		wstring Title=L"Preview";
+		wstring Plugin=cwsz_PlugInFile;
+		wstring AuxStart=L"none";
+		wstring AuxArgs=L"none";
+		wstring ClassName=cwsz_ClassName;
+		wstring WindowName=cwsz_WindowName;
+		wstring URL;
+		props_anc.StreamProfile=L"default";
+		props_anc.RecordPath=L"none";
+		props_anc.RecordFrames=false;  //local cache until the app becomes instantiated
+
+		{
+			string InFile = m_FileName.c_str();
+			std::ifstream in(InFile.c_str(), std::ios::in | std::ios::binary);
+			if (in.is_open())
+			{
+				const size_t NoEnties=17;
+				string StringEntry[NoEnties<<1];
+				{
+					char Buffer[1024];
+					for (size_t i=0;i<NoEnties;i++)
+					{
+						in>>StringEntry[i<<1];
+						in.getline(Buffer,1024);
+						StringEntry[(i<<1)+1]=Buffer;
+					}
+				}
+				in.close();
+				AssignInput(Title,StringEntry[1].c_str());
+				AssignInput(URL,StringEntry[3].c_str());
+				AssignInput(props_anc.Robot_IP_Address,StringEntry[5].c_str());
+				AssignInput(props_anc.StreamProfile,StringEntry[7].c_str());
+				int left=atoi(StringEntry[9].c_str());
+				int top=atoi(StringEntry[11].c_str());
+				int right=atoi(StringEntry[13].c_str());
+				int bottom=atoi(StringEntry[15].c_str());
+				props.XRes=right-left;
+				props.YRes=bottom-top;
+				props.XPos=left;
+				props.YPos=top;
+				AssignInput(SmartDashboard,StringEntry[17].c_str());
+				AssignInput(ClassName,StringEntry[19].c_str());
+				AssignInput(WindowName,StringEntry[21].c_str());
+				props_anc.IsPopup=atoi(StringEntry[23].c_str())==0?false:true;
+				AssignInput(Plugin,StringEntry[25].c_str());
+				AssignInput(AuxStart,StringEntry[27].c_str());
+				AssignInput(AuxArgs,StringEntry[29].c_str());
+				props_anc.RecordFrames=atoi(StringEntry[31].c_str())==0?false:true;
+				AssignInput(props_anc.RecordPath,StringEntry[33].c_str());
+			}
+			else
+			{
+				URL=L"";
+				props.XRes=320;
+				props.YRes=240;
+				props.XPos=20;
+				props.YPos=10;
+			}
+		}
+
+		props.window_type=DDraw_Preview::DDraw_Preview_Props::eSmartDashboard; //always use SmartDashboard
+
+		props.source_name=Title;
+		props.IP_Address=URL;
+		props.ReaderFormat=FrameGrabber::eFFMPeg_Reader;
+		if  ((wcsicmp(props_anc.StreamProfile.c_str(),L"mjpg")==0) || (wcsicmp(props_anc.StreamProfile.c_str(),L"mjpeg")==0))
+			props.ReaderFormat=FrameGrabber::eHttpReader;
+		else if  ((wcsicmp(props_anc.StreamProfile.c_str(),L"mjpg2")==0) || (wcsicmp(props_anc.StreamProfile.c_str(),L"mjpeg2")==0))
+			props.ReaderFormat=FrameGrabber::eHttpReader2;
+		props.smart_file=SmartDashboard;
+		props.ClassName=ClassName;
+		props.WindowName=WindowName;
+		props.plugin_file=Plugin;
+		props.controls_plugin_file=L"Controls.dll"; //TODO may want to allow user to specify none
+		props.aux_startup_file=AuxStart;
+		props.aux_startup_file_Args=AuxArgs;
+
+	}
+	void Save_INI()
+	{
+		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
+		AncillaryProps &props_anc=m_AncillaryProps;
+
+		string OutFile = m_FileName.c_str();
+		string output;
+
+		ofstream out(OutFile.c_str(), std::ios::out );
+
+		AssignOutput(output,props.source_name.c_str());
+		out << "title= " << output << endl;
+		AssignOutput(output,props.IP_Address.c_str());
+		out << "IP_Address= " << output << endl;
+		AssignOutput(output,props_anc.Robot_IP_Address.c_str());
+		out << "Robot_IP_Address= " << output << endl;
+		AssignOutput(output,props_anc.StreamProfile.c_str());
+		out << "StreamProfile= " << output << endl;
+
+		out << "left= " << props.XPos << endl;
+		out << "top= "  << props.YPos << endl;
+		out << "right= " << (props.XPos+props.XRes) << endl;
+		out << "bottom= "  << (props.YPos+props.YRes) << endl;
+
+		AssignOutput(output,props.smart_file.c_str());
+		out << "SmartDashboard= " << "\"" << output << "\"" << endl;
+		AssignOutput(output,props.ClassName.c_str());
+		out << "ClassName= " << output << endl;
+		AssignOutput(output,props.WindowName.c_str());
+		out << "WindowName= " << "\"" << output << "\"" << endl;
+		out << "IsPopup= " << props_anc.IsPopup << endl;
+		AssignOutput(output,props.plugin_file.c_str());
+		out << "PlugIn= " << output << endl;
+		AssignOutput(output,props.aux_startup_file.c_str());
+		out << "AuxStartupFile= " << output << endl;
+		AssignOutput(output,props.aux_startup_file_Args.c_str());
+		out << "AuxStartupFileArgs= " << output << endl;
+		out << "RecordFrames= " << props_anc.RecordFrames << endl;
+		AssignOutput(output,props_anc.RecordPath.c_str());
+		out << "RecordPath= " << output << endl;
+		out.close();
+	}
+public:
+	const DDraw_Preview::DDraw_Preview_Props &GetDDraw_Preview_Props() const {return m_PreviewProps;}
+	DDraw_Preview::DDraw_Preview_Props &GetDDraw_Preview_Props_rw() {return m_PreviewProps;}
+	const AncillaryProps &GetAncillaryProps() const {return m_AncillaryProps;}
+	AncillaryProps &GetAncillaryProps_rw() {return m_AncillaryProps;}
+
+	DDraw_Preview_Properties(const char *FileName=NULL) : m_UsingLUA(false),m_SaveOnExit(false)
 	{
 		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
 		Scripting::Script script;
 		const char *err;
-		if (FileName=NULL)
+		if (FileName==NULL)
 			FileName="Video1.lua";
-		err=script.LoadScript(FileName,true);
-		if (err==NULL)
+
+		//file name is not null go ahead assign... we should assume it will have an extension
+		m_FileName=FileName;
+
+		const char *ext=strchr(FileName,'.');
+
+		if ((ext)&&(stricmp(ext,".lua")==0))
 		{
-			script.NameMap["EXISTING_DASHBOARD_MAIN"] = "EXISTING_DASHMAIN";
-			SetUpGlobalTable(script);
-			LoadFromScript(script);
+			err=script.LoadScript(FileName,true);
+			if (err==NULL)
+			{
+				script.NameMap["EXISTING_DASHBOARD_MAIN"] = "EXISTING_DASHMAIN";
+				SetUpGlobalTable(script);
+				LoadFromScript(script);
+				m_UsingLUA=true;
+			}
+			else
+			{
+				//In the default case if we don't have a lua fallback to ini
+				m_FileName="Video1.ini";
+				Load_INI();
+			}
+		}
+		else if ((ext)&&(stricmp(ext,".ini")==0))
+		{
+			Load_INI();
+		}
+		else
+			assert(false);
+
+	}
+	void SetSaveOnExit(bool SaveOnExit) {m_SaveOnExit=SaveOnExit;}
+	~DDraw_Preview_Properties()
+	{
+		if (m_SaveOnExit)
+		{
+			if (!m_UsingLUA)
+				Save_INI();
 		}
 	}
 };
 
+//#define __UseLegacyStartup__
+#ifdef __UseLegacyStartup__
 int APIENTRY _tWinMain(HINSTANCE hInstance,
 					   HINSTANCE hPrevInstance,
 					   LPTSTR    lpCmdLine,
@@ -1434,3 +1599,76 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	return 0;
 }
 
+
+
+#else
+int APIENTRY _tWinMain(HINSTANCE hInstance,
+					   HINSTANCE hPrevInstance,
+					   LPTSTR    lpCmdLine,
+					   int       nCmdShow)
+{
+	// Create a system wide named event
+	std::wstring SystemWideName=L"SmartCPPDashboard_";
+	SystemWideName+=lpCmdLine;  //keep it unique to allow multiple instances (but not of the same kind)
+	HANDLE	SystemWideNamedEvent = ::CreateEventW( NULL, FALSE, FALSE, SystemWideName.c_str() );		
+	if ( SystemWideNamedEvent )
+	{	// Check for another app with the same name running
+		if ( ::GetLastError() == ERROR_ALREADY_EXISTS )
+		{
+			DebugOutput("Another copy of this application is already running.\n");
+			return 1;
+		}
+	}
+
+	{
+
+		std::string Filename;
+		{
+			wchar2char(lpCmdLine);
+			Filename=wchar2char_pchar;
+		}
+		//For release build... we need to restore our working directory read .ini from driver station
+		#ifndef _DEBUG
+		{
+			wchar_t Buffer[MAX_PATH];
+			GetModuleFileName(hInstance,Buffer,MAX_PATH);
+			wchar_t *LastSlash=wcsrchr(Buffer,'\\');
+			*LastSlash=0;
+			SetCurrentDirectory(Buffer);
+		}
+		#endif
+		DDraw_Preview_Properties main_props(Filename.c_str()[0]!=0?Filename.c_str():NULL);
+		//Grab the ancillary properties and assign them to their respective places
+		const DDraw_Preview_Properties::AncillaryProps &props_anc=main_props.GetAncillaryProps();
+		g_Robot_IP_Address=props_anc.Robot_IP_Address;
+		g_IsPopup=props_anc.IsPopup;
+		g_IP_Address=main_props.GetDDraw_Preview_Props().IP_Address;
+
+		DDraw_Preview TheApp(main_props.GetDDraw_Preview_Props());
+		//Note: ensure the CWD is maintained on exit... the file requester can change where it goes
+		wchar_t CWD[MAX_PATH];
+		GetCurrentDirectory(MAX_PATH,CWD);
+		TheApp.SetInitRecord(props_anc.RecordFrames);
+		{
+			wchar2char(props_anc.RecordPath.c_str());
+			TheApp.SetRecordPath(wchar2char_pchar);
+		}
+		TheApp.RunApp();
+		SetCurrentDirectory(CWD);
+		bool SaveOnExit=true;
+		//TODO Hack bandaid... fixme
+		if (g_WindowInfo.rcNormalPosition.left + g_WindowInfo.rcNormalPosition.top + g_WindowInfo.rcNormalPosition.right + g_WindowInfo.rcNormalPosition.bottom == 0)
+			SaveOnExit=false;
+
+		//set the globals back into the properties for save
+		main_props.GetAncillaryProps_rw().Robot_IP_Address=g_Robot_IP_Address;
+		main_props.GetAncillaryProps_rw().IsPopup=g_IsPopup;
+		main_props.GetDDraw_Preview_Props_rw().IP_Address=g_IP_Address;
+
+		main_props.SetSaveOnExit(SaveOnExit);
+	}
+	CloseHandle(SystemWideNamedEvent);
+	return 0;
+}
+
+#endif
