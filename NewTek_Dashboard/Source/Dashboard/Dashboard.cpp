@@ -892,6 +892,9 @@ void DDraw_Preview::Deferred_AttachToParent()
 	} while ((ParentHwnd==NULL)&&(m_IsStreaming)); //This may take a while on cold start
 	if ((ParentHwnd)&&(m_IsStreaming))
 	{
+		//Force a match... when it lost its parent it must not save a pop-up offset flagged as a pop-up these are relative offsets to
+		//the parent window... so we can keep this this way by fooling the logic to thinking it was child all along
+		m_IsPopup_LastOpenedState=false;
 		//This is pretty much the identical implementation as eMenu_Dockable
 		g_IsPopup=false;
 		Reset();  //since we are already in a DPC we can call this directly
