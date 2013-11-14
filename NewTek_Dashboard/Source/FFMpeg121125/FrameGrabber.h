@@ -110,6 +110,8 @@ protected:
 	bool GetSeekable() const {return m_Seekable;}
 	void SetFileName(const wchar_t *IPAddress,IpURLConversion format=eIpURL_H264);
 
+	virtual void UpdateProperties() {}
+
 	void *m_VideoStream;
 	std::string m_URL;
 private:
@@ -179,8 +181,15 @@ protected:
 
 	//allow late binding of the output (hence start streaming exists for this delay)
 	void SetOutstream_Interface(FrameWork::Outstream_Interface *Preview) {m_Preview=Preview;}
+	virtual void UpdateProperties();
 
 private:
+	struct FFPlay_Controller_Props
+	{
+		FFPlay_Controller_Props();
+		std::string RecordPath;
+		bool RecordFrames;
+	} m_FFPlay_Controller_Props;
 	//This class simply listens for a DO exit event, and will SwitchFilename process if it receives this event
 	class FailSafe
 	{
