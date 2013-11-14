@@ -316,6 +316,8 @@ class DDraw_Preview
 		void Deferred_AttachToParent_DPC();
 		FrameWork::event m_Terminate;
 		FrameWork::Work::thread m_thread;  //For DPC support
+		//This is needed to ensure open is finished before a reset operation when using Deferred_AttachToParent_DPC
+		FrameWork::critical_section m_BlockOpenCloseResources;  
 
 		HWND m_ParentHwnd;
 		Window *m_Window;
@@ -811,6 +813,7 @@ void DDraw_Preview::StopStreaming()
 
 void DDraw_Preview::CloseResources()
 {
+	auto_lock FunctionBlock(m_BlockOpenCloseResources);
 	{
 		//See if the filename has changed... so that we can save it on exit
 		Dashboard_Controller_Interface *dci=m_FrameGrabber.GetDashboard_Controller_Interface();
@@ -897,7 +900,6 @@ void DDraw_Preview::Deferred_AttachToParent()
 
 void DDraw_Preview::Deferred_AttachToParent_DPC()
 {
-	using namespace FrameWork;
 	cpp::threadcall_ex( do_not_wait, m_thread, this, &DDraw_Preview::Deferred_AttachToParent);
 }
 
@@ -905,6 +907,7 @@ void DDraw_Preview::Deferred_AttachToParent_DPC()
 
 void DDraw_Preview::OpenResources()
 {
+	auto_lock FunctionBlock(m_BlockOpenCloseResources);
 	typedef DDraw_Preview::DDraw_Preview_Props PrevProps;
 	CloseResources(); //just ensure all resources are closed
 
