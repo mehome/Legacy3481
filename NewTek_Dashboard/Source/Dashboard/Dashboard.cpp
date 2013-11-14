@@ -642,6 +642,73 @@ void DDraw_Preview::DDraw_Preview_Props::SetDefaults(LONG XRes_,LONG YRes_,float
  /*											DDraw_Preview												*/
 /*******************************************************************************************************/
 
+
+
+//http://stackoverflow.com/questions/3922488/use-wildcards-with-findwindow-api-call-with-mfc
+//Added wildcard find window implementation to ensure all EuCon 3 versions dialog windows are found
+//This code is slightly modified to our coding conventions
+
+struct FindWindowData 
+{
+	FindWindowData(const wchar_t *windowTitle) : WindowTitle(windowTitle) , ResultHandle(0)
+	{}
+	std::wstring WindowTitle;
+	HWND ResultHandle;
+};
+
+BOOL CALLBACK FindWindowImpl( HWND hWnd, LPARAM lParam ) 
+{
+	FindWindowData * p = (FindWindowData *) lParam ;
+	if( !p ) 
+	{
+		// Finish enumerating we received an invalid parameter
+		return FALSE;
+	}
+
+	int length = GetWindowTextLength( hWnd ) + 1;
+	if( length > 0 ) 
+	{
+		std::vector<wchar_t> buffer( std::size_t( length ), 0 );      
+		if( GetWindowText( hWnd, &buffer[0], length ) ) 
+		{
+			// Comparing the string - If you want to add some features you can do it here
+			if( _wcsnicmp( &buffer[0], p->WindowTitle.c_str(), std::min( buffer.size(), p->WindowTitle.size() )  ) == 0 ) 
+			{
+				p->ResultHandle = hWnd;
+				// Finish enumerating we found what we need
+				return FALSE;
+			}
+		}
+	}
+	// Continue enumerating
+	return TRUE;
+}
+
+// Returns the window handle when found if it returns 0 GetLastError() will return more information
+HWND FindWindowStart( const wchar_t *windowTitle ) 
+{
+
+	if( !windowTitle ) 
+	{
+		SetLastError( ERROR_INVALID_PARAMETER );
+		return 0;
+	}
+
+	FindWindowData data( windowTitle );
+	if( !EnumWindows( FindWindowImpl, PtrToLong(&data) ) && data.ResultHandle != 0 ) 
+	{
+		SetLastError( ERROR_SUCCESS );
+		return data.ResultHandle;
+	}
+
+	// Return ERROR_FILE_NOT_FOUND in GetLastError
+	SetLastError( ERROR_FILE_NOT_FOUND );
+	return 0;
+}
+
+
+
+
 void DDraw_Preview::Controls_Plugin::FlushPlugin()
 {
 	if (m_PlugIn)
@@ -694,6 +761,11 @@ DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),
 
 void DDraw_Preview::UpdateDefaultsFromWindowPlacement()
 {
+	//If we never associated the parent window on startup because we were a pop-up, and invoke a docking operation we'll need to associate it
+	//now... if its there we can successfully dock
+	if ((!g_IsPopup)&&(!m_ParentHwnd))
+		m_ParentHwnd=FindWindowStart(m_Props.WindowName.c_str());
+
 	//If we still have our parent window or if we have always been a pop-up
 	if ((m_ParentHwnd) || (g_IsPopup && m_IsPopup_LastOpenedState))
 	{
@@ -807,71 +879,6 @@ void DDraw_Preview::StartStreaming()
 
 }
 
-
-
-//http://stackoverflow.com/questions/3922488/use-wildcards-with-findwindow-api-call-with-mfc
-//Added wildcard find window implementation to ensure all EuCon 3 versions dialog windows are found
-//This code is slightly modified to our coding conventions
-
-struct FindWindowData 
-{
-	FindWindowData(const wchar_t *windowTitle) : WindowTitle(windowTitle) , ResultHandle(0)
-	{}
-	std::wstring WindowTitle;
-	HWND ResultHandle;
-};
-
-BOOL CALLBACK FindWindowImpl( HWND hWnd, LPARAM lParam ) 
-{
-	FindWindowData * p = (FindWindowData *) lParam ;
-	if( !p ) 
-	{
-		// Finish enumerating we received an invalid parameter
-		return FALSE;
-	}
-
-	int length = GetWindowTextLength( hWnd ) + 1;
-	if( length > 0 ) 
-	{
-		std::vector<wchar_t> buffer( std::size_t( length ), 0 );      
-		if( GetWindowText( hWnd, &buffer[0], length ) ) 
-		{
-			// Comparing the string - If you want to add some features you can do it here
-			if( _wcsnicmp( &buffer[0], p->WindowTitle.c_str(), std::min( buffer.size(), p->WindowTitle.size() )  ) == 0 ) 
-			{
-				p->ResultHandle = hWnd;
-				// Finish enumerating we found what we need
-				return FALSE;
-			}
-		}
-	}
-	// Continue enumerating
-	return TRUE;
-}
-
-// Returns the window handle when found if it returns 0 GetLastError() will return more information
-HWND FindWindowStart( const wchar_t *windowTitle ) 
-{
-
-	if( !windowTitle ) 
-	{
-		SetLastError( ERROR_INVALID_PARAMETER );
-		return 0;
-	}
-
-	FindWindowData data( windowTitle );
-	if( !EnumWindows( FindWindowImpl, PtrToLong(&data) ) && data.ResultHandle != 0 ) 
-	{
-		SetLastError( ERROR_SUCCESS );
-		return data.ResultHandle;
-	}
-
-	// Return ERROR_FILE_NOT_FOUND in GetLastError
-	SetLastError( ERROR_FILE_NOT_FOUND );
-	return 0;
-}
-
-
 void DDraw_Preview::Deferred_AttachToParent()
 {
 	HWND ParentHwnd=NULL;
@@ -966,7 +973,7 @@ void DDraw_Preview::OpenResources()
 	}
 
 	bool Enable_Deferred_AttachToParent=false;
-	if ((m_Props.WindowName.c_str()[0]!=0)&&(m_Props.window_type!=PrevProps::eStandAlone))
+	if ((!g_IsPopup)&&(m_Props.WindowName.c_str()[0]!=0)&&(m_Props.window_type!=PrevProps::eStandAlone))
 	{
 		#if 0
 		//Give this some time to open
