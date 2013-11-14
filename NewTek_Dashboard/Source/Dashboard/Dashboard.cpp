@@ -1160,6 +1160,19 @@ private:
 		return err;
 	}
 
+	//This is common for all readers once the StreamProfile is set
+	void InitReaderFormatProp()
+	{
+		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
+		const AncillaryProps &props_anc=m_AncillaryProps;
+
+		props.ReaderFormat=FrameGrabber::eFFMPeg_Reader;
+		if  ((wcsicmp(props_anc.StreamProfile.c_str(),L"mjpg")==0) || (wcsicmp(props_anc.StreamProfile.c_str(),L"mjpeg")==0))
+			props.ReaderFormat=FrameGrabber::eHttpReader;
+		else if  ((wcsicmp(props_anc.StreamProfile.c_str(),L"mjpg2")==0) || (wcsicmp(props_anc.StreamProfile.c_str(),L"mjpeg2")==0))
+			props.ReaderFormat=FrameGrabber::eHttpReader2;
+	}
+
 	virtual void LoadFromScript(Scripting::Script& script)
 	{
 		const char* err=NULL;
@@ -1181,9 +1194,10 @@ private:
 			//IP_Address= Black
 			AssignWstring(script,"url","Black",props.IP_Address);  //It was so confusing to call this IP_Address url should be a better name
 			//Robot_IP_Address= localhost
-			AssignWstring(script,"Robot_IP_Address","localhost",m_AncillaryProps.Robot_IP_Address);
+			AssignWstring(script,"robot_ip_address","localhost",m_AncillaryProps.Robot_IP_Address);
 			//StreamProfile= default
-			AssignWstring(script,"StreamProfile","default",m_AncillaryProps.StreamProfile);
+			AssignWstring(script,"stream_profile","default",m_AncillaryProps.StreamProfile);
+			InitReaderFormatProp();
 			//left= 20
 			err = script.GetField("left",NULL,NULL,&dTest);
 			props.XPos=err?20:(LONG)dTest;
@@ -1197,12 +1211,12 @@ private:
 			err = script.GetField("bottom",NULL,NULL,&dTest);
 			props.YRes=err?240:((LONG)dTest)-props.YPos;
 			//SmartDashboard= "java -jar C:\WindRiver\WPILib\SmartDashboard.jar ip localhost"
-			AssignWstring(script,"SmartDashboard","java -jar C:\\WindRiver\\WPILib\\SmartDashboard.jar ip localhost",props.smart_file);
+			AssignWstring(script,"smart_dashboard","java -jar C:\\WindRiver\\WPILib\\SmartDashboard.jar ip localhost",props.smart_file);
 			//ClassName= SunAwtFrame  --depreciated
 			//WindowName= "SmartDashboard"  //we have wildcard capabilities so we can omit endings
-			AssignWstring(script,"WindowName","SmartDashboard",props.WindowName);
+			AssignWstring(script,"window_name","SmartDashboard",props.WindowName);
 			//IsPopup= 0
-			err = script.GetField("IsPopup",&sTest,NULL,NULL);
+			err = script.GetField("is_popup",&sTest,NULL,NULL);
 			if (!err)
 			{
 				if ((sTest.c_str()[0]=='n')||(sTest.c_str()[0]=='N')||(sTest.c_str()[0]=='0'))
@@ -1213,13 +1227,13 @@ private:
 			else
 				m_AncillaryProps.IsPopup=true;
 			//PlugIn= Compositor.dll
-			AssignWstring(script,"PlugIn","",props.plugin_file);
+			AssignWstring(script,"plug_in","",props.plugin_file);
 			//AuxStartupFile= TestServer.exe
-			AssignWstring(script,"AuxStartupFile","",props.aux_startup_file);
+			AssignWstring(script,"aux_startup_file","",props.aux_startup_file);
 			//AuxStartupFileArgs= none
-			AssignWstring(script,"AuxStartupFileArgs","",props.aux_startup_file_Args);
+			AssignWstring(script,"aux_startup_file_args","",props.aux_startup_file_Args);
 			//RecordFrames= 0
-			err = script.GetField("RecordFrames",&sTest,NULL,NULL);
+			err = script.GetField("record_frames",&sTest,NULL,NULL);
 			if (!err)
 			{
 				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
@@ -1231,8 +1245,9 @@ private:
 				m_AncillaryProps.RecordFrames=false;
 
 			//RecordPath= D:/media/Robot_Capture/
-			AssignWstring(script,"RecordPath","D:/media/Robot_Capture/",m_AncillaryProps.RecordPath);
+			AssignWstring(script,"record_path","D:/media/Robot_Capture/",m_AncillaryProps.RecordPath);
 
+			props.controls_plugin_file=L"Controls.dll"; //TODO may want to allow user to specify none
 			script.Pop();
 		}
 	}
@@ -1302,15 +1317,11 @@ private:
 			}
 		}
 
+		InitReaderFormatProp();
 		props.window_type=DDraw_Preview::DDraw_Preview_Props::eSmartDashboard; //always use SmartDashboard
 
 		props.source_name=Title;
 		props.IP_Address=URL;
-		props.ReaderFormat=FrameGrabber::eFFMPeg_Reader;
-		if  ((wcsicmp(props_anc.StreamProfile.c_str(),L"mjpg")==0) || (wcsicmp(props_anc.StreamProfile.c_str(),L"mjpeg")==0))
-			props.ReaderFormat=FrameGrabber::eHttpReader;
-		else if  ((wcsicmp(props_anc.StreamProfile.c_str(),L"mjpg2")==0) || (wcsicmp(props_anc.StreamProfile.c_str(),L"mjpeg2")==0))
-			props.ReaderFormat=FrameGrabber::eHttpReader2;
 		props.smart_file=SmartDashboard;
 		props.ClassName=ClassName;
 		props.WindowName=WindowName;
@@ -1640,9 +1651,18 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		DDraw_Preview_Properties main_props(Filename.c_str()[0]!=0?Filename.c_str():NULL);
 		//Grab the ancillary properties and assign them to their respective places
 		const DDraw_Preview_Properties::AncillaryProps &props_anc=main_props.GetAncillaryProps();
+		DDraw_Preview_Properties::AncillaryProps &props_anc_rw=main_props.GetAncillaryProps_rw();
+		const DDraw_Preview::DDraw_Preview_Props &props=main_props.GetDDraw_Preview_Props();
+		DDraw_Preview::DDraw_Preview_Props &props_rw=main_props.GetDDraw_Preview_Props_rw();
+
 		g_Robot_IP_Address=props_anc.Robot_IP_Address;
 		g_IsPopup=props_anc.IsPopup;
 		g_IP_Address=main_props.GetDDraw_Preview_Props().IP_Address;
+
+		g_WindowInfo.rcNormalPosition.left=props.XPos;
+		g_WindowInfo.rcNormalPosition.top=props.YPos;
+		g_WindowInfo.rcNormalPosition.right=props.XPos+props.XRes;
+		g_WindowInfo.rcNormalPosition.bottom=props.YPos+props.YRes;
 
 		DDraw_Preview TheApp(main_props.GetDDraw_Preview_Props());
 		//Note: ensure the CWD is maintained on exit... the file requester can change where it goes
@@ -1661,9 +1681,14 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			SaveOnExit=false;
 
 		//set the globals back into the properties for save
-		main_props.GetAncillaryProps_rw().Robot_IP_Address=g_Robot_IP_Address;
-		main_props.GetAncillaryProps_rw().IsPopup=g_IsPopup;
-		main_props.GetDDraw_Preview_Props_rw().IP_Address=g_IP_Address;
+		props_anc_rw.Robot_IP_Address=g_Robot_IP_Address;
+		props_anc_rw.IsPopup=g_IsPopup;
+		props_rw.IP_Address=g_IP_Address;
+
+		props_rw.XPos=g_WindowInfo.rcNormalPosition.left;
+		props_rw.YPos=g_WindowInfo.rcNormalPosition.top;
+		props_rw.XRes=g_WindowInfo.rcNormalPosition.right-g_WindowInfo.rcNormalPosition.left;
+		props_rw.YRes=g_WindowInfo.rcNormalPosition.bottom-g_WindowInfo.rcNormalPosition.top;
 
 		main_props.SetSaveOnExit(SaveOnExit);
 	}
