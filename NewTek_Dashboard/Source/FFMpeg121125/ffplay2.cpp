@@ -3101,10 +3101,7 @@ bool FrameGrabber_FFMpeg::StartStreaming()
 	if (!m_VideoStream) 
 		fprintf(stderr, "Failed to initialize VideoState!\n");
 	else
-	{
-		UpdateProperties();  //make sure all the properties are updated
 		reader->StartStreaming();
-	}
 	return m_VideoStream!=NULL;
 }
 
@@ -3200,28 +3197,8 @@ void FFPlay_Controller::FailSafe::operator() ( const void* )
 }
 
   /***************************************************************************************************************/
-/*									FFPlay_Controller::FFPlay_Controller_Props									*/
-/***************************************************************************************************************/
-
-FFPlay_Controller::FFPlay_Controller_Props::FFPlay_Controller_Props()
-{
-	RecordPath=	"D:\\media\\Robot_Capture\\";
-	RecordFrames=false;
-}
-
-  /***************************************************************************************************************/
  /*												FFPlay_Controller												*/
 /***************************************************************************************************************/
-
-void FFPlay_Controller::UpdateProperties()
-{
-	if (m_VideoStream)
-	{
-		FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
-		instance.set_record_path(m_FFPlay_Controller_Props.RecordPath.c_str());
-		instance.record_elemental(m_FFPlay_Controller_Props.RecordFrames);
-	}
-}
 
 void FFPlay_Controller::Flush() 
 {
@@ -3294,43 +3271,27 @@ int FFPlay_Controller::Pause (void)
 
 void FFPlay_Controller::Record (bool start)
 {
-	m_FFPlay_Controller_Props.RecordFrames=start;
-	if (m_VideoStream)
-	{
-		FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
-		instance.record_elemental(start);
-	}
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	instance.record_elemental(start);
 }
 
 bool FFPlay_Controller::GetRecordState (void)
 {
-	if (m_VideoStream)
-	{
-		FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
-		m_FFPlay_Controller_Props.RecordFrames=instance.get_rercord_state();
-	}
-	return m_FFPlay_Controller_Props.RecordFrames;
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	return instance.get_rercord_state();
 }
 
 void FFPlay_Controller::SetRecordPath(const char *Path)
 {
 	assert(Path);
-	m_FFPlay_Controller_Props.RecordPath=Path;
-	if (m_VideoStream)
-	{
-		FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
-		instance.set_record_path(Path);
-	}
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	instance.set_record_path(Path);
 }
 
 const char *FFPlay_Controller::GetRecordPath()
 {
-	if (m_VideoStream)
-	{
-		FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
-		m_FFPlay_Controller_Props.RecordPath=instance.get_record_path();
-	}
-	return m_FFPlay_Controller_Props.RecordPath.c_str();
+	FF_Play_Reader &instance=*((FF_Play_Reader *)m_VideoStream);
+	return instance.get_record_path();
 }
 
 void FFPlay_Controller::Seek (__int64 position_10us)
