@@ -104,6 +104,20 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Fr
 		//Note: out_frame could be UVYV if we wanted it to be... I don't want to assume its the same as &bgra_frame even though it may be
 		Bitmap_Frame *out_frame;
 		out_frame = NI_VisionProcessing(&bgra_frame, x_target, y_target, have_target);
+		//TODO cannot enable this until I have some prediction added
+		#if 0
+		//This is somewhat cheating, but we can assume there is only one instance of the tracking that will be happening
+		using namespace FrameWork;
+		static KalmanFilter s_KalFilter_Xtarget;
+		static KalmanFilter s_KalFilter_Ytarget;
+		static Averager<double,5> s_Xtarget_Averager;
+		static Averager<double,5> s_Ytarget_Averager;
+		x_target = s_KalFilter_Xtarget(x_target);  //apply the Kalman filter
+		x_target=s_Xtarget_Averager.GetAverage(x_target); //and Ricks x element averager
+		y_target = s_KalFilter_Ytarget(y_target);  //apply the Kalman filter
+		y_target=s_Ytarget_Averager.GetAverage(y_target); //and Ricks x element averager
+		#endif
+
 		//DebugOutput("X=%.2f, Y=%.2f, %s\n", x_target, y_target, have_target ? "target: yes" : "target: no");
 		#ifdef __Using_UDP__
 		if (g_UDP_Output && have_target)
