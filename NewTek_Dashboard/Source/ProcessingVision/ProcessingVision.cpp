@@ -104,18 +104,34 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Fr
 		//Note: out_frame could be UVYV if we wanted it to be... I don't want to assume its the same as &bgra_frame even though it may be
 		Bitmap_Frame *out_frame;
 		out_frame = NI_VisionProcessing(&bgra_frame, x_target, y_target, have_target);
-		//TODO cannot enable this until I have some prediction added
+		//TODO still under testing... this is experimental to see if it has better improvement
 		#if 0
 		//This is somewhat cheating, but we can assume there is only one instance of the tracking that will be happening
+		SmartDashboard::PutNumber("desired x",x_target);
 		using namespace FrameWork;
 		static KalmanFilter s_KalFilter_Xtarget;
 		static KalmanFilter s_KalFilter_Ytarget;
 		static Averager<double,5> s_Xtarget_Averager;
 		static Averager<double,5> s_Ytarget_Averager;
+		static Predict_simple s_Xtarget_Predict;
+		static time_type s_LastTime;
+		#if 0
+		static bool FirstRun=true;
+		if (FirstRun)
+		{
+			SmartDashboard::PutNumber("lag",0.06);
+			FirstRun=false;
+		}
+		const double lag=SmartDashboard::GetNumber("lag");
+		#endif
 		x_target = s_KalFilter_Xtarget(x_target);  //apply the Kalman filter
 		x_target=s_Xtarget_Averager.GetAverage(x_target); //and Ricks x element averager
 		y_target = s_KalFilter_Ytarget(y_target);  //apply the Kalman filter
 		y_target=s_Ytarget_Averager.GetAverage(y_target); //and Ricks x element averager
+		const time_type current_time=time_type::get_current_time();
+		const time_type dtime_s=current_time-s_LastTime;
+		s_LastTime=current_time;
+		x_target=s_Xtarget_Predict(x_target,dtime_s,0.25);
 		#endif
 
 		//DebugOutput("X=%.2f, Y=%.2f, %s\n", x_target, y_target, have_target ? "target: yes" : "target: no");

@@ -104,6 +104,30 @@ private:
 	T m_CurrentValue;
 };
 
+class Predict_simple
+{
+public:
+	Predict_simple()
+	{
+		Reset();
+	}
+	/// \return the filtered value
+	double operator()(double input,double dTime_s,double PredictTime)
+	{
+		//compute velocity
+		const double velocity=(input-m_last_input) / dTime_s;
+		const double Predict_s= input + (velocity * PredictTime);
+		m_last_input=input;
+		return Predict_s;
+	}
+	void Reset()
+	{
+		m_last_input=0.0;
+	}
+private:
+	double m_last_input;
+};
+
 struct mem
 {
 	static void*	alloc( const size_t size, const size_t align )
