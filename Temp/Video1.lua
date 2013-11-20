@@ -30,7 +30,13 @@ DashboardProps =
 		aux_startup_file="",
 		aux_startup_file_args="",
 		record_frames= 0,
-		record_path= "D:\\media\\Robot_Capture\\",
+		record_path= "D:/media/Robot_Capture/",
+		
+		--We can control which of these we want to have persistence
+		--ignore_position=true,
+		--ignore_url=true,
+		--ignore_popup=true,
+		--ignore_record=true,
 		
 		--This must stay here to load the settings
 		load_settings = GetSettings(),
