@@ -9,6 +9,7 @@
 #include <ddraw.h>
 #include <atlbase.h>
 #include <shellapi.h>
+#include <strsafe.h>
 #define __IncludeInputBase__  //we want lua
 #include "../FrameWork/FrameWork.h"
 #include "../FrameWork/Window.h"
@@ -1173,45 +1174,62 @@ private:
 			props.ReaderFormat=FrameGrabber::eHttpReader2;
 	}
 
-	void Load_PersistentData(Scripting::Script& script)
+	struct IgnoreList
+	{
+		bool Ignore_URL;
+		bool Ignore_Position;
+		bool Ignore_Popup;
+		bool Ignore_Record;
+	};
+	void Load_PersistentData(Scripting::Script& script, const IgnoreList &ignore_list)
 	{
 		const char* err=NULL;
 		std::string sTest;
 		double dTest;
 		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
 		//TODO add ignore capabilities
-		AssignWstring(script,"url","Black",props.IP_Address);
-		err = script.GetField("left",NULL,NULL,&dTest);
-		props.XPos=err?20:(LONG)dTest;
-		err = script.GetField("top",NULL,NULL,&dTest);
-		props.YPos=err?10:(LONG)dTest;
-		err = script.GetField("right",NULL,NULL,&dTest);
-		props.XRes=err?320:((LONG)dTest)-props.XPos;
-		err = script.GetField("bottom",NULL,NULL,&dTest);
-		props.YRes=err?240:((LONG)dTest)-props.YPos;
-		err = script.GetField("is_popup",&sTest,NULL,NULL);
-		if (!err)
+		if (!ignore_list.Ignore_URL)
+			AssignWstring(script,"url","Black",props.IP_Address);
+		if (!ignore_list.Ignore_Position)
 		{
-			if ((sTest.c_str()[0]=='n')||(sTest.c_str()[0]=='N')||(sTest.c_str()[0]=='0'))
-				m_AncillaryProps.IsPopup=false;
+			err = script.GetField("left",NULL,NULL,&dTest);
+			props.XPos=err?20:(LONG)dTest;
+			err = script.GetField("top",NULL,NULL,&dTest);
+			props.YPos=err?10:(LONG)dTest;
+			err = script.GetField("right",NULL,NULL,&dTest);
+			props.XRes=err?320:((LONG)dTest)-props.XPos;
+			err = script.GetField("bottom",NULL,NULL,&dTest);
+			props.YRes=err?240:((LONG)dTest)-props.YPos;
+		}
+		if (!ignore_list.Ignore_Popup)
+		{
+			err = script.GetField("is_popup",&sTest,NULL,NULL);
+			if (!err)
+			{
+				if ((sTest.c_str()[0]=='n')||(sTest.c_str()[0]=='N')||(sTest.c_str()[0]=='0'))
+					m_AncillaryProps.IsPopup=false;
+				else
+					m_AncillaryProps.IsPopup=true;
+			}
 			else
 				m_AncillaryProps.IsPopup=true;
 		}
-		else
-			m_AncillaryProps.IsPopup=true;
-		err = script.GetField("record_frames",&sTest,NULL,NULL);
-		if (!err)
+		if (!ignore_list.Ignore_Record)
 		{
-			if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
-				m_AncillaryProps.RecordFrames=true;
+			err = script.GetField("record_frames",&sTest,NULL,NULL);
+			if (!err)
+			{
+				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
+					m_AncillaryProps.RecordFrames=true;
+				else
+					m_AncillaryProps.RecordFrames=false;
+			}
 			else
 				m_AncillaryProps.RecordFrames=false;
-		}
-		else
-			m_AncillaryProps.RecordFrames=false;
 
-		//RecordPath= D:/media/Robot_Capture/
-		AssignWstring(script,"record_path","D:/media/Robot_Capture/",m_AncillaryProps.RecordPath);
+			//RecordPath= D:/media/Robot_Capture/
+			AssignWstring(script,"record_path","D:/media/Robot_Capture/",m_AncillaryProps.RecordPath);
+		}
 	}
 
 	virtual void LoadFromScript(Scripting::Script& script)
@@ -1290,11 +1308,18 @@ private:
 
 			props.controls_plugin_file=L"Controls.dll"; //TODO may want to allow user to specify none
 
+			IgnoreList ignore_list;
+			memset(&ignore_list,0,sizeof(IgnoreList));
+			err = script.GetField("ignore_url",NULL,&ignore_list.Ignore_URL,NULL);
+			err = script.GetField("ignore_position",NULL,&ignore_list.Ignore_Position,NULL);
+			err = script.GetField("ignore_popup",NULL,&ignore_list.Ignore_Popup,NULL);
+			err = script.GetField("ignore_record",NULL,&ignore_list.Ignore_Record,NULL);
+
 			err = script.GetFieldTable("load_settings");
 			{
 				if (!err)
 				{
-					Load_PersistentData(script);
+					Load_PersistentData(script,ignore_list);
 					script.Pop();
 				}
 			}
@@ -1424,6 +1449,50 @@ private:
 		out << "RecordPath= " << output << endl;
 		out.close();
 	}
+
+
+	void Save_LUA_internal(std::ofstream &out)
+	{
+		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
+		AncillaryProps &props_anc=m_AncillaryProps;
+
+		using namespace std;
+		string output;
+		out << "settings_load = " << endl;    //header
+		out << "{" << endl;
+
+		AssignOutput(output,props.IP_Address.c_str());
+		out << "\t" << "url= " << "\"" << output << "\"," << endl;
+
+		out << "\t" << "left= " << props.XPos << "," << endl;
+		out << "\t" << "top= " << props.YPos << "," << endl;
+		out << "\t" << "right= " << (props.XPos+props.XRes) << "," << endl;
+		out << "\t" << "bottom= " << (props.YPos+props.YRes) << "," << endl;
+
+		out << "\t" << "is_popup= " << props_anc.IsPopup << "," << endl;
+		out << "\t" << "record_frames= " << props_anc.RecordFrames << "," << endl;
+		AssignOutput(output,props_anc.RecordPath.c_str());
+		out << "\t" << "record_path= " << "\"" << output << "\"" << endl;
+		out << "}" << endl;  //footer
+	}
+
+	void Save_LUA()
+	{
+		using namespace std;
+		char Buffer[1024];
+		StringCchCopyA(Buffer,1024,m_FileName.c_str());
+		//chop extension
+		char *EndPeriodPtr=strrchr(Buffer,'.');
+		if (EndPeriodPtr)
+			*EndPeriodPtr=0;
+
+		string OutFile = Buffer;
+		OutFile += "Save.lua";
+
+		ofstream out(OutFile.c_str(), std::ios::out );
+
+		Save_LUA_internal(out);
+	}
 public:
 	const DDraw_Preview::DDraw_Preview_Props &GetDDraw_Preview_Props() const {return m_PreviewProps;}
 	DDraw_Preview::DDraw_Preview_Props &GetDDraw_Preview_Props_rw() {return m_PreviewProps;}
@@ -1475,6 +1544,8 @@ public:
 		{
 			if (!m_UsingLUA)
 				Save_INI();
+			else
+				Save_LUA();
 		}
 	}
 };
