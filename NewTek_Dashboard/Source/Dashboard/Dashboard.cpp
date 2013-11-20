@@ -1173,6 +1173,47 @@ private:
 			props.ReaderFormat=FrameGrabber::eHttpReader2;
 	}
 
+	void Load_PersistentData(Scripting::Script& script)
+	{
+		const char* err=NULL;
+		std::string sTest;
+		double dTest;
+		DDraw_Preview::DDraw_Preview_Props &props=m_PreviewProps;
+		//TODO add ignore capabilities
+		AssignWstring(script,"url","Black",props.IP_Address);
+		err = script.GetField("left",NULL,NULL,&dTest);
+		props.XPos=err?20:(LONG)dTest;
+		err = script.GetField("top",NULL,NULL,&dTest);
+		props.YPos=err?10:(LONG)dTest;
+		err = script.GetField("right",NULL,NULL,&dTest);
+		props.XRes=err?320:((LONG)dTest)-props.XPos;
+		err = script.GetField("bottom",NULL,NULL,&dTest);
+		props.YRes=err?240:((LONG)dTest)-props.YPos;
+		err = script.GetField("is_popup",&sTest,NULL,NULL);
+		if (!err)
+		{
+			if ((sTest.c_str()[0]=='n')||(sTest.c_str()[0]=='N')||(sTest.c_str()[0]=='0'))
+				m_AncillaryProps.IsPopup=false;
+			else
+				m_AncillaryProps.IsPopup=true;
+		}
+		else
+			m_AncillaryProps.IsPopup=true;
+		err = script.GetField("record_frames",&sTest,NULL,NULL);
+		if (!err)
+		{
+			if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
+				m_AncillaryProps.RecordFrames=true;
+			else
+				m_AncillaryProps.RecordFrames=false;
+		}
+		else
+			m_AncillaryProps.RecordFrames=false;
+
+		//RecordPath= D:/media/Robot_Capture/
+		AssignWstring(script,"record_path","D:/media/Robot_Capture/",m_AncillaryProps.RecordPath);
+	}
+
 	virtual void LoadFromScript(Scripting::Script& script)
 	{
 		const char* err=NULL;
@@ -1248,6 +1289,16 @@ private:
 			AssignWstring(script,"record_path","D:/media/Robot_Capture/",m_AncillaryProps.RecordPath);
 
 			props.controls_plugin_file=L"Controls.dll"; //TODO may want to allow user to specify none
+
+			err = script.GetFieldTable("load_settings");
+			{
+				if (!err)
+				{
+					Load_PersistentData(script);
+					script.Pop();
+				}
+			}
+
 			script.Pop();
 		}
 	}
@@ -1689,6 +1740,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		props_rw.YPos=g_WindowInfo.rcNormalPosition.top;
 		props_rw.XRes=g_WindowInfo.rcNormalPosition.right-g_WindowInfo.rcNormalPosition.left;
 		props_rw.YRes=g_WindowInfo.rcNormalPosition.bottom-g_WindowInfo.rcNormalPosition.top;
+
+		props_anc_rw.RecordFrames=TheApp.GetInitRecord();
+		if (TheApp.GetRecordPath())
+		{
+			char2wchar(TheApp.GetRecordPath());
+			props_anc_rw.RecordPath=char2wchar_pwchar;
+		}
 
 		main_props.SetSaveOnExit(SaveOnExit);
 	}
