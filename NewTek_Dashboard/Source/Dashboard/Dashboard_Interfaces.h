@@ -50,6 +50,9 @@ public:
 	//converter functions
 	virtual void UYVY_to_BGRA(const Bitmap_Frame *sourceUVYV,Bitmap_Frame *destBGRA)=0;
 	virtual void BGRA_to_UYVY(const Bitmap_Frame *sourceBGRA,Bitmap_Frame *destUYVY)=0;
+
+	// line drawing
+	virtual void DrawLineUYVY( Bitmap_Frame *frame, const int posn0[], const int posn1[], const unsigned int col[] )=0;
 };
 
 class Dashboard_Controller_Interface

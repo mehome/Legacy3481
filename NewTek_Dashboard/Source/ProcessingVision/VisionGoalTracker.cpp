@@ -247,7 +247,7 @@ int VisionGoalTracker::ProcessImage(double &x_target, double &y_target)
 							BBoxColor = COLOR_RED;
 						else if( particleList.particleData[i].status == eAreaFail)
 							BBoxColor = COLOR_CYAN;
-						imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
+						imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor);
 					}
 					continue;
 				}

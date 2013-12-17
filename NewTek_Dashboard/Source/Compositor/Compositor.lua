@@ -89,14 +89,15 @@ CompositorProps = {
 		--Types	"none","square","composite","bypass"
 		sequence =
 		{
-			sequence_1 = {	type="square", selection=1	},
+			sequence_1 = {	type="alignment" },
 			sequence_2 = 
 			{
 				type="composite",
 				composite=
 				{
-					composite_1 = {	type="square", selection=2	},
-					composite_2 = {	type="square", selection=3	},
+					composite_1 = { type="bypass" },
+					composite_2 = {	type="square", selection=2	},
+					composite_3 = {	type="square", selection=3	},
 				}
 			},
 			sequence_3 = {	type="bypass" },

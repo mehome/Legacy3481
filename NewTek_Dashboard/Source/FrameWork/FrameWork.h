@@ -30,6 +30,9 @@ namespace FrameWork
 
 		// Color conversions
 		#include "color_conversions.h"		
+
+		// Line drawing
+		#include "rasterize.h"
 	}
 
 #include "Misc.h"

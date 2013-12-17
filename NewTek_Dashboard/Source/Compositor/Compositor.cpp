@@ -59,7 +59,7 @@ __inline T Enum_GetValue(const char *value,const char * const Table[],size_t NoI
 
 const char * const csz_ReticleType_Enum[] =
 {
-	"none","square","composite","bypass","line_plot"
+	"none","square","alignment","composite","bypass","line_plot"
 };
 
 struct Compositor_Props
@@ -107,6 +107,7 @@ struct Compositor_Props
 	{
 		eNone,
 		eDefault,
+		eAlignment,
 		eComposite,
 		eBypass,
 		eLinePlot
@@ -463,6 +464,7 @@ static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Pro
 			switch (seq_pkt.type)
 			{
 			case Compositor_Props::eDefault:
+			case Compositor_Props::eAlignment:
 				{
 					err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
 					err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
@@ -805,6 +807,36 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 			}
 		}
 	}
+	return Frame;
+}
+
+
+
+static Bitmap_Frame* RenderLineReticle(Bitmap_Frame* Frame)
+{
+	if (g_Framework)
+	{
+		
+		unsigned int col[] = { 128, 255, 128, 255 };
+		int pos1[] = { Frame->XRes/3, Frame->YRes/3 };
+		int pos2[] = { Frame->XRes/3 * 2, Frame->YRes/3 };
+		//pos1[0] = 0;
+		//pos1[1] = 0;
+		//pos2[0] = Frame->XRes;
+		//pos2[1] = Frame->YRes;
+		g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+		pos1[0] = Frame->XRes/3;
+		pos1[1] = Frame->YRes/3;
+		pos2[0] = 0;
+		pos2[1] = Frame->YRes;
+		g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+		pos1[0] = Frame->XRes/3 * 2;
+		pos1[1] = Frame->YRes/3;
+		pos2[0] = Frame->XRes;
+		pos2[1] = Frame->YRes;
+		g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+	}
+	
 	return Frame;
 }
 
@@ -1319,6 +1351,9 @@ class Compositor
 					}
 					ret=RenderSquareReticle(Frame,Xpos,Ypos,sqr_props.primary);
 				}
+				break;
+			case Compositor_Props::eAlignment:
+				ret=RenderLineReticle(Frame);
 				break;
 			case Compositor_Props::eBypass:
 				ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);

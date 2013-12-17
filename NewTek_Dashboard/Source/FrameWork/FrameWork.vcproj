@@ -197,6 +197,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rasterize_line.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -304,6 +308,10 @@
 			</File>
 			<File
 				RelativePath=".\Preview.h"
+				>
+			</File>
+			<File
+				RelativePath=".\rasterize.h"
 				>
 			</File>
 			<File

@@ -82,12 +82,26 @@ class Dashboard_Framework_Helper : public Dashboard_Framework_Interface
 		bitmap_bgra_u8 dest_bitmap((pixel_bgra_u8 *)destBGRA->Memory,destBGRA->XRes,destBGRA->YRes,destBGRA->Stride);
 		dest_bitmap=source_bitmap;
 	}
+
 	void BGRA_to_UYVY(const Bitmap_Frame *sourceBGRA,Bitmap_Frame *destUYVY)
 	{
 		using namespace FrameWork::Bitmaps;
 		bitmap_bgra_u8 source_bitmap((pixel_bgra_u8 *)sourceBGRA->Memory,sourceBGRA->XRes,sourceBGRA->YRes,sourceBGRA->Stride);
 		bitmap_ycbcr_u8 dest_bitmap((pixel_ycbcr_u8 *)destUYVY->Memory,destUYVY->XRes,destUYVY->YRes,destUYVY->Stride);
 		dest_bitmap=source_bitmap;
+	}
+
+	void DrawLineUYVY( Bitmap_Frame *frame, const int posn0[], const int posn1[], const unsigned int col[] )
+	{
+		using namespace FrameWork::Bitmaps;
+		using namespace rasterize;
+		pixel_ycbcr_u8 pix;
+		pix.m_cb = (unsigned char)col[0];
+		pix.m_y0 = (unsigned char)col[1];
+		pix.m_cr = (unsigned char)col[2];
+		pix.m_y1 = (unsigned char)col[3];
+		bitmap_ycbcr_u8 dest((pixel_ycbcr_u8 *)frame->Memory, frame->XRes, frame->YRes, frame->Stride);
+		line( dest, posn0, posn1, (const pixel_ycbcr_u8)pix );
 	}
 
 };
