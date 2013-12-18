@@ -89,7 +89,7 @@ CompositorProps = {
 		--Types	"none","square","composite","bypass"
 		sequence =
 		{
-			sequence_1 = {	type="alignment" },
+			sequence_1 = {	type="pathalign" },
 			sequence_2 = 
 			{
 				type="composite",

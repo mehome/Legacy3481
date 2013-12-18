@@ -59,7 +59,7 @@ __inline T Enum_GetValue(const char *value,const char * const Table[],size_t NoI
 
 const char * const csz_ReticleType_Enum[] =
 {
-	"none","square","alignment","composite","bypass","line_plot"
+	"none","square","pathalign","composite","bypass","line_plot"
 };
 
 struct Compositor_Props
@@ -107,7 +107,7 @@ struct Compositor_Props
 	{
 		eNone,
 		eDefault,
-		eAlignment,
+		ePathAlign,
 		eComposite,
 		eBypass,
 		eLinePlot
@@ -464,7 +464,7 @@ static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Pro
 			switch (seq_pkt.type)
 			{
 			case Compositor_Props::eDefault:
-			case Compositor_Props::eAlignment:
+			case Compositor_Props::ePathAlign:
 				{
 					err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
 					err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
@@ -810,35 +810,534 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 	return Frame;
 }
 
+//TODO: resolve why this is not visible from math.h even with _USE_MATH_DEFINES defined.
+#define M_PI       3.14159265358979323846
 
-
-static Bitmap_Frame* RenderLineReticle(Bitmap_Frame* Frame)
+// link for original c# code.
+// http://www.codeincodeblock.com/2012/03/projecting-3d-world-co-ordinates-into.html
+struct _3Dpoint
 {
-	if (g_Framework)
-	{
-		
-		unsigned int col[] = { 128, 255, 128, 255 };
-		int pos1[] = { Frame->XRes/3, Frame->YRes/3 };
-		int pos2[] = { Frame->XRes/3 * 2, Frame->YRes/3 };
-		//pos1[0] = 0;
-		//pos1[1] = 0;
-		//pos2[0] = Frame->XRes;
-		//pos2[1] = Frame->YRes;
-		g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
-		pos1[0] = Frame->XRes/3;
-		pos1[1] = Frame->YRes/3;
-		pos2[0] = 0;
-		pos2[1] = Frame->YRes;
-		g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
-		pos1[0] = Frame->XRes/3 * 2;
-		pos1[1] = Frame->YRes/3;
-		pos2[0] = Frame->XRes;
-		pos2[1] = Frame->YRes;
-		g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+	double x, y, z;
+	
+	_3Dpoint(double xx, double yy, double zz)
+	{            
+		x = xx;
+		y = yy;
+		z = zz;
 	}
 	
-	return Frame;
-}
+	_3Dpoint()
+	{
+		x = 0.0;
+		y = 0.0;
+		z = 0.0;
+	}
+};
+
+struct _2Dpoint
+{
+	int h, v;
+	_2Dpoint(int hh, int vv)
+	{
+		h = hh;
+		v = vv;
+	}
+	
+	_2Dpoint()
+	{
+		h = 0;
+		v = 0;
+	}
+};
+
+class CAMERA
+{
+public:
+	_3Dpoint from;
+	_3Dpoint to;
+	_3Dpoint up;
+	double angleh, anglev;
+	double zoom;
+	double front, back;
+	short projection;
+
+	CAMERA()
+	{
+		from = _3Dpoint(0.0, -50.0 ,0.0);
+		to = _3Dpoint(0,50,0);
+		up = _3Dpoint(0,0,1);
+		angleh = 45.0;
+		anglev = 45.0;
+		zoom = 1.0;
+		front = 1.0;
+		back = 200.0;
+		projection = 0;
+	}
+};
+
+class SCREEN
+{
+public:
+	_2Dpoint center;
+	_2Dpoint size;
+	SCREEN()
+	{
+		center = _2Dpoint(640/2,480/2);
+		size = _2Dpoint(640, 480);
+	}
+
+	SCREEN(int width, int hight)
+	{
+		center = _2Dpoint(width/2, hight/2);
+		size = _2Dpoint(width, hight);
+	}
+};
+
+class projection
+{
+public:
+	_2Dpoint p1;
+	_2Dpoint p2;
+
+private:
+	_3Dpoint origin;
+	_3Dpoint e1, e2, n1, n2;
+	CAMERA camera;
+	SCREEN screen;
+	double tanthetah, tanthetav;
+	_3Dpoint basisa, basisb, basisc;
+	double EPSILON;
+	double DTOR;// 0.01745329252
+	
+public:
+	// TODO: need constructor that takes frame
+	projection()
+	{
+		EPSILON = 0.001;
+		DTOR = 0.01745329252;
+		camera = CAMERA();
+		screen = SCREEN(640, 480);
+		origin = _3Dpoint();
+		basisa = _3Dpoint();
+		basisb = _3Dpoint();
+		basisc = _3Dpoint();
+		p1 = _2Dpoint();
+		p2 = _2Dpoint();
+		e1 = _3Dpoint();
+		e2 = _3Dpoint();
+		n1 = _3Dpoint();
+		n2 = _3Dpoint();
+		assert(Trans_Initialise() == true);
+	}
+
+	bool Trans_Initialise()
+	{
+		/* Is the camera position and view vector coincident ? */
+		if (EqualVertex(camera.to, camera.from))
+		{
+			return (false);
+		}
+
+		/* Is there a legal camera up vector ? */
+		if (EqualVertex(camera.up, origin))
+		{
+			return (false);
+		}
+
+		basisb.x = camera.to.x - camera.from.x;
+		basisb.y = camera.to.y - camera.from.y;
+		basisb.z = camera.to.z - camera.from.z;
+		Normalise(basisb);
+		basisa= CrossProduct(camera.up, basisb);
+		Normalise(basisa);
+
+		/* Are the up vector and view direction colinear */
+		if (EqualVertex(basisa, origin))
+		{
+			return (false);
+		}
+
+		basisc=CrossProduct(basisb, basisa);
+
+		/* Do we have legal camera apertures ? */
+		if (camera.angleh < EPSILON || camera.anglev < EPSILON)
+		{
+			return (false);
+		}
+
+		/* Calculate camera aperture statics, note: angles in degrees */
+		tanthetah = tan(camera.angleh * DTOR / 2);
+		tanthetav = tan(camera.anglev * DTOR / 2);
+
+		/* Do we have a legal camera zoom ? */
+		if (camera.zoom < EPSILON)
+		{
+			return (false);
+		}
+
+		/* Are the clipping planes legal ? */
+		if (camera.front < 0 || camera.back < 0 || camera.back <= camera.front)
+		{
+			return (false);
+		}
+
+		return true;
+	}
+
+	void Trans_World2Eye(_3Dpoint w, _3Dpoint e)
+	{
+		/* Translate world so that the camera is at the origin */
+		w.x -= camera.from.x;
+		w.y -= camera.from.y;
+		w.z -= camera.from.z;
+
+		/* Convert to eye coordinates using basis vectors */
+		e.x = w.x * basisa.x + w.y * basisa.y + w.z * basisa.z;
+		e.y = w.x * basisb.x + w.y * basisb.y + w.z * basisb.z;
+		e.z = w.x * basisc.x + w.y * basisc.y + w.z * basisc.z;
+	}
+
+	bool Trans_ClipEye(_3Dpoint e1, _3Dpoint e2)
+	{
+		double mu;
+
+		/* Is the vector totally in front of the front cutting plane ? */
+		if (e1.y <= camera.front && e2.y <= camera.front)
+		{
+			return (false);
+		}
+
+		/* Is the vector totally behind the back cutting plane ? */
+		if (e1.y >= camera.back && e2.y >= camera.back)
+		{
+			return (false);
+		}
+
+		/* Is the vector partly in front of the front cutting plane ? */
+		if ((e1.y < camera.front && e2.y > camera.front) ||
+			(e1.y > camera.front && e2.y < camera.front))
+		{
+			mu = (camera.front - e1.y) / (e2.y - e1.y);
+			if (e1.y < camera.front)
+			{
+				e1.x = e1.x + mu * (e2.x - e1.x);
+				e1.z = e1.z + mu * (e2.z - e1.z);
+				e1.y = camera.front;
+			}
+			else
+			{
+				e2.x = e1.x + mu * (e2.x - e1.x);
+				e2.z = e1.z + mu * (e2.z - e1.z);
+				e2.y = camera.front;
+			}
+		}
+
+		/* Is the vector partly behind the back cutting plane ? */
+		if ((e1.y < camera.back && e2.y > camera.back) ||
+			(e1.y > camera.back && e2.y < camera.back))
+		{ 
+			mu = (camera.back - e1.y) / (e2.y - e1.y);
+			if (e1.y < camera.back)
+			{
+				e2.x = e1.x + mu * (e2.x - e1.x);
+				e2.z = e1.z + mu * (e2.z - e1.z);
+				e2.y = camera.back;
+			}
+			else
+			{
+				e1.x = e1.x + mu * (e2.x - e1.x);
+				e1.z = e1.z + mu * (e2.z - e1.z);
+				e1.y = camera.back;
+			}
+		}
+
+		return (true);
+	}
+
+	void Trans_Eye2Norm(_3Dpoint e, _3Dpoint n)
+	{
+		double d;
+		if (camera.projection == 0)
+		{
+			d = camera.zoom / e.y;
+			n.x = d * e.x / tanthetah;
+			n.y = e.y;
+			n.z = d * e.z / tanthetav;
+		}
+		else
+		{
+			n.x = camera.zoom * e.x / tanthetah;
+			n.y = e.y;
+			n.z = camera.zoom * e.z / tanthetav;
+		}
+	}
+
+	bool Trans_ClipNorm(_3Dpoint n1, _3Dpoint n2)
+	{
+		double mu;
+	
+		/* Is the line segment totally right of x = 1 ? */
+		if (n1.x >= 1 && n2.x >= 1)
+			return (false);
+
+		/* Is the line segment totally left of x = -1 ? */
+		if (n1.x <= -1 && n2.x <= -1)
+			return (false);
+
+		/* Does the vector cross x = 1 ? */
+		if ((n1.x > 1 && n2.x < 1) || (n1.x < 1 && n2.x > 1))
+		{
+			mu = (1 - n1.x) / (n2.x - n1.x);
+			if (n1.x < 1)
+			{
+				n2.z = n1.z + mu * (n2.z - n1.z);
+				n2.x = 1;
+			}
+			else
+			{
+				n1.z = n1.z + mu * (n2.z - n1.z);
+				n1.x = 1;
+			}
+		}
+
+		/* Does the vector cross x = -1 ? */
+		if ((n1.x < -1 && n2.x > -1) || (n1.x > -1 && n2.x < -1))
+		{
+			mu = (-1 - n1.x) / (n2.x - n1.x);
+			if (n1.x > -1)
+			{
+				n2.z = n1.z + mu * (n2.z - n1.z);
+				n2.x = -1;
+			}
+			else
+			{
+				n1.z = n1.z + mu * (n2.z - n1.z);
+				n1.x = -1;
+			}
+		}
+
+		/* Is the line segment totally above z = 1 ? */
+		if (n1.z >= 1 && n2.z >= 1)
+			return (false);
+
+		/* Is the line segment totally below z = -1 ? */
+		if (n1.z <= -1 && n2.z <= -1)
+			return (false);
+
+		/* Does the vector cross z = 1 ? */
+		if ((n1.z > 1 && n2.z < 1) || (n1.z < 1 && n2.z > 1))
+		{
+			mu = (1 - n1.z) / (n2.z - n1.z);
+			if (n1.z < 1)
+			{
+				n2.x = n1.x + mu * (n2.x - n1.x);
+				n2.z = 1;
+			}
+			else
+			{
+				n1.x = n1.x + mu * (n2.x - n1.x);
+				n1.z = 1;
+			}
+		}
+
+		/* Does the vector cross z = -1 ? */
+		if ((n1.z < -1 && n2.z > -1) || (n1.z > -1 && n2.z < -1))
+		{
+			mu = (-1 - n1.z) / (n2.z - n1.z);
+			if (n1.z > -1)
+			{
+				n2.x = n1.x + mu * (n2.x - n1.x);
+				n2.z = -1;
+			}
+			else
+			{
+				n1.x = n1.x + mu * (n2.x - n1.x);
+				n1.z = -1;
+			}
+		}
+
+		return (true);
+
+	}
+
+	void Trans_Norm2Screen(_3Dpoint norm, _2Dpoint projected)
+	{
+		//MessageBox.Show("the value of  are");
+		projected.h = (int)(screen.center.h - screen.size.h * norm.x / 2);
+		projected.v = (int)(screen.center.v - screen.size.v * norm.z / 2);
+	}
+
+	bool Trans_Line(_3Dpoint w1, _3Dpoint w2)
+	{
+		Trans_World2Eye(w1, e1);
+		Trans_World2Eye(w2, e2);
+		if (Trans_ClipEye(e1, e2))
+		{
+			Trans_Eye2Norm(e1, n1);
+			Trans_Eye2Norm(e2, n2);
+			if (Trans_ClipNorm(n1, n2))
+			{
+				Trans_Norm2Screen(n1, p1);
+				Trans_Norm2Screen(n2, p2);
+				return (true);
+			}
+		}
+	
+		return (true);
+	}
+
+	void Normalise(_3Dpoint v)
+	{
+		double length;
+		length = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+		v.x /= length;
+		v.y /= length;
+		v.z /= length;
+	}
+
+	_3Dpoint CrossProduct(_3Dpoint p1,_3Dpoint p2)
+	{	
+		_3Dpoint p3;
+		p3 = _3Dpoint(0,0,0);
+		p3.x = p1.y * p2.z - p1.z * p2.y;
+		p3.y = p1.z * p2.x - p1.x * p2.z;
+		p3.z = p1.x * p2.y - p1.y * p2.x;
+	
+		return p3;
+	}
+
+	bool EqualVertex(_3Dpoint p1, _3Dpoint p2)
+	{
+		if (abs(p1.x - p2.x) > EPSILON)
+			return(false);
+		if (abs(p1.y - p2.y) > EPSILON)
+			return(false);
+		if (abs(p1.z - p2.z) > EPSILON)
+			return(false);
+
+		return(true);
+	}
+};
+
+
+class PathRenderer
+{
+public:
+	PathRenderer(void)
+	{
+		NumPoints = 10;
+		Left = new Point[NumPoints + 1];
+		Center = new Point[NumPoints + 1];
+		Right = new Point[NumPoints + 1];
+		Translation = new Point[NumPoints + 1];
+
+		// these should probably be pulled from LUA values.
+		width = 24 * 0.0254;	// 24 inches in meters
+		length = 33 * 0.0254;	// 33 inches in meters
+		pivot_point_length = 22 * 0.0254;	// assumes pivot point is 2/3s from front.
+
+		forward_velocity = 0;
+		angular_velocity = 0;
+	}
+
+	~PathRenderer(void)
+	{
+		delete[] Left;
+		delete[] Center;
+		delete[] Right;
+		delete[] Translation;
+	}
+
+	int NumPoints;
+
+	double width;				// width in meters of the path (generally width of the robot drive)
+	double length;				// length in meters of predicted path
+	double pivot_point_length;	// length in meters from the drive pivot point to the front of the robot.
+
+	double forward_velocity;	// meters per second
+	double angular_velocity;	// radians per second
+
+	void ComputePathPoints(double Foward_Vel, double Angular_Vel)
+	{
+		if( Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
+			return;
+
+		forward_velocity = Foward_Vel;
+		angular_velocity = Angular_Vel;
+
+		double time_to_length = forward_velocity > 0 ? length / forward_velocity : 0;
+		double end_angle = angular_velocity != 0 ? angular_velocity * time_to_length : length;
+		
+		double path_radius = angular_velocity != 0 ? forward_velocity / angular_velocity : 0;
+		double left_radius = path_radius - width / 2;
+		double right_radius = path_radius + width / 2;
+
+		double angle = 0;
+		for(int i = 0; i <= NumPoints; i++)
+		{
+			// calculate the front end translation first
+			Translation[i].x = angular_velocity != 0 ? cos(angle + M_PI/2) * pivot_point_length : 0;
+			Translation[i].y = angular_velocity != 0 ? sin(angle + M_PI/2) * pivot_point_length : pivot_point_length;
+
+			Center[i].x = angular_velocity != 0 ? (cos(angle) * path_radius - path_radius) + Translation[i].x : 0 + Translation[i].x;
+			Center[i].y = angular_velocity != 0 ? (sin(angle) * path_radius) + Translation[i].y - pivot_point_length : angle + Translation[i].y - pivot_point_length;
+
+			Left[i].x = angular_velocity != 0 ? (cos(angle) * left_radius - path_radius) + Translation[i].x : left_radius + Translation[i].x;
+			Left[i].y = angular_velocity != 0 ? (sin(angle) * left_radius) + Translation[i].y - pivot_point_length : angle + Translation[i].y - pivot_point_length;
+
+			Right[i].x = angular_velocity != 0 ? (cos(angle) * right_radius - path_radius) + Translation[i].x : right_radius + Translation[i].x;
+			Right[i].y = angular_velocity != 0 ? (sin(angle) * right_radius) + Translation[i].y - pivot_point_length : angle + Translation[i].y - pivot_point_length;
+
+			angle += end_angle/NumPoints;
+		}
+	}
+
+	Bitmap_Frame* RenderPath(Bitmap_Frame* Frame)
+	{
+		if (g_Framework)
+		{
+			unsigned int col[] = { 128, 255, 128, 255 };
+			int pos1[2];
+			int pos2[2];
+
+			// quick test
+			for (int i = 0; i < NumPoints; i++)
+			{
+				pos1[0] = (int)(Left[i].x * Frame->XRes/2 + Frame->XRes/2);
+				pos1[1] = Frame->YRes - (int)(Left[i].y * Frame->YRes/2);
+				pos2[0] = (int)(Left[i + 1].x * Frame->XRes/2 + Frame->XRes/2);
+				pos2[1] = Frame->YRes - (int)(Left[i + 1].y * Frame->YRes/2);
+				g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+
+				pos1[0] = (int)(Right[i].x * Frame->XRes/2 + Frame->XRes/2);
+				pos1[1] = Frame->YRes - (int)(Right[i].y * Frame->YRes/2);
+				pos2[0] = (int)(Right[i + 1].x * Frame->XRes/2 + Frame->XRes/2);
+				pos2[1] = Frame->YRes - (int)(Right[i + 1].y * Frame->YRes/2);
+				g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+			}
+
+			pos1[0] = (int)(Left[NumPoints].x * Frame->XRes/2 + Frame->XRes/2);
+			pos1[1] = Frame->YRes - (int)(Left[NumPoints].y * Frame->YRes/2);
+			pos2[0] = (int)(Right[NumPoints].x * Frame->XRes/2 + Frame->XRes/2);
+			pos2[1] = Frame->YRes - (int)(Right[NumPoints].y * Frame->YRes/2);
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+		}
+
+		return Frame;
+	}
+
+private:
+	struct Point
+	{
+		double x;
+		double y;
+	};
+
+	Point* Left;
+	Point* Center;
+	Point* Right;
+	Point* Translation;
+};
 
 class Bypass_Reticle
 {
@@ -1352,8 +1851,12 @@ class Compositor
 					ret=RenderSquareReticle(Frame,Xpos,Ypos,sqr_props.primary);
 				}
 				break;
-			case Compositor_Props::eAlignment:
-				ret=RenderLineReticle(Frame);
+			case Compositor_Props::ePathAlign:
+				{
+					m_PathPlotter.ComputePathPoints(2.0, 1.0);
+					ret = m_PathPlotter.RenderPath(Frame);
+				}
+//				ret=RenderPath(Frame);
 				break;
 			case Compositor_Props::eBypass:
 				ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
@@ -1465,6 +1968,7 @@ class Compositor
 		double m_Xpos_Offset,m_Ypos_Offset;  //only used when stepping through recursion
 		Bypass_Reticle m_Bypass;
 		LinePlot_Retical m_LinePlot;
+		PathRenderer m_PathPlotter;
 
 		bool m_IsEditable;
 		bool m_PreviousIsEditable;  //detect when Editable has switched to off to issue an update
