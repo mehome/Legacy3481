@@ -813,8 +813,6 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 //TODO: resolve why this is not visible from math.h even with _USE_MATH_DEFINES defined.
 #define M_PI       3.14159265358979323846
 
-// link for original c# code.
-// http://www.codeincodeblock.com/2012/03/projecting-3d-world-co-ordinates-into.html
 struct _3Dpoint
 {
 	double x, y, z;
@@ -850,6 +848,8 @@ struct _2Dpoint
 	}
 };
 
+// The code below for perspective projection uses a coordinate system where X being right, Y pointing into the distance, and Z pointing up.
+// While I'm tempted to convert it (I prefer Z to be the distance axis), it's somewhat convenient in some cases to have the ground-plane on the X Y axis.
 class CAMERA
 {
 public:
@@ -863,14 +863,16 @@ public:
 
 	CAMERA()
 	{
-		from = _3Dpoint(0.0, -50.0 ,0.0);
-		to = _3Dpoint(0,50,0);
-		up = _3Dpoint(0,0,1);
-		angleh = 45.0;
-		anglev = 45.0;
+		double DTOR = 0.01745329252;
+
+		from = _3Dpoint(0, -.5 ,1.0);
+		to = _3Dpoint(0, 1, 0);
+		up = _3Dpoint(sin(0 * DTOR), 0, cos(0 * DTOR));
+		angleh = 47.0;
+		anglev = 47.0;
 		zoom = 1.0;
 		front = 1.0;
-		back = 200.0;
+		back = 250.0;
 		projection = 0;
 	}
 };
@@ -984,7 +986,7 @@ public:
 		return true;
 	}
 
-	void Trans_World2Eye(_3Dpoint w, _3Dpoint e)
+	void Trans_World2Eye(_3Dpoint w, _3Dpoint& e)
 	{
 		/* Translate world so that the camera is at the origin */
 		w.x -= camera.from.x;
@@ -997,7 +999,7 @@ public:
 		e.z = w.x * basisc.x + w.y * basisc.y + w.z * basisc.z;
 	}
 
-	bool Trans_ClipEye(_3Dpoint e1, _3Dpoint e2)
+	bool Trans_ClipEye(_3Dpoint& e1, _3Dpoint& e2)
 	{
 		double mu;
 
@@ -1054,7 +1056,7 @@ public:
 		return (true);
 	}
 
-	void Trans_Eye2Norm(_3Dpoint e, _3Dpoint n)
+	void Trans_Eye2Norm(_3Dpoint e, _3Dpoint& n)
 	{
 		double d;
 		if (camera.projection == 0)
@@ -1072,7 +1074,7 @@ public:
 		}
 	}
 
-	bool Trans_ClipNorm(_3Dpoint n1, _3Dpoint n2)
+	bool Trans_ClipNorm(_3Dpoint& n1, _3Dpoint& n2)
 	{
 		double mu;
 	
@@ -1160,9 +1162,8 @@ public:
 
 	}
 
-	void Trans_Norm2Screen(_3Dpoint norm, _2Dpoint projected)
+	void Trans_Norm2Screen(_3Dpoint norm, _2Dpoint& projected)
 	{
-		//MessageBox.Show("the value of  are");
 		projected.h = (int)(screen.center.h - screen.size.h * norm.x / 2);
 		projected.v = (int)(screen.center.v - screen.size.v * norm.z / 2);
 	}
@@ -1186,7 +1187,7 @@ public:
 		return (true);
 	}
 
-	void Normalise(_3Dpoint v)
+	void Normalise(_3Dpoint& v)
 	{
 		double length;
 		length = sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
@@ -1226,10 +1227,10 @@ public:
 	PathRenderer(void)
 	{
 		NumPoints = 10;
-		Left = new Point[NumPoints + 1];
-		Center = new Point[NumPoints + 1];
-		Right = new Point[NumPoints + 1];
-		Translation = new Point[NumPoints + 1];
+		Left = new _3Dpoint[NumPoints + 1];
+		Center = new _3Dpoint[NumPoints + 1];
+		Right = new _3Dpoint[NumPoints + 1];
+		Translation = new _3Dpoint[NumPoints + 1];
 
 		// these should probably be pulled from LUA values.
 		width = 24 * 0.0254;	// 24 inches in meters
@@ -1238,6 +1239,8 @@ public:
 
 		forward_velocity = 0;
 		angular_velocity = 0;
+
+		proc = projection();
 	}
 
 	~PathRenderer(void)
@@ -1256,6 +1259,8 @@ public:
 
 	double forward_velocity;	// meters per second
 	double angular_velocity;	// radians per second
+
+	projection proc;			// projection class
 
 	void ComputePathPoints(double Foward_Vel, double Angular_Vel)
 	{
@@ -1281,17 +1286,23 @@ public:
 
 			Center[i].x = angular_velocity != 0 ? (cos(angle) * path_radius - path_radius) + Translation[i].x : 0 + Translation[i].x;
 			Center[i].y = angular_velocity != 0 ? (sin(angle) * path_radius) + Translation[i].y - pivot_point_length : angle + Translation[i].y - pivot_point_length;
+			Center[i].z = 0.0;
 
 			Left[i].x = angular_velocity != 0 ? (cos(angle) * left_radius - path_radius) + Translation[i].x : left_radius + Translation[i].x;
 			Left[i].y = angular_velocity != 0 ? (sin(angle) * left_radius) + Translation[i].y - pivot_point_length : angle + Translation[i].y - pivot_point_length;
+			Left[i].z = 0.0;
 
 			Right[i].x = angular_velocity != 0 ? (cos(angle) * right_radius - path_radius) + Translation[i].x : right_radius + Translation[i].x;
 			Right[i].y = angular_velocity != 0 ? (sin(angle) * right_radius) + Translation[i].y - pivot_point_length : angle + Translation[i].y - pivot_point_length;
+			Right[i].z = 0.0;
 
 			angle += end_angle/NumPoints;
 		}
 	}
 
+	// PATH2D, CUBE, or PATH3D
+#define RENDER_TYPE_PATH3D
+	
 	Bitmap_Frame* RenderPath(Bitmap_Frame* Frame)
 	{
 		if (g_Framework)
@@ -1300,6 +1311,7 @@ public:
 			int pos1[2];
 			int pos2[2];
 
+#if defined(RENDER_TYPE_PATH2D)
 			// quick test
 			for (int i = 0; i < NumPoints; i++)
 			{
@@ -1321,22 +1333,169 @@ public:
 			pos2[0] = (int)(Right[NumPoints].x * Frame->XRes/2 + Frame->XRes/2);
 			pos2[1] = Frame->YRes - (int)(Right[NumPoints].y * Frame->YRes/2);
 			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+
+#endif
+
+#if defined(RENDER_TYPE_PATH3D)
+			proc.Trans_Line(Left[0], Right[0]);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+
+			for (int i = 0; i < NumPoints; i++)
+			{
+				proc.Trans_Line(Left[i], Left[i + 1]);
+				pos1[0] = proc.p1.h;
+				pos1[1] = proc.p1.v;
+				pos2[0] = proc.p2.h;
+				pos2[1] = proc.p2.v;
+				g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+
+				proc.Trans_Line(Right[i], Right[i + 1]);
+				pos1[0] = proc.p1.h;
+				pos1[1] = proc.p1.v;
+				pos2[0] = proc.p2.h;
+				pos2[1] = proc.p2.v;
+				g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+			}
+
+			proc.Trans_Line(Left[NumPoints], Right[NumPoints]);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+#endif
+
+#if defined(RENDER_TYPE_CUBE)
+			// 3D test
+			double _neg = -2.0;
+			double _pov =  2.0;
+			double _near = 0.0;
+			double _far =  4.0;
+
+			_3Dpoint Dpoint1, Dpoint2, Dpoint3, Dpoint4;
+
+			//draw front
+			Dpoint1 = _3Dpoint(_neg, _near, _pov);
+			Dpoint2 = _3Dpoint(_pov, _near, _pov);
+			Dpoint3 = _3Dpoint(_pov, _near, _neg);
+			Dpoint4 = _3Dpoint(_neg, _near, _neg);
+			
+			proc.Trans_Line(Dpoint1, Dpoint2);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+
+			proc.Trans_Line(Dpoint2, Dpoint3);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+
+			proc.Trans_Line(Dpoint3, Dpoint4);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+
+			proc.Trans_Line(Dpoint4, Dpoint1);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+
+			//draw back
+			Dpoint1 = _3Dpoint(_neg, _far, _pov);
+			Dpoint2 = _3Dpoint(_pov, _far, _pov);
+			Dpoint3 = _3Dpoint(_pov, _far, _neg);
+			Dpoint4 = _3Dpoint(_neg, _far, _neg);
+			
+			proc.Trans_Line(Dpoint1, Dpoint2);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+			
+			proc.Trans_Line(Dpoint2, Dpoint3);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+			
+			proc.Trans_Line(Dpoint3, Dpoint4);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+			
+			proc.Trans_Line(Dpoint4, Dpoint1);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+		
+			//draw left side
+			Dpoint1 = _3Dpoint(_neg, _near, _pov);
+			Dpoint2 = _3Dpoint(_neg, _far, _pov);
+			Dpoint3 = _3Dpoint(_neg, _near, _neg);
+			Dpoint4 = _3Dpoint(_neg, _far, _neg);
+			
+			proc.Trans_Line(Dpoint1, Dpoint2);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+			
+			proc.Trans_Line(Dpoint3, Dpoint4);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+		
+			//draw right side
+			Dpoint1 = _3Dpoint(_pov, _near, _pov);
+			Dpoint2 = _3Dpoint(_pov, _far, _pov);
+			Dpoint3 = _3Dpoint(_pov , _near, _neg);
+			Dpoint4 = _3Dpoint(_pov, _far, _neg);
+			
+			proc.Trans_Line(Dpoint1, Dpoint2);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+			
+			proc.Trans_Line(Dpoint3, Dpoint4);
+			pos1[0] = proc.p1.h;
+			pos1[1] = proc.p1.v;
+			pos2[0] = proc.p2.h;
+			pos2[1] = proc.p2.v;
+			g_Framework->DrawLineUYVY(Frame, pos1, pos2, col);
+#endif
 		}
 
 		return Frame;
 	}
 
 private:
-	struct Point
-	{
-		double x;
-		double y;
-	};
-
-	Point* Left;
-	Point* Center;
-	Point* Right;
-	Point* Translation;
+	_3Dpoint* Left;
+	_3Dpoint* Center;
+	_3Dpoint* Right;
+	_3Dpoint* Translation;
 };
 
 class Bypass_Reticle
@@ -1853,10 +2012,9 @@ class Compositor
 				break;
 			case Compositor_Props::ePathAlign:
 				{
-					m_PathPlotter.ComputePathPoints(2.0, 1.0);
+					m_PathPlotter.ComputePathPoints(1.0, 0.1);
 					ret = m_PathPlotter.RenderPath(Frame);
 				}
-//				ret=RenderPath(Frame);
 				break;
 			case Compositor_Props::eBypass:
 				ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
