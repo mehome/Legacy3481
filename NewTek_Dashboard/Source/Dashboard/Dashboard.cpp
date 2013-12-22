@@ -91,15 +91,25 @@ class Dashboard_Framework_Helper : public Dashboard_Framework_Interface
 		dest_bitmap=source_bitmap;
 	}
 
-	void DrawLineUYVY( Bitmap_Frame *frame, const int posn0[], const int posn1[], const unsigned int col[] )
+	void DrawLineUYVY( Bitmap_Frame *frame, _2Dpoint p1, _2Dpoint p2, const unsigned int col[] )
 	{
 		using namespace FrameWork::Bitmaps;
 		using namespace rasterize;
 		pixel_ycbcr_u8 pix;
+
+		int posn0[2];
+		int posn1[2];
+
 		pix.m_cb = (unsigned char)col[0];
 		pix.m_y0 = (unsigned char)col[1];
 		pix.m_cr = (unsigned char)col[2];
 		pix.m_y1 = (unsigned char)col[3];
+
+		posn0[0] = p1.h;
+		posn0[1] = p1.v;
+		posn1[0] = p2.h;
+		posn1[1] = p2.v;
+
 		bitmap_ycbcr_u8 dest((pixel_ycbcr_u8 *)frame->Memory, frame->XRes, frame->YRes, frame->Stride);
 		line( dest, posn0, posn1, (const pixel_ycbcr_u8)pix );
 	}

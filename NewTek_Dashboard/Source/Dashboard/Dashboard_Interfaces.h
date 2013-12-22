@@ -40,6 +40,22 @@ struct Bitmap_Handle
 	void *Handle; //used internally
 };
 
+struct _2Dpoint
+{
+	int h, v;
+	_2Dpoint(int hh, int vv)
+	{
+		h = hh;
+		v = vv;
+	}
+
+	_2Dpoint()
+	{
+		h = 0;
+		v = 0;
+	}
+};
+
 class Dashboard_Framework_Interface
 {
 public:
@@ -52,7 +68,7 @@ public:
 	virtual void BGRA_to_UYVY(const Bitmap_Frame *sourceBGRA,Bitmap_Frame *destUYVY)=0;
 
 	// line drawing
-	virtual void DrawLineUYVY( Bitmap_Frame *frame, const int posn0[], const int posn1[], const unsigned int col[] )=0;
+	virtual void DrawLineUYVY( Bitmap_Frame *frame, _2Dpoint p1, _2Dpoint p2, const unsigned int col[] )=0;
 };
 
 class Dashboard_Controller_Interface
