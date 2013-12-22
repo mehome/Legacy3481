@@ -813,6 +813,7 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 //TODO: resolve why this is not visible from math.h even with _USE_MATH_DEFINES defined.
 #define M_PI       3.14159265358979323846
 
+// Note: _2Dpoint is defined in Dashboard_Interface.h because it's handy for use with the line drawing function.
 struct _3Dpoint
 {
 	double x, y, z;
@@ -850,7 +851,9 @@ public:
 	{
 		double DTOR = 0.01745329252;
 
-		from = _3Dpoint(0, -.5 ,1.0);
+		// These just give us sane starting values. 
+		// Don't make camera adjustments here.
+		from = _3Dpoint(0, -.5 ,0);
 		to = _3Dpoint(0, 1, 0);
 		rot = 0;
 		up = _3Dpoint(sin(rot * DTOR), 0, cos(rot * DTOR));
@@ -860,6 +863,12 @@ public:
 		front = 0.0;
 		back = 250.0;
 		projection = 0;
+	}
+
+	// A more convenient way to set the camera.
+	void SetLookAtFromAngles(double direction, double hight)
+	{
+		// todo: implement this.	
 	}
 };
 
@@ -890,7 +899,7 @@ public:
 class projection
 {
 public:
-	_2Dpoint p1;	// this is effectively our output points
+	_2Dpoint p1;	// these are effectively our output points
 	_2Dpoint p2;
 
 	CAMERA camera;
@@ -924,6 +933,9 @@ public:
 		assert(Trans_Initialise() == true);
 	}
 
+	// This is for convenience.
+	// Note that if you want to change camera settings like position, or orientation, 
+	// you have to change camera members, then call Trans_Initialize() 
 	projection(_3Dpoint Cam_Origin, _3Dpoint Cam_LookAt, double FOV, double Cam_Zoom )
 	{
 		EPSILON = 0.001;
@@ -1249,18 +1261,18 @@ public:
 		Translation = new _3Dpoint[NumPoints + 1];
 
 		// these should probably be pulled from LUA values.
-		width = 15 * 0.0254;	// 15 inches in meters (robot is 24)
-		length = 33 * 0.0254;	// 33 inches in meters
-		pivot_point_length = 22 * 0.0254;	// assumes pivot point is 2/3s from front.
+		width = 15 * 0.0254;	// 15 inches in meters (robot is 24)	This is the width of our drawn path.
+		length = 33 * 0.0254;	// 33 inches in meters					This is how far to project our path.
+		pivot_point_length = 22 * 0.0254;	// assumes pivot point is 2/3s from front.		This is the distance from the pivot point to the front, center of the robot frame.
 
+		forward_velocity = 0;	// just setting to known values. these should be set per frame.
+		angular_velocity = 0;
+
+		// camera position is relative to the center, front of the robot drive, on the ground. ( i.e., our ground point is 0 )
 		_3Dpoint Camera_position = _3Dpoint(0.0, -10 * 0.0254, 18 * 0.0254);	// we'll say it's in the center, 18 inches high, 10 inches back.
 		_3Dpoint Camara_LookAt = _3Dpoint(0.0, 0.33, 0.0);	// look at the ground about 1/3 of our path
 
-		forward_velocity = 0;
-		angular_velocity = 0;
-
 		projector = projection(Camera_position, Camara_LookAt, 47.0, 1.0 );
-
 	}
 
 	~PathRenderer(void)
@@ -1282,6 +1294,8 @@ public:
 
 	projection projector;		// projection class
 
+	// Compute the path mesh. This is for the front of the robot which is offset from the pivot point at ground level.
+	// This should be called prior to each render, but could be called only when velocities change.
 	void ComputePathPoints(double Foward_Vel, double Angular_Vel)
 	{
 		if( Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
@@ -1320,6 +1334,7 @@ public:
 		}
 	}
 
+	// draw the path mesh
 	Bitmap_Frame* RenderPath(Bitmap_Frame* Frame)
 	{
 		if (g_Framework)
@@ -1336,12 +1351,15 @@ public:
 				projector.Trans_Line(Left[i], Left[i + 1]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 
+				projector.Trans_Line(Center[i], Center[i + 1]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
 				projector.Trans_Line(Right[i], Right[i + 1]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-			}
 
-			projector.Trans_Line(Left[NumPoints], Right[NumPoints]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+				projector.Trans_Line(Left[i + 1], Right[i + 1]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+			}
 		}
 
 		return Frame;
@@ -1868,7 +1886,7 @@ class Compositor
 				break;
 			case Compositor_Props::ePathAlign:
 				{
-					m_PathPlotter.ComputePathPoints(1.0, -0.2);
+					m_PathPlotter.ComputePathPoints(1.0, 0.25);
 					ret = m_PathPlotter.RenderPath(Frame);
 				}
 				break;
