@@ -102,6 +102,16 @@ struct Compositor_Props
 
 	std::vector<LinePlotReticle_Container_Props> lineplot_reticle;
 
+	struct PathAlign_Container_Props
+	{
+		double width,length;
+		double pivot_point_length;
+		double pos_x,pos_y,pos_z;
+		double rot_x,rot_y,rot_z;
+		double FOV;
+	} PathAlign;
+	//for now no list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
+
 	//Reticle type definitions
 	enum ReticleType
 	{
@@ -377,6 +387,121 @@ static void LoadLinePlotProps(Scripting::Script& script,Compositor_Props &props)
 	} while (!fieldtable_err);
 }
 
+static bool LoadMeasuredValue(Scripting::Script& script,const char *root_name,double &value)
+{
+	const char* err=NULL;
+	err = script.GetField(root_name, NULL, NULL,&value);
+	if (err)
+	{
+		std::string name=root_name;
+		name+="_ft";
+		err = script.GetField(name.c_str(), NULL, NULL,&value);
+		if (!err)
+			value=Feet2Meters(value);
+		else
+		{
+			std::string name=root_name;
+			name+="_in";
+			err = script.GetField(name.c_str(), NULL, NULL,&value);
+			if (!err)
+				value=Inches2Meters(value);
+		}
+	}
+	return err==NULL;  //return success if no error
+}
+
+static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props)
+{
+	const char* err=NULL;
+	const char* fieldtable_err=NULL;
+	//Note: I've left this in form to handle list of settings... not yet sure if user will need multiple views (e.g. multiple sequences)
+	//do 
+	{
+		fieldtable_err = script.GetFieldTable("path_align");
+		if (!fieldtable_err)
+		{
+			Compositor_Props::PathAlign_Container_Props pal_props;
+
+			double fTest;
+			if (LoadMeasuredValue(script,"width",fTest))
+				pal_props.width=fTest;
+			else
+				pal_props.width= 15 * 0.0254;	// 15 inches in meters (robot is 24)	This is the width of our drawn path.
+			if (LoadMeasuredValue(script,"length",fTest))
+				pal_props.length=fTest;
+			else
+				pal_props.length= 33 * 0.0254;	// 33 inches in meters					This is how far to project our path.
+			if (LoadMeasuredValue(script,"pivot",fTest))
+				pal_props.pivot_point_length=fTest;
+			else
+				pal_props.pivot_point_length= 22 * 0.0254;	// assumes pivot point is 2/3s from front.		This is the distance from the pivot point to the front, center of the robot frame.
+
+			err = script.GetFieldTable("camera_position");
+			if (!err)
+			{
+				if (LoadMeasuredValue(script,"x",fTest))
+					pal_props.pos_x=fTest;
+				else
+					pal_props.pos_x=0.0;
+				if (LoadMeasuredValue(script,"y",fTest))
+					pal_props.pos_y=fTest;
+				else
+					pal_props.pos_y= -10 * 0.0254;
+				if (LoadMeasuredValue(script,"z",fTest))
+					pal_props.pos_z=fTest;
+				else
+					pal_props.pos_z=18 * 0.0254;
+				script.Pop();
+			}
+			//TODO add measured value support once I can verify these are in radians
+			err = script.GetFieldTable("camera_rotation");
+			if (!err)
+			{
+				err = script.GetField("x",NULL,NULL,&fTest);
+				if (!err)
+					pal_props.rot_x=fTest;
+				else 
+					pal_props.rot_x=0.0;
+				err = script.GetField("y",NULL,NULL,&fTest);
+				if (!err)
+					pal_props.rot_y=fTest;
+				else
+					pal_props.rot_y=0.33;
+				err = script.GetField("z",NULL,NULL,&fTest);
+				if (!err)
+					pal_props.rot_z=fTest;
+				else
+					pal_props.rot_z=0.0;
+				script.Pop();
+			}
+			err = script.GetField("fov",NULL,NULL,&fTest);
+			if (!err)
+				pal_props.FOV=fTest;
+			else
+				pal_props.FOV=47.0;
+			props.PathAlign=pal_props;
+			//props.square_reticle.push_back(sqr_pkt);
+			//index++;
+			script.Pop();
+		}
+		else
+		{
+			Compositor_Props::PathAlign_Container_Props pal_props;
+			pal_props.width= 15 * 0.0254;
+			pal_props.length= 33 * 0.0254;
+			pal_props.pivot_point_length= 22 * 0.0254;
+			pal_props.pos_x=0.0;
+			pal_props.pos_y= -10 * 0.0254;
+			pal_props.pos_z=18 * 0.0254;
+			pal_props.rot_x=0.0;
+			pal_props.rot_y=0.33;
+			pal_props.rot_z=0.0;
+			pal_props.FOV=47.0;
+			props.PathAlign=pal_props;
+		}
+	} //while (!fieldtable_err);
+}
+
 static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequence_List &sequence,Compositor_Props &props,bool IsRecursive=false)
 {
 	const char* err=NULL;
@@ -528,6 +653,8 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 			LoadLinePlotProps(script,props);
 			script.Pop();
 		}
+
+		LoadPathAlignProps(script,props);
 
 		err = script.GetFieldTable("sequence");
 		if (!err)
@@ -810,8 +937,6 @@ static Bitmap_Frame *RenderSquareReticle(Bitmap_Frame *Frame,double XPos,double 
 	return Frame;
 }
 
-//TODO: resolve why this is not visible from math.h even with _USE_MATH_DEFINES defined.
-#define M_PI       3.14159265358979323846
 
 // Note: _2Dpoint is defined in Dashboard_Interface.h because it's handy for use with the line drawing function.
 struct _3Dpoint
@@ -1273,6 +1398,17 @@ public:
 		_3Dpoint Camara_LookAt = _3Dpoint(0.0, 0.33, 0.0);	// look at the ground about 1/3 of our path
 
 		projector = projection(Camera_position, Camara_LookAt, 47.0, 1.0 );
+	}
+
+	void Initialize(const Compositor_Props::PathAlign_Container_Props &props)
+	{
+		width=props.width;
+		length=props.length;
+		pivot_point_length=props.pivot_point_length;
+		_3Dpoint Camera_position = _3Dpoint(props.pos_x,props.pos_y,props.pos_z);
+		_3Dpoint Camara_LookAt = _3Dpoint(props.rot_x,props.rot_y,props.rot_z);
+
+		projector = projection(Camera_position, Camara_LookAt, props.FOV, 1.0 );
 	}
 
 	~PathRenderer(void)
@@ -1756,6 +1892,7 @@ class Compositor
 					m_Bypass.LoadPlugIn(props->GetCompositorProps().BypassPlugin.c_str());					
 					m_Bypass.Callback_Initialize();  //will implicitly handle error
 				}
+				m_PathPlotter.Initialize(m_CompositorProperties.GetCompositorProps().PathAlign);
 			}
 			else
 				m_pSequence=&m_CompositorProperties.GetCompositorProps().Sequence;  //Assign pointer for default properties case

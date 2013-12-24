@@ -86,6 +86,15 @@ CompositorProps = {
 			}
 		},
 		
+		path_align =
+		{
+			width_in=15,length_in=33,
+			pivot_in=22,
+			camera_position =	{ x_in=0, y_in=-10, z_in=18 },
+			camera_rotation =	{ x=0, y=1.0, z=0 },
+			fov=47
+		},
+		
 		--Types	"none","square","composite","bypass"
 		sequence =
 		{

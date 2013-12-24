@@ -154,6 +154,24 @@ void DrawField( PBYTE pField, const int FrameWidth, const int FieldHeight, const
 void DebugOutput(const char *format, ... );
 std::string BuildString(const char *format, ... );
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+#ifndef M_PIF
+#define M_PIF 3.141592654f
+#endif
+#define M_PID 3.14159265358979323846
+
+#define DEG_2_RAD(x)		((x)*M_PI/180.0)
+#define RAD_2_DEG(x)		((x)*180.0/M_PI)
+#define ARRAY_SIZE(things)	((sizeof(things)/sizeof(*(things))))
+
+#define Inches2Meters(x)	((x)*0.0254)
+#define Feet2Meters(x)		((x)*0.3048)
+#define Meters2Feet(x)		((x)*3.2808399)
+#define Meters2Inches(x)	((x)*39.3700787)
+
 //! Easily compare doubles with a delta
 inline bool Equals(double d1, double d2)
 {
