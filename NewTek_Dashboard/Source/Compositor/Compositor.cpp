@@ -1786,6 +1786,8 @@ class Compositor
 			em->Event_Map["ToggleLinePlot"].Subscribe(ehl,*this, &Compositor::ToggleLinePlot);
 
 			//m_RecurseIntoComposite=true; //testing  (TODO implement in menu)
+			SmartDashboard::PutNumber("Velocity",1.0);
+			SmartDashboard::PutNumber("Rotation Velocity",0.0);
 		}
 
 		void SaveData_Sequence(std::ofstream &out,const Compositor_Props::Sequence_List &sequence,size_t RecursiveCount=0)
@@ -1937,6 +1939,12 @@ class Compositor
 			return Ypos;
 		}
 
+		//TODO work out unresolved external symbol of Framework::IsZero()
+		inline bool IsZero(double value,double tolerance=1e-5)
+		{
+			return fabs(value)<tolerance;
+		}
+
 		Bitmap_Frame *Render_Reticle(Bitmap_Frame *Frame,const Compositor_Props::Sequence_List &sequence,size_t SequenceIndex,double XOffset=0.0,double YOffset=0.0)
 		{
 			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
@@ -2023,8 +2031,23 @@ class Compositor
 				break;
 			case Compositor_Props::ePathAlign:
 				{
+					#if 0
 					m_PathPlotter.ComputePathPoints(1.0, 0.25);
-					ret = m_PathPlotter.RenderPath(Frame);
+					#else
+					double Velocity=SmartDashboard::GetNumber("Velocity");
+					double Rotation_Velocity=SmartDashboard::GetNumber("Rotation Velocity");
+					if ((!IsZero(Rotation_Velocity))&&(IsZero(Velocity)))
+						Velocity=1.0;
+					//Flip direction when going backwards
+					if (Velocity<0.0)
+					{
+						Velocity=-Velocity;
+						Rotation_Velocity=-Rotation_Velocity;
+					}
+					m_PathPlotter.ComputePathPoints(Feet2Meters(Velocity),-Rotation_Velocity);
+					#endif
+					if (!IsZero(Velocity))
+						ret = m_PathPlotter.RenderPath(Frame);
 				}
 				break;
 			case Compositor_Props::eBypass:
