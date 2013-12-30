@@ -958,30 +958,28 @@ struct _3Dpoint
 	}
 };
 
-// The code below for perspective projection uses a coordinate system where X being right, Y pointing into the distance, and Z pointing up.
-// While I'm tempted to convert it (I prefer Z to be the distance axis), it's somewhat convenient in some cases to have the ground-plane on the X Y axis.
+#define DTOR 0.01745329252
+
 class CAMERA
 {
 public:
-	_3Dpoint from;
-	_3Dpoint to;
-	_3Dpoint up;
-	double angleh, anglev;
-	double zoom;
-	double front, back;
-	double rot;		// unlikely that we'll use it, but this gives camera roll
+	_3Dpoint from;			// camera origin
+	_3Dpoint to;			// the point we are looking at in 3 space (NOT a vector)
+	_3Dpoint up;			// up vector.
+	double angleh, anglev;	// FOVs (in degrees)
+	double zoom;			
+	double front, back;		// clipping planes
+	double roll;			// roll
 	short projection;
 
 	CAMERA()
 	{
-		double DTOR = 0.01745329252;
-
 		// These just give us sane starting values. 
 		// Don't make camera adjustments here.
 		from = _3Dpoint(0, -.5 ,0);
 		to = _3Dpoint(0, 1, 0);
-		rot = 0;
-		up = _3Dpoint(sin(rot * DTOR), 0, cos(rot * DTOR));
+		roll = 0;
+		up = _3Dpoint(sin(roll), 0, cos(roll));
 		angleh = 47.0;
 		anglev = 47.0;
 		zoom = 1.0;
@@ -991,9 +989,19 @@ public:
 	}
 
 	// A more convenient way to set the camera.
-	void SetLookAtFromAngles(double direction, double hight)
+	void SetLookAtFromAngles(_3Dpoint orientation)
 	{
-		// todo: implement this.	
+		// forward facing vector
+		_3Dpoint new_look = _3Dpoint(0, 1, 0);
+		new_look.x = sin(orientation.x);
+		new_look.y = cos(orientation.x);
+		new_look.y *= cos(orientation.y);
+		new_look.z = sin(orientation.y);
+		to.x = from.x + new_look.x;	
+		to.y = from.y + new_look.y;
+		to.z = from.z + new_look.z;
+		roll = orientation.z;
+		up = _3Dpoint(sin(roll), 0, cos(roll));
 	}
 };
 
@@ -1036,13 +1044,11 @@ private:
 	double tanthetah, tanthetav;
 	_3Dpoint basisa, basisb, basisc;
 	double EPSILON;
-	double DTOR;// 0.01745329252
 	
 public:
 	projection()
 	{
 		EPSILON = 0.001;
-		DTOR = 0.01745329252;
 		camera = CAMERA();
 		screen = SCREEN(640, 480);
 		origin = _3Dpoint();
@@ -1064,7 +1070,6 @@ public:
 	projection(_3Dpoint Cam_Origin, _3Dpoint Cam_LookAt, double FOV, double Cam_Zoom )
 	{
 		EPSILON = 0.001;
-		DTOR = 0.01745329252;
 		camera = CAMERA();
 		camera.from = Cam_Origin;
 		camera.to = Cam_LookAt;
@@ -1368,8 +1373,9 @@ private:
 
 	void Trans_Norm2Screen(_3Dpoint norm, _2Dpoint& projected)
 	{
+		double aspect = (double)screen.size.h / (double)screen.size.v;
 		projected.h = (int)(screen.center.h - screen.size.h * norm.x / 2);
-		projected.v = (int)(screen.center.v - screen.size.v * norm.z / 2);
+		projected.v = (int)(screen.center.v - screen.size.v * aspect * norm.z / 2);
 	}
 };
 
@@ -1392,12 +1398,6 @@ public:
 
 		forward_velocity = 0;	// just setting to known values. these should be set per frame.
 		angular_velocity = 0;
-
-		// camera position is relative to the center, front of the robot drive, on the ground. ( i.e., our ground point is 0 )
-		_3Dpoint Camera_position = _3Dpoint(0.0, -10 * 0.0254, 18 * 0.0254);	// we'll say it's in the center, 18 inches high, 10 inches back.
-		_3Dpoint Camara_LookAt = _3Dpoint(0.0, 0.33, 0.0);	// look at the ground about 1/3 of our path
-
-		projector = projection(Camera_position, Camara_LookAt, 47.0, 1.0 );
 	}
 
 	void Initialize(const Compositor_Props::PathAlign_Container_Props &props)
@@ -1408,7 +1408,12 @@ public:
 		_3Dpoint Camera_position = _3Dpoint(props.pos_x,props.pos_y,props.pos_z);
 		_3Dpoint Camara_LookAt = _3Dpoint(props.rot_x,props.rot_y,props.rot_z);
 
-		projector = projection(Camera_position, Camara_LookAt, props.FOV, 1.0 );
+		projector = projection();
+		projector.camera.from = Camera_position;
+		projector.camera.SetLookAtFromAngles(Camara_LookAt);
+		projector.camera.anglev = props.FOV;
+		projector.camera.angleh = props.FOV;
+		projector.Trans_Initialise();
 	}
 
 	~PathRenderer(void)
@@ -1507,6 +1512,94 @@ private:
 	_3Dpoint* Right;
 	_3Dpoint* Translation;
 };
+
+#if 0	// coming to a compositor near you.
+class CubeRenderer
+{
+public:
+	CubeRenderer(void)
+	{
+		cube[0].x = -0.5, cube[0].y =  0.5, cube[0].z =  0.5;
+		cube[1].x =  0.5, cube[1].y =  0.5, cube[1].z =  0.5;
+		cube[2].x = -0.5, cube[2].y =  0.5, cube[2].z = -0.5;
+		cube[3].x =  0.5, cube[3].y =  0.5, cube[3].z = -0.5;
+		cube[4].x = -0.5, cube[4].y = -0.5, cube[4].z =  0.5;
+		cube[5].x =  0.5, cube[5].y = -0.5, cube[5].z =  0.5;
+		cube[6].x = -0.5, cube[6].y = -0.5, cube[6].z = -0.5;
+		cube[7].x =  0.5, cube[7].y = -0.5, cube[7].z = -0.5;
+	}
+
+	void Initialize(const Compositor_Props::Cube_Container_Props &props)
+	{
+		_3Dpoint Camera_position = _3Dpoint(props.pos_x,props.pos_y,props.pos_z);
+		_3Dpoint Camara_LookAt = _3Dpoint(props.rot_x,props.rot_y,props.rot_z);
+
+		projector = projection();
+		projector.camera.from = Camera_position;
+		projector.camera.SetLookAtFromAngles(Camara_LookAt);
+		projector.camera.anglev = props.FOV;
+		projector.camera.angleh = props.FOV;
+		projector.Trans_Initialise();
+	}
+
+	~PathRenderer(void)
+	{
+	}
+
+	projection projector;		// projection class
+
+	_3Dpoint cube[8];
+
+	// draw the path mesh
+	Bitmap_Frame* RenderPath(Bitmap_Frame* Frame)
+	{
+		if (g_Framework)
+		{
+			unsigned int col[] = { 128, 255, 128, 255 };
+
+			projector.screen.SetSize(Frame->XRes, Frame->YRes);
+
+			projector.Trans_Line(cube[0], cube[1]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[0], cube[2]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[1], cube[3]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[2], cube[3]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[4], cube[5]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[4], cube[6]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[5], cube[7]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[6], cube[7]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[0], cube[4]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[1], cube[5]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[2], cube[6]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+			projector.Trans_Line(cube[3], cube[7]);
+			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+		}
+
+		return Frame;
+	}
+};
+#endif
 
 class Bypass_Reticle
 {

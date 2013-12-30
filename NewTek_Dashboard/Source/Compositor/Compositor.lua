@@ -88,10 +88,11 @@ CompositorProps = {
 		
 		path_align =
 		{
-			width_in=15,length_in=33,
-			pivot_in=22,
+			width_in = 15, length_in = 33,
+			pivot_in = 22,
 			camera_position =	{ x_in=0, y_in=-10, z_in=18 },
-			camera_rotation =	{ x=0, y=1.0, z=0 },
+			camera_rotation =	{ x=0, y=-0.61086522, z=0 },
+			-- Facing downwards -40 deg
 			fov=47
 		},
 		
