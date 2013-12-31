@@ -92,8 +92,15 @@ CompositorProps = {
 			pivot_in = 22,
 			camera_position =	{ x_in=0, y_in=-10, z_in=18 },
 			camera_rotation =	{ x=0, y=-0.61086522, z=0 },
-			-- Facing downwards -40 deg
-			fov=47
+						-- Camera rot facing downwards -40 deg
+			fov=47,
+			draw_cube = 0,
+			-- draw_cube will render a 1x1 meter cube centered at point 0,0,0.
+			-- for practical reasons, you'll need to move the camera position back to at least 0.5 meters.
+			-- if you place the camera at -1 meter, and set the orientation to 45 degress in one direction, 
+			-- you should see the corresponding front face edge at the center of the screen.
+			-- note that if you change 2 angles (say, toward the top right vertex), the corner will of the cube will NOT be centered.
+			--    this is normal due to perspective because the corner points are further away.
 		},
 		
 		--Types	"none","square","composite","bypass"

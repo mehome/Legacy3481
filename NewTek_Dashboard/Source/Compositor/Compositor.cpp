@@ -109,6 +109,7 @@ struct Compositor_Props
 		double pos_x,pos_y,pos_z;
 		double rot_x,rot_y,rot_z;
 		double FOV;
+		bool draw_cube;
 	} PathAlign;
 	//for now no list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
 
@@ -479,6 +480,14 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 				pal_props.FOV=fTest;
 			else
 				pal_props.FOV=47.0;
+			std::string sTest;
+			err = script.GetField("draw_cube",&sTest,NULL,NULL);
+			pal_props.draw_cube=false;
+			if (!err)
+			{
+				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
+					pal_props.draw_cube=true;
+			}
 			props.PathAlign=pal_props;
 			//props.square_reticle.push_back(sqr_pkt);
 			//index++;
@@ -497,6 +506,7 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			pal_props.rot_y=0.33;
 			pal_props.rot_z=0.0;
 			pal_props.FOV=47.0;
+			pal_props.draw_cube=false;
 			props.PathAlign=pal_props;
 		}
 	} //while (!fieldtable_err);
@@ -1391,6 +1401,20 @@ public:
 		Right = new _3Dpoint[NumPoints + 1];
 		Translation = new _3Dpoint[NumPoints + 1];
 
+		angle = -45;
+		dir = 1;
+
+		draw_cube = false;
+		// poitns for cube - 1 x 1 meter centered at 0,0,0.
+		cube[0].x = -0.5, cube[0].y =  0.5, cube[0].z =  0.5;
+		cube[1].x =  0.5, cube[1].y =  0.5, cube[1].z =  0.5;
+		cube[2].x = -0.5, cube[2].y =  0.5, cube[2].z = -0.5;
+		cube[3].x =  0.5, cube[3].y =  0.5, cube[3].z = -0.5;
+		cube[4].x = -0.5, cube[4].y = -0.5, cube[4].z =  0.5;
+		cube[5].x =  0.5, cube[5].y = -0.5, cube[5].z =  0.5;
+		cube[6].x = -0.5, cube[6].y = -0.5, cube[6].z = -0.5;
+		cube[7].x =  0.5, cube[7].y = -0.5, cube[7].z = -0.5;
+
 		// these should probably be pulled from LUA values.
 		width = 15 * 0.0254;	// 15 inches in meters (robot is 24)	This is the width of our drawn path.
 		length = 33 * 0.0254;	// 33 inches in meters					This is how far to project our path.
@@ -1407,6 +1431,7 @@ public:
 		pivot_point_length=props.pivot_point_length;
 		_3Dpoint Camera_position = _3Dpoint(props.pos_x,props.pos_y,props.pos_z);
 		_3Dpoint Camara_LookAt = _3Dpoint(props.rot_x,props.rot_y,props.rot_z);
+		draw_cube=props.draw_cube;
 
 		projector = projection();
 		projector.camera.from = Camera_position;
@@ -1433,13 +1458,18 @@ public:
 	double forward_velocity;	// meters per second
 	double angular_velocity;	// radians per second
 
+	bool draw_cube;				// if true, render a cube.
+	_3Dpoint cube[8];
+	int angle;
+	int dir;
+	
 	projection projector;		// projection class
 
 	// Compute the path mesh. This is for the front of the robot which is offset from the pivot point at ground level.
 	// This should be called prior to each render, but could be called only when velocities change.
 	void ComputePathPoints(double Foward_Vel, double Angular_Vel)
 	{
-		if( Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
+		if( draw_cube || Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
 			return;
 
 		forward_velocity = Foward_Vel;
@@ -1484,21 +1514,70 @@ public:
 
 			projector.screen.SetSize(Frame->XRes, Frame->YRes);
 
-			projector.Trans_Line(Left[0], Right[0]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			for (int i = 0; i < NumPoints; i++)
-			{
-				projector.Trans_Line(Left[i], Left[i + 1]);
+			if( !draw_cube )
+			{	// draw the normal path
+				projector.Trans_Line(Left[0], Right[0]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 
-				projector.Trans_Line(Center[i], Center[i + 1]);
+				for (int i = 0; i < NumPoints; i++)
+				{
+					projector.Trans_Line(Left[i], Left[i + 1]);
+					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+					projector.Trans_Line(Center[i], Center[i + 1]);
+					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+					projector.Trans_Line(Right[i], Right[i + 1]);
+					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+					projector.Trans_Line(Left[i + 1], Right[i + 1]);
+					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+				}
+			}
+			else	// test cube.
+			{	// animation. sweep back and forth.
+				//_3Dpoint Camera_LookAt = _3Dpoint(angle*DTOR, -45*DTOR, 0);
+				//angle += dir;
+				//if(angle < -45) dir = 1;
+				//if(angle > 45) dir = -1;
+
+				//projector.camera.SetLookAtFromAngles(Camera_LookAt);
+				//projector.Trans_Initialise();
+
+				projector.Trans_Line(cube[0], cube[1]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 
-				projector.Trans_Line(Right[i], Right[i + 1]);
+				projector.Trans_Line(cube[0], cube[2]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 
-				projector.Trans_Line(Left[i + 1], Right[i + 1]);
+				projector.Trans_Line(cube[1], cube[3]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(cube[2], cube[3]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(cube[4], cube[5]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(cube[4], cube[6]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(cube[5], cube[7]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(cube[6], cube[7]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(cube[0], cube[4]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(cube[1], cube[5]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(cube[2], cube[6]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(cube[3], cube[7]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 			}
 		}
@@ -1513,93 +1592,6 @@ private:
 	_3Dpoint* Translation;
 };
 
-#if 0	// coming to a compositor near you.
-class CubeRenderer
-{
-public:
-	CubeRenderer(void)
-	{
-		cube[0].x = -0.5, cube[0].y =  0.5, cube[0].z =  0.5;
-		cube[1].x =  0.5, cube[1].y =  0.5, cube[1].z =  0.5;
-		cube[2].x = -0.5, cube[2].y =  0.5, cube[2].z = -0.5;
-		cube[3].x =  0.5, cube[3].y =  0.5, cube[3].z = -0.5;
-		cube[4].x = -0.5, cube[4].y = -0.5, cube[4].z =  0.5;
-		cube[5].x =  0.5, cube[5].y = -0.5, cube[5].z =  0.5;
-		cube[6].x = -0.5, cube[6].y = -0.5, cube[6].z = -0.5;
-		cube[7].x =  0.5, cube[7].y = -0.5, cube[7].z = -0.5;
-	}
-
-	void Initialize(const Compositor_Props::Cube_Container_Props &props)
-	{
-		_3Dpoint Camera_position = _3Dpoint(props.pos_x,props.pos_y,props.pos_z);
-		_3Dpoint Camara_LookAt = _3Dpoint(props.rot_x,props.rot_y,props.rot_z);
-
-		projector = projection();
-		projector.camera.from = Camera_position;
-		projector.camera.SetLookAtFromAngles(Camara_LookAt);
-		projector.camera.anglev = props.FOV;
-		projector.camera.angleh = props.FOV;
-		projector.Trans_Initialise();
-	}
-
-	~PathRenderer(void)
-	{
-	}
-
-	projection projector;		// projection class
-
-	_3Dpoint cube[8];
-
-	// draw the path mesh
-	Bitmap_Frame* RenderPath(Bitmap_Frame* Frame)
-	{
-		if (g_Framework)
-		{
-			unsigned int col[] = { 128, 255, 128, 255 };
-
-			projector.screen.SetSize(Frame->XRes, Frame->YRes);
-
-			projector.Trans_Line(cube[0], cube[1]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[0], cube[2]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[1], cube[3]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[2], cube[3]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[4], cube[5]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[4], cube[6]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[5], cube[7]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[6], cube[7]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[0], cube[4]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[1], cube[5]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[2], cube[6]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
-			projector.Trans_Line(cube[3], cube[7]);
-			g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-		}
-
-		return Frame;
-	}
-};
-#endif
 
 class Bypass_Reticle
 {
