@@ -22,8 +22,10 @@ public:
 	{
 		eNone,
 		eDefault,
+		ePathAlign,
 		eComposite,
-		eBypass
+		eBypass,
+		eLinePlot
 	};
 	virtual ReticleType GetCurrentReticalType() const=0;
 	virtual void SetStepIntoComposite(bool enableRecursiveStep)=0;
