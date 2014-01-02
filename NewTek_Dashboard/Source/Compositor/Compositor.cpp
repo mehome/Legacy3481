@@ -454,25 +454,39 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 					pal_props.pos_z=18 * 0.0254;
 				script.Pop();
 			}
-			//TODO add measured value support once I can verify these are in radians
 			err = script.GetFieldTable("camera_rotation");
 			if (!err)
 			{
-				err = script.GetField("x",NULL,NULL,&fTest);
-				if (!err)
-					pal_props.rot_x=fTest;
-				else 
-					pal_props.rot_x=0.0;
-				err = script.GetField("y",NULL,NULL,&fTest);
-				if (!err)
-					pal_props.rot_y=fTest;
+				err=script.GetField("x_deg", NULL, NULL, &fTest);
+				if (!err) pal_props.rot_x=DEG_2_RAD(fTest);
 				else
-					pal_props.rot_y=0.33;
-				err = script.GetField("z",NULL,NULL,&fTest);
-				if (!err)
-					pal_props.rot_z=fTest;
+				{
+					err = script.GetField("x",NULL,NULL,&fTest);
+					if (!err)
+						pal_props.rot_x=fTest;
+					else 
+						pal_props.rot_x=0.0;
+				}
+				err=script.GetField("y_deg", NULL, NULL, &fTest);
+				if (!err) pal_props.rot_y=DEG_2_RAD(fTest);
 				else
-					pal_props.rot_z=0.0;
+				{
+					err = script.GetField("y",NULL,NULL,&fTest);
+					if (!err)
+						pal_props.rot_y=fTest;
+					else
+						pal_props.rot_y=0.33;
+				}
+				err=script.GetField("z_deg", NULL, NULL, &fTest);
+				if (!err) pal_props.rot_z=DEG_2_RAD(fTest);
+				else
+				{
+					err = script.GetField("z",NULL,NULL,&fTest);
+					if (!err)
+						pal_props.rot_z=fTest;
+					else
+						pal_props.rot_z=0.0;
+				}
 				script.Pop();
 			}
 			err = script.GetField("fov",NULL,NULL,&fTest);
@@ -968,8 +982,6 @@ struct _3Dpoint
 	}
 };
 
-#define DTOR 0.01745329252
-
 class CAMERA
 {
 public:
@@ -1135,8 +1147,8 @@ public:
 		}
 
 		/* Calculate camera aperture statics, note: angles in degrees */
-		tanthetah = tan(camera.angleh * DTOR / 2);
-		tanthetav = tan(camera.anglev * DTOR / 2);
+		tanthetah = tan(DEG_2_RAD(camera.angleh) / 2);
+		tanthetav = tan(DEG_2_RAD(camera.anglev) / 2);
 
 		/* Do we have a legal camera zoom ? */
 		if (camera.zoom < EPSILON)
@@ -1536,7 +1548,7 @@ public:
 			}
 			else	// test cube.
 			{	// animation. sweep back and forth.
-				//_3Dpoint Camera_LookAt = _3Dpoint(angle*DTOR, -45*DTOR, 0);
+				//_3Dpoint Camera_LookAt = _3Dpoint(DEG_2_RAD(angle),DEG_2_RAD(-45), 0);
 				//angle += dir;
 				//if(angle < -45) dir = 1;
 				//if(angle > 45) dir = -1;

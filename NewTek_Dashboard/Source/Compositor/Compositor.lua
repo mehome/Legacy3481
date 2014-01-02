@@ -91,8 +91,7 @@ CompositorProps = {
 			width_in = 15, length_in = 33,
 			pivot_in = 22,
 			camera_position =	{ x_in=0, y_in=-10, z_in=18 },
-			camera_rotation =	{ x=0, y=-0.61086522, z=0 },
-						-- Camera rot facing downwards -40 deg
+			camera_rotation =	{ x=0, y_deg=-35, z=0 },
 			fov=47,
 			draw_cube = 0,
 			-- draw_cube will render a 1x1 meter cube centered at point 0,0,0.
