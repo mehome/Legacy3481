@@ -200,7 +200,7 @@ class Compositor_Properties
 //declared as global to avoid allocation on stack each iteration
 const char * const g_Compositor_Controls_Events[] = 
 {
-	"SetXAxis","SetYAxis","NextSequence","PreviousSequence","SequencePOV","ToggleLinePlot"
+	"SetXAxis","SetYAxis","NextSequence","PreviousSequence","SequencePOV","ToggleLinePlot","ResetPos"
 };
 
 const char *Compositor_Properties::ControlEvents::LUA_Controls_GetEvents(size_t index) const
@@ -980,6 +980,11 @@ struct _3Dpoint
 		y = 0.0;
 		z = 0.0;
 	}
+
+	inline bool operator==(const _3Dpoint& _Right) const
+	{
+		return ((x==_Right.x)&&(y==_Right.y)&&(z==_Right.z));
+	}
 };
 
 class CAMERA
@@ -1443,6 +1448,7 @@ public:
 		pivot_point_length=props.pivot_point_length;
 		_3Dpoint Camera_position = _3Dpoint(props.pos_x,props.pos_y,props.pos_z);
 		_3Dpoint Camara_LookAt = _3Dpoint(props.rot_x,props.rot_y,props.rot_z);
+		m_lastOrientation=Camara_LookAt;
 		draw_cube=props.draw_cube;
 
 		projector = projection();
@@ -1514,6 +1520,19 @@ public:
 			Right[i].z = 0.0;
 
 			angle += end_angle/NumPoints;
+		}
+	}
+
+	
+	//This is almost a wrapper to the projection call... except that it will implicitly check for difference before making the call
+	void Compute_LookAtFromAngles(double Yaw,double Pitch)
+	{
+		_3Dpoint orientation(Yaw,Pitch,m_lastOrientation.z);
+		if (!(orientation==m_lastOrientation))
+		{
+			projector.camera.SetLookAtFromAngles(orientation);
+			projector.Trans_Initialise();
+			m_lastOrientation=orientation;
 		}
 	}
 
@@ -1602,6 +1621,8 @@ private:
 	_3Dpoint* Center;
 	_3Dpoint* Right;
 	_3Dpoint* Translation;
+
+	_3Dpoint m_lastOrientation;  //used by Compute_LookAtFromAngles
 };
 
 
@@ -1724,6 +1745,15 @@ class Bypass_Reticle
 class Compositor
 {
 	public:
+		void ResetPos()
+		{
+			if (m_IsEditable)
+			{
+				m_Xpos=0.0,m_Ypos=0.0;
+				SmartDashboard::PutNumber("X Position",0.0);
+				SmartDashboard::PutNumber("Y Position",0.0);
+			}
+		}
 		void SetXAxis(double value)
 		{
 			if (m_IsEditable)
@@ -1881,6 +1911,7 @@ class Compositor
 			em->Event_Map["PreviousSequence"].Subscribe(ehl, *this, &Compositor::PreviousSequence);
 			em->EventValue_Map["SequencePOV"].Subscribe(ehl,*this, &Compositor::SetPOV);
 			em->Event_Map["ToggleLinePlot"].Subscribe(ehl,*this, &Compositor::ToggleLinePlot);
+			em->Event_Map["ResetPos"].Subscribe(ehl, *this, &Compositor::ResetPos);
 
 			//m_RecurseIntoComposite=true; //testing  (TODO implement in menu)
 			SmartDashboard::PutNumber("Velocity",1.0);
@@ -1962,6 +1993,7 @@ class Compositor
 			em->Event_Map["PreviousSequence"].Remove(*this, &Compositor::PreviousSequence);
 			em->EventValue_Map["SequencePOV"].Remove(*this, &Compositor::SetPOV);
 			em->Event_Map["ToggleLinePlot"].Remove(*this, &Compositor::ToggleLinePlot);
+			em->Event_Map["ResetPos"].Remove(*this, &Compositor::ResetPos);
 			
 			m_CompositorProperties.Get_CompositorControls().BindAdditionalUIControls(false,&m_JoyBinder,NULL);
 			//For now limit the sequence to advance and previous calls to save network bandwidth... we can move this to the time change if necessary
@@ -2128,9 +2160,15 @@ class Compositor
 				break;
 			case Compositor_Props::ePathAlign:
 				{
+					const Compositor_Props::PathAlign_Container_Props &pa_props=props.PathAlign;
 					#if 0
 					m_PathPlotter.ComputePathPoints(1.0, 0.25);
 					#else
+					double Xpos,Ypos;
+					Xpos=EnableFlash?m_Xpos+XOffset:seq_pkt.PositionX+XOffset;
+					Ypos=EnableFlash?m_Ypos+YOffset:seq_pkt.PositionY+YOffset;
+					//Treating Xpos and Ypos as degrees will keep the scale to feel about right
+					m_PathPlotter.Compute_LookAtFromAngles(DEG_2_RAD(Xpos)+pa_props.rot_x,DEG_2_RAD(Ypos)+pa_props.rot_y);
 					double Velocity=SmartDashboard::GetNumber("Velocity");
 					double Rotation_Velocity=SmartDashboard::GetNumber("Rotation Velocity");
 					if ((!IsZero(Rotation_Velocity))&&(IsZero(Velocity)))
