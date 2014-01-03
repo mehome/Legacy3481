@@ -108,7 +108,7 @@ struct Compositor_Props
 		double pivot_point_length;
 		double pos_x,pos_y,pos_z;
 		double rot_x,rot_y,rot_z;
-		double FOV;
+		double FOV_x,FOV_y;
 		bool draw_cube;
 	} PathAlign;
 	//for now no list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
@@ -491,9 +491,20 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			}
 			err = script.GetField("fov",NULL,NULL,&fTest);
 			if (!err)
-				pal_props.FOV=fTest;
+				pal_props.FOV_x=pal_props.FOV_y=fTest;
 			else
-				pal_props.FOV=47.0;
+			{
+				err = script.GetField("fov_x",NULL,NULL,&fTest);
+				if (!err)
+				{
+					pal_props.FOV_x=fTest;
+					err = script.GetField("fov_y",NULL,NULL,&fTest);
+					assert(!err);  //gotta have y if we have x
+					pal_props.FOV_y=fTest;
+				}
+				else
+					pal_props.FOV_x=pal_props.FOV_y=47.0;  //using default
+			}
 			std::string sTest;
 			err = script.GetField("draw_cube",&sTest,NULL,NULL);
 			pal_props.draw_cube=false;
@@ -519,7 +530,7 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			pal_props.rot_x=0.0;
 			pal_props.rot_y=0.33;
 			pal_props.rot_z=0.0;
-			pal_props.FOV=47.0;
+			pal_props.FOV_x=pal_props.FOV_y=47.0;
 			pal_props.draw_cube=false;
 			props.PathAlign=pal_props;
 		}
@@ -1454,8 +1465,8 @@ public:
 		projector = projection();
 		projector.camera.from = Camera_position;
 		projector.camera.SetLookAtFromAngles(Camara_LookAt);
-		projector.camera.anglev = props.FOV;
-		projector.camera.angleh = props.FOV;
+		projector.camera.anglev = props.FOV_y;
+		projector.camera.angleh = props.FOV_x;
 		projector.Trans_Initialise();
 	}
 

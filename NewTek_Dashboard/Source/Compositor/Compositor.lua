@@ -88,11 +88,11 @@ CompositorProps = {
 		
 		path_align =
 		{
-			width_in = 15, length_in = 33,
+			width_in = 31, length_in = 32,
 			pivot_in = 22,
-			camera_position =	{ x_in=0, y_in=-10, z_in=18 },
-			camera_rotation =	{ x=0, y_deg=-35, z=0 },
-			fov=47,
+			camera_position =	{ x_in=0, y_in=-6, z_in=16 },
+			camera_rotation =	{ x=0, y_deg=-17, z=0 },
+			fov_x=50,fov_y=47,
 			draw_cube = 0,
 			-- draw_cube will render a 1x1 meter cube centered at point 0,0,0.
 			-- for practical reasons, you'll need to move the camera position back to at least 0.5 meters.
