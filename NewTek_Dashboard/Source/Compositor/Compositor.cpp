@@ -445,11 +445,11 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 				else
 					pal_props.pos_x=0.0;
 				if (LoadMeasuredValue(script,"y",fTest))
-					pal_props.pos_y=fTest;
+					pal_props.pos_z=fTest;
 				else
 					pal_props.pos_y= -10 * 0.0254;
 				if (LoadMeasuredValue(script,"z",fTest))
-					pal_props.pos_z=fTest;
+					pal_props.pos_y=fTest;
 				else
 					pal_props.pos_z=18 * 0.0254;
 				script.Pop();
