@@ -436,8 +436,10 @@ class DDraw_Window : public Window
 			eMenu_Lock4x3,
 			eMenu_Lock16x9,
 			eMenu_Stretch,
+			eMenu_Show600i,
 			eMenu_Show480i,
-			eMenu_ShowHalfRes,
+			eMenu_Show300i,
+			eMenu_Show240i,
 			eMenu_NoEntries
 		};
 
@@ -547,8 +549,10 @@ class DDraw_Window : public Window
 						InsertMenu(hPopupMenu, -1, ((m_AspectRatio==16.0/9.0)?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Lock16x9, L"Lock 16x9 aspect");
 						InsertMenu(hPopupMenu, -1, ((m_AspectRatio==0.0)?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Stretch, L"Stretch");
 						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_SEPARATOR, eMenu_NoSelection, NULL);
+						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Show600i, L"Size 600i");
 						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Show480i, L"Size 480i");
-						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_ShowHalfRes, L"Size half res");
+						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Show300i, L"Size 300i");
+						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Show240i, L"Size 240i");
 					}
 					//go to plug-in for addition items
 					m_pParent->Callback_AddMenuItems(hPopupMenu,eMenu_NoEntries);
@@ -602,6 +606,13 @@ class DDraw_Window : public Window
 							case eMenu_Stretch:
 								m_AspectRatio=0.0;
 								break;
+							case eMenu_Show600i:
+								{
+									RECT rc;
+									GetWindowRect(*this,&rc);
+									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*600.0f),600,SWP_NOMOVE|SWP_NOZORDER);
+								}
+								break;
 							case eMenu_Show480i:
 								{
 									RECT rc;
@@ -609,7 +620,14 @@ class DDraw_Window : public Window
 									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*480.0f),480,SWP_NOMOVE|SWP_NOZORDER);
 								}
 								break;
-							case eMenu_ShowHalfRes:
+							case eMenu_Show300i:
+								{
+									RECT rc;
+									GetWindowRect(*this,&rc);
+									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*300.0f),300,SWP_NOMOVE|SWP_NOZORDER);
+								}
+								break;
+							case eMenu_Show240i:
 								{
 									RECT rc;
 									GetWindowRect(*this,&rc);
