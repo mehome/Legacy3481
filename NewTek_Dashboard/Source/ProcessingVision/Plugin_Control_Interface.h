@@ -26,7 +26,8 @@ enum VisionSetting_enum
 enum TrackerType 
 {
 	eGoalTracker,
-	eFrisbeTracker,
+	//eFrisbeTracker,
+	eBallTracker,
 	eNumTrackers
 };
 

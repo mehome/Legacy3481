@@ -67,9 +67,12 @@
 #define IDC_ResetThreshold              1054
 #define IDC_TargetGoal                  1055
 #define IDC_TargetFrisbe                1056
+#define IDC_TargetBall                  1056
 #define IDC_ShowBounds                  1057
 #define IDC_SOLID                       1058
+#define IDC_RedBall                     1059
 #define IDC_3PT                         1059
+#define IDC_BlueBall                    1060
 #define IDC_2PT                         1060
 #define IDC_RECORD                      1060
 #define IDC_DisableTarget               1061

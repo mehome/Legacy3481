@@ -233,6 +233,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VisionAerialAssistGoalTracker.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VisionBallTracker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\VisionGoalTracker.cpp"
 				>
 			</File>
@@ -268,6 +276,14 @@
 			</File>
 			<File
 				RelativePath=".\targetver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VisionAerialAssistGoalTracker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VisionBallTracker.h"
 				>
 			</File>
 			<File

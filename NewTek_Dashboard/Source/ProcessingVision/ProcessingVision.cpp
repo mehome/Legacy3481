@@ -5,6 +5,8 @@
 #include "NI_VisionProcessingBase.h"
 #include "VisionGoalTracker.h"
 #include "VisionRinTinTinTracker.h"
+#include "VisionAerialAssistGoalTracker.h"
+#include "VisionBallTracker.h"
 
 //#define __Using_UDP__
 
@@ -61,9 +63,11 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	if( g_pTracker[SelectedTracker] == NULL )
 	{
 		if( SelectedTracker == eGoalTracker )
-			g_pTracker[eGoalTracker] = new VisionGoalTracker();
-		if( SelectedTracker == eFrisbeTracker )
-			g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
+			g_pTracker[eGoalTracker] = new VisionAerialAssistGoalTracker();
+//		if( SelectedTracker == eFrisbeTracker )
+//			g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker();
+		if( SelectedTracker == eBallTracker )
+			g_pTracker[eBallTracker] = new VisionBallTracker();
 		if( g_pTracker[SelectedTracker] == NULL)
 			return Frame;
 	}
@@ -216,9 +220,11 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 				if( g_pTracker[SelectedTracker] == NULL )
 					SelectedTracker = PendingTracker;
 				if( PendingTracker == eGoalTracker )
-					g_pTracker[eGoalTracker] = new VisionGoalTracker();
-				if( PendingTracker == eFrisbeTracker )
-					g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
+					g_pTracker[eGoalTracker] = new VisionAerialAssistGoalTracker();
+//				if( PendingTracker == eFrisbeTracker )
+//					g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
+				if( PendingTracker == eBallTracker )
+					g_pTracker[eBallTracker] = new VisionBallTracker();
 			}
 			frameSync.wait(500);	// cheezy method to make the control dialog wait so it can get the correct values after switching
 			break;
@@ -285,9 +291,11 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 	if( g_pTracker[PendingTracker] == NULL )
 	{
 		if( PendingTracker == eGoalTracker )
-			g_pTracker[eGoalTracker] = new VisionGoalTracker();
-		if( PendingTracker == eFrisbeTracker )
-			g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
+			g_pTracker[eGoalTracker] = new VisionAerialAssistGoalTracker();
+//		if( PendingTracker == eFrisbeTracker )
+//			g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
+		if( PendingTracker == eBallTracker )
+			g_pTracker[eBallTracker] = new VisionBallTracker();
 	}
 
 	switch( VisionSetting )

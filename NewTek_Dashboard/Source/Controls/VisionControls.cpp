@@ -410,7 +410,8 @@ void VisionControls::GetVisionSettings()
 
 void VisionControls::UpdateControls()
 {
-	SendDlgItemMessage(m_hDlg, IDC_TargetFrisbe, BM_SETCHECK, ( CurrentSettings.vsTrackerType == eFrisbeTracker ), 0);
+	//SendDlgItemMessage(m_hDlg, IDC_TargetFrisbe, BM_SETCHECK, ( CurrentSettings.vsTrackerType == eFrisbeTracker ), 0);
+	SendDlgItemMessage(m_hDlg, IDC_TargetBall, BM_SETCHECK, ( CurrentSettings.vsTrackerType == eBallTracker ), 0);
 	SendDlgItemMessage(m_hDlg, IDC_TargetGoal, BM_SETCHECK, ( CurrentSettings.vsTrackerType == eGoalTracker ), 0);
 
 	SendDlgItemMessage(m_hDlg, IDC_DisplayNormal, BM_SETCHECK, ( CurrentSettings.vsDisplayType == eNormal ), 0);
@@ -504,8 +505,10 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 						GetVisionSettings();
 						UpdateControls();
 						break;
-					case IDC_TargetFrisbe:
-						g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, eFrisbeTracker);
+					//case IDC_TargetFrisbe:
+					//	g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, eFrisbeTracker);
+					case IDC_TargetBall:
+						g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, eBallTracker);
 						GetVisionSettings();
 						UpdateControls();
 						break;
@@ -541,7 +544,7 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 						g_plugin_SquareTargeting->Set_Vision_Settings(eBoundsText, bChecked);
 						CurrentSettings.vsBoundsText = bChecked;
 						break;
-					case IDC_3PT:
+					case IDC_3PT:	//TODO-CJT replace these two with select for Red/Blue Ball
 						bChecked = SendDlgItemMessage(m_hDlg, IDC_3PT, BM_GETCHECK, 0, 0) > 0;
 						g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, bChecked);
 						CurrentSettings.vs3ptGoal = bChecked;
