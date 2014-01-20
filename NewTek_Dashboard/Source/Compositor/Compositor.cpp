@@ -1911,7 +1911,7 @@ class Compositor
 			m_ToggleLinePlot=!m_ToggleLinePlot;
 		}
 		IEvent::HandlerList ehl;
-		Compositor(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
+		Compositor(const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
 			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),
 			m_IsEditable(false),m_PreviousIsEditable(false),m_RecurseIntoComposite(false),m_Flash(false),m_ToggleLinePlot(true)
 		{
@@ -1927,6 +1927,10 @@ class Compositor
 			//m_RecurseIntoComposite=true; //testing  (TODO implement in menu)
 			SmartDashboard::PutNumber("Velocity",1.0);
 			SmartDashboard::PutNumber("Rotation Velocity",0.0);
+			//Setup the edit position name (to be unique per window instance) 
+			m_EditPositionName="Edit Position ";
+			m_EditPositionName+=WindowTitle;
+			SmartDashboard::PutBoolean(m_EditPositionName.c_str(),false);
 		}
 
 		void SaveData_Sequence(std::ofstream &out,const Compositor_Props::Sequence_List &sequence,size_t RecursiveCount=0)
@@ -2047,7 +2051,7 @@ class Compositor
 		void SetIsEditable(bool Edit)
 		{
 			if (SmartDashboard::IsConnected())
-				SmartDashboard::PutBoolean("Edit Position",Edit);
+				SmartDashboard::PutBoolean(m_EditPositionName.c_str(),Edit);
 			else
 				m_IsEditable=Edit;
 		}
@@ -2233,7 +2237,7 @@ class Compositor
 
 			if (SmartDashboard::IsConnected())
 			{
-				m_IsEditable=SmartDashboard::GetBoolean("Edit Position");
+				m_IsEditable=SmartDashboard::GetBoolean(m_EditPositionName.c_str());
 				//This is only read for cases like autonomous... so we'll cut to the quick during edit mode and not read it
 				//I could almost write back the value not changing, but I'd need to track the top level index... I don't think it is justifiable for this
 				//especially since the workflow should not be changing this in the java client
@@ -2307,6 +2311,7 @@ class Compositor
 		Bypass_Reticle m_Bypass;
 		LinePlot_Retical m_LinePlot;
 		PathRenderer m_PathPlotter;
+		std::string m_EditPositionName;
 
 		bool m_IsEditable;
 		bool m_PreviousIsEditable;  //detect when Editable has switched to off to issue an update
@@ -2331,9 +2336,8 @@ extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(const char 
 	SmartDashboard::SetClientMode();
 	SmartDashboard::SetIPAddress(IPAddress);
 	SmartDashboard::init();
-	SmartDashboard::PutBoolean("Edit Position",false);
 
-	g_pCompositor = new Compositor(IPAddress,DashboardHelper);
+	g_pCompositor = new Compositor(IPAddress,WindowTitle,DashboardHelper);
 	{
 		Compositor_Properties props;
 		Scripting::Script script;
