@@ -2325,7 +2325,7 @@ extern "C" COMPOSITER_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 		return Frame;
 }
 
-extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper)
+extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper)
 {
 	g_Framework=DashboardHelper;
 	SmartDashboard::SetClientMode();

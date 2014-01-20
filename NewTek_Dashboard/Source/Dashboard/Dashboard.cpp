@@ -121,7 +121,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 	public:
 		ProcessingVision(FrameWork::Outstream_Interface *Preview=NULL) : m_DriverProc(NULL),
 			m_PlugIn(NULL),m_Outstream(Preview),m_pPluginControllerInterface(NULL) {}
-		void Callback_Initialize(char *IPAddress) {if (m_PlugIn) (*m_fpInitialize)(IPAddress,&m_DashboardHelper);}
+		void Callback_Initialize(const char *IPAddress,const char *WindowTitle) {if (m_PlugIn) (*m_fpInitialize)(IPAddress,WindowTitle,&m_DashboardHelper);}
 		void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
 		~ProcessingVision()
 		{
@@ -208,7 +208,7 @@ class ProcessingVision : public FrameWork::Outstream_Interface
 		typedef Bitmap_Frame * (*DriverProc_t)(Bitmap_Frame *Frame);
 		DriverProc_t m_DriverProc;
 
-		typedef void (*function_Initialize) (const char *IPAddress,Dashboard_Framework_Helper *DashboardHelper);
+		typedef void (*function_Initialize) (const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Helper *DashboardHelper);
 		function_Initialize m_fpInitialize;
 
 		typedef void (*function_void) ();
@@ -961,13 +961,18 @@ void DDraw_Preview::OpenResources()
 	{
 		m_ProcessingVision.LoadPlugIn(m_Props.plugin_file.c_str());
 		{
-			char *IpToUse="localhost";
+			std::string IpToUse="localhost";
 			if (g_Robot_IP_Address.c_str()[0]!=0)
 			{
 				wchar2char(g_Robot_IP_Address.c_str());
 				IpToUse=wchar2char_pchar;
 			}
-			m_ProcessingVision.Callback_Initialize(IpToUse);
+			std::string WindowTitle="default";
+			{
+				wchar2char(m_Props.source_name.c_str());
+				WindowTitle=wchar2char_pchar;
+			}
+			m_ProcessingVision.Callback_Initialize(IpToUse.c_str(),WindowTitle.c_str());
 			m_Controls_PlugIn.m_fpInitializePlugin(m_ProcessingVision.GetPluginInterface());
 		}
 	}

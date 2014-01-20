@@ -14,7 +14,7 @@
 extern "C" 
 {
 	/// \param IPAddress- this may be null if user does not wish to send out UDP packets
-	COMPOSITER_API void Callback_SmartCppDashboard_Initialize(const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper);
+	COMPOSITER_API void Callback_SmartCppDashboard_Initialize(const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper);
 	/// This is called when we are about to close will all for creation and destruction of classes
 	COMPOSITER_API void Callback_SmartCppDashboard_Shutdown();
 	COMPOSITER_API Plugin_Controller_Interface *Callback_CreatePluginControllerInterface();
