@@ -2,7 +2,7 @@ Pi=3.14159265358979323846
 
 --This is used load persistence of the coordinates last saved etc
 function GetSettings()
-	local loaded_file = loadfile("CompositorSave.lua")
+	local loaded_file = loadfile("CompositorSave_RearView.lua")
 	if (loaded_file==nil) then
 		return nil
 	else
