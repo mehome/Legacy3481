@@ -1641,13 +1641,13 @@ class Bypass_Reticle
 {
 	private:
 	HMODULE m_PlugIn;
-	std::string IPAddress;
+	std::string IPAddress,WindowTitle;
 	Dashboard_Framework_Interface *DashboardHelper;
 
 	typedef Bitmap_Frame * (*DriverProc_t)(Bitmap_Frame *Frame);
 	DriverProc_t m_DriverProc;
 
-	typedef void (*function_Initialize) (const char *IPAddress,Dashboard_Framework_Interface *DashboardHelper);
+	typedef void (*function_Initialize) (const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper);
 	function_Initialize m_fpInitialize;
 
 	typedef void (*function_void) ();
@@ -1661,7 +1661,7 @@ class Bypass_Reticle
 	Plugin_Controller_Interface *m_pPluginControllerInterface;
 
 	public:
-	Bypass_Reticle(const char *_IPAddress,Dashboard_Framework_Interface *_DashboardHelper) : m_PlugIn(NULL),IPAddress(_IPAddress),DashboardHelper(_DashboardHelper), 
+	Bypass_Reticle(const char *_IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *_DashboardHelper) : m_PlugIn(NULL),IPAddress(_IPAddress),DashboardHelper(_DashboardHelper), 
 		m_DriverProc(NULL),m_pPluginControllerInterface(NULL)
 	{
 	}
@@ -1681,7 +1681,7 @@ class Bypass_Reticle
 		}
 	}
 
-	void Callback_Initialize() {if (m_PlugIn) (*m_fpInitialize)(IPAddress.c_str(),DashboardHelper);}
+	void Callback_Initialize() {if (m_PlugIn) (*m_fpInitialize)(IPAddress.c_str(),WindowTitle.c_str(),DashboardHelper);}
 	void Callback_Shutdown() {if (m_PlugIn) (*m_fpShutdown)();}
 	~Bypass_Reticle()
 	{
@@ -1911,7 +1911,7 @@ class Compositor
 			m_ToggleLinePlot=!m_ToggleLinePlot;
 		}
 		IEvent::HandlerList ehl;
-		Compositor(const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
+		Compositor(const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,WindowTitle,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
 			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),
 			m_IsEditable(false),m_PreviousIsEditable(false),m_RecurseIntoComposite(false),m_Flash(false),m_ToggleLinePlot(true)
 		{
