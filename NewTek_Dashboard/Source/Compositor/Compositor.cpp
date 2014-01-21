@@ -2180,8 +2180,9 @@ class Compositor
 					m_PathPlotter.ComputePathPoints(1.0, 0.25);
 					#else
 					double Xpos,Ypos;
-					Xpos=EnableFlash?m_Xpos+XOffset:seq_pkt.PositionX+XOffset;
-					Ypos=EnableFlash?m_Ypos+YOffset:seq_pkt.PositionY+YOffset;
+					//We don't want to associate the position with the group offset... its always tuned separately 
+					Xpos=(EnableFlash&&m_RecurseIntoComposite)?m_Xpos:seq_pkt.PositionX;
+					Ypos=(EnableFlash&&m_RecurseIntoComposite)?m_Ypos:seq_pkt.PositionY;
 					//Treating Xpos and Ypos as degrees will keep the scale to feel about right
 					m_PathPlotter.Compute_LookAtFromAngles(DEG_2_RAD(Xpos)+pa_props.rot_x,DEG_2_RAD(Ypos)+pa_props.rot_y);
 					double Velocity=SmartDashboard::GetNumber("Velocity");
