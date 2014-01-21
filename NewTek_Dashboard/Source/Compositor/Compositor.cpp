@@ -2346,9 +2346,29 @@ extern "C" COMPOSITER_API void Callback_SmartCppDashboard_Initialize(const char 
 		Compositor_Properties props;
 		Scripting::Script script;
 		const char *err;
-		err=script.LoadScript("Compositor.lua",true);
+
+		{	//Try the unique name first
+			std::string UniqueName="Compositor_";
+			UniqueName+=WindowTitle;
+			UniqueName+=".lua";
+
+			err=script.LoadScript(UniqueName.c_str(),true);
+			if (err!=NULL)
+			{
+				UniqueName="../Compositor/Compositor_";
+				UniqueName+=WindowTitle;
+				UniqueName+=".lua";
+				err=script.LoadScript(UniqueName.c_str(),true);
+			}
+		}
+
+		//If that doesn't work try the legacy name
 		if (err!=NULL)
-			err=script.LoadScript("../Compositor/Compositor.lua",true);
+		{
+			err=script.LoadScript("Compositor.lua",true);
+			if (err!=NULL)
+				err=script.LoadScript("../Compositor/Compositor.lua",true);
+		}
 
 		if (err==NULL)
 		{
