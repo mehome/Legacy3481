@@ -1912,7 +1912,7 @@ class Compositor
 		}
 		IEvent::HandlerList ehl;
 		Compositor(const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,WindowTitle,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
-			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),
+			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),m_WindowTitle(WindowTitle),
 			m_IsEditable(false),m_PreviousIsEditable(false),m_RecurseIntoComposite(false),m_Flash(false),m_ToggleLinePlot(true)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
@@ -1983,7 +1983,9 @@ class Compositor
 		void SaveData()
 		{
 			using namespace std;
-			string OutFile = "CompositorSave.lua";
+			string OutFile = "CompositorSave_";
+			OutFile+=m_WindowTitle.c_str();
+			OutFile+=".lua";
 			string output;
 
 			ofstream out(OutFile.c_str(), std::ios::out );
@@ -2313,6 +2315,7 @@ class Compositor
 		LinePlot_Retical m_LinePlot;
 		PathRenderer m_PathPlotter;
 		std::string m_EditPositionName;
+		std::string m_WindowTitle;
 
 		bool m_IsEditable;
 		bool m_PreviousIsEditable;  //detect when Editable has switched to off to issue an update
