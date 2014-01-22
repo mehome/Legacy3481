@@ -1996,11 +1996,7 @@ class Compositor
 		~Compositor()
 		{
 			//ensure the current position is set on the properties
-			{
-				Compositor_Props::Sequence_List &sequence_rw= m_CompositorProperties.GetCompositorProps_rw().Sequence;
-				Compositor_Props::Sequence_Packet &seq_pkt_rw= sequence_rw[m_SequenceIndex];
-				seq_pkt_rw.PositionX=m_Xpos,  seq_pkt_rw.PositionY=m_Ypos;
-			}
+			UpdateSequence(m_SequenceIndex,true);
 		
 			SaveData();
 			FrameWork::EventMap *em=&m_EventMap; 
