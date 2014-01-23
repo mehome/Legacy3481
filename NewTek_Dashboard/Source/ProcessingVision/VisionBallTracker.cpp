@@ -72,6 +72,11 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
 
+	// we want the qualifying target lowest on the screen.
+	// (closest target)
+	int max_y = 0;
+	int index = 0;
+
 	//-----------------------------------------------------------------//
 	//  Threshold                                                      //
 	//-----------------------------------------------------------------//
@@ -176,11 +181,6 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 		VisionErrChk(imaqMask(ParticleImageU8, ParticleImageU8, WorkImageU8));
 
 	}
-
-	// we want the qualifying target lowest on the screen.
-	// (closest target)
-	int max_y = 0;
-	int index = 0;
 
 	VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
 

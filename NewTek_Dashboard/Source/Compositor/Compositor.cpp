@@ -42,6 +42,13 @@ Dashboard_Framework_Interface *g_Framework=NULL;
 using namespace FrameWork;
 event frameSync;
 
+enum path_shapes 
+{
+	e_Path,
+	e_Cube,
+	e_Square,
+	e_Circle
+};
 
 
 template<class T>
@@ -109,7 +116,7 @@ struct Compositor_Props
 		double pos_x,pos_y,pos_z;
 		double rot_x,rot_y,rot_z;
 		double FOV_x,FOV_y;
-		bool draw_cube;
+		enum path_shapes draw_shape;
 	} PathAlign;
 	//for now no list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
 
@@ -506,12 +513,18 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 					pal_props.FOV_x=pal_props.FOV_y=47.0;  //using default
 			}
 			std::string sTest;
-			err = script.GetField("draw_cube",&sTest,NULL,NULL);
-			pal_props.draw_cube=false;
+			err = script.GetField("draw_shape",&sTest,NULL,NULL);
+			pal_props.draw_shape=e_Path;
 			if (!err)
 			{
-				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
-					pal_props.draw_cube=true;
+				if (sTest == "path")
+					pal_props.draw_shape = e_Path;
+				else if(sTest == "cube")
+					pal_props.draw_shape = e_Cube;
+				else if(sTest == "square")
+					pal_props.draw_shape = e_Square;
+				else if(sTest == "circle")
+					pal_props.draw_shape = e_Circle;
 			}
 			props.PathAlign=pal_props;
 			//props.square_reticle.push_back(sqr_pkt);
@@ -531,7 +544,7 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			pal_props.rot_y=0.33;
 			pal_props.rot_z=0.0;
 			pal_props.FOV_x=pal_props.FOV_y=47.0;
-			pal_props.draw_cube=false;
+			pal_props.draw_shape=e_Path;
 			props.PathAlign=pal_props;
 		}
 	} //while (!fieldtable_err);
@@ -1417,7 +1430,6 @@ private:
 	}
 };
 
-
 class PathRenderer
 {
 public:
@@ -1432,8 +1444,9 @@ public:
 		angle = -45;
 		dir = 1;
 
-		draw_cube = false;
-		// poitns for cube - 1 x 1 meter centered at 0,0,0.
+		draw_shape = e_Path;
+
+		// points for cube - 1 x 1 meter centered at 0,0,0.
 		cube[0].x = -0.5, cube[0].y =  0.5, cube[0].z =  0.5;
 		cube[1].x =  0.5, cube[1].y =  0.5, cube[1].z =  0.5;
 		cube[2].x = -0.5, cube[2].y =  0.5, cube[2].z = -0.5;
@@ -1442,6 +1455,24 @@ public:
 		cube[5].x =  0.5, cube[5].y = -0.5, cube[5].z =  0.5;
 		cube[6].x = -0.5, cube[6].y = -0.5, cube[6].z = -0.5;
 		cube[7].x =  0.5, cube[7].y = -0.5, cube[7].z = -0.5;
+
+		// points for square - 25 x 25 inches centered at 0,0,0.
+		// -- fudged for now, y is out about 5 feet, you'll want it at zero and move by adding translation.
+		square[0].x = -12.5 * 0.0254, square[0].y =  0 + 60 * 0.0254, square[0].z =  12.5 * 0.0254;
+		square[1].x =  12.5 * 0.0254, square[1].y =  0 + 60 * 0.0254, square[1].z =  12.5 * 0.0254;
+		square[2].x = -12.5 * 0.0254, square[2].y =  0 + 60 * 0.0254, square[2].z = -12.5 * 0.0254;
+		square[3].x =  12.5 * 0.0254, square[3].y =  0 + 60 * 0.0254, square[3].z = -12.5 * 0.0254;
+
+		// point for circle - 25 inch diameter centered at 0,0,0.
+		// render twice, with translation.
+		double radius = 12.5 * 0.0254;
+		int idx = 0;
+		for(double rad = 0; rad < 2*M_PI; rad += 2*M_PI/40, idx++ )
+		{
+			circle[idx].x = cos(rad) * radius;
+			circle[idx].y = 0 + 60 * 0.0254;
+			circle[idx].z = sin(rad) * radius;
+		}
 
 		// these should probably be pulled from LUA values.
 		width = 15 * 0.0254;	// 15 inches in meters (robot is 24)	This is the width of our drawn path.
@@ -1460,7 +1491,7 @@ public:
 		_3Dpoint Camera_position = _3Dpoint(props.pos_x,props.pos_y,props.pos_z);
 		_3Dpoint Camara_LookAt = _3Dpoint(props.rot_x,props.rot_y,props.rot_z);
 		m_lastOrientation=Camara_LookAt;
-		draw_cube=props.draw_cube;
+		draw_shape=props.draw_shape;
 
 		projector = projection();
 		projector.camera.from = Camera_position;
@@ -1487,8 +1518,14 @@ public:
 	double forward_velocity;	// meters per second
 	double angular_velocity;	// radians per second
 
-	bool draw_cube;				// if true, render a cube.
+	path_shapes draw_shape;		// what to draw
+
 	_3Dpoint cube[8];
+
+	_3Dpoint square[4];
+
+	_3Dpoint circle[40];
+
 	int angle;
 	int dir;
 	
@@ -1498,7 +1535,7 @@ public:
 	// This should be called prior to each render, but could be called only when velocities change.
 	void ComputePathPoints(double Foward_Vel, double Angular_Vel)
 	{
-		if( draw_cube || Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
+		if( draw_shape != e_Path || Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
 			return;
 
 		forward_velocity = Foward_Vel;
@@ -1556,8 +1593,10 @@ public:
 
 			projector.screen.SetSize(Frame->XRes, Frame->YRes);
 
-			if( !draw_cube )
-			{	// draw the normal path
+			switch (draw_shape)
+			{
+			case e_Path:
+				// draw the normal path
 				projector.Trans_Line(Left[0], Right[0]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 
@@ -1575,9 +1614,10 @@ public:
 					projector.Trans_Line(Left[i + 1], Right[i + 1]);
 					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 				}
-			}
-			else	// test cube.
-			{	// animation. sweep back and forth.
+				break;
+			case e_Cube:
+				// test cube.
+				// animation. sweep back and forth.
 				//_3Dpoint Camera_LookAt = _3Dpoint(DEG_2_RAD(angle),DEG_2_RAD(-45), 0);
 				//angle += dir;
 				//if(angle < -45) dir = 1;
@@ -1621,6 +1661,61 @@ public:
 
 				projector.Trans_Line(cube[3], cube[7]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+				
+				break;
+			case e_Square:
+				projector.Trans_Line(square[0], square[1]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(square[0], square[2]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(square[1], square[3]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				projector.Trans_Line(square[2], square[3]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+				
+				break;
+			case e_Circle:
+				for (int p = 0; p < 39; p++)
+				{
+					projector.Trans_Line(circle[p], circle[p+1]);
+					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+				}
+				projector.Trans_Line(circle[39], circle[0]);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+		
+				// second time. We'll want to do a translation in both cases.
+				_3Dpoint Translation = _3Dpoint(0.0, 1.0, 0.0);	// one meter away.
+				_3Dpoint Pt1 = _3Dpoint();
+				_3Dpoint Pt2 = _3Dpoint();
+
+				for (int p = 0; p < 39; p++)
+				{
+					Pt1.x = Translation.x + circle[p].x;
+					Pt1.y = Translation.y + circle[p].y;
+					Pt1.z = Translation.z + circle[p].z;
+
+					Pt2.x = Translation.x + circle[p+1].x;
+					Pt2.y = Translation.y + circle[p+1].y;
+					Pt2.z = Translation.z + circle[p+1].z;
+
+					projector.Trans_Line(Pt1, Pt2);
+					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+				}
+				Pt1.x = Translation.x + circle[39].x;
+				Pt1.y = Translation.y + circle[39].y;
+				Pt1.z = Translation.z + circle[39].z;
+
+				Pt2.x = Translation.x + circle[0].x;
+				Pt2.y = Translation.y + circle[0].y;
+				Pt2.z = Translation.z + circle[0].z;
+
+				projector.Trans_Line(Pt1, Pt2);
+				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+
+				break;
 			}
 		}
 
