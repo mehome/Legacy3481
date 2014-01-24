@@ -57,7 +57,12 @@ __inline T Enum_GetValue(const char *value,const char * const Table[],size_t NoI
 
 const char * const csz_ReticleType_Enum[] =
 {
-	"none","square","pathalign","composite","bypass","line_plot"
+	"none","square","pathalign","shape","composite","bypass","line_plot"
+};
+
+const char * const csz_ShapeType_Enum[] =
+{
+	"cube","square","circle"
 };
 
 struct Compositor_Props
@@ -148,6 +153,9 @@ struct Compositor_Props
 			e_Square,
 			e_Circle
 		} draw_shape;
+		static shape_types GetShapeType_Enum (const char *value)
+		{	return Enum_GetValue<shape_types> (value,csz_ShapeType_Enum,_countof(csz_ShapeType_Enum));
+		}
 	};
 	std::vector<Shape3D_Renderer_Props> shapes_3D_reticle;
 
@@ -368,6 +376,96 @@ static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &p
 	} while (!fieldtable_err);
 }
 
+static bool LoadMeasuredValue(Scripting::Script& script,const char *root_name,double &value)
+{
+	const char* err=NULL;
+	err = script.GetField(root_name, NULL, NULL,&value);
+	if (err)
+	{
+		std::string name=root_name;
+		name+="_ft";
+		err = script.GetField(name.c_str(), NULL, NULL,&value);
+		if (!err)
+			value=Feet2Meters(value);
+		else
+		{
+			std::string name=root_name;
+			name+="_in";
+			err = script.GetField(name.c_str(), NULL, NULL,&value);
+			if (!err)
+				value=Inches2Meters(value);
+		}
+	}
+	return err==NULL;  //return success if no error
+}
+
+
+static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_Props &props,Compositor_Props::Shape3D_Renderer_Props &shape_props)
+{
+	const char* err=NULL;
+	double value;
+
+	typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
+
+	std::string sTest;
+	err = script.GetField("draw_shape",&sTest,NULL,NULL);
+	assert(!err);  //gotta have it if we are making a shape
+	ShapeProps::shape_types shape=ShapeProps::GetShapeType_Enum(sTest.c_str());
+	shape_props.draw_shape=shape;
+
+	if (shape==ShapeProps::e_Cube)
+	{
+		if (LoadMeasuredValue(script,"size",value))
+			shape_props.specific_data.Size_1D=value;
+		else
+			shape_props.specific_data.Size_1D= 12 * 0.0254;	// 12 inches default value
+	}
+	else
+	{
+		//The rest should be the shapes 2D kind
+		if (LoadMeasuredValue(script,"size",value))
+			shape_props.specific_data.Shapes2D.Size_1D=value;
+		else
+			shape_props.specific_data.Shapes2D.Size_1D= 12 * 0.0254;	// 12 inches default value
+
+		//TODO plane selection here
+		shape_props.specific_data.Shapes2D.PlaneSelection=ShapeProps::type_specifics::Shapes2D_Props::e_xy_plane;
+	}
+
+	err=script.GetField("r", NULL, NULL, &value);
+	if (!err)
+		shape_props.rgb[0]=(BYTE)value;
+	err=script.GetField("g", NULL, NULL, &value);
+	if (!err)
+		shape_props.rgb[1]=(BYTE)value;
+	err=script.GetField("b", NULL, NULL, &value);
+	if (!err)
+		shape_props.rgb[2]=(BYTE)value;
+}
+
+static void LoadShapeReticleProps(Scripting::Script& script,Compositor_Props &props)
+{
+	const char* err=NULL;
+	const char* fieldtable_err=NULL;
+	char Buffer[128];
+	size_t index=1;  //keep the lists cardinal in LUA
+	do 
+	{
+		sprintf_s(Buffer,128,"shape_reticle_%d",index);
+		fieldtable_err = script.GetFieldTable(Buffer);
+		if (!fieldtable_err)
+		{
+			Compositor_Props::Shape3D_Renderer_Props shape_props;
+			LoadShapeReticleProps_Internal(script,props,shape_props);
+
+			props.shapes_3D_reticle.push_back(shape_props);
+			index++;
+
+			script.Pop();
+		}
+	} while (!fieldtable_err);
+}
+
 static void LoadLinePlotProps_Internal(Scripting::Script& script,Compositor_Props &props,Compositor_Props::LinePlotReticle_Container_Props &lineplot_pkt)
 {
 	const char* err=NULL;
@@ -431,29 +529,6 @@ static void LoadLinePlotProps(Scripting::Script& script,Compositor_Props &props)
 			script.Pop();
 		}
 	} while (!fieldtable_err);
-}
-
-static bool LoadMeasuredValue(Scripting::Script& script,const char *root_name,double &value)
-{
-	const char* err=NULL;
-	err = script.GetField(root_name, NULL, NULL,&value);
-	if (err)
-	{
-		std::string name=root_name;
-		name+="_ft";
-		err = script.GetField(name.c_str(), NULL, NULL,&value);
-		if (!err)
-			value=Feet2Meters(value);
-		else
-		{
-			std::string name=root_name;
-			name+="_in";
-			err = script.GetField(name.c_str(), NULL, NULL,&value);
-			if (!err)
-				value=Inches2Meters(value);
-		}
-	}
-	return err==NULL;  //return success if no error
 }
 
 static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props)
@@ -624,6 +699,15 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 					seq_pkt.specific_data.SquareReticle_SelIndex--;  // translate cardinal to ordinal 
 				}
 				break;
+			case Compositor_Props::eShape3D:
+				{
+					double fTest;
+
+					err = script.GetField("selection",NULL,NULL,&fTest);
+					seq_pkt.specific_data.ShapeReticle_props.SelIndex=(size_t)fTest;
+					seq_pkt.specific_data.ShapeReticle_props.SelIndex--;  // translate cardinal to ordinal 
+				}
+				break;
 			case Compositor_Props::eComposite:
 
 				err = script.GetFieldTable("composite");
@@ -733,6 +817,14 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 			//clear the default one
 			props.square_reticle.clear();
 			LoadSquareReticleProps(script,props);
+			script.Pop();
+		}
+		err = script.GetFieldTable("shape_reticle_props");
+		if (!err)
+		{
+			//clear the default one
+			props.square_reticle.clear();
+			LoadShapeReticleProps(script,props);
 			script.Pop();
 		}
 		err = script.GetFieldTable("line_plot_props");
@@ -1718,7 +1810,17 @@ public:
 		if (g_Framework)
 		{
 			const projection &projector=m_Projection;
-			unsigned int col[] = { 128, 255, 128, 255 };
+
+			const double R = (double)props.rgb[0];
+			const double G = (double)props.rgb[1];
+			const double B = (double)props.rgb[2];
+
+			//These come from old code in the TargaReader plugin
+			const double Y = (0.257 * R + 0.504 * G + 0.098 * B) + 16.0;
+			const double U =(-0.148 * R - 0.291 * G + 0.439 * B) + 128.0;
+			const double V = (0.439 * R - 0.368 * G - 0.071 * B) + 128.0;
+			//gotta love constants to do this :)
+			const unsigned int col[] = { (unsigned int)U, (unsigned int)Y, (unsigned int)V, (unsigned int)Y };
 
 			projector.screen.SetSize(Frame->XRes, Frame->YRes);
 

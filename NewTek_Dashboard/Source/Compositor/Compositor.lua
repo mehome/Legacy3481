@@ -43,7 +43,17 @@ CompositorProps = {
 				r=0,g=255,b=255
 			}
 		},
-		
+		--Shape reticles depend on the path align to setup the camera confiruation even if the path align is never used
+		shape_reticle_props =
+		{
+			-- draw_shape -- may be "square", "circle", or "cube".
+			shape_reticle_1 =
+			{
+				size_in=25,
+				r=0,g=255,b=100,
+				draw_shape="circle"
+			}
+		},
 		line_plot_props =
 		{
 			--plot arm
@@ -107,6 +117,7 @@ CompositorProps = {
 				{
 					composite_1 = {	type="square", selection=1	},
 					composite_2 = {	type="pathalign" },
+					composite_3 = { type="shape", selection=1 }
 				}
 			},
 			sequence_2 = 
