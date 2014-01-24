@@ -42,15 +42,6 @@ Dashboard_Framework_Interface *g_Framework=NULL;
 using namespace FrameWork;
 event frameSync;
 
-enum path_shapes 
-{
-	e_Path,
-	e_Cube,
-	e_Square,
-	e_Circle
-};
-
-
 template<class T>
 __inline T Enum_GetValue(const char *value,const char * const Table[],size_t NoItems)
 {
@@ -116,7 +107,12 @@ struct Compositor_Props
 		double pos_x,pos_y,pos_z;
 		double rot_x,rot_y,rot_z;
 		double FOV_x,FOV_y;
-		enum path_shapes draw_shape;  //this will become depreciated
+		BYTE rgb[3];  //shape color
+		enum path_types
+		{
+			ePath,
+			eDistanceRunner
+		} path_type;  //this will become depreciated
 	} PathAlign;
 	//No list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
 
@@ -128,6 +124,7 @@ struct Compositor_Props
 		// _x,_y,_z controls the position of the shape
 		// _enabled controls whether or not it is enabled
 		std::string RemoteVariableName;
+		BYTE rgb[3];  //shape color
 		union type_specifics
 		{
 			double Size_1D;  //cubes use this... kept as generic name for shapes that just need size
@@ -144,7 +141,13 @@ struct Compositor_Props
 				} PlaneSelection;
 			} Shapes2D;
 		} specific_data;
-		enum path_shapes draw_shape;
+
+		enum shape_types 
+		{
+			e_Cube,
+			e_Square,
+			e_Circle
+		} draw_shape;
 	};
 	std::vector<Shape3D_Renderer_Props> shapes_3D_reticle;
 
@@ -154,6 +157,7 @@ struct Compositor_Props
 		eNone,
 		eDefault,
 		ePathAlign,
+		eShape3D,
 		eComposite,
 		eBypass,
 		eLinePlot
@@ -181,7 +185,7 @@ struct Compositor_Props
 			{
 				size_t SelIndex;
 				double PositionZ;
-			};
+			} ShapeReticle_props;
 		} specific_data;
 		bool IsEnabled;  //all reticles can have ability to not be drawn TODO
 	};
@@ -454,6 +458,7 @@ static bool LoadMeasuredValue(Scripting::Script& script,const char *root_name,do
 
 static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props)
 {
+	typedef Compositor_Props::PathAlign_Container_Props PathProps; 
 	const char* err=NULL;
 	const char* fieldtable_err=NULL;
 	//Note: I've left this in form to handle list of settings... not yet sure if user will need multiple views (e.g. multiple sequences)
@@ -548,6 +553,8 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			}
 			std::string sTest;
 			err = script.GetField("draw_shape",&sTest,NULL,NULL);
+			pal_props.path_type=PathProps::ePath;
+#if 0
 			pal_props.draw_shape=e_Path;
 			if (!err)
 			{
@@ -560,6 +567,7 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 				else if(sTest == "circle")
 					pal_props.draw_shape = e_Circle;
 			}
+#endif
 			props.PathAlign=pal_props;
 			//props.square_reticle.push_back(sqr_pkt);
 			//index++;
@@ -578,7 +586,7 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			pal_props.rot_y=0.33;
 			pal_props.rot_z=0.0;
 			pal_props.FOV_x=pal_props.FOV_y=47.0;
-			pal_props.draw_shape=e_Path;
+			pal_props.path_type=PathProps::ePath;
 			props.PathAlign=pal_props;
 		}
 	} //while (!fieldtable_err);
@@ -1093,8 +1101,8 @@ public:
 class SCREEN
 {
 public:
-	_2Dpoint center;
-	_2Dpoint size;
+	mutable _2Dpoint center;
+	mutable _2Dpoint size;
 
 	SCREEN()
 	{
@@ -1107,7 +1115,7 @@ public:
 		SetSize(width, hight);
 	}
 
-	void SetSize(int width, int hight)
+	void SetSize(int width, int hight) const
 	{
 		center = _2Dpoint(width/2, hight/2);
 		size = _2Dpoint(width, hight);
@@ -1117,15 +1125,15 @@ public:
 class projection
 {
 public:
-	_2Dpoint p1;	// these are effectively our output points
-	_2Dpoint p2;
+	mutable _2Dpoint p1;	// these are effectively our output points
+	mutable _2Dpoint p2;
 
 	CAMERA camera;
 	SCREEN screen;
 
 private:
 	_3Dpoint origin;
-	_3Dpoint e1, e2, n1, n2;
+	mutable _3Dpoint e1, e2, n1, n2;
 	double tanthetah, tanthetav;
 	_3Dpoint basisa, basisb, basisc;
 	double EPSILON;
@@ -1228,7 +1236,7 @@ public:
 		return true;
 	}
 
-	bool Trans_Line(_3Dpoint w1, _3Dpoint w2)
+	bool Trans_Line(_3Dpoint w1, _3Dpoint w2) const
 	{
 		Trans_World2Eye(w1, e1);
 		Trans_World2Eye(w2, e2);
@@ -1280,7 +1288,7 @@ public:
 	}
 
 private:
-	void Trans_World2Eye(_3Dpoint w, _3Dpoint& e)
+	void Trans_World2Eye(_3Dpoint w, _3Dpoint& e) const
 	{
 		/* Translate world so that the camera is at the origin */
 		w.x -= camera.from.x;
@@ -1293,7 +1301,7 @@ private:
 		e.z = w.x * basisc.x + w.y * basisc.y + w.z * basisc.z;
 	}
 
-	bool Trans_ClipEye(_3Dpoint& e1, _3Dpoint& e2)
+	bool Trans_ClipEye(_3Dpoint& e1, _3Dpoint& e2) const
 	{
 		double mu;
 
@@ -1350,7 +1358,7 @@ private:
 		return (true);
 	}
 
-	void Trans_Eye2Norm(_3Dpoint e, _3Dpoint& n)
+	void Trans_Eye2Norm(_3Dpoint e, _3Dpoint& n) const
 	{
 		double d;
 		if (camera.projection == 0)
@@ -1368,7 +1376,7 @@ private:
 		}
 	}
 
-	bool Trans_ClipNorm(_3Dpoint& n1, _3Dpoint& n2)
+	bool Trans_ClipNorm(_3Dpoint& n1, _3Dpoint& n2) const
 	{
 		double mu;
 	
@@ -1456,7 +1464,7 @@ private:
 
 	}
 
-	void Trans_Norm2Screen(_3Dpoint norm, _2Dpoint& projected)
+	void Trans_Norm2Screen(_3Dpoint norm, _2Dpoint& projected) const
 	{
 		double aspect = (double)screen.size.h / (double)screen.size.v;
 		projected.h = (int)(screen.center.h - screen.size.h * norm.x / 2);
@@ -1467,6 +1475,7 @@ private:
 class PathRenderer
 {
 public:
+	typedef Compositor_Props::PathAlign_Container_Props PathProps; 
 	PathRenderer(void)
 	{
 		NumPoints = 10;
@@ -1478,7 +1487,7 @@ public:
 		angle = -45;
 		dir = 1;
 
-		draw_shape = e_Path;
+		path_type = PathProps::ePath;
 
 		// points for cube - 1 x 1 meter centered at 0,0,0.
 		cube[0].x = -0.5, cube[0].y =  0.5, cube[0].z =  0.5;
@@ -1525,7 +1534,7 @@ public:
 		_3Dpoint Camera_position = _3Dpoint(props.pos_x,props.pos_y,props.pos_z);
 		_3Dpoint Camara_LookAt = _3Dpoint(props.rot_x,props.rot_y,props.rot_z);
 		m_lastOrientation=Camara_LookAt;
-		draw_shape=props.draw_shape;
+		path_type=props.path_type;
 
 		projector = projection();
 		projector.camera.from = Camera_position;
@@ -1552,7 +1561,7 @@ public:
 	double forward_velocity;	// meters per second
 	double angular_velocity;	// radians per second
 
-	path_shapes draw_shape;		// what to draw
+	PathProps::path_types path_type;		// what to draw
 
 	_3Dpoint cube[8];
 
@@ -1569,7 +1578,7 @@ public:
 	// This should be called prior to each render, but could be called only when velocities change.
 	void ComputePathPoints(double Foward_Vel, double Angular_Vel)
 	{
-		if( draw_shape != e_Path || Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
+		if( path_type != PathProps::ePath || Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
 			return;
 
 		forward_velocity = Foward_Vel;
@@ -1627,9 +1636,9 @@ public:
 
 			projector.screen.SetSize(Frame->XRes, Frame->YRes);
 
-			switch (draw_shape)
+			switch (path_type)
 			{
-			case e_Path:
+			case PathProps::ePath:
 				// draw the normal path
 				projector.Trans_Line(Left[0], Right[0]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
@@ -1649,7 +1658,74 @@ public:
 					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 				}
 				break;
-			case e_Cube:
+			}
+		}
+
+		return Frame;
+	}
+
+private:
+	_3Dpoint* Left;
+	_3Dpoint* Center;
+	_3Dpoint* Right;
+	_3Dpoint* Translation;
+
+	_3Dpoint m_lastOrientation;  //used by Compute_LookAtFromAngles
+};
+
+class Shape3D_Renderer
+{
+public:
+	typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
+	Shape3D_Renderer(const projection &Projection) : m_Projection(Projection)
+	{}
+	void InitCube(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
+	{
+		// points for cube - 1 x 1 meter centered at 0,0,0.
+		cube[0].x = -0.5, cube[0].y =  0.5, cube[0].z =  0.5;
+		cube[1].x =  0.5, cube[1].y =  0.5, cube[1].z =  0.5;
+		cube[2].x = -0.5, cube[2].y =  0.5, cube[2].z = -0.5;
+		cube[3].x =  0.5, cube[3].y =  0.5, cube[3].z = -0.5;
+		cube[4].x = -0.5, cube[4].y = -0.5, cube[4].z =  0.5;
+		cube[5].x =  0.5, cube[5].y = -0.5, cube[5].z =  0.5;
+		cube[6].x = -0.5, cube[6].y = -0.5, cube[6].z = -0.5;
+		cube[7].x =  0.5, cube[7].y = -0.5, cube[7].z = -0.5;
+	}
+	void InitSquare(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
+	{
+		// points for square - 25 x 25 inches centered at 0,0,0.
+		// -- fudged for now, y is out about 5 feet, you'll want it at zero and move by adding translation.
+		square[0].x = -12.5 * 0.0254, square[0].y =  0 + 60 * 0.0254, square[0].z =  12.5 * 0.0254;
+		square[1].x =  12.5 * 0.0254, square[1].y =  0 + 60 * 0.0254, square[1].z =  12.5 * 0.0254;
+		square[2].x = -12.5 * 0.0254, square[2].y =  0 + 60 * 0.0254, square[2].z = -12.5 * 0.0254;
+		square[3].x =  12.5 * 0.0254, square[3].y =  0 + 60 * 0.0254, square[3].z = -12.5 * 0.0254;
+	}
+	void InitCircle(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
+	{
+		// point for circle - 25 inch diameter centered at 0,0,0.
+		// render twice, with translation.
+		double radius = 12.5 * 0.0254;
+		int idx = 0;
+		for(double rad = 0; rad < 2*M_PI; rad += 2*M_PI/40, idx++ )
+		{
+			circle[idx].x = cos(rad) * radius;
+			circle[idx].y = 0 + 60 * 0.0254;
+			circle[idx].z = sin(rad) * radius;
+		}
+	}
+	Bitmap_Frame *operator()(Bitmap_Frame *Frame,double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
+	{
+		if (g_Framework)
+		{
+			const projection &projector=m_Projection;
+			unsigned int col[] = { 128, 255, 128, 255 };
+
+			projector.screen.SetSize(Frame->XRes, Frame->YRes);
+
+			switch (props.draw_shape)
+			{
+			case ShapeProps::e_Cube:
+				InitCube(XPos,YPos,ZPos,props);
 				// test cube.
 				// animation. sweep back and forth.
 				//_3Dpoint Camera_LookAt = _3Dpoint(DEG_2_RAD(angle),DEG_2_RAD(-45), 0);
@@ -1695,9 +1771,10 @@ public:
 
 				projector.Trans_Line(cube[3], cube[7]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-				
+
 				break;
-			case e_Square:
+			case ShapeProps::e_Square:
+				InitSquare(XPos,YPos,ZPos,props);
 				projector.Trans_Line(square[0], square[1]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 
@@ -1709,9 +1786,10 @@ public:
 
 				projector.Trans_Line(square[2], square[3]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-				
+
 				break;
-			case e_Circle:
+			case ShapeProps::e_Circle:
+				InitCircle(XPos,YPos,ZPos,props);
 				for (int p = 0; p < 39; p++)
 				{
 					projector.Trans_Line(circle[p], circle[p+1]);
@@ -1719,7 +1797,7 @@ public:
 				}
 				projector.Trans_Line(circle[39], circle[0]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-		
+
 				// second time. We'll want to do a translation in both cases.
 				_3Dpoint Translation = _3Dpoint(0.0, 1.0, 0.0);	// one meter away.
 				_3Dpoint Pt1 = _3Dpoint();
@@ -1754,28 +1832,14 @@ public:
 		}
 
 		return Frame;
-	}
 
-private:
-	_3Dpoint* Left;
-	_3Dpoint* Center;
-	_3Dpoint* Right;
-	_3Dpoint* Translation;
-
-	_3Dpoint m_lastOrientation;  //used by Compute_LookAtFromAngles
-};
-
-class Shape3D_Renderer
-{
-public:
-	Shape3D_Renderer(const projection &Projection) : m_Projection(Projection)
-	{}
-	Bitmap_Frame *operator()(Bitmap_Frame *Frame,double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
-	{
 	}
 
 private:
 	const projection &m_Projection;
+	_3Dpoint cube[8];
+	_3Dpoint square[4];
+	_3Dpoint circle[40];
 };
 
 class Bypass_Reticle
@@ -2053,7 +2117,9 @@ class Compositor
 		}
 		IEvent::HandlerList ehl;
 		Compositor(const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,WindowTitle,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
-			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),m_WindowTitle(WindowTitle),
+			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Zpos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),
+			m_PathPlotter(),m_ShapeRender(m_PathPlotter.projector),
+			m_WindowTitle(WindowTitle),
 			m_IsEditable(false),m_PreviousIsEditable(false),m_RecurseIntoComposite(false),m_Flash(false),m_ToggleLinePlot(true)
 		{
 			FrameWork::EventMap *em=&m_EventMap; 
@@ -2340,6 +2406,45 @@ class Compositor
 						ret = m_PathPlotter.RenderPath(Frame);
 				}
 				break;
+			case Compositor_Props::eShape3D:
+				{
+					const Compositor_Props::Shape3D_Renderer_Props &shape_props=props.shapes_3D_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
+					double Xpos,Ypos,Zpos;
+					if (m_RecurseIntoComposite)
+					{
+						Xpos=EnableFlash?m_Xpos+XOffset:seq_pkt.PositionX+XOffset;
+						Ypos=EnableFlash?m_Ypos+YOffset:seq_pkt.PositionY+YOffset;
+						Zpos=EnableFlash?m_Zpos:seq_pkt.specific_data.ShapeReticle_props.PositionZ;
+						if (EnableFlash)
+						{
+							Xpos=CheckX(Xpos);
+							m_Xpos=Xpos-XOffset;
+							Ypos=CheckY(Ypos);
+							m_Ypos=Ypos-YOffset;
+						}
+					}
+					else
+					{
+						//If we are not the top layer then we are always locked down if we are not recursing
+						bool UseInput=(&sequence==&props.Sequence) && EnableFlash;
+						Xpos=UseInput?m_Xpos:seq_pkt.PositionX+XOffset;
+						Ypos=UseInput?m_Ypos:seq_pkt.PositionY+YOffset;
+						Zpos=UseInput?m_Zpos:seq_pkt.specific_data.ShapeReticle_props.PositionZ;
+						if (EnableFlash)
+						{
+							Xpos=CheckX(Xpos);
+							double TempXpos=UseInput?Xpos:Xpos-seq_pkt.PositionX;
+							m_Xpos=(TempXpos<0)?std::max(TempXpos,m_Xpos):std::min(TempXpos,m_Xpos);
+
+							Ypos=CheckY(Ypos);
+							double TempYpos=UseInput?Ypos:Ypos-seq_pkt.PositionY;
+							m_Ypos=(TempXpos<0)?std::max(TempYpos,m_Ypos):std::min(TempYpos,m_Ypos);
+						}
+					}
+
+					m_ShapeRender(Frame,Xpos,Ypos,Zpos,shape_props);
+				}
+				break;
 			case Compositor_Props::eBypass:
 				ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
 				break;
@@ -2446,11 +2551,12 @@ class Compositor
 		};
 		std::stack<PositionPacket> m_PositionTracker;  //used to recurse into the sequence
 		size_t m_BlinkCounter; //very simple blink mechanism
-		double m_Xpos,m_Ypos;
+		double m_Xpos,m_Ypos,m_Zpos;
 		double m_Xpos_Offset,m_Ypos_Offset;  //only used when stepping through recursion
 		Bypass_Reticle m_Bypass;
 		LinePlot_Retical m_LinePlot;
 		PathRenderer m_PathPlotter;
+		Shape3D_Renderer m_ShapeRender;
 		std::string m_EditPositionName;
 		std::string m_WindowTitle;
 
