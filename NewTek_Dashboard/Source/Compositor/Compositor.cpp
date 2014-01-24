@@ -116,9 +116,20 @@ struct Compositor_Props
 		double pos_x,pos_y,pos_z;
 		double rot_x,rot_y,rot_z;
 		double FOV_x,FOV_y;
-		enum path_shapes draw_shape;
+		enum path_shapes draw_shape;  //this will become depreciated
 	} PathAlign;
-	//for now no list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
+	//No list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
+
+	//Shapes will use project properties set in the Path Align container... which should be renamed to projection properties
+	struct Shape3D_Renderer_Props
+	{
+		double pos_x,pos_y,pos_z;
+		//This works out to represent diameter for circle, width, height for square, and width, height, and depth for the cube
+		//If we add more shapes we could convert this to a union of specific data
+		double shape_size;
+		enum path_shapes draw_shape;
+	};
+	std::vector<Shape3D_Renderer_Props> shapes_3D_reticle;
 
 	//Reticle type definitions
 	enum ReticleType
@@ -1731,6 +1742,14 @@ private:
 	_3Dpoint m_lastOrientation;  //used by Compute_LookAtFromAngles
 };
 
+class Shape3D_Renderer
+{
+public:
+	Shape3D_Renderer(const projection &Projection) : m_Projection(Projection)
+	{}
+private:
+	const projection &m_Projection;
+};
 
 class Bypass_Reticle
 {
