@@ -123,10 +123,27 @@ struct Compositor_Props
 	//Shapes will use project properties set in the Path Align container... which should be renamed to projection properties
 	struct Shape3D_Renderer_Props
 	{
-		double pos_x,pos_y,pos_z;
-		//This works out to represent diameter for circle, width, height for square, and width, height, and depth for the cube
-		//If we add more shapes we could convert this to a union of specific data
-		double shape_size;
+		//This can be left empty for no remote control
+		//If filled in the following suffix on names are as follows:
+		// _x,_y,_z controls the position of the shape
+		// _enabled controls whether or not it is enabled
+		std::string RemoteVariableName;
+		union type_specifics
+		{
+			double Size_1D;  //cubes use this... kept as generic name for shapes that just need size
+			struct Shapes2D_Props  //circles and squares use this
+			{
+				double Size_1D;  
+				//Where x and y are width height and z is depth
+				enum PlaneSelection_enum
+				{
+					e_xy_plane,  //typical front face drawing
+					e_xz_plane,  //like drawn on the floor or ceiling
+					e_yz_plane,  //like drawn on a side wall (probably rarely used)
+					e_xy_and_xz_plane  //A double render on both planes
+				} PlaneSelection;
+			} Shapes2D;
+		} specific_data;
 		enum path_shapes draw_shape;
 	};
 	std::vector<Shape3D_Renderer_Props> shapes_3D_reticle;
@@ -160,7 +177,13 @@ struct Compositor_Props
 		{
 			size_t SquareReticle_SelIndex;
 			Sequence_List *Composite;
+			struct ShapeDynamics
+			{
+				size_t SelIndex;
+				double PositionZ;
+			};
 		} specific_data;
+		bool IsEnabled;  //all reticles can have ability to not be drawn TODO
 	};
 	Sequence_List Sequence;
 
@@ -1747,6 +1770,10 @@ class Shape3D_Renderer
 public:
 	Shape3D_Renderer(const projection &Projection) : m_Projection(Projection)
 	{}
+	Bitmap_Frame *operator()(Bitmap_Frame *Frame,double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
+	{
+	}
+
 private:
 	const projection &m_Projection;
 };
