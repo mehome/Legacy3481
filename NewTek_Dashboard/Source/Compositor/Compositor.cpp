@@ -629,20 +629,17 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			std::string sTest;
 			err = script.GetField("draw_shape",&sTest,NULL,NULL);
 			pal_props.path_type=PathProps::ePath;
-#if 0
-			pal_props.draw_shape=e_Path;
+
+			err=script.GetField("r", NULL, NULL, &fTest);
 			if (!err)
-			{
-				if (sTest == "path")
-					pal_props.draw_shape = e_Path;
-				else if(sTest == "cube")
-					pal_props.draw_shape = e_Cube;
-				else if(sTest == "square")
-					pal_props.draw_shape = e_Square;
-				else if(sTest == "circle")
-					pal_props.draw_shape = e_Circle;
-			}
-#endif
+				pal_props.rgb[0]=(BYTE)fTest;
+			err=script.GetField("g", NULL, NULL, &fTest);
+			if (!err)
+				pal_props.rgb[1]=(BYTE)fTest;
+			err=script.GetField("b", NULL, NULL, &fTest);
+			if (!err)
+				pal_props.rgb[2]=(BYTE)fTest;
+
 			props.PathAlign=pal_props;
 			//props.square_reticle.push_back(sqr_pkt);
 			//index++;
@@ -1581,34 +1578,6 @@ public:
 
 		path_type = PathProps::ePath;
 
-		// points for cube - 1 x 1 meter centered at 0,0,0.
-		cube[0].x = -0.5, cube[0].y =  0.5, cube[0].z =  0.5;
-		cube[1].x =  0.5, cube[1].y =  0.5, cube[1].z =  0.5;
-		cube[2].x = -0.5, cube[2].y =  0.5, cube[2].z = -0.5;
-		cube[3].x =  0.5, cube[3].y =  0.5, cube[3].z = -0.5;
-		cube[4].x = -0.5, cube[4].y = -0.5, cube[4].z =  0.5;
-		cube[5].x =  0.5, cube[5].y = -0.5, cube[5].z =  0.5;
-		cube[6].x = -0.5, cube[6].y = -0.5, cube[6].z = -0.5;
-		cube[7].x =  0.5, cube[7].y = -0.5, cube[7].z = -0.5;
-
-		// points for square - 25 x 25 inches centered at 0,0,0.
-		// -- fudged for now, y is out about 5 feet, you'll want it at zero and move by adding translation.
-		square[0].x = -12.5 * 0.0254, square[0].y =  0 + 60 * 0.0254, square[0].z =  12.5 * 0.0254;
-		square[1].x =  12.5 * 0.0254, square[1].y =  0 + 60 * 0.0254, square[1].z =  12.5 * 0.0254;
-		square[2].x = -12.5 * 0.0254, square[2].y =  0 + 60 * 0.0254, square[2].z = -12.5 * 0.0254;
-		square[3].x =  12.5 * 0.0254, square[3].y =  0 + 60 * 0.0254, square[3].z = -12.5 * 0.0254;
-
-		// point for circle - 25 inch diameter centered at 0,0,0.
-		// render twice, with translation.
-		double radius = 12.5 * 0.0254;
-		int idx = 0;
-		for(double rad = 0; rad < 2*M_PI; rad += 2*M_PI/40, idx++ )
-		{
-			circle[idx].x = cos(rad) * radius;
-			circle[idx].y = 0 + 60 * 0.0254;
-			circle[idx].z = sin(rad) * radius;
-		}
-
 		// these should probably be pulled from LUA values.
 		width = 15 * 0.0254;	// 15 inches in meters (robot is 24)	This is the width of our drawn path.
 		length = 33 * 0.0254;	// 33 inches in meters					This is how far to project our path.
@@ -1654,12 +1623,6 @@ public:
 	double angular_velocity;	// radians per second
 
 	PathProps::path_types path_type;		// what to draw
-
-	_3Dpoint cube[8];
-
-	_3Dpoint square[4];
-
-	_3Dpoint circle[40];
 
 	int angle;
 	int dir;
@@ -1720,11 +1683,27 @@ public:
 	}
 
 	// draw the path mesh
-	Bitmap_Frame* RenderPath(Bitmap_Frame* Frame)
+	Bitmap_Frame* RenderPath(Bitmap_Frame* Frame,const Compositor_Props::PathAlign_Container_Props &props,bool EnableFlash)
 	{
 		if (g_Framework)
 		{
-			unsigned int col[] = { 128, 255, 128, 255 };
+			const double R = (double)props.rgb[0];
+			const double G = (double)props.rgb[1];
+			const double B = (double)props.rgb[2];
+
+			//These come from old code in the TargaReader plugin
+			const double Y = (0.257 * R + 0.504 * G + 0.098 * B) + 16.0;
+			const double U =(-0.148 * R - 0.291 * G + 0.439 * B) + 128.0;
+			const double V = (0.439 * R - 0.368 * G - 0.071 * B) + 128.0;
+			//gotta love constants to do this :)
+			unsigned int col[] = { (unsigned int)U, (unsigned int)Y, (unsigned int)V, (unsigned int)Y };
+			if (EnableFlash)
+			{
+				col[0]=16;
+				col[1]=150;
+				col[2]=245;
+				col[3]=150;
+			}
 
 			projector.screen.SetSize(Frame->XRes, Frame->YRes);
 
@@ -2512,7 +2491,7 @@ class Compositor
 					m_PathPlotter.ComputePathPoints(Feet2Meters(Velocity),-Rotation_Velocity);
 					#endif
 					if (!IsZero(Velocity))
-						ret = m_PathPlotter.RenderPath(Frame);
+						ret = m_PathPlotter.RenderPath(Frame,pa_props,EnableFlash&&m_Flash);
 				}
 				break;
 			case Compositor_Props::eShape3D:

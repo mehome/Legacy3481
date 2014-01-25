@@ -103,6 +103,7 @@ CompositorProps = {
 			camera_position =	{ x_in=0, y_in=3.5, z_in=-1.0 },
 			camera_rotation =	{ x=0, y_deg=0, z=0 },
 			fov_x=67,fov_y=67,
+			r=0,g=255,b=100,
 			draw_shape = "path",
 			-- draw_shape -- may be "path", "square", "circle", or "cube".
 		},
