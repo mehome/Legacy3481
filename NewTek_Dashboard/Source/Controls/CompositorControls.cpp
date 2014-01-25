@@ -23,6 +23,7 @@ public:
 		eNone,
 		eDefault,
 		ePathAlign,
+		eShape3D,
 		eComposite,
 		eBypass,
 		eLinePlot

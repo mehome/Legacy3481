@@ -1805,7 +1805,7 @@ public:
 			circle[idx].z = sin(rad) * radius;
 		}
 	}
-	Bitmap_Frame *operator()(Bitmap_Frame *Frame,double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
+	Bitmap_Frame *operator()(Bitmap_Frame *Frame,double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props,bool EnableFlash)
 	{
 		if (g_Framework)
 		{
@@ -1820,7 +1820,14 @@ public:
 			const double U =(-0.148 * R - 0.291 * G + 0.439 * B) + 128.0;
 			const double V = (0.439 * R - 0.368 * G - 0.071 * B) + 128.0;
 			//gotta love constants to do this :)
-			const unsigned int col[] = { (unsigned int)U, (unsigned int)Y, (unsigned int)V, (unsigned int)Y };
+			unsigned int col[] = { (unsigned int)U, (unsigned int)Y, (unsigned int)V, (unsigned int)Y };
+			if (EnableFlash)
+			{
+				col[0]=16;
+				col[1]=150;
+				col[2]=245;
+				col[3]=150;
+			}
 
 			projector.screen.SetSize(Frame->XRes, Frame->YRes);
 
@@ -2544,7 +2551,7 @@ class Compositor
 						}
 					}
 
-					m_ShapeRender(Frame,Xpos,Ypos,Zpos,shape_props);
+					m_ShapeRender(Frame,Xpos,Ypos,Zpos,shape_props,EnableFlash&&m_Flash);
 				}
 				break;
 			case Compositor_Props::eBypass:
