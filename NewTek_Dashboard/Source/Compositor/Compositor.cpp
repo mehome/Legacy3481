@@ -709,7 +709,7 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 					err = script.GetField("selection",NULL,NULL,&fTest);
 					seq_pkt.specific_data.ShapeReticle_props.SelIndex=(size_t)fTest;
 					seq_pkt.specific_data.ShapeReticle_props.SelIndex--;  // translate cardinal to ordinal 
-					seq_pkt.specific_data.ShapeReticle_props.PositionZ=0.0;
+					seq_pkt.specific_data.ShapeReticle_props.PositionZ=60 * 0.0254;  //a 5 foot depth default makes easier to see it to start
 				}
 				break;
 			case Compositor_Props::eComposite:
@@ -1756,6 +1756,7 @@ class Shape3D_Renderer
 {
 public:
 	typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
+	typedef ShapeProps::type_specifics::Shapes2D_Props Shapes2D_Props;
 	Shape3D_Renderer(const projection &Projection) : m_Projection(Projection)
 	{}
 	void InitCube(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
@@ -1787,9 +1788,25 @@ public:
 		int idx = 0;
 		for(double rad = 0; rad < 2*M_PI; rad += 2*M_PI/40, idx++ )
 		{
-			circle[idx].x = cos(rad) * radius;
-			circle[idx].y = 0 + 60 * 0.0254;
-			circle[idx].z = sin(rad) * radius;
+			switch (props.specific_data.Shapes2D.PlaneSelection)
+			{
+			case Shapes2D_Props::e_xy_plane:
+			case Shapes2D_Props::e_xy_and_xz_plane:
+				circle[idx].x = (cos(rad) * radius) + XPos;
+				circle[idx].y = ZPos;
+				circle[idx].z = (sin(rad) * radius) + YPos;
+				break;
+			case Shapes2D_Props::e_xz_plane:
+				circle[idx].x = (cos(rad) * radius) + XPos;
+				circle[idx].y = (sin(rad) * radius) + ZPos;
+				circle[idx].z = YPos;
+				break;
+			case Shapes2D_Props::e_yz_plane:
+				circle[idx].x = ZPos;
+				circle[idx].y = (cos(rad) * radius) + ZPos;
+				circle[idx].z = (sin(rad) * radius) + YPos;
+				break;
+			}
 		}
 	}
 	Bitmap_Frame *operator()(Bitmap_Frame *Frame,double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props,bool EnableFlash)
@@ -2075,6 +2092,16 @@ class Compositor
 				//Save current position to this sequence packet
 				Sequence[m_SequenceIndex].PositionX=m_Xpos;
 				Sequence[m_SequenceIndex].PositionY=m_Ypos;
+				//Only certain 3D reticles have a Z position in the specific data structure
+				switch (Sequence[m_SequenceIndex].type)
+				{
+				case Compositor_Props::ePathAlign:
+					Sequence[m_SequenceIndex].specific_data.PositionZ=m_Zpos;
+					break;
+				case Compositor_Props::eShape3D:
+					Sequence[m_SequenceIndex].specific_data.ShapeReticle_props.PositionZ=m_Zpos;
+					break;
+				}
 
 				//For recursive stepping we can determine if we start the index from the end or beginning from looking at the old and new value
 				const bool FromNext=NewSequenceIndex<m_SequenceIndex;
@@ -2148,6 +2175,16 @@ class Compositor
 				//Modify position to last saved... using m_pSequence... since this may change when stepping into composite
 				m_Xpos=(*m_pSequence)[m_SequenceIndex].PositionX;
 				m_Ypos=(*m_pSequence)[m_SequenceIndex].PositionY;
+				//Only certain 3D reticles have a Z position in the specific data structure
+				switch (Sequence[m_SequenceIndex].type)
+				{
+				case Compositor_Props::ePathAlign:
+					m_Zpos=(*m_pSequence)[m_SequenceIndex].specific_data.PositionZ;
+					break;
+				case Compositor_Props::eShape3D:
+					m_Zpos=(*m_pSequence)[m_SequenceIndex].specific_data.ShapeReticle_props.PositionZ;
+					break;
+				}
 				if (CompositeUpdate)
 					UpdateSequence(NewSequenceIndex,true);
 			}
@@ -2484,7 +2521,7 @@ class Compositor
 					m_PathPlotter.ComputePathPoints(Feet2Meters(Velocity),-Rotation_Velocity);
 					#endif
 					if (!IsZero(Velocity))
-						ret = m_PathPlotter.RenderPath(Frame,pa_props,EnableFlash&&m_Flash);
+						ret = m_PathPlotter.RenderPath(Frame,pa_props,m_RecurseIntoComposite&&EnableFlash&&!m_Flash);
 				}
 				break;
 			case Compositor_Props::eShape3D:
@@ -2523,7 +2560,7 @@ class Compositor
 						}
 					}
 
-					m_ShapeRender(Frame,Xpos,Ypos,Zpos,shape_props,EnableFlash&&m_Flash);
+					m_ShapeRender(Frame,Xpos,Ypos,Zpos,shape_props,EnableFlash&&!m_Flash);
 				}
 				break;
 			case Compositor_Props::eBypass:
