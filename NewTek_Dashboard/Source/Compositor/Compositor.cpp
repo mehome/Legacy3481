@@ -420,6 +420,22 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 	typedef ShapeProps::type_specifics::Shapes2D_Props Shapes2D_Props;
 
 	std::string sTest;
+	err = script.GetField("remote_name",&shape_props.RemoteVariableName,NULL,NULL);
+	if (shape_props.RemoteVariableName.c_str()[0]!=0)
+	{
+		sTest=shape_props.RemoteVariableName;
+		sTest+="_x";
+		SmartDashboard::PutNumber(sTest,0.0);
+		sTest=shape_props.RemoteVariableName;
+		sTest+="_y";
+		SmartDashboard::PutNumber(sTest,0.0);
+		sTest=shape_props.RemoteVariableName;
+		sTest+="_z";
+		SmartDashboard::PutNumber(sTest,0.0);
+		sTest=shape_props.RemoteVariableName;
+		sTest+="_enabled";
+		SmartDashboard::PutBoolean(sTest,true);
+	}
 	err = script.GetField("draw_shape",&sTest,NULL,NULL);
 	assert(!err);  //gotta have it if we are making a shape
 	ShapeProps::shape_types shape=ShapeProps::GetShapeType_Enum(sTest.c_str());
@@ -792,9 +808,24 @@ static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Pro
 				err = script.GetField("z",NULL,NULL,&seq_pkt.specific_data.PositionZ);
 				break;
 			case Compositor_Props::eShape3D:
-				err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
-				err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
-				err = script.GetField("z",NULL,NULL,&seq_pkt.specific_data.ShapeReticle_props.PositionZ);
+				{
+					err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
+					err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
+					err = script.GetField("z",NULL,NULL,&seq_pkt.specific_data.ShapeReticle_props.PositionZ);
+					const Compositor_Props::Shape3D_Renderer_Props &shape_props=props.shapes_3D_reticle[seq_pkt.specific_data.ShapeReticle_props.SelIndex];
+					if (shape_props.RemoteVariableName.c_str()[0]!=0)
+					{
+						sTest=shape_props.RemoteVariableName;
+						sTest+="_x";
+						SmartDashboard::PutNumber(sTest,Meters2Feet(seq_pkt.PositionX));
+						sTest=shape_props.RemoteVariableName;
+						sTest+="_y";
+						SmartDashboard::PutNumber(sTest,Meters2Feet(seq_pkt.PositionY));
+						sTest=shape_props.RemoteVariableName;
+						sTest+="_z";
+						SmartDashboard::PutNumber(sTest,Meters2Feet(seq_pkt.specific_data.ShapeReticle_props.PositionZ));
+					}
+				}
 				break;
 			case Compositor_Props::eComposite:
 				{
@@ -2576,35 +2607,58 @@ class Compositor
 				{
 					const Compositor_Props::Shape3D_Renderer_Props &shape_props=props.shapes_3D_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
 					double Xpos,Ypos,Zpos;
-					if (m_RecurseIntoComposite)
+					std::string sTest=shape_props.RemoteVariableName;
+					if ((!m_IsEditable)&&(shape_props.RemoteVariableName.c_str()[0]!=0))
 					{
-						Xpos=EnableFlash?m_Xpos+XOffset:seq_pkt.PositionX+XOffset;
-						Ypos=EnableFlash?m_Ypos+YOffset:seq_pkt.PositionY+YOffset;
-						Zpos=EnableFlash?m_Zpos:seq_pkt.specific_data.ShapeReticle_props.PositionZ;
-						if (EnableFlash)
-						{
-							Xpos=CheckX(Xpos);
-							m_Xpos=Xpos-XOffset;
-							Ypos=CheckY(Ypos);
-							m_Ypos=Ypos-YOffset;
-						}
+						sTest+="_x";
+						Xpos=Feet2Meters(SmartDashboard::GetNumber(sTest));
+						sTest=shape_props.RemoteVariableName;
+						sTest+="_y";
+						Ypos=Feet2Meters(SmartDashboard::GetNumber(sTest));
+						sTest=shape_props.RemoteVariableName;
+						sTest+="_z";
+						Zpos=Feet2Meters(SmartDashboard::GetNumber(sTest));
 					}
 					else
 					{
-						//If we are not the top layer then we are always locked down if we are not recursing
-						bool UseInput=(&sequence==&props.Sequence) && EnableFlash;
-						Xpos=UseInput?m_Xpos:seq_pkt.PositionX+XOffset;
-						Ypos=UseInput?m_Ypos:seq_pkt.PositionY+YOffset;
-						Zpos=UseInput?m_Zpos:seq_pkt.specific_data.ShapeReticle_props.PositionZ;
-						if (EnableFlash)
+						if (m_RecurseIntoComposite)
 						{
-							Xpos=CheckX(Xpos);
-							double TempXpos=UseInput?Xpos:Xpos-seq_pkt.PositionX;
-							m_Xpos=(TempXpos<0)?std::max(TempXpos,m_Xpos):std::min(TempXpos,m_Xpos);
+							Xpos=EnableFlash?m_Xpos+XOffset:seq_pkt.PositionX+XOffset;
+							Ypos=EnableFlash?m_Ypos+YOffset:seq_pkt.PositionY+YOffset;
+							Zpos=EnableFlash?m_Zpos:seq_pkt.specific_data.ShapeReticle_props.PositionZ;
+							if (EnableFlash)
+							{
+								m_Xpos=Xpos-XOffset;
+								m_Ypos=Ypos-YOffset;
+							}
+						}
+						else
+						{
+							//If we are not the top layer then we are always locked down if we are not recursing
+							bool UseInput=(&sequence==&props.Sequence) && EnableFlash;
+							Xpos=UseInput?m_Xpos:seq_pkt.PositionX+XOffset;
+							Ypos=UseInput?m_Ypos:seq_pkt.PositionY+YOffset;
+							Zpos=UseInput?m_Zpos:seq_pkt.specific_data.ShapeReticle_props.PositionZ;
+							if (EnableFlash)
+							{
+								double TempXpos=UseInput?Xpos:Xpos-seq_pkt.PositionX;
+								m_Xpos=(TempXpos<0)?std::max(TempXpos,m_Xpos):std::min(TempXpos,m_Xpos);
 
-							Ypos=CheckY(Ypos);
-							double TempYpos=UseInput?Ypos:Ypos-seq_pkt.PositionY;
-							m_Ypos=(TempXpos<0)?std::max(TempYpos,m_Ypos):std::min(TempYpos,m_Ypos);
+								double TempYpos=UseInput?Ypos:Ypos-seq_pkt.PositionY;
+								m_Ypos=(TempXpos<0)?std::max(TempYpos,m_Ypos):std::min(TempYpos,m_Ypos);
+							}
+						}
+						if (shape_props.RemoteVariableName.c_str()[0]!=0)
+						{
+							sTest=shape_props.RemoteVariableName;
+							sTest+="_x";
+							SmartDashboard::PutNumber(sTest,Meters2Feet(Xpos));
+							sTest=shape_props.RemoteVariableName;
+							sTest+="_y";
+							SmartDashboard::PutNumber(sTest,Meters2Feet(Ypos));
+							sTest=shape_props.RemoteVariableName;
+							sTest+="_z";
+							SmartDashboard::PutNumber(sTest,Meters2Feet(Zpos));
 						}
 					}
 

@@ -49,8 +49,17 @@ CompositorProps = {
 			-- draw_shape -- may be "square", "circle", or "cube".
 			shape_reticle_1 =
 			{
+				remote_name="apex_reticle",
 				size_in=25,
 				r=0,g=255,b=100,
+				plane_selection="xy_and_xz",
+				draw_shape="circle"
+			},
+			shape_reticle_2 =
+			{
+				remote_name="land_reticle",
+				size_in=25,
+				r=100,g=100,b=0,
 				plane_selection="xy",
 				draw_shape="circle"
 			}
@@ -118,8 +127,9 @@ CompositorProps = {
 				composite=
 				{
 					composite_1 = {	type="square", selection=1	},
-					composite_2 = {	type="pathalign" },
-					composite_3 = { type="shape", selection=1 }
+					composite_2 = { type="shape", selection=1 },
+					composite_3 = { type="shape", selection=2 },
+					composite_4 = {	type="pathalign" }
 				}
 			},
 			sequence_2 = 
