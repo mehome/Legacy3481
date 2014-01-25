@@ -69,6 +69,7 @@ struct Compositor_Props
 {
 	double X_Scalar;
 	double Y_Scalar;
+	double Z_Scalar;
 
 	//Reticle type:  default  (a.k.a square)
 	struct SquareReticle_Props
@@ -194,6 +195,7 @@ struct Compositor_Props
 				size_t SelIndex;
 				double PositionZ;
 			} ShapeReticle_props;
+			double PositionZ; //for path align
 		} specific_data;
 		bool IsEnabled;  //all reticles can have ability to not be drawn TODO
 	};
@@ -253,7 +255,7 @@ class Compositor_Properties
 //declared as global to avoid allocation on stack each iteration
 const char * const g_Compositor_Controls_Events[] = 
 {
-	"SetXAxis","SetYAxis","NextSequence","PreviousSequence","SequencePOV","ToggleLinePlot","ResetPos"
+	"SetXAxis","SetYAxis","SetZAxis","NextSequence","PreviousSequence","SequencePOV","ToggleLinePlot","ResetPos"
 };
 
 const char *Compositor_Properties::ControlEvents::LUA_Controls_GetEvents(size_t index) const
@@ -267,6 +269,7 @@ Compositor_Properties::Compositor_Properties() : m_CompositorControls(&s_Control
 	Compositor_Props props;
 	props.X_Scalar=0.025;
 	props.Y_Scalar=0.025;
+	props.Z_Scalar=0.025;
 
 	//Make one default
 	Compositor_Props::SquareReticle_Props sqr_props;
@@ -696,6 +699,9 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 					seq_pkt.specific_data.SquareReticle_SelIndex--;  // translate cardinal to ordinal 
 				}
 				break;
+			case Compositor_Props::ePathAlign:
+				seq_pkt.specific_data.PositionZ=0.0;
+				break;
 			case Compositor_Props::eShape3D:
 				{
 					double fTest;
@@ -703,6 +709,7 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 					err = script.GetField("selection",NULL,NULL,&fTest);
 					seq_pkt.specific_data.ShapeReticle_props.SelIndex=(size_t)fTest;
 					seq_pkt.specific_data.ShapeReticle_props.SelIndex--;  // translate cardinal to ordinal 
+					seq_pkt.specific_data.ShapeReticle_props.PositionZ=0.0;
 				}
 				break;
 			case Compositor_Props::eComposite:
@@ -808,6 +815,7 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 	{
 		script.GetField("x_scalar", NULL, NULL, &props.X_Scalar);
 		script.GetField("y_scalar", NULL, NULL, &props.Y_Scalar);
+		script.GetField("z_scalar", NULL, NULL, &props.Z_Scalar);
 		err = script.GetFieldTable("square_reticle_props");
 		if (!err)
 		{
@@ -819,8 +827,8 @@ void Compositor_Properties::LoadFromScript(Scripting::Script& script)
 		err = script.GetFieldTable("shape_reticle_props");
 		if (!err)
 		{
-			//clear the default one
-			props.square_reticle.clear();
+			//pedantic
+			props.shapes_3D_reticle.clear();
 			LoadShapeReticleProps(script,props);
 			script.Pop();
 		}
@@ -1671,9 +1679,9 @@ public:
 
 	
 	//This is almost a wrapper to the projection call... except that it will implicitly check for difference before making the call
-	void Compute_LookAtFromAngles(double Yaw,double Pitch)
+	void Compute_LookAtFromAngles(double Yaw,double Pitch,double Roll)
 	{
-		_3Dpoint orientation(Yaw,Pitch,m_lastOrientation.z);
+		_3Dpoint orientation(Yaw,Pitch,Roll);
 		if (!(orientation==m_lastOrientation))
 		{
 			projector.camera.SetLookAtFromAngles(orientation);
@@ -1886,35 +1894,6 @@ public:
 				projector.Trans_Line(circle[39], circle[0]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 
-				// second time. We'll want to do a translation in both cases.
-				_3Dpoint Translation = _3Dpoint(0.0, 1.0, 0.0);	// one meter away.
-				_3Dpoint Pt1 = _3Dpoint();
-				_3Dpoint Pt2 = _3Dpoint();
-
-				for (int p = 0; p < 39; p++)
-				{
-					Pt1.x = Translation.x + circle[p].x;
-					Pt1.y = Translation.y + circle[p].y;
-					Pt1.z = Translation.z + circle[p].z;
-
-					Pt2.x = Translation.x + circle[p+1].x;
-					Pt2.y = Translation.y + circle[p+1].y;
-					Pt2.z = Translation.z + circle[p+1].z;
-
-					projector.Trans_Line(Pt1, Pt2);
-					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-				}
-				Pt1.x = Translation.x + circle[39].x;
-				Pt1.y = Translation.y + circle[39].y;
-				Pt1.z = Translation.z + circle[39].z;
-
-				Pt2.x = Translation.x + circle[0].x;
-				Pt2.y = Translation.y + circle[0].y;
-				Pt2.z = Translation.z + circle[0].z;
-
-				projector.Trans_Line(Pt1, Pt2);
-				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
 				break;
 			}
 		}
@@ -2053,9 +2032,10 @@ class Compositor
 		{
 			if (m_IsEditable)
 			{
-				m_Xpos=0.0,m_Ypos=0.0;
+				m_Xpos=0.0,m_Ypos=0.0,m_Zpos=0.0;
 				SmartDashboard::PutNumber("X Position",0.0);
 				SmartDashboard::PutNumber("Y Position",0.0);
+				SmartDashboard::PutNumber("Z Position",0.0);
 			}
 		}
 		void SetXAxis(double value)
@@ -2076,6 +2056,16 @@ class Compositor
 				m_Ypos+= (value * props.Y_Scalar);
 			}
 		}
+		void SetZAxis(double value)
+		{
+			if (m_IsEditable)
+			{
+				const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
+				SmartDashboard::PutNumber("Z Position",value);
+				m_Zpos+= (value * props.Z_Scalar);
+			}
+		}
+
 		void UpdateSequence(size_t NewSequenceIndex,bool forceUpdate=false)
 		{
 			if ((m_SequenceIndex!=NewSequenceIndex)||forceUpdate)
@@ -2213,6 +2203,7 @@ class Compositor
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Subscribe(ehl,*this, &Compositor::SetXAxis);
 			em->EventValue_Map["SetYAxis"].Subscribe(ehl,*this, &Compositor::SetYAxis);
+			em->EventValue_Map["SetZAxis"].Subscribe(ehl,*this, &Compositor::SetZAxis);
 			em->Event_Map["NextSequence"].Subscribe(ehl, *this, &Compositor::NextSequence);
 			em->Event_Map["PreviousSequence"].Subscribe(ehl, *this, &Compositor::PreviousSequence);
 			em->EventValue_Map["SequencePOV"].Subscribe(ehl,*this, &Compositor::SetPOV);
@@ -2297,6 +2288,7 @@ class Compositor
 			FrameWork::EventMap *em=&m_EventMap; 
 			em->EventValue_Map["SetXAxis"].Remove(*this, &Compositor::SetXAxis);
 			em->EventValue_Map["SetYAxis"].Remove(*this, &Compositor::SetYAxis);
+			em->EventValue_Map["SetZAxis"].Remove(*this, &Compositor::SetZAxis);
 			em->Event_Map["NextSequence"].Remove(*this, &Compositor::NextSequence);
 			em->Event_Map["PreviousSequence"].Remove(*this, &Compositor::PreviousSequence);
 			em->EventValue_Map["SequencePOV"].Remove(*this, &Compositor::SetPOV);
@@ -2472,12 +2464,13 @@ class Compositor
 					#if 0
 					m_PathPlotter.ComputePathPoints(1.0, 0.25);
 					#else
-					double Xpos,Ypos;
+					double Xpos,Ypos,Zpos;
 					//We don't want to associate the position with the group offset... its always tuned separately 
 					Xpos=(EnableFlash&&m_RecurseIntoComposite)?m_Xpos:seq_pkt.PositionX;
 					Ypos=(EnableFlash&&m_RecurseIntoComposite)?m_Ypos:seq_pkt.PositionY;
+					Zpos=(EnableFlash&&m_RecurseIntoComposite)?m_Zpos:seq_pkt.specific_data.PositionZ;
 					//Treating Xpos and Ypos as degrees will keep the scale to feel about right
-					m_PathPlotter.Compute_LookAtFromAngles(DEG_2_RAD(Xpos)+pa_props.rot_x,DEG_2_RAD(Ypos)+pa_props.rot_y);
+					m_PathPlotter.Compute_LookAtFromAngles(DEG_2_RAD(Xpos)+pa_props.rot_x,DEG_2_RAD(Ypos)+pa_props.rot_y,DEG_2_RAD(Zpos)+pa_props.rot_z);
 					double Velocity=SmartDashboard::GetNumber("Velocity");
 					double Rotation_Velocity=SmartDashboard::GetNumber("Rotation Velocity");
 					if ((!IsZero(Rotation_Velocity))&&(IsZero(Velocity)))

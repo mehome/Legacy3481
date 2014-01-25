@@ -154,7 +154,9 @@ CompositorProps = {
 			control = "gamepad f310 (controller)",
 			SetXAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			SetYAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
+			SetZAxis = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
 			SequencePOV =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			ResetPos     = {type="joystick_button", key=0, keyboard=' ', on_off=false},
 		},		
 		Joystick_3 =
 		{
