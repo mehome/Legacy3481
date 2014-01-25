@@ -65,6 +65,11 @@ const char * const csz_ShapeType_Enum[] =
 	"cube","square","circle"
 };
 
+const char * const csz_Shape2D_PlaneSelection_Enum[] =
+{
+	"xy","xz","yz","xy_and_xz"
+};
+
 struct Compositor_Props
 {
 	double X_Scalar;
@@ -145,6 +150,9 @@ struct Compositor_Props
 					e_yz_plane,  //like drawn on a side wall (probably rarely used)
 					e_xy_and_xz_plane  //A double render on both planes
 				} PlaneSelection;
+				static PlaneSelection_enum GetPlaneSelection_Enum (const char *value)
+				{	return Enum_GetValue<PlaneSelection_enum> (value,csz_Shape2D_PlaneSelection_Enum,_countof(csz_Shape2D_PlaneSelection_Enum));
+				}
 			} Shapes2D;
 		} specific_data;
 
@@ -409,6 +417,7 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 	double value;
 
 	typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
+	typedef ShapeProps::type_specifics::Shapes2D_Props Shapes2D_Props;
 
 	std::string sTest;
 	err = script.GetField("draw_shape",&sTest,NULL,NULL);
@@ -431,8 +440,15 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 		else
 			shape_props.specific_data.Shapes2D.Size_1D= 12 * 0.0254;	// 12 inches default value
 
-		//TODO plane selection here
-		shape_props.specific_data.Shapes2D.PlaneSelection=ShapeProps::type_specifics::Shapes2D_Props::e_xy_plane;
+		//plane selection 
+		err = script.GetField("plane_selection",&sTest,NULL,NULL);
+		if (!err)
+		{
+			Shapes2D_Props::PlaneSelection_enum selection=Shapes2D_Props::GetPlaneSelection_Enum(sTest.c_str());
+			shape_props.specific_data.Shapes2D.PlaneSelection=selection;
+		}
+		else
+			shape_props.specific_data.Shapes2D.PlaneSelection=ShapeProps::type_specifics::Shapes2D_Props::e_xy_plane;
 	}
 
 	err=script.GetField("r", NULL, NULL, &value);
@@ -767,11 +783,18 @@ static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Pro
 			switch (seq_pkt.type)
 			{
 			case Compositor_Props::eDefault:
+				err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
+				err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
+				break;
 			case Compositor_Props::ePathAlign:
-				{
-					err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
-					err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
-				}
+				err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
+				err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
+				err = script.GetField("z",NULL,NULL,&seq_pkt.specific_data.PositionZ);
+				break;
+			case Compositor_Props::eShape3D:
+				err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
+				err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
+				err = script.GetField("z",NULL,NULL,&seq_pkt.specific_data.ShapeReticle_props.PositionZ);
 				break;
 			case Compositor_Props::eComposite:
 				{
@@ -1911,6 +1934,21 @@ public:
 				projector.Trans_Line(circle[39], circle[0]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
 
+				//For xy and xz we render two circles and xy has already been rendered in the default loop
+				if (props.specific_data.Shapes2D.PlaneSelection==Shapes2D_Props::e_xy_and_xz_plane)
+				{
+					//Copy the props and alter the plane selection to xz (since the xy and xz selection has already rendered the xy selection)
+					ShapeProps props_copy=props;
+					props_copy.specific_data.Shapes2D.PlaneSelection=Shapes2D_Props::e_xz_plane;
+					InitCircle(XPos,YPos,ZPos,props_copy);
+					for (int p = 0; p < 39; p++)
+					{
+						projector.Trans_Line(circle[p], circle[p+1]);
+						g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+					}
+					projector.Trans_Line(circle[39], circle[0]);
+					g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
+				}
 				break;
 			}
 		}
@@ -2285,12 +2323,22 @@ class Compositor
 				out << "type=" << "\"" << Compositor_Props::GetReticleType_String(seq_pkt.type) << "\", ";
 				//TODO write specific data types here... which should be the same expect for the composite type
 				out << "x=" << seq_pkt.PositionX << ", " << "y=" << seq_pkt.PositionY << " ";
-				if (seq_pkt.type == Compositor_Props::eComposite)
+				switch (seq_pkt.type)
 				{
-					out << ",\n";
-					Compositor_Props::Sequence_List *Composite=seq_pkt.specific_data.Composite;
-					//recursively call this within the composite list to be used as the sequence
-					SaveData_Sequence(out,*Composite,RecursiveCount+1);
+				case Compositor_Props::eComposite:
+					{
+						out << ",\n";
+						Compositor_Props::Sequence_List *Composite=seq_pkt.specific_data.Composite;
+						//recursively call this within the composite list to be used as the sequence
+						SaveData_Sequence(out,*Composite,RecursiveCount+1);
+					}
+					break;
+				case Compositor_Props::ePathAlign:
+					out << ", " << "z=" << seq_pkt.specific_data.PositionZ << " ";
+					break;
+				case Compositor_Props::eShape3D:
+					out << ", " << "z=" << seq_pkt.specific_data.ShapeReticle_props.PositionZ << " ";
+					break;
 				}
 				out << "}," << endl;
 			}

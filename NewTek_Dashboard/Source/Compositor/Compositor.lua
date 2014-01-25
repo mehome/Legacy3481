@@ -2,7 +2,7 @@ Pi=3.14159265358979323846
 
 --This is used load persistence of the coordinates last saved etc
 function GetSettings()
-	local loaded_file = loadfile("CompositorSave_Preview.lua")
+	local loaded_file = loadfile("CompositorSave_Main.lua")
 	if (loaded_file==nil) then
 		return nil
 	else
@@ -51,6 +51,7 @@ CompositorProps = {
 			{
 				size_in=25,
 				r=0,g=255,b=100,
+				plane_selection="xy",
 				draw_shape="circle"
 			}
 		},
