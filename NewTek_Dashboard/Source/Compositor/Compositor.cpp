@@ -1710,10 +1710,9 @@ public:
 		forward_velocity = fabs(Forward_Vel);  //reverse needs to keep this positive to render the curves properly
 		angular_velocity = Angular_Vel;
 
-		//Grrr I'm losing it... I don't think this needs to flip, but I'll keep it around in case I'm wrong
 		//Going backwards we switch the forward to positve and reverse the curve
-		//if (Forward_Vel<0.0)
-		//	angular_velocity=-angular_velocity;
+		if (Forward_Vel<0.0)
+			angular_velocity=-angular_velocity;
 
 		//I'm not quite sure whether to make this vanish if it is stopped... hard coded for now, but may make a lua option
 		#if 0
