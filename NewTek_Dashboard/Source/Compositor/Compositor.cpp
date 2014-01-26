@@ -1707,6 +1707,12 @@ public:
 		if( path_type != PathProps::ePath || Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
 			return;
 
+		//Normalize the angular velocity
+		Angular_Vel=m_KalFilter_AngularVelocity(Angular_Vel);
+		Angular_Vel=m_AngularVelocity_Averager.GetAverage(Angular_Vel);
+		if (Is_Zero(Angular_Vel))
+			Angular_Vel=0.0;
+
 		forward_velocity = fabs(Forward_Vel);  //reverse needs to keep this positive to render the curves properly
 		angular_velocity = Angular_Vel;
 
@@ -1731,15 +1737,22 @@ public:
 		const double right_radius = path_radius + width / 2;
 
 		const double SegmentLength=end_angle/NumPoints;
-		dTime_s=0.033;  //test
+		//dTime_s=0.033;  //breakpoint test
 		double direction=(Angular_Vel>=0.0)?-1.0:1.0;
 		if ((Forward_Vel<0.0) && (Angular_Vel!=0.0))
 			direction=-direction;
-		//hack
+		//hack TODO find the derivate for angular velocity
 		if (Angular_Vel!=0.0)
 		{
-			direction=(direction>0.0)?0.05:-0.05;
+			direction=(direction>0.0)?0.1:-0.1;
 		}
+		//hack 2... as it gets closer to zero velocity it goes very fast
+		if ((fabs(Angular_Vel)<0.1)&&(angular_velocity!=0))
+		{
+			direction=0.0;
+			m_SegmentOffset=0.0;  //avoid bug when going from backwards to forwards
+		}
+
 		m_SegmentOffset=SegmentLength!=0.0?fmod((((Forward_Vel * direction) * dTime_s)+m_SegmentOffset),SegmentLength):m_SegmentOffset;
 		double angle = m_SegmentOffset;
 		//TODO motion with angular velocity doesn't look right
@@ -1841,6 +1854,8 @@ private:
 
 	_3Dpoint m_lastOrientation;  //used by Compute_LookAtFromAngles
 	double m_SegmentOffset;
+	KalmanFilter m_KalFilter_AngularVelocity;
+	Averager<double,10> m_AngularVelocity_Averager;
 };
 
 class Shape3D_Renderer
