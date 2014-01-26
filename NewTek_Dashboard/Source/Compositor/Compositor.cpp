@@ -1647,6 +1647,8 @@ public:
 
 		forward_velocity = 0;	// just setting to known values. these should be set per frame.
 		angular_velocity = 0;
+
+		m_SegmentOffset=0.0;
 	}
 
 	void Initialize(const Compositor_Props::PathAlign_Container_Props &props)
@@ -1691,24 +1693,50 @@ public:
 	
 	projection projector;		// projection class
 
+	//TODO work out unresolved external symbol of Framework::IsZero()
+	inline bool Is_Zero(double value,double tolerance=1e-5)
+	{
+		return fabs(value)<tolerance;
+	}
+
+
 	// Compute the path mesh. This is for the front of the robot which is offset from the pivot point at ground level.
 	// This should be called prior to each render, but could be called only when velocities change.
-	void ComputePathPoints(double Foward_Vel, double Angular_Vel)
+	void ComputePathPoints(double Forward_Vel, double Angular_Vel, double dTime_s)
 	{
 		if( path_type != PathProps::ePath || Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
 			return;
 
-		forward_velocity = Foward_Vel;
+		forward_velocity = fabs(Forward_Vel);  //reverse needs to keep this positive to render the curves properly
 		angular_velocity = Angular_Vel;
 
-		double time_to_length = forward_velocity > 0 ? length / forward_velocity : 0;
-		double end_angle = angular_velocity != 0 ? angular_velocity * time_to_length : length;
-		
-		double path_radius = angular_velocity != 0 ? forward_velocity / angular_velocity : 0;
-		double left_radius = path_radius - width / 2;
-		double right_radius = path_radius + width / 2;
+		//Grrr I'm losing it... I don't think this needs to flip, but I'll keep it around in case I'm wrong
+		//Going backwards we switch the forward to positve and reverse the curve
+		//if (Forward_Vel<0.0)
+		//	angular_velocity=-angular_velocity;
 
-		double angle = 0;
+		//I'm not quite sure whether to make this vanish if it is stopped... hard coded for now, but may make a lua option
+		#if 0
+		if ((!IsZero(angular_velocity))&&(IsZero(forward_velocity)))
+			forward_velocity=1.0;
+		#else
+		if (Is_Zero(forward_velocity))
+			forward_velocity=1.0;
+		#endif
+
+		const double time_to_length = forward_velocity > 0 ? length / forward_velocity : 0;
+		const double end_angle = angular_velocity != 0 ? angular_velocity * time_to_length : length;
+		
+		const double path_radius = angular_velocity != 0 ? forward_velocity / angular_velocity : 0;
+		const double left_radius = path_radius - width / 2;
+		const double right_radius = path_radius + width / 2;
+
+		const double SegmentLength=end_angle/NumPoints;
+		m_SegmentOffset=SegmentLength!=0.0?fmod(((-Forward_Vel * dTime_s)+m_SegmentOffset),fabs(SegmentLength)):m_SegmentOffset;
+		double angle = m_SegmentOffset;
+		//TODO motion with angular velocity doesn't look right
+		if (angular_velocity!=0)
+			angle=0;
 		for(int i = 0; i <= NumPoints; i++)
 		{
 			// calculate the front end translation first
@@ -1727,7 +1755,7 @@ public:
 			Right[i].y = angular_velocity != 0 ? (sin(angle) * right_radius) + Translation[i].y - pivot_point_length : angle + Translation[i].y - pivot_point_length;
 			Right[i].z = 0.0;
 
-			angle += end_angle/NumPoints;
+			angle += SegmentLength;
 		}
 	}
 
@@ -1804,6 +1832,7 @@ private:
 	_3Dpoint* Translation;
 
 	_3Dpoint m_lastOrientation;  //used by Compute_LookAtFromAngles
+	double m_SegmentOffset;
 };
 
 class Shape3D_Renderer
@@ -2589,18 +2618,9 @@ class Compositor
 					m_PathPlotter.Compute_LookAtFromAngles(DEG_2_RAD(Xpos)+pa_props.rot_x,DEG_2_RAD(Ypos)+pa_props.rot_y,DEG_2_RAD(Zpos)+pa_props.rot_z);
 					double Velocity=SmartDashboard::GetNumber("Velocity");
 					double Rotation_Velocity=SmartDashboard::GetNumber("Rotation Velocity");
-					if ((!IsZero(Rotation_Velocity))&&(IsZero(Velocity)))
-						Velocity=1.0;
-					//Flip direction when going backwards
-					if (Velocity<0.0)
-					{
-						Velocity=-Velocity;
-						Rotation_Velocity=-Rotation_Velocity;
-					}
-					m_PathPlotter.ComputePathPoints(Feet2Meters(Velocity),-Rotation_Velocity);
+					m_PathPlotter.ComputePathPoints(Feet2Meters(Velocity),-Rotation_Velocity,m_dTime_s);
 					#endif
-					if (!IsZero(Velocity))
-						ret = m_PathPlotter.RenderPath(Frame,pa_props,m_RecurseIntoComposite&&EnableFlash&&!m_Flash);
+					ret = m_PathPlotter.RenderPath(Frame,pa_props,m_RecurseIntoComposite&&EnableFlash&&!m_Flash);
 				}
 				break;
 			case Compositor_Props::eShape3D:
@@ -2696,6 +2716,7 @@ class Compositor
 			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
 			const time_type current_time=time_type::get_current_time();
 			const double dTime_s=(double)(current_time-m_LastTime);
+			m_dTime_s=dTime_s;
 			m_LastTime=current_time;
 			m_Frame=Frame; //to access frame properties during the event callback
 			m_JoyBinder.UpdateJoyStick(dTime_s);
@@ -2757,6 +2778,7 @@ class Compositor
 		bool GetRecurseIntoComposite() const {return m_RecurseIntoComposite;}
 	private:
 		time_type m_LastTime;
+		double m_dTime_s;
 		FrameWork::UI::JoyStick_Binder m_JoyBinder;
 		FrameWork::EventMap m_EventMap;
 		Compositor_Properties m_CompositorProperties;

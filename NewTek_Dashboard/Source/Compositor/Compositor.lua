@@ -108,11 +108,11 @@ CompositorProps = {
 		
 		path_align =
 		{
-			width_in = 8.5, length_in = 11,
+			width_in = 25, length_ft = 10,
 			pivot_in = 2,
-			camera_position =	{ x_in=0, y_in=3.5, z_in=-1.0 },
+			camera_position =	{ x_in=0, y_in=12, z_in=-1.0 },
 			camera_rotation =	{ x=0, y_deg=0, z=0 },
-			fov_x=67,fov_y=67,
+			fov_x=60,fov_y=60,
 			r=0,g=255,b=100,
 			draw_shape = "path",
 			-- draw_shape -- may be "path", "square", "circle", or "cube".
@@ -167,7 +167,7 @@ CompositorProps = {
 			SetYAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
 			SetZAxis = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
 			SequencePOV =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			ResetPos     = {type="joystick_button", key=0, keyboard=' ', on_off=false},
+			ResetPos     = {type="joystick_button", key=1, keyboard=' ', on_off=false},
 		},		
 		Joystick_3 =
 		{
