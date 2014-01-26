@@ -1731,11 +1731,20 @@ public:
 		const double right_radius = path_radius + width / 2;
 
 		const double SegmentLength=end_angle/NumPoints;
-		m_SegmentOffset=SegmentLength!=0.0?fmod(((-Forward_Vel * dTime_s)+m_SegmentOffset),fabs(SegmentLength)):m_SegmentOffset;
+		dTime_s=0.033;  //test
+		double direction=(Angular_Vel>=0.0)?-1.0:1.0;
+		if ((Forward_Vel<0.0) && (Angular_Vel!=0.0))
+			direction=-direction;
+		//hack
+		if (Angular_Vel!=0.0)
+		{
+			direction=(direction>0.0)?0.05:-0.05;
+		}
+		m_SegmentOffset=SegmentLength!=0.0?fmod((((Forward_Vel * direction) * dTime_s)+m_SegmentOffset),SegmentLength):m_SegmentOffset;
 		double angle = m_SegmentOffset;
 		//TODO motion with angular velocity doesn't look right
-		if (angular_velocity!=0)
-			angle=0;
+		//if (angular_velocity!=0)
+		//	angle=0;
 		for(int i = 0; i <= NumPoints; i++)
 		{
 			// calculate the front end translation first
