@@ -417,7 +417,7 @@ class DDraw_Window : public Window
 	public:
 		DDraw_Window(DDraw_Preview *pParent, HWND HWND_Parent=NULL , const bool IsPopup=true , 
 			const wchar_t *pWindowName=L"Window" , const RECT *pWindowPosition=NULL ) : Window(HWND_Parent,IsPopup,pWindowName,pWindowPosition), 
-			m_pParent(pParent),m_AspectRatio(4.0/3.0),m_Editable(false),m_IsDragging(false)
+			m_pParent(pParent),m_AspectRatio(4.0/3.0),m_Editable(false),m_IsDragging(false),m_Rotate90(false)
 		{
 		}
 		~DDraw_Window()
@@ -440,6 +440,7 @@ class DDraw_Window : public Window
 			eMenu_Show480i,
 			eMenu_Show300i,
 			eMenu_Show240i,
+			eMenu_Rotate90,
 			eMenu_NoEntries
 		};
 
@@ -553,6 +554,7 @@ class DDraw_Window : public Window
 						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Show480i, L"Size 480i");
 						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Show300i, L"Size 300i");
 						InsertMenu(hPopupMenu, -1, MF_BYPOSITION | MF_STRING, eMenu_Show240i, L"Size 240i");
+						InsertMenu(hPopupMenu, -1, ((m_Rotate90)?MF_CHECKED:MF_UNCHECKED) | MF_BYPOSITION | MF_STRING, eMenu_Rotate90, L"Rotate 90");
 					}
 					//go to plug-in for addition items
 					m_pParent->Callback_AddMenuItems(hPopupMenu,eMenu_NoEntries);
@@ -598,10 +600,10 @@ class DDraw_Window : public Window
 								m_AspectRatio=m_pParent->GetAspectRatio();
 								break;
 							case eMenu_Lock4x3:
-								m_AspectRatio=4.0/3.0;
+								m_AspectRatio=!m_Rotate90 ? 4.0/3.0 : 3.0/4.0;
 								break;
 							case eMenu_Lock16x9:
-								m_AspectRatio=16.0/9.0;
+								m_AspectRatio=!m_Rotate90? 16.0/9.0 : 9.0/16.0;
 								break;
 							case eMenu_Stretch:
 								m_AspectRatio=0.0;
@@ -610,29 +612,37 @@ class DDraw_Window : public Window
 								{
 									RECT rc;
 									GetWindowRect(*this,&rc);
-									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*600.0f),600,SWP_NOMOVE|SWP_NOZORDER);
+									const double YRes=m_Rotate90 ? 800.0 : 600.0;
+									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*YRes),(int)YRes,SWP_NOMOVE|SWP_NOZORDER);
 								}
 								break;
 							case eMenu_Show480i:
 								{
 									RECT rc;
 									GetWindowRect(*this,&rc);
-									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*480.0f),480,SWP_NOMOVE|SWP_NOZORDER);
+									const double YRes=m_Rotate90 ? 640.0 : 480.0;
+									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*YRes),(int)YRes,SWP_NOMOVE|SWP_NOZORDER);
 								}
 								break;
 							case eMenu_Show300i:
 								{
 									RECT rc;
 									GetWindowRect(*this,&rc);
-									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*300.0f),300,SWP_NOMOVE|SWP_NOZORDER);
+									const double YRes=m_Rotate90 ? 400.0 : 300.0;
+									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*YRes),(int)YRes,SWP_NOMOVE|SWP_NOZORDER);
 								}
 								break;
 							case eMenu_Show240i:
 								{
 									RECT rc;
 									GetWindowRect(*this,&rc);
-									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*240.0f),240,SWP_NOMOVE|SWP_NOZORDER);
+									const double YRes=m_Rotate90 ? 320.0 : 240.0;
+									SetWindowPos(*this,NULL,0,0,(int)(m_AspectRatio*YRes),(int)YRes,SWP_NOMOVE|SWP_NOZORDER);
 								}
+								break;
+							case eMenu_Rotate90:
+								m_Rotate90=!m_Rotate90;
+								m_AspectRatio=1.0/m_AspectRatio; //get reciprocal of whatever it currently is
 								break;
 							default:
 								{
@@ -665,6 +675,7 @@ class DDraw_Window : public Window
 		//if this is 0 it does not lock
 		double m_AspectRatio;
 		bool m_Editable,m_IsDragging;
+		bool m_Rotate90;
 };
 
 
