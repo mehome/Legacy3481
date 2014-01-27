@@ -1228,7 +1228,7 @@ public:
 		anglev = 47.0;
 		zoom = 1.0;
 		front = 0.0;
-		back = 250.0;
+		back = 1000.0;
 		projection = 0;
 	}
 
@@ -1236,11 +1236,17 @@ public:
 	void SetLookAtFromAngles(_3Dpoint orientation)
 	{
 		// forward facing vector
-		_3Dpoint new_look = _3Dpoint(0, 1, 0);
+		_3Dpoint new_look = _3Dpoint(0, 1, 0);	// unit vector
+		// rotate it.
 		new_look.x = sin(orientation.x);
 		new_look.y = cos(orientation.x);
 		new_look.y *= cos(orientation.y);
 		new_look.z = sin(orientation.y);
+		// scale it.
+		new_look.x *= 10.0;
+		new_look.y *= 10.0;
+		new_look.z *= 10.0;
+		// add it to the camera origin.
 		to.x = from.x + new_look.x;	
 		to.y = from.y + new_look.y;
 		to.z = from.z + new_look.z;
@@ -1395,7 +1401,7 @@ public:
 		{
 			Trans_Eye2Norm(e1, n1);
 			Trans_Eye2Norm(e2, n2);
-			if (Trans_ClipNorm(n1, n2))
+//			if (Trans_ClipNorm(n1, n2))
 			{
 				Trans_Norm2Screen(n1, p1);
 				Trans_Norm2Screen(n2, p2);
