@@ -1790,6 +1790,9 @@ public:
 			projector.camera.SetLookAtFromAngles(orientation);
 			projector.Trans_Initialise();
 			m_lastOrientation=orientation;
+			SmartDashboard::PutNumber("Camera_Yaw",RAD_2_DEG(Yaw));
+			SmartDashboard::PutNumber("Camera_Pitch",RAD_2_DEG(Pitch));
+			SmartDashboard::PutNumber("Camera_Roll",RAD_2_DEG(Roll));
 		}
 	}
 
