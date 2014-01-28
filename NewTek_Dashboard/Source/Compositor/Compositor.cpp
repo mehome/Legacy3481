@@ -1899,7 +1899,7 @@ public:
 	{
 		// point for circle - 25 inch diameter centered at 0,0,0.
 		// render twice, with translation.
-		double radius = 12.5 * 0.0254;
+		double radius = props.specific_data.Shapes2D.Size_1D;
 		int idx = 0;
 		for(double rad = 0; rad < 2*M_PI; rad += 2*M_PI/40, idx++ )
 		{
@@ -2363,7 +2363,7 @@ class Compositor
 		IEvent::HandlerList ehl;
 		Compositor(const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,WindowTitle,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
 			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Zpos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),
-			m_PathPlotter(),m_ShapeRender(m_PathPlotter.projector),
+			m_LastFOV(47.0),m_PathPlotter(),m_ShapeRender(m_PathPlotter.projector),
 			m_WindowTitle(WindowTitle),
 			m_IsEditable(false),m_PreviousIsEditable(false),m_RecurseIntoComposite(false),m_Flash(false),m_ToggleLinePlot(true)
 		{
@@ -2384,6 +2384,7 @@ class Compositor
 			m_EditPositionName="Edit Position ";
 			m_EditPositionName+=WindowTitle;
 			SmartDashboard::PutBoolean(m_EditPositionName.c_str(),false);
+			SmartDashboard::PutNumber("FOV",m_LastFOV);
 		}
 
 		void SaveData_Sequence(std::ofstream &out,const Compositor_Props::Sequence_List &sequence,size_t RecursiveCount=0)
@@ -2500,6 +2501,8 @@ class Compositor
 					m_Bypass.LoadPlugIn(props->GetCompositorProps().BypassPlugin.c_str());					
 					m_Bypass.Callback_Initialize();  //will implicitly handle error
 				}
+				m_LastFOV=m_CompositorProperties.GetCompositorProps().PathAlign.FOV_x;
+				SmartDashboard::PutNumber("FOV",m_LastFOV);
 				m_PathPlotter.Initialize(m_CompositorProperties.GetCompositorProps().PathAlign);
 			}
 			else
@@ -2646,6 +2649,16 @@ class Compositor
 					Xpos=(EnableFlash&&m_RecurseIntoComposite)?m_Xpos:seq_pkt.PositionX;
 					Ypos=(EnableFlash&&m_RecurseIntoComposite)?m_Ypos:seq_pkt.PositionY;
 					Zpos=(EnableFlash&&m_RecurseIntoComposite)?m_Zpos:seq_pkt.specific_data.PositionZ;
+					{
+						const double NewFOV=SmartDashboard::GetNumber("FOV");
+						if (NewFOV!=m_LastFOV)
+						{
+							m_PathPlotter.projector.camera.angleh=NewFOV;
+							m_PathPlotter.projector.camera.anglev=NewFOV;
+							m_PathPlotter.projector.Trans_Initialise();
+							m_LastFOV=NewFOV;
+						}
+					}
 					//Treating Xpos and Ypos as degrees will keep the scale to feel about right
 					m_PathPlotter.Compute_LookAtFromAngles(DEG_2_RAD(Xpos)+pa_props.rot_x,DEG_2_RAD(Ypos)+pa_props.rot_y,DEG_2_RAD(Zpos)+pa_props.rot_z);
 					double Velocity=SmartDashboard::GetNumber("Velocity");
@@ -2827,6 +2840,7 @@ class Compositor
 		size_t m_BlinkCounter; //very simple blink mechanism
 		double m_Xpos,m_Ypos,m_Zpos;
 		double m_Xpos_Offset,m_Ypos_Offset;  //only used when stepping through recursion
+		double m_LastFOV;
 		Bypass_Reticle m_Bypass;
 		LinePlot_Retical m_LinePlot;
 		PathRenderer m_PathPlotter;
