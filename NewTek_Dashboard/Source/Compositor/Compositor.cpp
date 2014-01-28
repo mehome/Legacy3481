@@ -1243,9 +1243,9 @@ public:
 		new_look.y *= cos(orientation.y);
 		new_look.z = sin(orientation.y);
 		// scale it.
-		new_look.x *= 10.0;
-		new_look.y *= 10.0;
-		new_look.z *= 10.0;
+		//new_look.x *= 10.0;
+		//new_look.y *= 10.0;
+		//new_look.z *= 10.0;
 		// add it to the camera origin.
 		to.x = from.x + new_look.x;	
 		to.y = from.y + new_look.y;
@@ -1899,7 +1899,7 @@ public:
 	{
 		// point for circle - 25 inch diameter centered at 0,0,0.
 		// render twice, with translation.
-		double radius = props.specific_data.Shapes2D.Size_1D;
+		double radius = props.specific_data.Shapes2D.Size_1D * 0.5;  //The props stores as diameter so we half it
 		int idx = 0;
 		for(double rad = 0; rad < 2*M_PI; rad += 2*M_PI/40, idx++ )
 		{
