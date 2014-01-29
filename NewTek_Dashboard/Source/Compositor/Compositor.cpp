@@ -127,6 +127,7 @@ struct Compositor_Props
 			ePath,
 			eDistanceRunner
 		} path_type;  //this will become depreciated
+		size_t NumberSegments;  //This can slice the path up into this many segment squares
 		bool IsRearView;  //Used for if camera is mounted for rear view
 	} PathAlign;
 	//No list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
@@ -678,6 +679,9 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			err=script.GetField("b", NULL, NULL, &fTest);
 			if (!err)
 				pal_props.rgb[2]=(BYTE)fTest;
+
+			err=script.GetField("num_segments", NULL, NULL, &fTest);
+			pal_props.NumberSegments=err?10:(size_t)fTest;
 
 			err = script.GetField("rear_view",&sTest,NULL,NULL);
 			pal_props.IsRearView=false;
@@ -1669,6 +1673,22 @@ public:
 		m_SegmentOffset=0.0;
 	}
 
+	void SetNumPoints(size_t NumSegments)
+	{
+		if (NumSegments>(size_t)NumPoints)
+		{
+			delete[] Left;
+			delete[] Center;
+			delete[] Right;
+			delete[] Translation;
+			NumPoints=NumSegments;
+			Left = new _3Dpoint[NumPoints + 1];
+			Center = new _3Dpoint[NumPoints + 1];
+			Right = new _3Dpoint[NumPoints + 1];
+			Translation = new _3Dpoint[NumPoints + 1];
+		}
+	}
+
 	void Initialize(const Compositor_Props::PathAlign_Container_Props &props)
 	{
 		width=props.width;
@@ -2525,6 +2545,7 @@ class Compositor
 				SmartDashboard::PutNumber("FOV",m_LastFOV);
 				#endif
 				m_PathPlotter.Initialize(m_CompositorProperties.GetCompositorProps().PathAlign);
+				m_PathPlotter.SetNumPoints(m_CompositorProperties.GetCompositorProps().PathAlign.NumberSegments);  //assign the segment count
 			}
 			else
 				m_pSequence=&m_CompositorProperties.GetCompositorProps().Sequence;  //Assign pointer for default properties case
