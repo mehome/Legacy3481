@@ -127,6 +127,7 @@ struct Compositor_Props
 			ePath,
 			eDistanceRunner
 		} path_type;  //this will become depreciated
+		bool IsRearView;  //Used for if camera is mounted for rear view
 	} PathAlign;
 	//No list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
 
@@ -677,6 +678,14 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			err=script.GetField("b", NULL, NULL, &fTest);
 			if (!err)
 				pal_props.rgb[2]=(BYTE)fTest;
+
+			err = script.GetField("rear_view",&sTest,NULL,NULL);
+			pal_props.IsRearView=false;
+			if (!err)
+			{
+				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
+					pal_props.IsRearView=true;
+			}
 
 			props.PathAlign=pal_props;
 			//props.square_reticle.push_back(sqr_pkt);
@@ -2678,6 +2687,8 @@ class Compositor
 					//Treating Xpos and Ypos as degrees will keep the scale to feel about right
 					m_PathPlotter.Compute_LookAtFromAngles(DEG_2_RAD(Xpos)+pa_props.rot_x,DEG_2_RAD(Ypos)+pa_props.rot_y,DEG_2_RAD(Zpos)+pa_props.rot_z);
 					double Velocity=SmartDashboard::GetNumber("Velocity");
+					if (pa_props.IsRearView)
+						Velocity=-Velocity;
 					double Rotation_Velocity=SmartDashboard::GetNumber("Rotation Velocity");
 					m_PathPlotter.ComputePathPoints(Feet2Meters(Velocity),-Rotation_Velocity,m_dTime_s);
 					#endif
