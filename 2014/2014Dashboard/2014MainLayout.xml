@@ -1,74 +1,178 @@
 <xml version="1.0">
 <dashboard>
 	<widget field="pid error offset" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="420"/>
+		<location x="0" y="326"/>
 	</widget>
 	<widget field="desired velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="399"/>
+		<location x="0" y="305"/>
 	</widget>
 	<widget field="actual velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="378"/>
+		<location x="0" y="284"/>
 	</widget>
 	<widget field="desired y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="357"/>
-	</widget>
-	<widget field="voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="336"/>
-	</widget>
-	<widget field="pid cs-left" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="315"/>
-	</widget>
-	<widget field="pid error offset-left" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="294"/>
-	</widget>
-	<widget field="desired velocity-left" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="273"/>
-	</widget>
-	<widget field="LeftEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="252"/>
-	</widget>
-	<widget field="LeftVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="231"/>
-	</widget>
-	<widget field="pid cs-right" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="210"/>
-	</widget>
-	<widget field="pid error offset-right" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="189"/>
-	</widget>
-	<widget field="desired velocity-right" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="168"/>
-	</widget>
-	<widget field="RightEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="147"/>
-	</widget>
-	<widget field="RightVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="21"/>
+		<location x="0" y="263"/>
 	</widget>
 	<widget field="actual y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="122"/>
+	</widget>
+	<widget field="voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="0" y="0"/>
 	</widget>
+	<widget field="land_reticle_z" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="10" y="241"/>
+		<width>119</width>
+	</widget>
+	<widget field="land_reticle_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="11" y="209"/>
+		<width>103</width>
+	</widget>
+	<widget field="land_reticle_x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="12" y="179"/>
+		<width>100</width>
+	</widget>
+	<widget field="apex_reticle_z" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="11" y="100"/>
+		<width>118</width>
+	</widget>
+	<widget field="apex_reticle_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="9" y="76"/>
+		<width>117</width>
+	</widget>
+	<widget field="apex_reticle_x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="10" y="51"/>
+		<width>117</width>
+	</widget>
 	<widget field="Edit Position RearView" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="1111" y="51"/>
+		<location x="1218" y="30"/>
+	</widget>
+	<widget field="UseHighGear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="302" y="295"/>
+	</widget>
+	<widget field="ClutchEngaged" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="418" y="461"/>
+		<height>19</height>
+	</widget>
+	<widget field="WinchVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="199" y="485"/>
+		<property name="Foreground" value="0.102.0.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
+	</widget>
+	<widget field="Catapult_Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="168" y="327"/>
+		<property name="Upper Limit" value="220.0"/>
+		<property name="Lower Limit" value="-50.0"/>
+		<property name="Tick Interval" value="45.0"/>
+	</widget>
+	<widget field="Z Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="478" y="89"/>
+		<width>101</width>
+		<property name="Foreground" value="102.0.153.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="424" y="335"/>
+		<property name="Text" value="Edit Position"/>
+	</static-widget>
+	<widget field="land_reticle_enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="7" y="159"/>
+	</widget>
+	<widget field="apex_reticle_enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="12" y="30"/>
 	</widget>
 	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="275" y="15"/>
+		<location x="496" y="331"/>
 	</widget>
-	<widget field="Y Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="126"/>
+	<widget field="Sequence" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="440" y="282"/>
+		<width>78</width>
 	</widget>
-	<widget field="X Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="105"/>
+	<widget field="Y Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="480" y="54"/>
+		<width>100</width>
+		<property name="Foreground" value="153.0.255.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="84"/>
+	<widget field="X Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="479" y="20"/>
+		<width>95</width>
+		<property name="Foreground" value="153.0.255.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="Sequence" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="63"/>
+	<widget field="LeftEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="190" y="235"/>
+		<width>107</width>
+		<height>30</height>
+		<property name="Foreground" value="51.153.255.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="3.844"/>
+		<property name="Minimum" value="-3.844"/>
 	</widget>
-	<widget field="Rotation Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="42"/>
+	<widget field="RightEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="405" y="236"/>
+		<width>115</width>
+		<property name="Foreground" value="51.153.255.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="3.844"/>
+		<property name="Minimum" value="-3.844"/>
 	</widget>
+	<widget field="Y_ft " type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="382" y="64"/>
+		<width>80</width>
+	</widget>
+	<widget field="X_ft " type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="382" y="28"/>
+		<width>79</width>
+		<height>21</height>
+	</widget>
+	<widget field="Heading" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="298" y="160"/>
+		<width>94</width>
+		<height>65</height>
+		<property name="Upper Limit" value="180.0"/>
+		<property name="Lower Limit" value="-180.0"/>
+		<property name="Tick Interval" value="45.0"/>
+	</widget>
+	<widget field="Rotation Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="307" y="237"/>
+		<width>89</width>
+		<property name="Maximum" value="10.0"/>
+		<property name="Minimum" value="-10.0"/>
+	</widget>
+	<widget field="IsSlide" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="190" y="293"/>
+	</widget>
+	<widget field="RightVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="401" y="178"/>
+		<width>114</width>
+		<property name="Foreground" value="255.51.51.255"/>
+		<property name="Background" value="0.0.153.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
+	</widget>
+	<widget field="LeftVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="188" y="168"/>
+		<width>104</width>
+		<height>30</height>
+		<property name="Foreground" value="0.204.0.255"/>
+		<property name="Background" value="0.0.153.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
+	</widget>
+	<widget field="Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="151" y="12"/>
+		<property name="Upper Limit" value="14.0"/>
+		<property name="Lower Limit" value="-14.0"/>
+		<property name="Tick Interval" value="2.8"/>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="1143" y="36"/>
+		<property name="Text" value="Edit Position"/>
+	</static-widget>
 </dashboard>
 <live-window>
 </live-window>

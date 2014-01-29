@@ -14,7 +14,7 @@ DashboardProps =
 	settings =
 	{
 		title= "Main",
-		url= "black_33_800x600",
+		url= "black_33_600x800",
 		robot_ip_address= "localhost",
 		stream_profile= "default",
 		--TODO offload to the save file

@@ -35,18 +35,13 @@ CompositorProps = {
 		},
 		path_align =
 		{
-			width_in = 8.5, length_in = 11,
+			width_in = 25, length_ft = 10,
 			pivot_in = 2,
-			camera_position =	{ x_in=0, y_in=3.5, z_in=-1.0 },
+			camera_position =	{ x_in=0, y_in=12, z_in=-25 },
 			camera_rotation =	{ x=0, y_deg=0, z=0 },
-			fov_x=67,fov_y=67,
-			draw_cube = 0,
-			-- draw_cube will render a 1x1 meter cube centered at point 0,0,0.
-			-- for practical reasons, you'll need to move the camera position back to at least 0.5 meters.
-			-- if you place the camera at -1 meter, and set the orientation to 45 degress in one direction, 
-			-- you should see the corresponding front face edge at the center of the screen.
-			-- note that if you change 2 angles (say, toward the top right vertex), the corner will of the cube will NOT be centered.
-			--    this is normal due to perspective because the corner points are further away.
+			r=0,g=255,b=100,
+			rear_view='y',
+			fov=47,
 		},
 				
 		--Types	"none","square","composite","bypass"

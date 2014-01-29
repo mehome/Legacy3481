@@ -21,13 +21,13 @@ CompositorProps = {
 		{
 			square_reticle_1 =
 			{
-				thickness_x=20,thickness_y=20,opacity=0.7,
+				thickness_x=6,thickness_y=6,opacity=0.7,
 				r=0,g=255,b=100,
 
 				use_shadow='y', exclude_region='y',
 				shadow =
 				{
-					thickness_x=20,thickness_y=20,opacity=0.9,
+					thickness_x=6,thickness_y=6,opacity=0.9,
 					r=0,g=0,b=0
 				},
 				x_offset=2,y_offset=1
@@ -51,7 +51,27 @@ CompositorProps = {
 				r=0,g=255,b=255
 			}
 		},
-		
+		--Shape reticles depend on the path align to setup the camera confiruation even if the path align is never used
+		shape_reticle_props =
+		{
+			-- draw_shape -- may be "square", "circle", or "cube".
+			shape_reticle_1 =
+			{
+				remote_name="apex_reticle",
+				size_in=25,
+				r=0,g=255,b=100,
+				plane_selection="xy_and_xz",
+				draw_shape="circle"
+			},
+			shape_reticle_2 =
+			{
+				remote_name="land_reticle",
+				size_in=25,
+				r=250,g=250,b=0,
+				plane_selection="xy",
+				draw_shape="circle"
+			}
+		},
 		line_plot_props =
 		{
 			--plot arm
@@ -94,7 +114,19 @@ CompositorProps = {
 			}
 		},
 		
-		--Types	"none","square","composite","bypass"
+		path_align =
+		{
+			width_in = 25, length_ft = 10,
+			pivot_in = 2,
+			camera_position =	{ x_in=0, y_in=12, z_in=-1.0 },
+			camera_rotation =	{ x=0, y_deg=20, z=0 },
+			fov=45,
+			r=0,g=255,b=100,
+			draw_shape = "path",
+			-- draw_shape -- may be "path", "square", "circle", or "cube".
+		},
+		
+		--Types	"none","square","composite","bypass","pathalign"
 		sequence =
 		{
 			sequence_1 = 
@@ -103,7 +135,9 @@ CompositorProps = {
 				composite=
 				{
 					composite_1 = {	type="square", selection=1	},
-					composite_2 = {	type="square", selection=2	},
+					composite_2 = { type="shape", selection=1 },
+					composite_3 = { type="shape", selection=2 },
+					composite_4 = {	type="pathalign" }
 				}
 			},
 			sequence_2 = {	type="bypass" },
@@ -121,22 +155,27 @@ CompositorProps = {
 			control = "logitech dual action",
 			SetXAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			SetYAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
+			SetZAxis = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
 			SequencePOV =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			ToggleLinePlot     = {type="joystick_button", key=6, on_off=false},
+			ResetPos     = {type="joystick_button", key=2, keyboard=' ', on_off=false},
 		},
 		Joystick_2 =
 		{
 			control = "gamepad f310 (controller)",
 			SetXAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			SetYAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
+			SetZAxis = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
 			SequencePOV =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			ToggleLinePlot     = {type="joystick_button", key=6, on_off=false},
+			ResetPos     = {type="joystick_button", key=1, keyboard=' ', on_off=false},
 		},		
 		Joystick_3 =
 		{
 			control = "airflo",
 			SetXAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			SetYAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
+			SetZAxis = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=0.0},
 			--These sequence events happen whether or not you are in edit so choose what you want to use during the game
 			--The POV is not supported by the driver station so it is the perfect chose... I've added buttons here to show if you need to use them instead
 			--NextSequence     = {type="joystick_button", key=2, keyboard='y', on_off=false},
