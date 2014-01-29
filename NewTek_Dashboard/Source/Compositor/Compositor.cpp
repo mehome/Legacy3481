@@ -3,6 +3,9 @@
 #include "../FrameWork/FrameWork.h"
 #include "Compositor.h"
 
+//Enable this to include FOV in the SmartDashboard
+#undef __Edit_FOV__
+
 //#define __DisableSmartDashboard__ //used to quickly disable the smart dashboard
 #ifndef __DisableSmartDashboard__
 #include "../SmartDashboard/SmartDashboard_import.h"
@@ -2363,7 +2366,10 @@ class Compositor
 		IEvent::HandlerList ehl;
 		Compositor(const char *IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *DashboardHelper) : m_Bypass(IPAddress,WindowTitle,DashboardHelper),m_JoyBinder(FrameWork::GetDirectInputJoystick()),
 			m_SequenceIndex(0),m_pSequence(NULL),m_BlinkCounter(0),m_Xpos(0.0),m_Ypos(0.0),m_Zpos(0.0),m_Xpos_Offset(0.0),m_Ypos_Offset(0.0),
-			m_LastFOV(47.0),m_PathPlotter(),m_ShapeRender(m_PathPlotter.projector),
+			#ifdef __Edit_FOV__
+			m_LastFOV(47.0),
+			#endif
+			m_PathPlotter(),m_ShapeRender(m_PathPlotter.projector),
 			m_WindowTitle(WindowTitle),
 			m_IsEditable(false),m_PreviousIsEditable(false),m_RecurseIntoComposite(false),m_Flash(false),m_ToggleLinePlot(true)
 		{
@@ -2384,7 +2390,9 @@ class Compositor
 			m_EditPositionName="Edit Position ";
 			m_EditPositionName+=WindowTitle;
 			SmartDashboard::PutBoolean(m_EditPositionName.c_str(),false);
+			#ifdef __Edit_FOV__
 			SmartDashboard::PutNumber("FOV",m_LastFOV);
+			#endif
 		}
 
 		void SaveData_Sequence(std::ofstream &out,const Compositor_Props::Sequence_List &sequence,size_t RecursiveCount=0)
@@ -2501,8 +2509,10 @@ class Compositor
 					m_Bypass.LoadPlugIn(props->GetCompositorProps().BypassPlugin.c_str());					
 					m_Bypass.Callback_Initialize();  //will implicitly handle error
 				}
+				#ifdef __Edit_FOV__
 				m_LastFOV=m_CompositorProperties.GetCompositorProps().PathAlign.FOV_x;
 				SmartDashboard::PutNumber("FOV",m_LastFOV);
+				#endif
 				m_PathPlotter.Initialize(m_CompositorProperties.GetCompositorProps().PathAlign);
 			}
 			else
@@ -2649,6 +2659,8 @@ class Compositor
 					Xpos=(EnableFlash&&m_RecurseIntoComposite)?m_Xpos:seq_pkt.PositionX;
 					Ypos=(EnableFlash&&m_RecurseIntoComposite)?m_Ypos:seq_pkt.PositionY;
 					Zpos=(EnableFlash&&m_RecurseIntoComposite)?m_Zpos:seq_pkt.specific_data.PositionZ;
+
+					#ifdef __Edit_FOV__
 					{
 						const double NewFOV=SmartDashboard::GetNumber("FOV");
 						if (NewFOV!=m_LastFOV)
@@ -2659,6 +2671,8 @@ class Compositor
 							m_LastFOV=NewFOV;
 						}
 					}
+					#endif
+
 					//Treating Xpos and Ypos as degrees will keep the scale to feel about right
 					m_PathPlotter.Compute_LookAtFromAngles(DEG_2_RAD(Xpos)+pa_props.rot_x,DEG_2_RAD(Ypos)+pa_props.rot_y,DEG_2_RAD(Zpos)+pa_props.rot_z);
 					double Velocity=SmartDashboard::GetNumber("Velocity");
@@ -2840,7 +2854,9 @@ class Compositor
 		size_t m_BlinkCounter; //very simple blink mechanism
 		double m_Xpos,m_Ypos,m_Zpos;
 		double m_Xpos_Offset,m_Ypos_Offset;  //only used when stepping through recursion
+		#ifdef __Edit_FOV__
 		double m_LastFOV;
+		#endif
 		Bypass_Reticle m_Bypass;
 		LinePlot_Retical m_LinePlot;
 		PathRenderer m_PathPlotter;
