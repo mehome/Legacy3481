@@ -41,7 +41,7 @@ CompositorProps = {
 			camera_rotation =	{ x=0, y_deg=0, z=0 },
 			r=0,g=255,b=100,
 			rear_view='y',
-			fov=47,
+			fov=45,
 		},
 				
 		--Types	"none","square","composite","bypass"
