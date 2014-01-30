@@ -5,6 +5,7 @@
 
 //Enable this to include FOV in the SmartDashboard
 #undef __Edit_FOV__
+#undef  __Edit_Camera_Position__
 
 //#define __DisableSmartDashboard__ //used to quickly disable the smart dashboard
 #ifndef __DisableSmartDashboard__
@@ -723,6 +724,12 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 				else
 					pal_props.pos_z=18 * 0.0254;
 				script.Pop();
+
+				#ifdef __Edit_Camera_Position__
+				SmartDashboard::PutNumber("Camera_x",Meters2Inches(pal_props.pos_x));
+				SmartDashboard::PutNumber("Camera_y",Meters2Inches(pal_props.pos_z));
+				SmartDashboard::PutNumber("Camera_z",Meters2Inches(pal_props.pos_y));
+				#endif
 			}
 			err = script.GetFieldTable("camera_rotation");
 			if (!err)
@@ -1947,7 +1954,7 @@ public:
 			projector.camera.SetLookAtFromAngles(orientation);
 			projector.Trans_Initialise();
 			m_lastOrientation=orientation;
-			#ifdef __Edit_FOV__
+			#ifdef __Edit_Camera_Position__
 			SmartDashboard::PutNumber("Camera_Yaw",RAD_2_DEG(Yaw));
 			SmartDashboard::PutNumber("Camera_Pitch",RAD_2_DEG(Pitch));
 			SmartDashboard::PutNumber("Camera_Roll",RAD_2_DEG(Roll));
@@ -2565,6 +2572,11 @@ class Compositor
 			#ifdef __Edit_FOV__
 			SmartDashboard::PutNumber("FOV",m_LastFOV);
 			#endif
+			#ifdef __Edit_Camera_Position__
+			SmartDashboard::PutNumber("Camera_x",0.0);
+			SmartDashboard::PutNumber("Camera_y",Inches2Meters(12));
+			SmartDashboard::PutNumber("Camera_z",0.0);
+			#endif
 		}
 
 		void SaveData_Sequence(std::ofstream &out,const Compositor_Props::Sequence_List &sequence,size_t RecursiveCount=0)
@@ -2825,6 +2837,7 @@ class Compositor
 			case Compositor_Props::ePathAlign:
 				{
 					const Compositor_Props::PathAlign_Container_Props &pa_props=props.PathAlign;
+					Compositor_Props::PathAlign_Container_Props &pa_props_rw=props_rw.PathAlign;
 					#if 0
 					m_PathPlotter.ComputePathPoints(1.0, 0.25);
 					#else
@@ -2843,6 +2856,24 @@ class Compositor
 							m_PathPlotter.projector.camera.anglev=NewFOV;
 							m_PathPlotter.projector.Trans_Initialise();
 							m_LastFOV=NewFOV;
+						}
+					}
+					#endif
+
+					#ifdef __Edit_Camera_Position__
+					{
+
+						const double Camera_x=SmartDashboard::GetNumber("Camera_x");
+						const double Camera_y=SmartDashboard::GetNumber("Camera_y");
+						const double Camera_z=SmartDashboard::GetNumber("Camera_z");
+						if ((Camera_x!=pa_props.pos_x)||(Camera_y!=pa_props.pos_y)||(Camera_z!=pa_props.pos_z))
+						{
+							pa_props_rw.pos_x=Inches2Meters(Camera_x);
+							pa_props_rw.pos_y=Inches2Meters(Camera_z);
+							pa_props_rw.pos_z=Inches2Meters(Camera_y);
+							_3Dpoint Camera_position = _3Dpoint(pa_props.pos_x,pa_props.pos_y,pa_props.pos_z);
+							m_PathPlotter.projector.camera.from=Camera_position;
+							m_PathPlotter.projector.Trans_Initialise();
 						}
 					}
 					#endif
