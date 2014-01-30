@@ -39,6 +39,23 @@ public:
 };
 #endif
 
+#define SCRIPT_TEST_BOOL_YES(x,y)  			err = script.GetField(y,&sTest,NULL,NULL);\
+x=false;\
+if (!err)\
+{\
+	if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))\
+		x=true;\
+}
+
+
+
+#define SCRIPT_TEST_BOOL_NO(x,y)  			err = script.GetField(y,&sTest,NULL,NULL);\
+x=true;\
+if (!err)\
+{\
+	if ((sTest.c_str()[0]=='n')||(sTest.c_str()[0]=='N')||(sTest.c_str()[0]=='0'))\
+		x=false;\
+}
 
 
 Dashboard_Framework_Interface *g_Framework=NULL;
@@ -71,6 +88,11 @@ const char * const csz_ShapeType_Enum[] =
 const char * const csz_Shape2D_PlaneSelection_Enum[] =
 {
 	"xy","xz","yz","xy_and_xz"
+};
+
+const char * const csz_PathAlign_Enum[] =
+{
+	"none","path","runner"
 };
 
 struct Compositor_Props
@@ -124,10 +146,16 @@ struct Compositor_Props
 		BYTE rgb[3];  //shape color
 		enum path_types
 		{
-			ePath,
-			eDistanceRunner
+			eNone,  //still need path align for shapes, but we can not draw anything for it
+			eDefaultPath,
+			eDistanceRunner  //TODO this one may look cool, but probably not going to do it
 		} path_type;  //this will become depreciated
+		static path_types GetPathAlign_Enum (const char *value)
+		{	return Enum_GetValue<path_types> (value,csz_PathAlign_Enum,_countof(csz_PathAlign_Enum));
+		}
 		size_t NumberSegments;  //This can slice the path up into this many segment squares
+		bool IgnoreLinearVelocity;  //avoid motion when true
+		bool IgnoreAngularVelocity; //avoid the curving when true
 		bool IsRearView;  //Used for if camera is mounted for rear view
 	} PathAlign;
 	//No list for path align... assuming only one instance is needed of one camera at a fixed point and orientation
@@ -353,20 +381,8 @@ static void LoadSquareReticleProps(Scripting::Script& script,Compositor_Props &p
 
 			Compositor_Props::SquareReticle_Container_Props sqr_pkt;
 			std::string sTest;
-			err = script.GetField("use_shadow",&sTest,NULL,NULL);
-			sqr_pkt.UsingShadow=false;
-			if (!err)
-			{
-				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
-					sqr_pkt.UsingShadow=true;
-			}
-			err = script.GetField("exclude_region",&sTest,NULL,NULL);
-			sqr_pkt.ExcludeRegion=true;
-			if (!err)
-			{
-				if ((sTest.c_str()[0]=='n')||(sTest.c_str()[0]=='N')||(sTest.c_str()[0]=='0'))
-					sqr_pkt.ExcludeRegion=false;
-			}
+			SCRIPT_TEST_BOOL_YES(sqr_pkt.UsingShadow,"use_shadow");
+			SCRIPT_TEST_BOOL_NO(sqr_pkt.ExcludeRegion,"exclude_region");
 			err = script.GetFieldTable("shadow");
 			if (!err)
 			{
@@ -667,8 +683,15 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 					pal_props.FOV_x=pal_props.FOV_y=47.0;  //using default
 			}
 			std::string sTest;
-			err = script.GetField("draw_shape",&sTest,NULL,NULL);
-			pal_props.path_type=PathProps::ePath;
+			err = script.GetField("draw_selection",&sTest,NULL,NULL);
+			if (!err)
+			{
+				PathProps::path_types selection=PathProps::GetPathAlign_Enum(sTest.c_str());
+				pal_props.path_type=selection;
+			}
+			else
+				pal_props.path_type=PathProps::eDefaultPath;
+
 
 			err=script.GetField("r", NULL, NULL, &fTest);
 			if (!err)
@@ -683,13 +706,9 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			err=script.GetField("num_segments", NULL, NULL, &fTest);
 			pal_props.NumberSegments=err?10:(size_t)fTest;
 
-			err = script.GetField("rear_view",&sTest,NULL,NULL);
-			pal_props.IsRearView=false;
-			if (!err)
-			{
-				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
-					pal_props.IsRearView=true;
-			}
+			SCRIPT_TEST_BOOL_YES(pal_props.IsRearView,"rear_view");
+			SCRIPT_TEST_BOOL_YES(pal_props.IgnoreLinearVelocity,"disable_motion");
+			SCRIPT_TEST_BOOL_YES(pal_props.IgnoreAngularVelocity,"disable_turns");
 
 			props.PathAlign=pal_props;
 			//props.square_reticle.push_back(sqr_pkt);
@@ -709,7 +728,7 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			pal_props.rot_y=0.33;
 			pal_props.rot_z=0.0;
 			pal_props.FOV_x=pal_props.FOV_y=47.0;
-			pal_props.path_type=PathProps::ePath;
+			pal_props.path_type=PathProps::eDefaultPath;
 			props.PathAlign=pal_props;
 		}
 	} //while (!fieldtable_err);
@@ -1660,7 +1679,7 @@ public:
 		angle = -45;
 		dir = 1;
 
-		path_type = PathProps::ePath;
+		path_type = PathProps::eDefaultPath;
 
 		// these should probably be pulled from LUA values.
 		width = 15 * 0.0254;	// 15 inches in meters (robot is 24)	This is the width of our drawn path.
@@ -1740,9 +1759,9 @@ public:
 
 	// Compute the path mesh. This is for the front of the robot which is offset from the pivot point at ground level.
 	// This should be called prior to each render, but could be called only when velocities change.
-	void ComputePathPoints(double Forward_Vel, double Angular_Vel, double dTime_s)
+	void ComputePathPoints(double Forward_Vel, double Angular_Vel, double dTime_s, bool ImplementLinearMotion)
 	{
-		if( path_type != PathProps::ePath || Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
+		if( path_type != PathProps::eDefaultPath || Translation == NULL || Center == NULL || Right == NULL || Left == NULL ) 
 			return;
 
 		//Normalize the angular velocity
@@ -1793,6 +1812,8 @@ public:
 
 		m_SegmentOffset=SegmentLength!=0.0?fmod((((Forward_Vel * direction) * dTime_s)+m_SegmentOffset),SegmentLength):m_SegmentOffset;
 		double angle = m_SegmentOffset;
+		if (!ImplementLinearMotion)
+			angle=0.0;
 		//TODO motion with angular velocity doesn't look right
 		//if (angular_velocity!=0)
 		//	angle=0;
@@ -1863,7 +1884,7 @@ public:
 
 			switch (path_type)
 			{
-			case PathProps::ePath:
+			case PathProps::eDefaultPath:
 				// draw the normal path
 				projector.Trans_Line(Left[0], Right[0]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
@@ -2710,8 +2731,8 @@ class Compositor
 					double Velocity=SmartDashboard::GetNumber("Velocity");
 					if (pa_props.IsRearView)
 						Velocity=-Velocity;
-					double Rotation_Velocity=SmartDashboard::GetNumber("Rotation Velocity");
-					m_PathPlotter.ComputePathPoints(Feet2Meters(Velocity),-Rotation_Velocity,m_dTime_s);
+					double Rotation_Velocity=!pa_props.IgnoreAngularVelocity ? SmartDashboard::GetNumber("Rotation Velocity") : 0.0;
+					m_PathPlotter.ComputePathPoints(Feet2Meters(Velocity),-Rotation_Velocity,m_dTime_s,!pa_props.IgnoreLinearVelocity);
 					#endif
 					ret = m_PathPlotter.RenderPath(Frame,pa_props,m_RecurseIntoComposite&&EnableFlash&&!m_Flash);
 				}

@@ -114,7 +114,9 @@ CompositorProps = {
 			camera_rotation =	{ x=0, y_deg=0, z=0 },
 			fov_x=60,fov_y=60,
 			r=0,g=255,b=100,
-			draw_shape = "path",
+			--draw_selection = "none",
+			--disable_motion = 'y',
+			--disable_turns = 'y',
 			-- draw_shape -- may be "path", "square", "circle", or "cube".
 		},
 		
