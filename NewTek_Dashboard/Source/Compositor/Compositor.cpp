@@ -452,6 +452,7 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 
 	typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
 	typedef ShapeProps::type_specifics::Shapes2D_Props Shapes2D_Props;
+	typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Shapes2D_Orientation_Props SquareProps;
 
 	std::string sTest;
 	err = script.GetField("remote_name",&shape_props.RemoteVariableName,NULL,NULL);
@@ -500,22 +501,77 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 			shape_props.specific_data.Shapes2D.PlaneSelection=ShapeProps::type_specifics::Shapes2D_Props::e_xy_plane;
 		break;
 	case ShapeProps::e_Square:
-		
-		if (LoadMeasuredValue(script,"size",value))
-			shape_props.specific_data.Shapes2D_Orientation.Length=shape_props.specific_data.Shapes2D_Orientation.Width=value;
-		else
 		{
-			if (LoadMeasuredValue(script,"length",value))
-				shape_props.specific_data.Shapes2D_Orientation.Length=value;
-			else
-				shape_props.specific_data.Shapes2D_Orientation.Length= 12 * 0.0254;	
 
-			if (LoadMeasuredValue(script,"width",value))
-				shape_props.specific_data.Shapes2D_Orientation.Width=value;
+			SquareProps &sqr_props=shape_props.specific_data.Shapes2D_Orientation;
+			if (LoadMeasuredValue(script,"size",value))
+				sqr_props.Length=sqr_props.Width=value;
 			else
-				shape_props.specific_data.Shapes2D_Orientation.Width= 12 * 0.0254;	
-		}
+			{
+				if (LoadMeasuredValue(script,"length",value))
+					sqr_props.Length=value;
+				else
+					sqr_props.Length= 12 * 0.0254;	
+
+				if (LoadMeasuredValue(script,"width",value))
+					sqr_props.Width=value;
+				else
+					sqr_props.Width= 12 * 0.0254;	
+			}
+
+			//TODO move this in sequence packet when live edit comes on-line
+			double fTest;
+			err = script.GetFieldTable("rotation");
+			if (!err)
+			{
+				err=script.GetField("x_deg", NULL, NULL, &fTest);
+				if (!err) sqr_props.Yaw=DEG_2_RAD(fTest);
+				else
+				{
+					err = script.GetField("x",NULL,NULL,&fTest);
+					if (!err)
+						sqr_props.Yaw=fTest;
+					else 
+						sqr_props.Yaw=0.0;
+				}
+				err=script.GetField("y_deg", NULL, NULL, &fTest);
+				if (!err) sqr_props.Pitch=DEG_2_RAD(fTest);
+				else
+				{
+					err = script.GetField("y",NULL,NULL,&fTest);
+					if (!err)
+						sqr_props.Pitch=fTest;
+					else
+						sqr_props.Pitch=0.0;
+				}
+				err=script.GetField("z_deg", NULL, NULL, &fTest);
+				if (!err) sqr_props.Roll=DEG_2_RAD(fTest);
+				else
+				{
+					err = script.GetField("z",NULL,NULL,&fTest);
+					if (!err)
+						sqr_props.Roll=fTest;
+					else
+						sqr_props.Roll=0.0;
+				}
+				script.Pop();
+			}
+			if (shape_props.RemoteVariableName.c_str()[0]!=0)
+			{
+				sTest=shape_props.RemoteVariableName;
+				sTest+="_rot_x";
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Yaw));
+				sTest=shape_props.RemoteVariableName;
+				sTest+="_rot_y";
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Pitch));
+				sTest=shape_props.RemoteVariableName;
+				sTest+="_rot_z";
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Roll));
+			}
+
+		}		
 		break;
+
 	default:
 		//The rest should be the shapes 2D kind
 		if (LoadMeasuredValue(script,"size",value))
@@ -1483,6 +1539,11 @@ public:
 		return (true);
 	}
 
+	bool Trans_Line(osg::Vec3d w1, osg::Vec3d w2) const
+	{
+		return Trans_Line(_3Dpoint(w1[0],w1[1],w1[2]),_3Dpoint(w2[0],w2[1],w2[2]));
+	}
+
 	void Normalise(_3Dpoint& v)
 	{
 		double length;
@@ -1965,6 +2026,15 @@ public:
 	typedef ShapeProps::type_specifics::Shapes2D_Props Shapes2D_Props;
 	Shape3D_Renderer(const projection &Projection) : m_Projection(Projection)
 	{}
+
+	inline osg::Quat From_Rot_Radians(double Yaw, double Pitch, double Roll)
+	{
+		return osg::Quat(
+			Pitch, osg::Vec3d(1,0,0),
+			Roll, osg::Vec3d(0,1,0),
+			Yaw, osg::Vec3d(0,0,1));
+	}
+
 	void InitCube(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
 	{
 		// points for cube - 1 x 1 meter centered at 0,0,0.
@@ -1979,12 +2049,26 @@ public:
 	}
 	void InitSquare(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
 	{
-		// points for square - 25 x 25 inches centered at 0,0,0.
-		// -- fudged for now, y is out about 5 feet, you'll want it at zero and move by adding translation.
-		square[0].x = -12.5 * 0.0254, square[0].y =  0 + 60 * 0.0254, square[0].z =  12.5 * 0.0254;
-		square[1].x =  12.5 * 0.0254, square[1].y =  0 + 60 * 0.0254, square[1].z =  12.5 * 0.0254;
-		square[2].x = -12.5 * 0.0254, square[2].y =  0 + 60 * 0.0254, square[2].z = -12.5 * 0.0254;
-		square[3].x =  12.5 * 0.0254, square[3].y =  0 + 60 * 0.0254, square[3].z = -12.5 * 0.0254;
+		using namespace osg;
+		typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Shapes2D_Orientation_Props SquareProps;
+		const SquareProps &sqr_props=props.specific_data.Shapes2D_Orientation;
+		Quat orientation=From_Rot_Radians(sqr_props.Yaw,sqr_props.Pitch,sqr_props.Roll);
+
+		//A square is a 2D object therefore has no depth or the forward direction
+		//Vec3d ForwardDir(orientation*Vec3d(0,1,0));
+		Vec3d UpDir(orientation*Vec3d(0,0,1));
+		Vec3d RightDir(orientation*Vec3d(1,0,0));
+		//Scale normalized by the length and width
+		UpDir*=sqr_props.Length;
+		RightDir*=sqr_props.Width;
+		//Now to apply position offset
+		Vec3d Offset(XPos,ZPos,YPos);
+
+		square[0]=-RightDir +  UpDir + Offset;
+		square[1]= RightDir +  UpDir + Offset;
+		square[2]=-RightDir + -UpDir + Offset;
+		square[3]= RightDir + -UpDir + Offset;
+
 	}
 	void InitCircle(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
 	{
@@ -2105,7 +2189,6 @@ public:
 
 				projector.Trans_Line(square[2], square[3]);
 				g_Framework->DrawLineUYVY(Frame, projector.p1, projector.p2, col);
-
 				break;
 			case ShapeProps::e_Circle:
 				InitCircle(XPos,YPos,ZPos,props);
@@ -2143,7 +2226,7 @@ public:
 private:
 	const projection &m_Projection;
 	_3Dpoint cube[8];
-	_3Dpoint square[4];
+	osg::Vec3d square[4];
 	_3Dpoint circle[40];
 };
 
@@ -2788,6 +2871,20 @@ class Compositor
 						sTest=shape_props.RemoteVariableName;
 						sTest+="_z";
 						Zpos=Feet2Meters(SmartDashboard::GetNumber(sTest));
+
+						typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
+						if (shape_props.draw_shape==ShapeProps::e_Square)
+						{
+							sTest=shape_props.RemoteVariableName;
+							sTest+="_rot_x";
+							Xpos=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							sTest=shape_props.RemoteVariableName;
+							sTest+="_rot_y";
+							Ypos=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							sTest=shape_props.RemoteVariableName;
+							sTest+="_rot_z";
+							Zpos=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+						}
 					}
 					else
 					{
@@ -2829,6 +2926,20 @@ class Compositor
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_z";
 							SmartDashboard::PutNumber(sTest,Meters2Feet(Zpos));
+
+							//TODO enable once I have check box for rotation
+							//typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
+							//if (shape_props.draw_shape==ShapeProps::e_Square)
+							//{
+							//	sTest+="_rot_x";
+							//	SmartDashboard::PutNumber(sTest,RAD_2_DEG(Xpos));
+							//	sTest=shape_props.RemoteVariableName;
+							//	sTest+="_rot_y";
+							//	SmartDashboard::PutNumber(sTest,RAD_2_DEG(Ypos));
+							//	sTest=shape_props.RemoteVariableName;
+							//	sTest+="_rot_z";
+							//	SmartDashboard::PutNumber(sTest,RAD_2_DEG(Zpos));
+							//}
 						}
 					}
 
