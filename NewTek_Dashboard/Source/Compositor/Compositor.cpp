@@ -2060,8 +2060,8 @@ public:
 		Vec3d UpDir(orientation*Vec3d(0,0,1));
 		Vec3d RightDir(orientation*Vec3d(1,0,0));
 		//Scale normalized by the length and width
-		UpDir*=sqr_props.Length;
-		RightDir*=sqr_props.Width;
+		UpDir*=(sqr_props.Length * 0.5); //half length and width to work with center
+		RightDir*=(sqr_props.Width * 0.5);
 		//Now to apply position offset
 		Vec3d Offset(XPos,ZPos,YPos);
 
