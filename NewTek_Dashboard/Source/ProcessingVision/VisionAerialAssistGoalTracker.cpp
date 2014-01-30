@@ -27,14 +27,21 @@ VisionAerialAssistGoalTracker::VisionAerialAssistGoalTracker()
 			break;
 	}
 
-	Set3PtGoalAspect(m_b3PtGoal);
+	SetRejectBorderObjs(false);
+	SetUseConvexHull(false);
 
 	// particle filter parameters
-	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
-	float plower[] = {40, 30};	
-	float pUpper[] = {630, 470};
-	int pCalibrated[] = {0,0};
-	int pExclude[] = {0,0};
+	//MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
+	//float plower[] = {40, 30};	
+	//float pUpper[] = {630, 470};
+	//int pCalibrated[] = {0,0};
+	//int pExclude[] = {0,0};
+
+	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_AREA};
+	float plower[] = {150};	
+	float pUpper[] = {65535};
+	int pCalibrated[] = {0};
+	int pExclude[] = {0};
 
 	criteriaCount = sizeof(FilterMeasureTypes) / sizeof(FilterMeasureTypes[0]);
 
@@ -43,14 +50,6 @@ VisionAerialAssistGoalTracker::VisionAerialAssistGoalTracker()
 
 VisionAerialAssistGoalTracker::~VisionAerialAssistGoalTracker()
 {
-}
-
-void VisionAerialAssistGoalTracker::Set3PtGoalAspect(bool bUse3pt)
-{
-	if( bUse3pt )
-		particleList.SetParticleParams( 0.75f, 0.7f, 3.2f );	// area threshold, aspect min, max
-	else
-		particleList.SetParticleParams( 0.75f, 0.7f, 2.2f );	// area threshold, aspect min, max
 }
 
 void VisionAerialAssistGoalTracker::SetDefaultThreshold( void )
@@ -79,7 +78,8 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 	int min_y = SourceImageInfo.yRes + 1;
 	int index = 0;
 
-	Set3PtGoalAspect(m_b3PtGoal);	// not very efficient since it won't change every frame.
+	particleList.SetParticleParams( 0.75f, 0.0f, 0.0f, (4.0f/32), (23.5f/4) );	// area threshold, aspect min, max
+//	particleList.SetParticleParams( 0.75f, 0.0f, 0.0f, (1.2f/11.6f), (10.0f/1.0f) );	// area threshold, aspect min, max
 
 	//-----------------------------------------------------------------//
 	//  Threshold                                                      //

@@ -59,6 +59,8 @@ struct ParticleList
 		area_threshold = 0.8f;
 		aspectMin = 0.8f;
 		aspectMax = 1.4f;
+		ideal_vert_asp = 4.0/32;
+		ideal_horz_asp = 23.5/4;
 	}
 
 	void SetParticleParams( float thresh, float aspMin, float aspMax )
@@ -66,12 +68,26 @@ struct ParticleList
 		area_threshold = thresh;
 		aspectMin = aspMin;
 		aspectMax = aspMax;
+		ideal_vert_asp = 0.0f;
+		ideal_horz_asp = 0.0f;
+	}
+
+	void SetParticleParams( float thresh, float aspMin, float aspMax, float vert_asp, float horz_asp )
+	{
+		area_threshold = thresh;
+		aspectMin = aspMin;
+		aspectMax = aspMax;
+		ideal_vert_asp = vert_asp;
+		ideal_horz_asp = horz_asp;
 	}
 
 	int numParticles;
 	float area_threshold;	// particles must fill this much of their bounding box to qualify.
 	float aspectMin;		// particle bounding box must be in this range of aspect ratios.
 	float aspectMax;
+	float ideal_vert_asp;
+	float ideal_horz_asp;
+
 	std::vector<ParticleData>particleData;
 };
 
@@ -124,6 +140,8 @@ public:
 
 	ThresholdColorSpace GetThresholdMode( void ) { return m_ThresholdMode; }
 	int GetThresholdValues( VisionSetting_enum whichVal );
+
+	double ratioToScore(double ratio);
 
 protected:
 	// option switches

@@ -252,6 +252,13 @@ void VisionTracker::InitParticleFilter(MeasurementType FilterMeasureTypes[], flo
 }
 
 
+double VisionTracker::ratioToScore(double ratio)
+{
+	double score = (max(0, min(100*(1-fabs(1-ratio)),100)));
+	return score;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Function Name: GetParticles
@@ -300,6 +307,8 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double area;
 		double center_x;
 		double center_y;
+		double eq_long_side;
+		double eq_short_side;
 		eStatus status = eOK;
 
 		// Computes the requested pixel measurements about the particle.
@@ -310,6 +319,9 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_RIGHT, &bound_right));
 		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_BOUNDING_RECT_BOTTOM, &bound_bottom));
 
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_EQUIVALENT_RECT_LONG_SIDE, &eq_long_side));
+		VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_EQUIVALENT_RECT_SHORT_SIDE, &eq_short_side));
+
 		double bound_width = bound_right - bound_left;
 		double bound_height = bound_bottom - bound_top;
 		double aspect = bound_width / bound_height;
@@ -318,12 +330,32 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		DOUT("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
 
 		// if aspect is not in range, skip it.
-		if( aspect < particleList.aspectMin || aspect > particleList.aspectMax)
+		if( particleList.aspectMin > 0 && particleList.aspectMax > 0)
 		{
-			DOUT("rejected - min %f < asp %f < max %f\n", particleList.aspectMin, aspect, particleList.aspectMax);
-			status = eAspectFail;
+			if( aspect < particleList.aspectMin || aspect > particleList.aspectMax)
+			{
+				DOUT("rejected - min %f < asp %f < max %f\n", particleList.aspectMin, aspect, particleList.aspectMax);
+				status = eAspectFail;
+			}
+		}
+		else if( bound_width > bound_height)
+		{
+			if(ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp) < 50)
+			{
+				DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp));
+				status = eAspectFail;
+			}
 		}
 		else
+		{
+			if(ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp) < 50)
+			{
+				DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp));
+				status = eAspectFail;
+			}
+		}
+		
+		if(status != eAspectFail)
 		{
 			// particle area
 			VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &area));
