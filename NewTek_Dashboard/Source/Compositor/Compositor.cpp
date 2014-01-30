@@ -172,7 +172,7 @@ struct Compositor_Props
 		union type_specifics
 		{
 			double Size_1D;  //cubes use this... kept as generic name for shapes that just need size
-			struct Shapes2D_Props  //circles and squares use this
+			struct Shapes2D_Props  //circles use this
 			{
 				double Size_1D;  
 				//Where x and y are width height and z is depth
@@ -187,6 +187,11 @@ struct Compositor_Props
 				{	return Enum_GetValue<PlaneSelection_enum> (value,csz_Shape2D_PlaneSelection_Enum,_countof(csz_Shape2D_PlaneSelection_Enum));
 				}
 			} Shapes2D;
+			struct Shapes2D_Orientation_Props  //Squares use this
+			{
+				double Length,Width;
+				double Yaw,Pitch,Roll;
+			} Shapes2D_Orientation;
 		} specific_data;
 
 		enum shape_types 
@@ -236,6 +241,14 @@ struct Compositor_Props
 				size_t SelIndex;
 				double PositionZ;
 			} ShapeReticle_props;
+
+			struct ShapeDynamics_Orientation
+			{
+				size_t SelIndex;
+				double PositionZ;
+				double rot_x,rot_y,rot_z;
+			} ShapeReticle_Orientation_props;
+
 			double PositionZ; //for path align
 		} specific_data;
 		bool IsEnabled;  //all reticles can have ability to not be drawn TODO
@@ -462,21 +475,20 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 	ShapeProps::shape_types shape=ShapeProps::GetShapeType_Enum(sTest.c_str());
 	shape_props.draw_shape=shape;
 
-	if (shape==ShapeProps::e_Cube)
+	switch (shape)
 	{
+	case ShapeProps::e_Cube:
 		if (LoadMeasuredValue(script,"size",value))
 			shape_props.specific_data.Size_1D=value;
 		else
-			shape_props.specific_data.Size_1D= 12 * 0.0254;	// 12 inches default value
-	}
-	else
-	{
+			shape_props.specific_data.Size_1D= 12 * 0.0254;	
+		break;
+	case ShapeProps::e_Circle:
 		//The rest should be the shapes 2D kind
 		if (LoadMeasuredValue(script,"size",value))
 			shape_props.specific_data.Shapes2D.Size_1D=value;
 		else
-			shape_props.specific_data.Shapes2D.Size_1D= 12 * 0.0254;	// 12 inches default value
-
+			shape_props.specific_data.Shapes2D.Size_1D= 12 * 0.0254;	
 		//plane selection 
 		err = script.GetField("plane_selection",&sTest,NULL,NULL);
 		if (!err)
@@ -486,6 +498,30 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 		}
 		else
 			shape_props.specific_data.Shapes2D.PlaneSelection=ShapeProps::type_specifics::Shapes2D_Props::e_xy_plane;
+		break;
+	case ShapeProps::e_Square:
+		
+		if (LoadMeasuredValue(script,"size",value))
+			shape_props.specific_data.Shapes2D_Orientation.Length=shape_props.specific_data.Shapes2D_Orientation.Width=value;
+		else
+		{
+			if (LoadMeasuredValue(script,"length",value))
+				shape_props.specific_data.Shapes2D_Orientation.Length=value;
+			else
+				shape_props.specific_data.Shapes2D_Orientation.Length= 12 * 0.0254;	
+
+			if (LoadMeasuredValue(script,"width",value))
+				shape_props.specific_data.Shapes2D_Orientation.Width=value;
+			else
+				shape_props.specific_data.Shapes2D_Orientation.Width= 12 * 0.0254;	
+		}
+		break;
+	default:
+		//The rest should be the shapes 2D kind
+		if (LoadMeasuredValue(script,"size",value))
+			shape_props.specific_data.Shapes2D.Size_1D=value;
+		else
+			shape_props.specific_data.Shapes2D.Size_1D= 12 * 0.0254;	// 12 inches default value
 	}
 
 	err=script.GetField("r", NULL, NULL, &value);
