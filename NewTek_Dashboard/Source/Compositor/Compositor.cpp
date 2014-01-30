@@ -529,32 +529,33 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 				else
 				{
 					err = script.GetField("x",NULL,NULL,&fTest);
-					if (!err)
-						sqr_props.Yaw=fTest;
-					else 
-						sqr_props.Yaw=0.0;
+					assert(!err);
+					sqr_props.Yaw=fTest;
 				}
 				err=script.GetField("y_deg", NULL, NULL, &fTest);
 				if (!err) sqr_props.Pitch=DEG_2_RAD(fTest);
 				else
 				{
 					err = script.GetField("y",NULL,NULL,&fTest);
-					if (!err)
-						sqr_props.Pitch=fTest;
-					else
-						sqr_props.Pitch=0.0;
+					assert(!err);
+					sqr_props.Pitch=fTest;
 				}
 				err=script.GetField("z_deg", NULL, NULL, &fTest);
 				if (!err) sqr_props.Roll=DEG_2_RAD(fTest);
 				else
 				{
 					err = script.GetField("z",NULL,NULL,&fTest);
-					if (!err)
-						sqr_props.Roll=fTest;
-					else
-						sqr_props.Roll=0.0;
+					assert(!err);
+					sqr_props.Roll=fTest;
 				}
 				script.Pop();
+			}
+			else
+			{
+
+				sqr_props.Yaw=0.0;
+				sqr_props.Pitch=0.0;
+				sqr_props.Roll=0.0;
 			}
 			if (shape_props.RemoteVariableName.c_str()[0]!=0)
 			{
@@ -2030,9 +2031,9 @@ public:
 	inline osg::Quat From_Rot_Radians(double Yaw, double Pitch, double Roll)
 	{
 		return osg::Quat(
-			Pitch, osg::Vec3d(1,0,0),
+			-Pitch, osg::Vec3d(1,0,0),
 			Roll, osg::Vec3d(0,1,0),
-			Yaw, osg::Vec3d(0,0,1));
+			-Yaw, osg::Vec3d(0,0,1));
 	}
 
 	void InitCube(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
@@ -2739,6 +2740,7 @@ class Compositor
 		Bitmap_Frame *Render_Reticle(Bitmap_Frame *Frame,const Compositor_Props::Sequence_List &sequence,size_t SequenceIndex,double XOffset=0.0,double YOffset=0.0)
 		{
 			const Compositor_Props &props=m_CompositorProperties.GetCompositorProps();
+			Compositor_Props &props_rw=m_CompositorProperties.GetCompositorProps_rw();
 			Bitmap_Frame *ret=Frame;
 			bool EnableFlash=false;
 			if (m_IsEditable)
@@ -2859,6 +2861,7 @@ class Compositor
 			case Compositor_Props::eShape3D:
 				{
 					const Compositor_Props::Shape3D_Renderer_Props &shape_props=props.shapes_3D_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
+					Compositor_Props::Shape3D_Renderer_Props &shape_props_rw=props_rw.shapes_3D_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
 					double Xpos,Ypos,Zpos;
 					std::string sTest=shape_props.RemoteVariableName;
 					if ((!m_IsEditable)&&(shape_props.RemoteVariableName.c_str()[0]!=0))
@@ -2875,15 +2878,16 @@ class Compositor
 						typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
 						if (shape_props.draw_shape==ShapeProps::e_Square)
 						{
+							ShapeProps::type_specifics::Shapes2D_Orientation_Props &orientation_rw=shape_props_rw.specific_data.Shapes2D_Orientation;
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_rot_x";
-							Xpos=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							orientation_rw.Yaw=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_rot_y";
-							Ypos=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							orientation_rw.Pitch=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_rot_z";
-							Zpos=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							orientation_rw.Roll=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
 						}
 					}
 					else
