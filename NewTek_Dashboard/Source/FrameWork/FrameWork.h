@@ -7,6 +7,11 @@
 #include <queue>
 #include <map>
 
+//gah... someday these should be fixed... for now disable the warnings
+#pragma warning(disable : 4244)
+#include "osg/osg_Matrix.h"
+#pragma warning(default : 4244)
+
 // The namespace
 namespace FrameWork
 {
