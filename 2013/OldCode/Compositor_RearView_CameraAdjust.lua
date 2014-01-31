@@ -37,7 +37,7 @@ CompositorProps = {
 		{
 			width_in = 25, length_ft = 10,
 			pivot_in = 2,
-			camera_position =	{ x_in=0, y_in=12, z_in=-25 },
+			camera_position =	{ x_in=0, y_in=12, z_in=0 },
 			camera_rotation =	{ x=0, y_deg=0, z=0 },
 			r=0,g=255,b=100,
 			disable_motion = 'y',
