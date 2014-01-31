@@ -25,7 +25,8 @@ enum eStatus
 {
 	eOK,
 	eAspectFail,
-	eAreaFail
+	eAreaFail,
+	eCircularityFail
 };
 
 struct LineSegment
@@ -61,6 +62,7 @@ struct ParticleList
 		aspectMax = 1.4f;
 		ideal_vert_asp = 4.0/32;
 		ideal_horz_asp = 23.5/4;
+		circularity_limit = 1.5f;
 	}
 
 	void SetParticleParams( float thresh, float aspMin, float aspMax )
@@ -70,6 +72,17 @@ struct ParticleList
 		aspectMax = aspMax;
 		ideal_vert_asp = 0.0f;
 		ideal_horz_asp = 0.0f;
+		circularity_limit = 0.0f;
+	}
+
+	void SetParticleParams( float thresh, float aspMin, float aspMax, float circlim )
+	{
+		area_threshold = thresh;
+		aspectMin = aspMin;
+		aspectMax = aspMax;
+		ideal_vert_asp = 0.0f;
+		ideal_horz_asp = 0.0f;
+		circularity_limit = circlim;
 	}
 
 	void SetParticleParams( float thresh, float aspMin, float aspMax, float vert_asp, float horz_asp )
@@ -79,6 +92,7 @@ struct ParticleList
 		aspectMax = aspMax;
 		ideal_vert_asp = vert_asp;
 		ideal_horz_asp = horz_asp;
+		circularity_limit = 0.0f;
 	}
 
 	int numParticles;
@@ -87,6 +101,7 @@ struct ParticleList
 	float aspectMax;
 	float ideal_vert_asp;
 	float ideal_horz_asp;
+	float circularity_limit;
 
 	std::vector<ParticleData>particleData;
 };

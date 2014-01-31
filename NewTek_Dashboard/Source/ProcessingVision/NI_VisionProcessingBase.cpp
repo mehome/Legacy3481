@@ -354,8 +354,21 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				status = eAspectFail;
 			}
 		}
-		
-		if(status != eAspectFail)
+
+		if(status == eOK)
+		{
+			double circularity;
+			VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR, &circularity));
+			DOUT("circularity: %f\n", circularity);
+			// if not round enough
+			if(circularity > particleList.circularity_limit)
+			{
+				DOUT("rejected - circularity factor too high %f\n", circularity);
+				status = eCircularityFail;
+			}
+		}
+
+		if(status == eOK)
 		{
 			// particle area
 			VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &area));
@@ -392,10 +405,6 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		// convert to aiming system coords
 		newParticle.AimSys.x = (float)((center_x - (XRes/2.0)) / (XRes/2.0)) * Aspect;
 		newParticle.AimSys.y = (float)((center_y - (YRes/2.0)) / (YRes/2.0));
-
-		//double circularity;
-		//VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR, &circularity));
-		//DOUT("circularity: %f\n", circularity);
 
 		particleList.particleData.push_back(newParticle);
 	}

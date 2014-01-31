@@ -27,7 +27,7 @@ VisionBallTracker::VisionBallTracker()
 		break;
 	}
 
-	particleList.SetParticleParams( 0.55f, 1.0f, 10.0f );	// area threshold, aspect min, max
+	particleList.SetParticleParams( 0.55f, 0.8f, 1.2f, 1.5f );	// area threshold, aspect min, max, circularity max
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
@@ -35,13 +35,6 @@ VisionBallTracker::VisionBallTracker()
 	float pUpper[] = {630, 470};
 	int pCalibrated[] = {0,0};
 	int pExclude[] = {0,0};
-
-	//// particle filter parameters	// TODO: should add bounding size limits to eliminate small objects like round lights.
-	//MeasurementType FilterMeasureTypes[] = {IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR};
-	//float plower[] = {(float)1.127};	
-	//float pUpper[] = {(float)1.3};
-	//int pCalibrated[] = {0};
-	//int pExclude[] = {0};
 
 	criteriaCount = sizeof(FilterMeasureTypes) / sizeof(FilterMeasureTypes[0]);
 
@@ -129,6 +122,9 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 	// Filters particles based on their morphological measurements.
 	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
 #endif
+
+	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
+
 	if( m_bObjectSeparation )
 	{
 		//-------------------------------------------------------------------//
@@ -297,6 +293,8 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 							BBoxColor = COLOR_RED;
 						else if( particleList.particleData[i].status == eAreaFail)
 							BBoxColor = COLOR_CYAN;
+						else if( particleList.particleData[i].status == eCircularityFail)
+							BBoxColor = COLOR_YELLOW;
 						imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
 					}
 					continue;
