@@ -6,6 +6,15 @@
 //Enable this to include FOV in the SmartDashboard
 #undef __Edit_FOV__
 #undef  __Edit_Camera_Position__
+#undef __ShowBottomHandle__
+
+#if 0
+#define UnitMeasure2UI Meters2Feet
+#define UI2UnitMeasure Feet2Meters
+#else
+#define UnitMeasure2UI Meters2Inches
+#define UI2UnitMeasure Inches2Meters
+#endif
 
 //#define __DisableSmartDashboard__ //used to quickly disable the smart dashboard
 #ifndef __DisableSmartDashboard__
@@ -739,32 +748,32 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 				else
 				{
 					err = script.GetField("x",NULL,NULL,&fTest);
-					if (!err)
-						pal_props.rot_x=fTest;
-					else 
-						pal_props.rot_x=0.0;
+					assert(!err);
+					pal_props.rot_x=fTest;
 				}
 				err=script.GetField("y_deg", NULL, NULL, &fTest);
 				if (!err) pal_props.rot_y=DEG_2_RAD(fTest);
 				else
 				{
 					err = script.GetField("y",NULL,NULL,&fTest);
-					if (!err)
-						pal_props.rot_y=fTest;
-					else
-						pal_props.rot_y=0.33;
+					assert(!err);
+					pal_props.rot_y=fTest;
 				}
 				err=script.GetField("z_deg", NULL, NULL, &fTest);
 				if (!err) pal_props.rot_z=DEG_2_RAD(fTest);
 				else
 				{
 					err = script.GetField("z",NULL,NULL,&fTest);
-					if (!err)
-						pal_props.rot_z=fTest;
-					else
-						pal_props.rot_z=0.0;
+					assert(!err);
+					pal_props.rot_z=fTest;
 				}
 				script.Pop();
+			}
+			else
+			{
+				pal_props.rot_x=0.0;
+				pal_props.rot_y=0.33;
+				pal_props.rot_z=0.0;
 			}
 			err = script.GetField("fov",NULL,NULL,&fTest);
 			if (!err)
@@ -952,13 +961,13 @@ static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Pro
 					{
 						sTest=shape_props.RemoteVariableName;
 						sTest+="_x";
-						SmartDashboard::PutNumber(sTest,Meters2Feet(seq_pkt.PositionX));
+						SmartDashboard::PutNumber(sTest,UnitMeasure2UI(seq_pkt.PositionX));
 						sTest=shape_props.RemoteVariableName;
 						sTest+="_y";
-						SmartDashboard::PutNumber(sTest,Meters2Feet(seq_pkt.PositionY));
+						SmartDashboard::PutNumber(sTest,UnitMeasure2UI(seq_pkt.PositionY));
 						sTest=shape_props.RemoteVariableName;
 						sTest+="_z";
-						SmartDashboard::PutNumber(sTest,Meters2Feet(seq_pkt.specific_data.ShapeReticle_props.PositionZ));
+						SmartDashboard::PutNumber(sTest,UnitMeasure2UI(seq_pkt.specific_data.ShapeReticle_props.PositionZ));
 					}
 				}
 				break;
@@ -2077,6 +2086,15 @@ public:
 		square[2]=-RightDir + -UpDir + Offset;
 		square[3]= RightDir + -UpDir + Offset;
 
+		#ifdef __ShowBottomHandle__
+		std::string sTest;
+		sTest=props.RemoteVariableName;
+		sTest+="_bottom_y";
+		SmartDashboard::PutNumber(sTest,UnitMeasure2UI(square[3].z()));
+		sTest=props.RemoteVariableName;
+		sTest+="_bottom_z";
+		SmartDashboard::PutNumber(sTest,UnitMeasure2UI(square[3].y()));
+		#endif
 	}
 	void InitCircle(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
 	{
@@ -2898,13 +2916,13 @@ class Compositor
 					if ((!m_IsEditable)&&(shape_props.RemoteVariableName.c_str()[0]!=0))
 					{
 						sTest+="_x";
-						Xpos=Feet2Meters(SmartDashboard::GetNumber(sTest));
+						Xpos=UI2UnitMeasure(SmartDashboard::GetNumber(sTest));
 						sTest=shape_props.RemoteVariableName;
 						sTest+="_y";
-						Ypos=Feet2Meters(SmartDashboard::GetNumber(sTest));
+						Ypos=UI2UnitMeasure(SmartDashboard::GetNumber(sTest));
 						sTest=shape_props.RemoteVariableName;
 						sTest+="_z";
-						Zpos=Feet2Meters(SmartDashboard::GetNumber(sTest));
+						Zpos=UI2UnitMeasure(SmartDashboard::GetNumber(sTest));
 
 						typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
 						if (shape_props.draw_shape==ShapeProps::e_Square)
@@ -2954,13 +2972,13 @@ class Compositor
 						{
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_x";
-							SmartDashboard::PutNumber(sTest,Meters2Feet(Xpos));
+							SmartDashboard::PutNumber(sTest,UnitMeasure2UI(Xpos));
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_y";
-							SmartDashboard::PutNumber(sTest,Meters2Feet(Ypos));
+							SmartDashboard::PutNumber(sTest,UnitMeasure2UI(Ypos));
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_z";
-							SmartDashboard::PutNumber(sTest,Meters2Feet(Zpos));
+							SmartDashboard::PutNumber(sTest,UnitMeasure2UI(Zpos));
 
 							//TODO enable once I have check box for rotation
 							//typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
