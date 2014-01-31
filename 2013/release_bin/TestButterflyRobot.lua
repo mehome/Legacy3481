@@ -12,7 +12,7 @@ WheelTurningDiameter_In= ( (WheelBase_Width_In * WheelBase_Width_In) + (WheelBas
 HighGearSpeed = (492.83 / 60.0) * Pi * wheel_diameter_in * Inches2Meters  --RPM's from Parker
 LowGearSpeed  = (184.81 / 60.0) * Pi * wheel_diameter_in * Inches2Meters
 MaxCentripetalTraverse=20 --The maximum amount of centripetal force that can be allowed (may want to be higher for better drive)
-skid=math.cos(math.atan2(WheelBase_Width_In,WheelBase_Length_In))
+skid=math.cos(math.atan2(WheelBase_Length_In,WheelBase_Width_In))
 
 TestShip = {
 

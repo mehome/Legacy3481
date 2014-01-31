@@ -11,7 +11,8 @@ WheelBase_Length_In=27.5
 Half_WB_Length_In=WheelBase_Length_In / 2.0
 WheelTurningDiameter_In= ( (WheelBase_Width_In * WheelBase_Width_In) + (Half_WB_Length_In * Half_WB_Length_In) ) ^ 0.5
 HighGearSpeed = (427.68 / 60.0) * Pi * Wheel_diameter_in * Inches2Meters  --RPM's from Parker
-skid=math.cos(math.atan2(WheelBase_Width_In,WheelBase_Length_In/2))
+skid=math.cos(math.atan2(WheelBase_Length_In/2,WheelBase_Width_In))
+gMaxTorqueYaw = (2 * 4 * Meters2Inches / WheelTurningDiameter_In) * skid
 
 
 TestShip = {
@@ -20,7 +21,8 @@ TestShip = {
 	MaxAccelLeft = 20, MaxAccelRight = 20, 
 	MaxAccelForward = 4, MaxAccelReverse = 4, 
 	MaxAccelForward_High = 10, MaxAccelReverse_High = 10, 
-	MaxTorqueYaw = (2 * 4 * Meters2Inches / WheelTurningDiameter_In) * skid, 
+	MaxTorqueYaw = gMaxTorqueYaw,
+	MaxTorqueYaw_High = gMaxTorqueYaw * 5, 
 	rotate_to_scale = 0.5, rotate_to_scale_high = 1.0,
 
 	MAX_SPEED = HighGearSpeed, -- Maximum Speed (m/s)
@@ -53,6 +55,7 @@ TestShip = {
 		drive_to_scale=0.50,				--For 4 to 10 50% gives a 5 inch tolerance
 		strafe_to_scale=4/20,  --In autonomous we need the max to match the max forward and reverse
 		left_max_offset=0.0 , right_max_offset=0.0,   --Ensure both tread top speeds are aligned
+		use_aggressive_stop='no',
 		--This is obtainer from encoder RPM's of 1069.2 and Wheel RPM's 427.68 (both high and low have same ratio)
 		encoder_to_wheel_ratio=1.0,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
 		voltage_multiply=1.0,				--May be reversed using -1.0
@@ -72,7 +75,11 @@ TestShip = {
 			control = "any",
 			--Use Arcade/FPS enable
 			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			Analog_Turn = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--AirFlo
+			--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Logitect F310
+			Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, magnitude_scalar_arc=0.875, magnitude_scalar_base=(1/(Pi/2))*1.0025444578, is_flipped=false, 
+				multiplier=1.0, filter=0.01, curve_intensity=1.0},
 			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Use tank steering enable
 			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=1.0},

@@ -12,6 +12,7 @@ WheelTurningDiameter_In= ( (WheelBase_Width_In * WheelBase_Width_In) + (WheelBas
 
 HighGearSpeed = (427.68 / 60.0) * Pi * wheel_diameter_in * Inches2Meters  --RPM's from Parker
 LowGearSpeed  = (167.06 / 60.0) * Pi * wheel_diameter_in * Inches2Meters
+gMaxTorqueYaw = 2 * 4 * Meters2Inches / WheelTurningDiameter_In
 
 TestShip = {
 
@@ -19,7 +20,8 @@ TestShip = {
 	MaxAccelLeft = 20, MaxAccelRight = 20, 
 	MaxAccelForward = 4, MaxAccelReverse = 4, 
 	MaxAccelForward_High = 10, MaxAccelReverse_High = 10, 
-	MaxTorqueYaw = 2 * 4 * Meters2Inches / WheelTurningDiameter_In, 
+	MaxTorqueYaw = gMaxTorqueYaw, 
+	MaxTorqueYaw_High = gMaxTorqueYaw * 5, 
 	
 	MAX_SPEED = HighGearSpeed,
 	ACCEL = 10,    -- Thruster Acceleration m/s2 (1g = 9.8)
@@ -72,7 +74,7 @@ TestShip = {
 			control = "any",
 			--Use Arcade/FPS enable
 			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			Analog_Turn = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.85, filter=0.0, curve_intensity=1.0},
+			Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			Analog_StrafeRight= {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.02, curve_intensity=1.0},
 			SlideHold = {type="joystick_button", key=6, on_off=true},
