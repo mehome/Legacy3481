@@ -11,7 +11,7 @@
 //#define __Using_UDP__
 
 #ifndef __Using_UDP__
-#include "../SmartDashboard2/SmartDashboard_Import.h"
+#include "../SmartDashboard/SmartDashboard_Import.h"
 #endif
 
 #ifdef __Using_UDP__
@@ -23,6 +23,7 @@ Dashboard_Framework_Interface *g_Framework=NULL;
 TrackerType PendingTracker = eGoalTracker;
 FrameWork::event frameSync;
 bool g_IsTargeting=false;
+std::string g_WindowTitle="";
 
 //Give something cool to look at
 class SineWaveMaker
@@ -97,6 +98,13 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 #if 1
 extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Frame)
 {
+	if (SmartDashboard::IsConnected())
+	{
+		std::string IsTargeting=g_WindowTitle;
+		IsTargeting+="_Is_Targeting";
+		g_IsTargeting=SmartDashboard::GetBoolean(IsTargeting.c_str());
+	}
+
 	if (g_IsTargeting)
 	{
 		Bitmap_Handle *bgra_handle=g_Framework->CreateBGRA(Frame);
@@ -266,7 +274,13 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 				g_pTracker[SelectedTracker]->Set3PtGoal((bool)(int)value);
 			break;
 		case eIsTargeting:
-			g_IsTargeting=(value==0.0)?false:true;
+			{
+				std::string IsTargeting=g_WindowTitle;
+				IsTargeting+="_Is_Targeting";
+				SmartDashboard::PutBoolean(IsTargeting.c_str(),(value==0.0)?false:true);
+
+				g_IsTargeting=(value==0.0)?false:true;
+			}
 			break;
 		case eThresholdPlane1Min:
 		case eThresholdPlane2Min:
@@ -351,9 +365,13 @@ extern "C" PROCESSINGVISION_API void Callback_SmartCppDashboard_Initialize(const
 	if (IPAddress)
 		g_UDP_Output=UDP_Client_Interface::GetNewInstance(IPAddress);
 	#else
+	g_WindowTitle=WindowTitle;
 	SmartDashboard::SetClientMode();
 	SmartDashboard::SetIPAddress(IPAddress?IPAddress:"127.0.0.1");  //if null use local host
 	SmartDashboard::init();
+	std::string IsTargeting=g_WindowTitle;
+	IsTargeting+="_Is_Targeting";
+	SmartDashboard::PutBoolean(IsTargeting.c_str(),false);
 	#endif
 }
 
