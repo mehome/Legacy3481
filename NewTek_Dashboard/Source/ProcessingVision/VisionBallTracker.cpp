@@ -27,12 +27,12 @@ VisionBallTracker::VisionBallTracker()
 		break;
 	}
 
-	particleList.SetParticleParams( 0.55f, 0.8f, 1.2f, 1.5f );	// area threshold, aspect min, max, circularity max
+	particleList.SetParticleParams( 0.55f, 0.8f, 1.2f, 1.02f );	// area threshold, aspect min, max, circularity max
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
-	float plower[] = {30, 30};	
-	float pUpper[] = {630, 470};
+	float plower[] = {90, 90};	
+	float pUpper[] = {639, 479};
 	int pCalibrated[] = {0,0};
 	int pExclude[] = {0,0};
 
@@ -111,19 +111,41 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 	structElem.hexa = FALSE;
 	structElem.kernel = pKernel;
 
-	int erosions = 3;
+	int erosions = 4;
 
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, FALSE, erosions, IMAQ_KEEP_LARGE, &structElem));
 
-#if 1
 	int numParticles = 0;
 
 	// Filters particles based on their morphological measurements.
 	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
-#endif
 
-	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
+	// Erode the image to help remove noise
+	int pKernel2[25] = {0,1,1,1,0,
+						1,1,1,1,1,
+						1,1,1,1,1,
+						1,1,1,1,1,
+						0,1,1,1,0};
+	structElem.matrixCols = 5;
+	structElem.matrixRows = 5;
+	structElem.hexa = FALSE;
+	structElem.kernel = pKernel2;
+
+	// Applies multiple morphological transformation to the binary image.
+	for (int i = 0 ; i < 3 ; i++)
+	{
+		VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_ERODE, &structElem));
+	}
+
+	// Now dialate it a bunch of times using the same kernal. hopefully, the images will merge.
+	for (int i = 0 ; i < 16 ; i++)
+	{
+		VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_DILATE, &structElem));
+	}
+
+
+//	EnableObjectSeparation( true );
 
 	if( m_bObjectSeparation )
 	{
@@ -144,7 +166,6 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 		//-------------------------------------------------------------------//
 		//                             Watershed                             //
 		//-------------------------------------------------------------------//
-		
 		int zoneCount;
 		VisionErrChk(imaqWatershedTransform(WorkImageU8, WorkImageU8, TRUE, &zoneCount));
 
@@ -177,6 +198,8 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 		VisionErrChk(imaqMask(ParticleImageU8, ParticleImageU8, WorkImageU8));
 
 	}
+
+	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
 
 	VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
 

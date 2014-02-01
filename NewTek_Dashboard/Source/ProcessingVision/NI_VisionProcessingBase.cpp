@@ -329,6 +329,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 
 		DOUT("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
 
+#if 0
 		// if aspect is not in range, skip it.
 		if( particleList.aspectMin > 0 && particleList.aspectMax > 0)
 		{
@@ -354,7 +355,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				status = eAspectFail;
 			}
 		}
-
+#endif
 		if(status == eOK)
 		{
 			double circularity;
@@ -367,7 +368,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				status = eCircularityFail;
 			}
 		}
-
+#if 0
 		if(status == eOK)
 		{
 			// particle area
@@ -380,7 +381,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				status = eAreaFail;
 			}
 		}
-
+#endif
 		// all good, fill the values and add new entry to the list.
 		ParticleData newParticle;
 		particleList.numParticles++;
