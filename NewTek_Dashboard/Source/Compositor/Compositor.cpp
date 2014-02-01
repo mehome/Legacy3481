@@ -2280,8 +2280,8 @@ class Bypass_Reticle
 	Plugin_Controller_Interface *m_pPluginControllerInterface;
 
 	public:
-	Bypass_Reticle(const char *_IPAddress,const char *WindowTitle,Dashboard_Framework_Interface *_DashboardHelper) : m_PlugIn(NULL),IPAddress(_IPAddress),DashboardHelper(_DashboardHelper), 
-		m_DriverProc(NULL),m_pPluginControllerInterface(NULL)
+	Bypass_Reticle(const char *_IPAddress,const char *_WindowTitle,Dashboard_Framework_Interface *_DashboardHelper) : m_PlugIn(NULL),IPAddress(_IPAddress),WindowTitle(_WindowTitle),
+		DashboardHelper(_DashboardHelper),m_DriverProc(NULL),m_pPluginControllerInterface(NULL)
 	{
 	}
 
