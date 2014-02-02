@@ -304,7 +304,9 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double bound_right;
 		double bound_top;
 		double bound_bottom;
-		double area;
+		//TODO fixme
+		//ni_visionprocessingbase.cpp(307) : warning C4101: 'area' : unreferenced local variable
+		//double area;
 		double center_x;
 		double center_y;
 		double eq_long_side;
