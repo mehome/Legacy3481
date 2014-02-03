@@ -49,15 +49,17 @@ CompositorProps = {
 			-- draw_shape -- may be "square", "circle", or "cube".
 			shape_reticle_1 =
 			{
-				remote_name="apex_reticle",
+				remote_name="test_reticle",
 				size_in=25,
-				r=0,g=255,b=100,
-				plane_selection="xy_and_xz",
-				draw_shape="circle"
+				--length_in=30,
+				--width_in=25,
+				r=255,g=255,b=255,
+				rotation={x=0,y_deg=0,z_deg=0},
+				draw_shape="square"
 			},
 			shape_reticle_2 =
 			{
-				remote_name="land_reticle",
+				--remote_name="land_reticle",
 				size_in=25,
 				r=100,g=100,b=0,
 				plane_selection="xy",
@@ -112,7 +114,7 @@ CompositorProps = {
 			pivot_in = 2,
 			camera_position =	{ x_in=0, y_in=12, z_in=-1.0 },
 			camera_rotation =	{ x=0, y_deg=0, z=0 },
-			fov_x=60,fov_y=60,
+			fov_x=45,fov_y=45,
 			r=0,g=255,b=100,
 			--draw_selection = "none",
 			--disable_motion = 'y',
