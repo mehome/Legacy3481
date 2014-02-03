@@ -222,7 +222,7 @@ protected:
 	FindEdgeOptions2 findEdgeOptions;
 	StraightEdgeOptions straightEdgeOptions;
 
-	ParticleList particleList;	// our results data structure
+	//ParticleList particleList;	// our results data structure
 
 	// text drawing
 	char TextBuffer[256];

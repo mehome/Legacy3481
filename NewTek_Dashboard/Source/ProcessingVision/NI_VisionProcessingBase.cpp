@@ -296,7 +296,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 
 	// Counts the number of particles in the image
 	int numParticles;
-	VisionErrChk(imaqCountParticles(ParticleImageU8, TRUE, &numParticles));
+	VisionErrChk(imaqCountParticles(image, TRUE, &numParticles));
 
 	for (int i = 0 ; i < numParticles ; i++)
 	{

@@ -28,6 +28,7 @@ VisionBallTracker::VisionBallTracker()
 	}
 
 	particleList.SetParticleParams( 0.55f, 0.8f, 1.2f, 1.02f );	// area threshold, aspect min, max, circularity max
+	FirstPassParticleList.SetParticleParams( 0.55f, 0.8f, 1.2f, 1.02f );	// area threshold, aspect min, max, circularity max
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
@@ -121,31 +122,7 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 	// Filters particles based on their morphological measurements.
 	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
 
-	// Erode the image to help remove noise
-	int pKernel2[25] = {0,1,1,1,0,
-						1,1,1,1,1,
-						1,1,1,1,1,
-						1,1,1,1,1,
-						0,1,1,1,0};
-	structElem.matrixCols = 5;
-	structElem.matrixRows = 5;
-	structElem.hexa = FALSE;
-	structElem.kernel = pKernel2;
-
-	// Applies multiple morphological transformation to the binary image.
-	for (int i = 0 ; i < 3 ; i++)
-	{
-		VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_ERODE, &structElem));
-	}
-
-	// Now dialate it a bunch of times using the same kernal. hopefully, the images will merge.
-	for (int i = 0 ; i < 16 ; i++)
-	{
-		VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_DILATE, &structElem));
-	}
-
-
-//	EnableObjectSeparation( true );
+	EnableObjectSeparation( true );
 
 	if( m_bObjectSeparation )
 	{
@@ -176,8 +153,8 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 
 		// Sets the structuring element.
 		int pKernel1[9] = {0,1,0,
-			  			   1,1,1,
-						   0,1,0};
+			1,1,1,
+			0,1,0};
 		StructuringElement structElem1;
 		structElem1.matrixCols = 3;
 		structElem1.matrixRows = 3;
@@ -185,7 +162,7 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 		structElem1.kernel = pKernel1;
 
 		// Applies multiple morphological transformation to the binary image.
-		for (int i = 0 ; i < 1 ; i++)
+		for (int i = 0 ; i < 3 ; i++)
 		{
 			VisionErrChk(imaqMorphology(WorkImageU8, WorkImageU8, IMAQ_ERODE, &structElem1));
 		}
@@ -196,7 +173,34 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 
 		// Masks the image
 		VisionErrChk(imaqMask(ParticleImageU8, ParticleImageU8, WorkImageU8));
+	}
 
+	VisionErrChk(imaqConvexHull(WorkImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
+
+	// get bounding boxes for these before we dilate.
+	VisionErrChk(GetParticles(WorkImageU8, TRUE, FirstPassParticleList));
+
+	// Erode the image to help remove noise
+	int pKernel2[25] = {0,1,1,1,0,
+						1,1,1,1,1,
+						1,1,1,1,1,
+						1,1,1,1,1,
+						0,1,1,1,0};
+	structElem.matrixCols = 5;
+	structElem.matrixRows = 5;
+	structElem.hexa = FALSE;
+	structElem.kernel = pKernel2;
+
+	// Applies multiple morphological transformation to the binary image.
+	for (int i = 0 ; i < 3 ; i++)
+	{
+		VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_ERODE, &structElem));
+	}
+
+	// Now dialate it a bunch of times using the same kernal. hopefully, the images will merge.
+	for (int i = 0 ; i < 16 ; i++)
+	{
+		VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_DILATE, &structElem));
 	}
 
 	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
@@ -226,6 +230,31 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 
 		Rect rect;
 
+		for(int i = 0; i < FirstPassParticleList.numParticles; i++)
+		{
+			// bounding box
+			rect.top = FirstPassParticleList.particleData[i].bound_top;
+			rect.left = FirstPassParticleList.particleData[i].bound_left;
+			rect.height = FirstPassParticleList.particleData[i].bound_height;
+			rect.width = FirstPassParticleList.particleData[i].bound_width;
+
+			if( FirstPassParticleList.particleData[i].status == eOK )
+				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_WHITE );
+			else
+			{
+				float BBoxColor = COLOR_WHITE;
+				if( FirstPassParticleList.particleData[i].status == eAspectFail )
+					BBoxColor = COLOR_BLUE;
+				else if( FirstPassParticleList.particleData[i].status == eAreaFail)
+					BBoxColor = COLOR_MAGENT;
+				else if( FirstPassParticleList.particleData[i].status == eCircularityFail)
+					BBoxColor = COLOR_YELLOW;
+				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
+
+				continue;
+			}
+		}
+
 		// overlay some useful info
 		for(int i = 0; i < particleList.numParticles; i++)
 		{
@@ -233,7 +262,8 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 			Point P2;
 
 			// track lowest center y (image coords, top is zero.)
-			if( particleList.particleData[i].center.y > max_y )
+			if( particleList.particleData[i].center.y > max_y &&
+				particleList.particleData[i].status == eOK )
 			{
 				max_y = particleList.particleData[i].center.y;
 				index = i;
