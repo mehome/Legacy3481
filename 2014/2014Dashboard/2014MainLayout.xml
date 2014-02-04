@@ -1,66 +1,43 @@
 <xml version="1.0">
 <dashboard>
-	<widget field="pid error offset" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="326"/>
+	<widget field="IntakeArm_Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="343" y="265"/>
+		<width>148</width>
+		<height>91</height>
+		<property name="Upper Limit" value="220.0"/>
+		<property name="Lower Limit" value="-50.0"/>
+		<property name="Tick Interval" value="45.0"/>
 	</widget>
-	<widget field="desired velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="305"/>
-	</widget>
-	<widget field="actual velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="284"/>
-	</widget>
-	<widget field="desired y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="263"/>
-	</widget>
-	<widget field="actual y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="122"/>
-	</widget>
-	<widget field="voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="0"/>
-	</widget>
-	<widget field="land_reticle_z" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="10" y="241"/>
-		<width>119</width>
-	</widget>
-	<widget field="land_reticle_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="11" y="209"/>
-		<width>103</width>
-	</widget>
-	<widget field="land_reticle_x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="12" y="179"/>
-		<width>100</width>
-	</widget>
-	<widget field="apex_reticle_z" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="11" y="100"/>
-		<width>118</width>
-	</widget>
-	<widget field="apex_reticle_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="9" y="76"/>
-		<width>117</width>
-	</widget>
-	<widget field="apex_reticle_x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="10" y="51"/>
-		<width>117</width>
+	<widget field="IntakeArmVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="356" y="365"/>
+		<width>141</width>
+		<property name="Foreground" value="51.102.0.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Edit Position RearView" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="1218" y="30"/>
 	</widget>
 	<widget field="UseHighGear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="302" y="295"/>
+		<location x="291" y="233"/>
 	</widget>
 	<widget field="ClutchEngaged" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="418" y="461"/>
+		<location x="209" y="413"/>
 		<height>19</height>
 	</widget>
 	<widget field="WinchVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="199" y="485"/>
+		<location x="200" y="362"/>
+		<width>130</width>
 		<property name="Foreground" value="0.102.0.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Catapult_Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
-		<location x="168" y="327"/>
+		<location x="186" y="269"/>
+		<width>152</width>
+		<height>93</height>
 		<property name="Upper Limit" value="220.0"/>
 		<property name="Lower Limit" value="-50.0"/>
 		<property name="Tick Interval" value="45.0"/>
@@ -73,20 +50,14 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="424" y="335"/>
+		<location x="429" y="420"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
-	<widget field="land_reticle_enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="7" y="159"/>
-	</widget>
-	<widget field="apex_reticle_enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="12" y="30"/>
-	</widget>
 	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="496" y="331"/>
+		<location x="501" y="415"/>
 	</widget>
 	<widget field="Sequence" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="440" y="282"/>
+		<location x="438" y="235"/>
 		<width>78</width>
 	</widget>
 	<widget field="Y Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
@@ -104,7 +75,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="LeftEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="190" y="235"/>
+		<location x="180" y="176"/>
 		<width>107</width>
 		<height>30</height>
 		<property name="Foreground" value="51.153.255.255"/>
@@ -113,7 +84,7 @@
 		<property name="Minimum" value="-3.844"/>
 	</widget>
 	<widget field="RightEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="405" y="236"/>
+		<location x="406" y="186"/>
 		<width>115</width>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
@@ -130,7 +101,7 @@
 		<height>21</height>
 	</widget>
 	<widget field="Heading" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
-		<location x="298" y="160"/>
+		<location x="297" y="101"/>
 		<width>94</width>
 		<height>65</height>
 		<property name="Upper Limit" value="180.0"/>
@@ -138,16 +109,17 @@
 		<property name="Tick Interval" value="45.0"/>
 	</widget>
 	<widget field="Rotation Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="307" y="237"/>
+		<location x="306" y="184"/>
 		<width>89</width>
 		<property name="Maximum" value="10.0"/>
 		<property name="Minimum" value="-10.0"/>
 	</widget>
 	<widget field="IsSlide" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="190" y="293"/>
+		<location x="190" y="231"/>
+		<height>14</height>
 	</widget>
 	<widget field="RightVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="401" y="178"/>
+		<location x="403" y="135"/>
 		<width>114</width>
 		<property name="Foreground" value="255.51.51.255"/>
 		<property name="Background" value="0.0.153.255"/>
@@ -155,7 +127,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="LeftVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="188" y="168"/>
+		<location x="182" y="121"/>
 		<width>104</width>
 		<height>30</height>
 		<property name="Foreground" value="0.204.0.255"/>
@@ -165,6 +137,8 @@
 	</widget>
 	<widget field="Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
 		<location x="151" y="12"/>
+		<width>164</width>
+		<height>100</height>
 		<property name="Upper Limit" value="14.0"/>
 		<property name="Lower Limit" value="-14.0"/>
 		<property name="Tick Interval" value="2.8"/>
