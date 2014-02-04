@@ -484,7 +484,7 @@ void VisionControls::EnableGBSVSliders(bool bEnable)
 long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	//For now VisionControls does not need to call anything in g_Controller, but if it does we can enable this assert, along with providing black (test pattern)
-	//with a stubbed out controller... The vision controls may wish to target on black for simulated overlayed shapes
+	//with a stubbed out controller... The vision controls may wish to target on black for simulated overlay shapes
 	//  [2/3/2014 James]
 	//assert(g_Controller);
 	assert(g_plugin_SquareTargeting);
