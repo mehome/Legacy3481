@@ -3000,7 +3000,18 @@ class Compositor
 				}
 				break;
 			case Compositor_Props::eBypass:
-				ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
+				{
+					//Enable this to profile the bypass plugin
+					#if 1
+					using namespace FrameWork;
+					time_type Profile=time_type::get_current_time();
+					ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
+					time_type Profile2=time_type::get_current_time();
+					SmartDashboard::PutNumber("Bypass Time ms",(double)(Profile2-Profile)*1000.0);
+					#else
+					ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
+					#endif
+				}
 				break;
 			case Compositor_Props::eLinePlot:
 				{
