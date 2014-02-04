@@ -117,13 +117,9 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, FALSE, erosions, IMAQ_KEEP_LARGE, &structElem));
 
-	int numParticles = 0;
-
-	// Filters particles based on their morphological measurements.
-	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
-
 	EnableObjectSeparation( true );
 
+	// this process breaks objects apart at narrow borders
 	if( m_bObjectSeparation )
 	{
 		//-------------------------------------------------------------------//
@@ -175,9 +171,17 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 		VisionErrChk(imaqMask(ParticleImageU8, ParticleImageU8, WorkImageU8));
 	}
 
+	int numParticles = 0;
+
+	// Filters particles based on their morphological measurements.
+	// gets rid of smaller objects
+	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
+
+	// this will help to identify a circular object
 	VisionErrChk(imaqConvexHull(WorkImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
 
 	// get bounding boxes for these before we dilate.
+	// so we can get the correct size of the ball.
 	VisionErrChk(GetParticles(WorkImageU8, TRUE, FirstPassParticleList));
 
 	// Erode the image to help remove noise
@@ -205,6 +209,7 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 
 	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
 
+	// we retest for a possibly bisected ball.
 	VisionErrChk(GetParticles(ParticleImageU8, TRUE, particleList));
 
 	if( m_DisplayMode == eThreshold )
@@ -214,9 +219,6 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 
 	if(particleList.numParticles > 0)
 	{
-		if( m_bUseFindCorners )
-			VisionErrChk(FindParticleCorners(InputImageRGB, particleList));
-
 		if( m_DisplayMode == eMasked )
 		{
 			if( m_bShowSolidMask )
@@ -230,28 +232,31 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 
 		Rect rect;
 
-		for(int i = 0; i < FirstPassParticleList.numParticles; i++)
+		if( m_bShowBoundsText )
 		{
-			// bounding box
-			rect.top = FirstPassParticleList.particleData[i].bound_top;
-			rect.left = FirstPassParticleList.particleData[i].bound_left;
-			rect.height = FirstPassParticleList.particleData[i].bound_height;
-			rect.width = FirstPassParticleList.particleData[i].bound_width;
-
-			if( FirstPassParticleList.particleData[i].status == eOK )
-				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_WHITE );
-			else
+			for(int i = 0; i < FirstPassParticleList.numParticles; i++)
 			{
-				float BBoxColor = COLOR_WHITE;
-				if( FirstPassParticleList.particleData[i].status == eAspectFail )
-					BBoxColor = COLOR_BLUE;
-				else if( FirstPassParticleList.particleData[i].status == eAreaFail)
-					BBoxColor = COLOR_MAGENT;
-				else if( FirstPassParticleList.particleData[i].status == eCircularityFail)
-					BBoxColor = COLOR_YELLOW;
-				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
+				// bounding box
+				rect.top = FirstPassParticleList.particleData[i].bound_top;
+				rect.left = FirstPassParticleList.particleData[i].bound_left;
+				rect.height = FirstPassParticleList.particleData[i].bound_height;
+				rect.width = FirstPassParticleList.particleData[i].bound_width;
 
-				continue;
+				if( FirstPassParticleList.particleData[i].status == eOK )
+					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_WHITE );
+				else
+				{
+					float BBoxColor = COLOR_WHITE;
+					if( FirstPassParticleList.particleData[i].status == eAspectFail )
+						BBoxColor = COLOR_BLUE;
+					else if( FirstPassParticleList.particleData[i].status == eAreaFail)
+						BBoxColor = COLOR_MAGENT;
+					else if( FirstPassParticleList.particleData[i].status == eCircularityFail)
+						BBoxColor = COLOR_YELLOW;
+					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
+
+					continue;
+				}
 			}
 		}
 
@@ -336,7 +341,35 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 				rect.width = particleList.particleData[i].bound_width;
 
 				if( particleList.particleData[i].status == eOK )
+				{
 					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+
+					Rect ballSizeRect;
+					ballSizeRect.top = 999999;
+					ballSizeRect.left = 999999;
+					ballSizeRect.height = 0;
+					ballSizeRect.width = 0;
+
+					// find the actual size
+					for(int x = 0; i < FirstPassParticleList.numParticles; i++)
+					{	// find the first pass items within the bounds of this object
+						if( (FirstPassParticleList.particleData[x].bound_top >= rect.top) &&
+							(FirstPassParticleList.particleData[x].bound_left >= rect.left) &&
+							(FirstPassParticleList.particleData[x].bound_height < rect.height) &&
+							(FirstPassParticleList.particleData[x].bound_width < rect.width) )
+						{
+							if( FirstPassParticleList.particleData[x].bound_top < ballSizeRect.top )
+								ballSizeRect.top = FirstPassParticleList.particleData[x].bound_top;
+							if( FirstPassParticleList.particleData[x].bound_left < ballSizeRect.left )
+								ballSizeRect.left = FirstPassParticleList.particleData[x].bound_left;
+							if( FirstPassParticleList.particleData[x].bound_height > ballSizeRect.height )
+								ballSizeRect.height = FirstPassParticleList.particleData[x].bound_height;
+							if( FirstPassParticleList.particleData[x].bound_width > ballSizeRect.width )
+								ballSizeRect.width = FirstPassParticleList.particleData[x].bound_width;
+						}
+					}
+					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, ballSizeRect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+				}
 				else
 				{
 					if( m_bShowBoundsText )
@@ -353,26 +386,6 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 					continue;
 				}
 
-				if( m_bUseFindCorners && m_bShowFindCorners )
-				{
-					// corner points
-					for(int j = 0; j < 4; j++)
-					{
-						P1.x = (int)particleList.particleData[i].Intersections[j].x - 6;
-						P1.y = (int)particleList.particleData[i].Intersections[j].y;
-						P2.x = (int)particleList.particleData[i].Intersections[j].x + 6;
-						P2.y = (int)particleList.particleData[i].Intersections[j].y;
-
-						imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
-
-						P1.x = (int)particleList.particleData[i].Intersections[j].x;
-						P1.y = (int)particleList.particleData[i].Intersections[j].y - 6;
-						P2.x = (int)particleList.particleData[i].Intersections[j].x;
-						P2.y = (int)particleList.particleData[i].Intersections[j].y + 6;
-
-						imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_YELLOW );
-					}
-				}
 			}	// show overlays
 		}	// particle loop
 
