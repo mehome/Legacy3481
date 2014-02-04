@@ -247,12 +247,12 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 				else
 				{
 					float BBoxColor = COLOR_WHITE;
-					if( FirstPassParticleList.particleData[i].status == eAspectFail )
-						BBoxColor = COLOR_BLUE;
-					else if( FirstPassParticleList.particleData[i].status == eAreaFail)
-						BBoxColor = COLOR_MAGENT;
-					else if( FirstPassParticleList.particleData[i].status == eCircularityFail)
-						BBoxColor = COLOR_YELLOW;
+					//if( FirstPassParticleList.particleData[i].status == eAspectFail )
+					//	BBoxColor = COLOR_BLUE;
+					//else if( FirstPassParticleList.particleData[i].status == eAreaFail)
+					//	BBoxColor = COLOR_MAGENT;
+					//else if( FirstPassParticleList.particleData[i].status == eCircularityFail)
+					//	BBoxColor = COLOR_YELLOW;
 					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
 
 					continue;
@@ -351,12 +351,12 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 					ballSizeRect.width = 0;
 
 					// find the actual size
-					for(int x = 0; i < FirstPassParticleList.numParticles; i++)
+					for(int x = 0; x < FirstPassParticleList.numParticles; x++)
 					{	// find the first pass items within the bounds of this object
 						if( (FirstPassParticleList.particleData[x].bound_top >= rect.top) &&
 							(FirstPassParticleList.particleData[x].bound_left >= rect.left) &&
-							(FirstPassParticleList.particleData[x].bound_height < rect.height) &&
-							(FirstPassParticleList.particleData[x].bound_width < rect.width) )
+							((FirstPassParticleList.particleData[x].bound_height - (FirstPassParticleList.particleData[x].bound_top - rect.top)) < rect.height) &&
+							((FirstPassParticleList.particleData[x].bound_width - (FirstPassParticleList.particleData[x].bound_right - rect.left)) < rect.width) )
 						{
 							if( FirstPassParticleList.particleData[x].bound_top < ballSizeRect.top )
 								ballSizeRect.top = FirstPassParticleList.particleData[x].bound_top;
