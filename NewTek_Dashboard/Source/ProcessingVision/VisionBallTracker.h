@@ -8,6 +8,7 @@ public:
 
 	int ProcessImage(double &x, double &y);
 	void SetDefaultThreshold(void);
+	void SetBallThreshold(bool);
 
 private:
 	ParticleList particleList;	// our results data structure

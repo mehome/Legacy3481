@@ -132,7 +132,9 @@ public:
 	// particle processing opts
 	void SetRejectBorderObjs( bool bRejctBorder ) { m_bRejectBorderParticles = bRejctBorder; }
 	void SetUseConvexHull( bool bUseConvex )	  { m_bUseConvexHull = bUseConvex; }
-	void Set3PtGoal(bool b3PtGoal )		  { m_b3PtGoal = b3PtGoal; }
+	void Set3PtGoal( bool b3PtGoal )			  { m_b3PtGoal = b3PtGoal; }
+	void SetBallTrackingColor( bool bBallColor )  { m_bBallColor = bBallColor; }
+
 
 	// threshold
 	void SetThresholdMode( ThresholdColorSpace mode );
@@ -140,6 +142,9 @@ public:
 
 	// object separation
 	void EnableObjectSeparation( bool bObjsSep ) {m_bObjectSeparation = bObjsSep; }
+
+	// join objects
+	void EnableObjectJoin( bool bObjsJoin ) { m_bJoinObjects = bObjsJoin; }
 
 	// corner and and edge
 	void SetFindCorners( bool bFindCorners ) { m_bUseFindCorners = bFindCorners; }
@@ -171,9 +176,14 @@ protected:
 	bool m_bRejectBorderParticles;	
 	bool m_bUseConvexHull;			
 	bool m_b3PtGoal;
+	
+	bool m_bBallColor;
 
 	// object separation
 	bool m_bObjectSeparation;
+
+	// join objects (helps prevent bisection)
+	bool m_bJoinObjects;
 
 	// threshold method
 	ThresholdColorSpace m_ThresholdMode;

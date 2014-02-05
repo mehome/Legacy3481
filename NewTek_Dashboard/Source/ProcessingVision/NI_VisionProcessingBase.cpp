@@ -7,8 +7,8 @@ VisionTracker::VisionTracker()
 	: criteriaCount( 0 ), particleCriteria( NULL ), m_bObjectSeparation( false ),
 	  m_DisplayMode( eNormal ), m_bShowOverlays( true ), m_bShowSolidMask( false ),
 	  m_bShowAimingText( true ), m_bShowBoundsText( false ), m_ThresholdMode( eThreshRGB ),
-	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ), m_b3PtGoal( false ),
-	  m_bUseFindCorners( false ), m_bShowFindCorners( false )
+	  m_bRejectBorderParticles( true ), m_bUseConvexHull( false ), m_b3PtGoal( false ), m_bBallColor( false ),
+	  m_bUseFindCorners( false ), m_bShowFindCorners( false ), m_bJoinObjects( false )
 {	
 	Profiler = new profile;
 	InputImageRGB = imaqCreateImage(IMAQ_IMAGE_RGB, IMAGE_BORDER_SIZE);

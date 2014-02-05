@@ -273,6 +273,12 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 			if( SelectedTracker == eGoalTracker )
 				g_pTracker[SelectedTracker]->Set3PtGoal((bool)(int)value);
 			break;
+		case eBallColor:
+			if( g_pTracker[SelectedTracker] == NULL )
+				return false;
+			if( SelectedTracker == eBallTracker )
+				g_pTracker[SelectedTracker]->SetBallTrackingColor((bool)(int)value);
+			break;
 		case eIsTargeting:
 			{
 				std::string IsTargeting=g_WindowTitle;

@@ -118,6 +118,7 @@ class VisionControls : public DialogBase
 			bool vsAimingText;
 			bool vsBoundsText;
 			bool vs3ptGoal;
+			bool vsBallColor;
 			ThresholdColorSpace vsThresholdMode;	
 			int ThresholdValues[eNumThresholdSettings];
 		} CurrentSettings;
@@ -174,6 +175,8 @@ class MenuSelection_Vision : public MenuSelection_Interface
 			g_plugin_SquareTargeting->Set_Vision_Settings(eBoundsText, (double)(bool)(atoi(StringEntry.c_str()) > 0));
 			in >> StringEntry; in >> StringEntry;
 			g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, (double)(bool)(atoi(StringEntry.c_str()) > 0));
+			in >> StringEntry; in >> StringEntry;
+			g_plugin_SquareTargeting->Set_Vision_Settings(eBallColor, (double)(bool)(atoi(StringEntry.c_str()) > 0));
 			in >> StringEntry; in >> StringEntry;
 			g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, (double)(ThresholdColorSpace)atoi(StringEntry.c_str()));
 			in >> StringEntry; in >> StringEntry;
@@ -331,6 +334,9 @@ bool VisionControls::Run(HWND pParent)
 		CurrentSettings.vs3ptGoal = (bool)(atoi(StringEntry.c_str()) > 0);
 		g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, (double)CurrentSettings.vs3ptGoal);
 		in >> StringEntry; in >> StringEntry;
+		CurrentSettings.vsBallColor = (bool)(atoi(StringEntry.c_str()) > 0);
+		g_plugin_SquareTargeting->Set_Vision_Settings(eBallColor, (double)CurrentSettings.vsBallColor);
+		in >> StringEntry; in >> StringEntry;
 		CurrentSettings.vsThresholdMode = (ThresholdColorSpace)atoi(StringEntry.c_str());
 		g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, (double)CurrentSettings.vsThresholdMode);
 		in >> StringEntry; in >> StringEntry;
@@ -373,6 +379,7 @@ void VisionControls_SaveChanges()
 	out << "Aiming= " <<      (int)g_plugin_SquareTargeting->Get_Vision_Settings(eAimingText) << endl;
 	out << "Bounds= " <<      (int)g_plugin_SquareTargeting->Get_Vision_Settings(eBoundsText) << endl;
 	out << "3ptgoal= " <<     (int)g_plugin_SquareTargeting->Get_Vision_Settings(e3PtGoal) << endl;
+	out << "BallColor= " <<   (int)g_plugin_SquareTargeting->Get_Vision_Settings(eBallColor) << endl;
 	out << "ThresholdType= "<<(int)g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdMode) << endl;
 	out << "Plane1Min= " << g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdPlane1Min) << endl;
 	out << "Plane2Min= " << g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdPlane2Min) << endl;
@@ -401,6 +408,7 @@ void VisionControls::GetVisionSettings()
 	CurrentSettings.vsAimingText = (bool)((int)g_plugin_SquareTargeting->Get_Vision_Settings(eAimingText) > 0);
 	CurrentSettings.vsBoundsText = (bool)((int)g_plugin_SquareTargeting->Get_Vision_Settings(eBoundsText) > 0);
 	CurrentSettings.vs3ptGoal = (bool)((int)g_plugin_SquareTargeting->Get_Vision_Settings(e3PtGoal) > 0);
+	CurrentSettings.vsBallColor = (bool)((int)g_plugin_SquareTargeting->Get_Vision_Settings(eBallColor) > 0);
 	CurrentSettings.vsThresholdMode = (ThresholdColorSpace)(int)g_plugin_SquareTargeting->Get_Vision_Settings(eThresholdMode);
 	for( int i = 0; i < eNumThresholdSettings; i++ )
 	{
@@ -422,9 +430,12 @@ void VisionControls::UpdateControls()
 	SendDlgItemMessage(m_hDlg, IDC_ShowAiming, BM_SETCHECK, CurrentSettings.vsAimingText, 0);
 	SendDlgItemMessage(m_hDlg, IDC_ShowBounds, BM_SETCHECK, CurrentSettings.vsBoundsText, 0);
 	SendDlgItemMessage(m_hDlg, IDC_ShowOverlay, BM_SETCHECK, CurrentSettings.vsOverlays, 0);
-
+#if 0
 	SendDlgItemMessage(m_hDlg, IDC_3PT, BM_SETCHECK, CurrentSettings.vs3ptGoal, 0);
 	SendDlgItemMessage(m_hDlg, IDC_2PT, BM_SETCHECK, !CurrentSettings.vs3ptGoal, 0);
+#endif
+	SendDlgItemMessage(m_hDlg, IDC_RedBall, BM_SETCHECK, CurrentSettings.vsBallColor, 0);
+	SendDlgItemMessage(m_hDlg, IDC_BlueBall, BM_SETCHECK, !CurrentSettings.vsBallColor, 0);
 
 	SendDlgItemMessage(m_hDlg, IDC_ThresholdRGB, BM_SETCHECK, ( CurrentSettings.vsThresholdMode == eThreshRGB ), 0);
 	SendDlgItemMessage(m_hDlg, IDC_ThresholdHSV, BM_SETCHECK, ( CurrentSettings.vsThresholdMode == eThreshHSV ), 0);
@@ -547,7 +558,18 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 						g_plugin_SquareTargeting->Set_Vision_Settings(eBoundsText, bChecked);
 						CurrentSettings.vsBoundsText = bChecked;
 						break;
-					case IDC_3PT:	//TODO-CJT replace these two with select for Red/Blue Ball
+					case IDC_RedBall:	
+						bChecked = SendDlgItemMessage(m_hDlg, IDC_RedBall, BM_GETCHECK, 0, 0) > 0;
+						g_plugin_SquareTargeting->Set_Vision_Settings(eBallColor, bChecked);
+						CurrentSettings.vs3ptGoal = bChecked;
+						break;
+					case IDC_BlueBall:
+						bChecked = SendDlgItemMessage(m_hDlg, IDC_BlueBall, BM_GETCHECK, 0, 0) > 0;
+						g_plugin_SquareTargeting->Set_Vision_Settings(eBallColor, !bChecked);
+						CurrentSettings.vs3ptGoal = !bChecked;
+						break;
+#if 0
+					case IDC_3PT:	
 						bChecked = SendDlgItemMessage(m_hDlg, IDC_3PT, BM_GETCHECK, 0, 0) > 0;
 						g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, bChecked);
 						CurrentSettings.vs3ptGoal = bChecked;
@@ -557,6 +579,7 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 						g_plugin_SquareTargeting->Set_Vision_Settings(e3PtGoal, !bChecked);
 						CurrentSettings.vs3ptGoal = !bChecked;
 						break;
+#endif
 					case IDC_ThresholdRGB:
 						g_plugin_SquareTargeting->Set_Vision_Settings(eThresholdMode, eThreshRGB);
 						GetVisionSettings();

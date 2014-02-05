@@ -27,8 +27,13 @@ VisionBallTracker::VisionBallTracker()
 		break;
 	}
 
+	SetBallThreshold( m_bBallColor );
+
 	particleList.SetParticleParams( 0.55f, 0.8f, 1.2f, 1.02f );	// area threshold, aspect min, max, circularity max
 	FirstPassParticleList.SetParticleParams( 0.55f, 0.8f, 1.2f, 1.02f );	// area threshold, aspect min, max, circularity max
+
+	EnableObjectSeparation( false );
+	EnableObjectJoin( false );
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
@@ -62,6 +67,11 @@ void VisionBallTracker::SetDefaultThreshold( void )
 	LuminanceRange.minValue = 143, LuminanceRange.maxValue = 255;
 }
 
+void VisionBallTracker::SetBallThreshold(bool bColorSet)
+{
+
+}
+
 int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
@@ -70,6 +80,8 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 	// (closest target)
 	int max_y = 0;
 	int index = 0;
+
+	SetBallThreshold( m_bBallColor );
 
 	//-----------------------------------------------------------------//
 	//  Threshold                                                      //
@@ -117,8 +129,6 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 	// Filters particles based on their size.
 	VisionErrChk(imaqSizeFilter(ParticleImageU8, ParticleImageU8, FALSE, erosions, IMAQ_KEEP_LARGE, &structElem));
 
-	EnableObjectSeparation( true );
-
 	// this process breaks objects apart at narrow borders
 	if( m_bObjectSeparation )
 	{
@@ -149,8 +159,8 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 
 		// Sets the structuring element.
 		int pKernel1[9] = {0,1,0,
-			1,1,1,
-			0,1,0};
+						   1,1,1,
+						   0,1,0};
 		StructuringElement structElem1;
 		structElem1.matrixCols = 3;
 		structElem1.matrixRows = 3;
@@ -177,34 +187,37 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 	// gets rid of smaller objects
 	VisionErrChk(imaqParticleFilter4(ParticleImageU8, ParticleImageU8, particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles));
 
-	// this will help to identify a circular object
-	VisionErrChk(imaqConvexHull(WorkImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
-
-	// get bounding boxes for these before we dilate.
-	// so we can get the correct size of the ball.
-	VisionErrChk(GetParticles(WorkImageU8, TRUE, FirstPassParticleList));
-
-	// Erode the image to help remove noise
-	int pKernel2[25] = {0,1,1,1,0,
-						1,1,1,1,1,
-						1,1,1,1,1,
-						1,1,1,1,1,
-						0,1,1,1,0};
-	structElem.matrixCols = 5;
-	structElem.matrixRows = 5;
-	structElem.hexa = FALSE;
-	structElem.kernel = pKernel2;
-
-	// Applies multiple morphological transformation to the binary image.
-	for (int i = 0 ; i < 3 ; i++)
+	if( m_bJoinObjects )
 	{
-		VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_ERODE, &structElem));
-	}
+		// this will help to identify a circular object
+		VisionErrChk(imaqConvexHull(WorkImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
 
-	// Now dialate it a bunch of times using the same kernal. hopefully, the images will merge.
-	for (int i = 0 ; i < 16 ; i++)
-	{
-		VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_DILATE, &structElem));
+		// get bounding boxes for these before we dilate.
+		// so we can get the correct size of the ball.
+		VisionErrChk(GetParticles(WorkImageU8, TRUE, FirstPassParticleList));
+
+		// Erode the image to help remove noise
+		int pKernel2[25] = {0,1,1,1,0,
+			1,1,1,1,1,
+			1,1,1,1,1,
+			1,1,1,1,1,
+			0,1,1,1,0};
+		structElem.matrixCols = 5;
+		structElem.matrixRows = 5;
+		structElem.hexa = FALSE;
+		structElem.kernel = pKernel2;
+
+		// Applies multiple morphological transformation to the binary image.
+		for (int i = 0 ; i < 3 ; i++)
+		{
+			VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_ERODE, &structElem));
+		}
+
+		// Now dialate it a bunch of times using the same kernal. hopefully, the images will merge.
+		for (int i = 0 ; i < 16 ; i++)
+		{
+			VisionErrChk(imaqMorphology(ParticleImageU8, ParticleImageU8, IMAQ_DILATE, &structElem));
+		}
 	}
 
 	VisionErrChk(imaqConvexHull(ParticleImageU8, ParticleImageU8, FALSE));	// Connectivity 4??? set to true to make con 8.
@@ -242,21 +255,19 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 				rect.height = FirstPassParticleList.particleData[i].bound_height;
 				rect.width = FirstPassParticleList.particleData[i].bound_width;
 
-				if( FirstPassParticleList.particleData[i].status == eOK )
+				//if( FirstPassParticleList.particleData[i].status == eOK )
 					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_WHITE );
-				else
-				{
-					float BBoxColor = COLOR_WHITE;
+				//else
+				//{
+				//	float BBoxColor = COLOR_WHITE;
 					//if( FirstPassParticleList.particleData[i].status == eAspectFail )
 					//	BBoxColor = COLOR_BLUE;
 					//else if( FirstPassParticleList.particleData[i].status == eAreaFail)
 					//	BBoxColor = COLOR_MAGENT;
 					//else if( FirstPassParticleList.particleData[i].status == eCircularityFail)
 					//	BBoxColor = COLOR_YELLOW;
-					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
-
-					continue;
-				}
+				//	imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
+				//}
 			}
 		}
 
@@ -344,31 +355,36 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 				{
 					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
 
-					Rect ballSizeRect;
-					ballSizeRect.top = 999999;
-					ballSizeRect.left = 999999;
-					ballSizeRect.height = 0;
-					ballSizeRect.width = 0;
+					int ballSize_top = 999999;
+					int ballSize_left = 999999;
+					int ballSize_bottom = 0;
+					int ballSize_right = 0;
 
 					// find the actual size
 					for(int x = 0; x < FirstPassParticleList.numParticles; x++)
 					{	// find the first pass items within the bounds of this object
-						if( (FirstPassParticleList.particleData[x].bound_top >= rect.top) &&
-							(FirstPassParticleList.particleData[x].bound_left >= rect.left) &&
-							((FirstPassParticleList.particleData[x].bound_height - (FirstPassParticleList.particleData[x].bound_top - rect.top)) < rect.height) &&
-							((FirstPassParticleList.particleData[x].bound_width - (FirstPassParticleList.particleData[x].bound_right - rect.left)) < rect.width) )
+						if( (FirstPassParticleList.particleData[x].bound_top >= particleList.particleData[i].bound_top) &&
+							(FirstPassParticleList.particleData[x].bound_left >= particleList.particleData[i].bound_left) &&
+							(FirstPassParticleList.particleData[x].bound_bottom <= particleList.particleData[i].bound_bottom) &&
+							(FirstPassParticleList.particleData[x].bound_right <= particleList.particleData[i].bound_right) )
 						{
-							if( FirstPassParticleList.particleData[x].bound_top < ballSizeRect.top )
-								ballSizeRect.top = FirstPassParticleList.particleData[x].bound_top;
-							if( FirstPassParticleList.particleData[x].bound_left < ballSizeRect.left )
-								ballSizeRect.left = FirstPassParticleList.particleData[x].bound_left;
-							if( FirstPassParticleList.particleData[x].bound_height > ballSizeRect.height )
-								ballSizeRect.height = FirstPassParticleList.particleData[x].bound_height;
-							if( FirstPassParticleList.particleData[x].bound_width > ballSizeRect.width )
-								ballSizeRect.width = FirstPassParticleList.particleData[x].bound_width;
+							if( FirstPassParticleList.particleData[x].bound_top < ballSize_top )
+								ballSize_top = FirstPassParticleList.particleData[x].bound_top;
+							if( FirstPassParticleList.particleData[x].bound_left < ballSize_left )
+								ballSize_left = FirstPassParticleList.particleData[x].bound_left;
+							if( FirstPassParticleList.particleData[x].bound_bottom > ballSize_bottom )
+								ballSize_bottom = FirstPassParticleList.particleData[x].bound_bottom;
+							if( FirstPassParticleList.particleData[x].bound_right > ballSize_right )
+								ballSize_right = FirstPassParticleList.particleData[x].bound_right;
 						}
 					}
-					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, ballSizeRect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+
+					rect.top = ballSize_top;
+					rect.left = ballSize_left;
+					rect.height = ballSize_bottom - ballSize_top;
+					rect.width = ballSize_right - ballSize_left;
+
+					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
 				}
 				else
 				{
@@ -383,9 +399,7 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 							BBoxColor = COLOR_YELLOW;
 						imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
 					}
-					continue;
 				}
-
 			}	// show overlays
 		}	// particle loop
 
