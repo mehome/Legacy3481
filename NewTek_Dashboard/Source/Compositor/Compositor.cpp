@@ -538,10 +538,10 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 
 			//TODO move this in sequence packet when live edit comes on-line
 			double fTest;
-			err = script.GetField("x-bisect",NULL,NULL,&fTest);
+			err = script.GetField("x_bisect",NULL,NULL,&fTest);
 			sqr_props.XBisect=(err==NULL) ? fTest : 0.5;
 
-			err = script.GetField("y-bisect",NULL,NULL,&fTest);
+			err = script.GetField("y_bisect",NULL,NULL,&fTest);
 			sqr_props.YBisect=(err==NULL) ? fTest : 0.5;
 
 			err = script.GetFieldTable("rotation");
@@ -871,6 +871,9 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 		if (!err)
 		{
 			Compositor_Props::Sequence_Packet seq_pkt;
+			//Start with the position's initialized
+			seq_pkt.PositionX=0.0;
+			seq_pkt.PositionY=0.0;
 
 			std::string sTest;
 			err = script.GetField("type",&sTest,NULL,NULL);
@@ -898,7 +901,12 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 					err = script.GetField("selection",NULL,NULL,&fTest);
 					seq_pkt.specific_data.ShapeReticle_props.SelIndex=(size_t)fTest;
 					seq_pkt.specific_data.ShapeReticle_props.SelIndex--;  // translate cardinal to ordinal 
-					seq_pkt.specific_data.ShapeReticle_props.PositionZ=60 * 0.0254;  //a 5 foot depth default makes easier to see it to start
+
+					err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
+					err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
+					err = script.GetField("z",NULL,NULL,&seq_pkt.specific_data.ShapeReticle_props.PositionZ);
+					if (err)
+						seq_pkt.specific_data.ShapeReticle_props.PositionZ=60 * 0.0254;  //a 5 foot depth default makes easier to see it to start
 				}
 				break;
 			case Compositor_Props::eComposite:
@@ -914,10 +922,6 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 				}
 				break;
 			}
-
-			//These always start out zero'd
-			seq_pkt.PositionX=0.0;
-			seq_pkt.PositionY=0.0;
 
 			sequence.push_back(seq_pkt);
 			index++;

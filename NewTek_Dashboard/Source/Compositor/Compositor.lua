@@ -49,22 +49,35 @@ CompositorProps = {
 			-- draw_shape -- may be "square", "circle", or "cube".
 			shape_reticle_1 =
 			{
-				remote_name="test_reticle",
-				size_in=25,
-				--length_in=30,
-				--width_in=25,
-				r=255,g=255,b=255,
-				rotation={x=0,y_deg=0,z_deg=0},
-				draw_shape="square"
-			},
-			shape_reticle_2 =
-			{
 				remote_name="land_reticle",
 				size_in=25,
 				r=0,g=0,b=255,
 				plane_selection="xy",
-				draw_shape="circle"
-			}
+				draw_shape="circle",
+				y_bisect=1			--from origin the length is all up from the bottom
+			},
+			shape_reticle_2 =
+			{
+				remote_name="intake_frame1",
+				size_in=26,
+				--length_in=30,
+				--width_in=25,
+				r=0,g=255,b=255,
+				rotation={x=0,y_deg=0,z_deg=0},
+				draw_shape="square",
+				y_bisect=1
+			},
+			shape_reticle_3 =
+			{
+				remote_name="intake_frame2",
+				--size_in=26,
+				length_in=30,
+				width_in=26.8,
+				r=0,g=255,b=255,
+				rotation={x=0,y_deg=0,z_deg=0},
+				draw_shape="square"
+			},
+
 		},
 		line_plot_props =
 		{
@@ -130,14 +143,15 @@ CompositorProps = {
 				type="composite",
 				composite=
 				{
-					composite_1 = {	type="square", selection=1	},
+					composite_1 = {	type="square", selection=1},
 					composite_2 = { type="shape", selection=2 },
+					composite_3 = { type="shape", selection=3 },
 					
 					--composite_1 = { type="shape", selection=1 },
 					--composite_1 = { type="shape", selection=2 },
 					--composite_2 = {	type="bypass" },
 					
-					composite_3 = {	type="pathalign" }
+					composite_4 = {	type="pathalign" }
 				}
 			},
 			sequence_2 = 
