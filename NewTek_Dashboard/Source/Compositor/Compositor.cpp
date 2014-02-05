@@ -179,6 +179,11 @@ struct Compositor_Props
 		// _enabled controls whether or not it is enabled
 		std::string RemoteVariableName;
 		BYTE rgb[3];  //shape color
+		struct Shapes2D_Orientation_Props  //Squares use this
+		{
+			double Yaw,Pitch,Roll;
+		};
+
 		union type_specifics
 		{
 			double Size_1D;  //cubes use this... kept as generic name for shapes that just need size
@@ -197,11 +202,13 @@ struct Compositor_Props
 				{	return Enum_GetValue<PlaneSelection_enum> (value,csz_Shape2D_PlaneSelection_Enum,_countof(csz_Shape2D_PlaneSelection_Enum));
 				}
 			} Shapes2D;
-			struct Shapes2D_Orientation_Props  //Squares use this
+			struct Square_Props  //Squares use this
 			{
 				double Length,Width;
-				double Yaw,Pitch,Roll;
-			} Shapes2D_Orientation;
+				Shapes2D_Orientation_Props Orientation;
+				//These help define where to position the origin of the handle typically 0.5,0.5 is center
+				double XBisect,YBisect;
+			} Square;
 		} specific_data;
 
 		enum shape_types 
@@ -462,7 +469,7 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 
 	typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
 	typedef ShapeProps::type_specifics::Shapes2D_Props Shapes2D_Props;
-	typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Shapes2D_Orientation_Props SquareProps;
+	typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Square_Props SquareProps;
 
 	std::string sTest;
 	err = script.GetField("remote_name",&shape_props.RemoteVariableName,NULL,NULL);
@@ -513,7 +520,7 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 	case ShapeProps::e_Square:
 		{
 
-			SquareProps &sqr_props=shape_props.specific_data.Shapes2D_Orientation;
+			SquareProps &sqr_props=shape_props.specific_data.Square;
 			if (LoadMeasuredValue(script,"size",value))
 				sqr_props.Length=sqr_props.Width=value;
 			else
@@ -531,53 +538,59 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 
 			//TODO move this in sequence packet when live edit comes on-line
 			double fTest;
+			err = script.GetField("x-bisect",NULL,NULL,&fTest);
+			sqr_props.XBisect=(err==NULL) ? fTest : 0.5;
+
+			err = script.GetField("y-bisect",NULL,NULL,&fTest);
+			sqr_props.YBisect=(err==NULL) ? fTest : 0.5;
+
 			err = script.GetFieldTable("rotation");
 			if (!err)
 			{
 				err=script.GetField("x_deg", NULL, NULL, &fTest);
-				if (!err) sqr_props.Yaw=DEG_2_RAD(fTest);
+				if (!err) sqr_props.Orientation.Yaw=DEG_2_RAD(fTest);
 				else
 				{
 					err = script.GetField("x",NULL,NULL,&fTest);
 					assert(!err);
-					sqr_props.Yaw=fTest;
+					sqr_props.Orientation.Yaw=fTest;
 				}
 				err=script.GetField("y_deg", NULL, NULL, &fTest);
-				if (!err) sqr_props.Pitch=DEG_2_RAD(fTest);
+				if (!err) sqr_props.Orientation.Pitch=DEG_2_RAD(fTest);
 				else
 				{
 					err = script.GetField("y",NULL,NULL,&fTest);
 					assert(!err);
-					sqr_props.Pitch=fTest;
+					sqr_props.Orientation.Pitch=fTest;
 				}
 				err=script.GetField("z_deg", NULL, NULL, &fTest);
-				if (!err) sqr_props.Roll=DEG_2_RAD(fTest);
+				if (!err) sqr_props.Orientation.Roll=DEG_2_RAD(fTest);
 				else
 				{
 					err = script.GetField("z",NULL,NULL,&fTest);
 					assert(!err);
-					sqr_props.Roll=fTest;
+					sqr_props.Orientation.Roll=fTest;
 				}
 				script.Pop();
 			}
 			else
 			{
 
-				sqr_props.Yaw=0.0;
-				sqr_props.Pitch=0.0;
-				sqr_props.Roll=0.0;
+				sqr_props.Orientation.Yaw=0.0;
+				sqr_props.Orientation.Pitch=0.0;
+				sqr_props.Orientation.Roll=0.0;
 			}
 			if (shape_props.RemoteVariableName.c_str()[0]!=0)
 			{
 				sTest=shape_props.RemoteVariableName;
 				sTest+="_rot_x";
-				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Yaw));
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Orientation.Yaw));
 				sTest=shape_props.RemoteVariableName;
 				sTest+="_rot_y";
-				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Pitch));
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Orientation.Pitch));
 				sTest=shape_props.RemoteVariableName;
 				sTest+="_rot_z";
-				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Roll));
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Orientation.Roll));
 			}
 
 		}		
@@ -2067,24 +2080,29 @@ public:
 	void InitSquare(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
 	{
 		using namespace osg;
-		typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Shapes2D_Orientation_Props SquareProps;
-		const SquareProps &sqr_props=props.specific_data.Shapes2D_Orientation;
-		Quat orientation=From_Rot_Radians(sqr_props.Yaw,sqr_props.Pitch,sqr_props.Roll);
+		typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Square_Props SquareProps;
+		const SquareProps &sqr_props=props.specific_data.Square;
+		Quat orientation=From_Rot_Radians(sqr_props.Orientation.Yaw,sqr_props.Orientation.Pitch,sqr_props.Orientation.Roll);
 
 		//A square is a 2D object therefore has no depth or the forward direction
 		//Vec3d ForwardDir(orientation*Vec3d(0,1,0));
+
 		Vec3d UpDir(orientation*Vec3d(0,0,1));
+		Vec3d DownDir=UpDir;
 		Vec3d RightDir(orientation*Vec3d(1,0,0));
+		Vec3d LeftDir=RightDir;
 		//Scale normalized by the length and width
-		UpDir*=(sqr_props.Length * 0.5); //half length and width to work with center
-		RightDir*=(sqr_props.Width * 0.5);
+		UpDir   *=(sqr_props.Length * sqr_props.YBisect); //bisect length and width to work with that origin
+		DownDir *=(sqr_props.Length * (1.0-sqr_props.YBisect));
+		LeftDir *=(sqr_props.Width  * sqr_props.XBisect);
+		RightDir*=(sqr_props.Width  * (1.0-sqr_props.XBisect));
 		//Now to apply position offset
 		Vec3d Offset(XPos,ZPos,YPos);
 
-		square[0]=-RightDir +  UpDir + Offset;
-		square[1]= RightDir +  UpDir + Offset;
-		square[2]=-RightDir + -UpDir + Offset;
-		square[3]= RightDir + -UpDir + Offset;
+		square[0]= -LeftDir +   UpDir + Offset;
+		square[1]= RightDir +   UpDir + Offset;
+		square[2]= -LeftDir + -DownDir + Offset;
+		square[3]= RightDir + -DownDir + Offset;
 
 		#ifdef __ShowBottomHandle__
 		std::string sTest;
@@ -2927,16 +2945,16 @@ class Compositor
 						typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
 						if (shape_props.draw_shape==ShapeProps::e_Square)
 						{
-							ShapeProps::type_specifics::Shapes2D_Orientation_Props &orientation_rw=shape_props_rw.specific_data.Shapes2D_Orientation;
+							ShapeProps::type_specifics::Square_Props &orientation_rw=shape_props_rw.specific_data.Square;
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_rot_x";
-							orientation_rw.Yaw=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							orientation_rw.Orientation.Yaw=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_rot_y";
-							orientation_rw.Pitch=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							orientation_rw.Orientation.Pitch=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_rot_z";
-							orientation_rw.Roll=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							orientation_rw.Orientation.Roll=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
 						}
 					}
 					else
