@@ -259,12 +259,13 @@ struct Compositor_Props
 				double PositionZ;
 			} ShapeReticle_props;
 
-			struct ShapeDynamics_Orientation
-			{
-				size_t SelIndex;
-				double PositionZ;
-				double rot_x,rot_y,rot_z;
-			} ShapeReticle_Orientation_props;
+			//Not yet supported
+			//struct ShapeDynamics_Orientation
+			//{
+			//	size_t SelIndex;
+			//	double PositionZ;
+			//	double rot_x,rot_y,rot_z;
+			//} ShapeReticle_Orientation_props;
 
 			double PositionZ; //for path align
 		} specific_data;
@@ -861,6 +862,7 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 	const char* err=NULL;
 	char Buffer[128];
 	size_t index=1;  //keep the lists cardinal in LUA
+	bool GotFieldTable;
 	do 
 	{
 		if (!IsRecursive)
@@ -868,7 +870,8 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 		else
 			sprintf_s(Buffer,128,"composite_%d",index);
 		err = script.GetFieldTable(Buffer);
-		if (!err)
+		GotFieldTable=!err;
+		if (GotFieldTable)
 		{
 			Compositor_Props::Sequence_Packet seq_pkt;
 			//Start with the position's initialized
@@ -902,11 +905,34 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 					seq_pkt.specific_data.ShapeReticle_props.SelIndex=(size_t)fTest;
 					seq_pkt.specific_data.ShapeReticle_props.SelIndex--;  // translate cardinal to ordinal 
 
-					err = script.GetField("x",NULL,NULL,&seq_pkt.PositionX);
-					err = script.GetField("y",NULL,NULL,&seq_pkt.PositionY);
-					err = script.GetField("z",NULL,NULL,&seq_pkt.specific_data.ShapeReticle_props.PositionZ);
-					if (err)
-						seq_pkt.specific_data.ShapeReticle_props.PositionZ=60 * 0.0254;  //a 5 foot depth default makes easier to see it to start
+					if (LoadMeasuredValue(script,"x",fTest))
+						seq_pkt.PositionX=fTest;
+					else
+						seq_pkt.PositionX= 0.0;
+
+					if (LoadMeasuredValue(script,"y",fTest))
+						seq_pkt.PositionY=fTest;
+					else
+						seq_pkt.PositionY= 0.0;	
+
+					if (LoadMeasuredValue(script,"z",fTest))
+						seq_pkt.specific_data.ShapeReticle_props.PositionZ=fTest;
+					else
+						seq_pkt.specific_data.ShapeReticle_props.PositionZ= 60 * 0.0254;  //a 5 foot depth default makes easier to see it to start
+
+					const Compositor_Props::Shape3D_Renderer_Props &shape_props=props.shapes_3D_reticle[seq_pkt.specific_data.ShapeReticle_props.SelIndex];
+					if (shape_props.RemoteVariableName.c_str()[0]!=0)
+					{
+						sTest=shape_props.RemoteVariableName;
+						sTest+="_x";
+						SmartDashboard::PutNumber(sTest,UnitMeasure2UI(seq_pkt.PositionX));
+						sTest=shape_props.RemoteVariableName;
+						sTest+="_y";
+						SmartDashboard::PutNumber(sTest,UnitMeasure2UI(seq_pkt.PositionY));
+						sTest=shape_props.RemoteVariableName;
+						sTest+="_z";
+						SmartDashboard::PutNumber(sTest,UnitMeasure2UI(seq_pkt.specific_data.ShapeReticle_props.PositionZ));
+					}
 				}
 				break;
 			case Compositor_Props::eComposite:
@@ -928,7 +954,7 @@ static void LoadSequenceProps(Scripting::Script& script,Compositor_Props::Sequen
 
 			script.Pop();
 		}
-	} while (!err);
+	} while (GotFieldTable);
 }
 
 static void LoadSequence_PersistentData(Scripting::Script& script,Compositor_Props::Sequence_List &sequence,Compositor_Props &props,bool IsRecursive=false)

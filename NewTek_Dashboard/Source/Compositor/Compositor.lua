@@ -53,29 +53,27 @@ CompositorProps = {
 				size_in=25,
 				r=0,g=0,b=255,
 				plane_selection="xy",
-				draw_shape="circle",
-				y_bisect=1			--from origin the length is all up from the bottom
+				draw_shape="circle"
 			},
 			shape_reticle_2 =
 			{
+				--intake frame 2 would be 26.8 and a length of 28, but since it is so out of view I'll leave it out
 				remote_name="intake_frame1",
 				size_in=26,
-				--length_in=30,
-				--width_in=25,
 				r=0,g=255,b=255,
-				rotation={x=0,y_deg=0,z_deg=0},
+				rotation={x=0,y_deg=45,z_deg=0},
 				draw_shape="square",
-				y_bisect=1
+				y_bisect=1			--from origin the length is all up from the bottom
 			},
 			shape_reticle_3 =
 			{
-				remote_name="intake_frame2",
-				--size_in=26,
-				length_in=30,
-				width_in=26.8,
-				r=0,g=255,b=255,
-				rotation={x=0,y_deg=0,z_deg=0},
-				draw_shape="square"
+				remote_name="catapult_frame1",
+				length_in=26,
+				width_in=11,
+				r=255,g=0,b=0,
+				rotation={x=0,y_deg=90,z_deg=0},
+				draw_shape="square",
+				y_bisect=(1.0-(4.42/26))
 			},
 
 		},
@@ -125,7 +123,7 @@ CompositorProps = {
 		{
 			width_in = 25, length_ft = 10,
 			pivot_in = 2,
-			camera_position =	{ x_in=0, y_in=12, z_in=-1.0 },
+			camera_position =	{ x_in=0, y_in=16, z_in=-1.0 },
 			camera_rotation =	{ x=0, y_deg=0, z=0 },
 			fov_x=45,fov_y=45,
 			r=0,g=255,b=100,
@@ -144,8 +142,8 @@ CompositorProps = {
 				composite=
 				{
 					composite_1 = {	type="square", selection=1},
-					composite_2 = { type="shape", selection=2 },
-					composite_3 = { type="shape", selection=3 },
+					composite_2 = { type="shape", selection=2, y_in=6.62, z_in=17 },
+					composite_3 = { type="shape", selection=3, y_in=9.55, z_in=1+4.42 },
 					
 					--composite_1 = { type="shape", selection=1 },
 					--composite_1 = { type="shape", selection=2 },
