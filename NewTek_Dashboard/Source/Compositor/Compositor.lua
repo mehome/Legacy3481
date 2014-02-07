@@ -125,9 +125,10 @@ CompositorProps = {
 			pivot_in = 2,
 			--camera_position =	{ x_in=0, y_in=19, z_in=-1.0 },
 			--camera_rotation =	{ x_deg=0, y_deg=-8, z=0 },
-			--Rear intake camera
-			camera_position =	{ x_in=0, y_in=7.94, z_in=26.09 },
-			camera_rotation =	{ x_deg=0, y_deg=0, z=0 },
+			--Rear intake camera, while the z is really 26.09 from front it is about 13 from center, which is good for measuring coordinate from simulation
+			camera_position =	{ x_in=0, y_in=7.94, z_in=13.0 },
+			--The camera pitch gives a center point of ball at around 4.5 feet, which is the closet it can be while still being able to be targeted
+			camera_rotation =	{ x_deg=0, y_deg=5.426, z=0 },
 			--45 works for 1011 and 1013 sideways... 1013 normal is 60
 			fov=45,
 			r=0,g=255,b=100,
@@ -146,12 +147,11 @@ CompositorProps = {
 				composite=
 				{
 					composite_1 = {	type="square", selection=1},
-					composite_2 = { type="shape", selection=2, y_in=6.62, z_in=17 },
-					composite_3 = { type="shape", selection=3, y_in=9.55, z_in=1+4.42 },
+					--composite_2 = { type="shape", selection=2, y_in=6.62, z_in=17 },
+					--composite_3 = { type="shape", selection=3, y_in=9.55, z_in=1+4.42 },
 					
-					--composite_1 = { type="shape", selection=1 },
-					--composite_1 = { type="shape", selection=2 },
-					--composite_2 = {	type="bypass" },
+					composite_2 = { type="shape", selection=1 },
+					composite_3 = {	type="bypass" },
 					
 					composite_4 = {	type="pathalign" }
 				}
