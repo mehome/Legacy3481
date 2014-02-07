@@ -125,8 +125,10 @@ CompositorProps = {
 			pivot_in = 2,
 			--camera_position =	{ x_in=0, y_in=19, z_in=-1.0 },
 			--camera_rotation =	{ x_deg=0, y_deg=-8, z=0 },
-			camera_position =	{ x_in=10, y_in=9, z_in=26 },
-			camera_rotation =	{ x_deg=-10, y_deg=0, z=0 },
+			--Rear intake camera
+			camera_position =	{ x_in=0, y_in=7.94, z_in=26.09 },
+			camera_rotation =	{ x_deg=0, y_deg=0, z=0 },
+			--45 works for 1011 and 1013 sideways... 1013 normal is 60
 			fov=45,
 			r=0,g=255,b=100,
 			--draw_selection = "none",
