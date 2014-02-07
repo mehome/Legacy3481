@@ -6,3 +6,12 @@ Front camera
 Use z around -1 or less and about the same height
 Catapalt= 26 x 11
 intake = 26 x 26
+
+In testing with a 5.426 degree pitch on camera I can still track ball around (4.5*12)-13=41 inches.. 3.416 from the end where camera is, and
+about 5 degrees of freedom on each side.  3.9 gives about 6.7 degrees of freedom so we may want to be about 4 or 5 feet away for tracking to
+be effective.
+
+29 degree decline... or 61 (where 90 is straight up)... this will extend out 12.6 so that is when the ball has first contact... which from
+centerpoint is starting contact with bumper.
+
+This means we'll need to plan 4-5 feet out and drive straight back that much with no more information after the 3.4 mark.
