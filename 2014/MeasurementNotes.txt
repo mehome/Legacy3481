@@ -1,0 +1,8 @@
+Z -2.6 front
+Y ground offset = 4.28
+Rear Intake camera
+Camera y=12.22, z=23.49  =  7.94, 26.09
+Front camera 
+Use z around -1 or less and about the same height
+Catapalt= 26 x 11
+intake = 26 x 26
