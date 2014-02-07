@@ -118,7 +118,7 @@ CompositorProps = {
 		{
 			width_in = 25, length_ft = 12,
 			pivot_in = 2,
-			camera_position =	{ x_in=0, y_in=12, z_in=-1.0 },
+			camera_position =	{ x_in=0, y_in=7.94, z_in=-1.0 },
 			camera_rotation =	{ x=0, y_deg=20, z=0 },
 			fov=45,
 			r=0,g=255,b=100,
@@ -135,9 +135,9 @@ CompositorProps = {
 				type="composite",
 				composite=
 				{
-					composite_1 = {	type="square", selection=1	},
-					composite_2 = { type="shape", selection=1 },
-					composite_3 = { type="shape", selection=2 },
+					composite_1 = {	type="square", selection=1 },
+					composite_2 = { type="shape", selection=1, y=2.62243 , z=2.04425 },
+					composite_3 = { type="shape", selection=2,  y=0.310857 , z=3.74754 },
 					composite_4 = {	type="pathalign" }
 				}
 			},
