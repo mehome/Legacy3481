@@ -304,9 +304,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double bound_right;
 		double bound_top;
 		double bound_bottom;
-		//TODO fixme
-		//ni_visionprocessingbase.cpp(307) : warning C4101: 'area' : unreferenced local variable
-		//double area;
+		double area;
 		double center_x;
 		double center_y;
 		double eq_long_side;
@@ -331,7 +329,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 
 		DOUT("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
 
-#if 0
+#if 1
 		// if aspect is not in range, skip it.
 		if( particleList.aspectMin > 0 && particleList.aspectMax > 0)
 		{
@@ -341,24 +339,27 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				status = eAspectFail;
 			}
 		}
-		else if( bound_width > bound_height)
+		else if( particleList.ideal_horz_asp > 0 && particleList.ideal_vert_asp > 0 )
 		{
-			if(ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp) < 50)
+			if( bound_width > bound_height)
 			{
-				DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp));
-				status = eAspectFail;
+				if(ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp) < 50)
+				{
+					DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp));
+					status = eAspectFail;
+				}
 			}
-		}
-		else
-		{
-			if(ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp) < 50)
+			else
 			{
-				DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp));
-				status = eAspectFail;
+				if(ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp) < 50)
+				{
+					DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp));
+					status = eAspectFail;
+				}
 			}
 		}
 #endif
-		if(status == eOK)
+		if(status == eOK && particleList.circularity_limit > 0)
 		{
 			double circularity;
 			VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_HEYWOOD_CIRCULARITY_FACTOR, &circularity));
@@ -370,8 +371,8 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				status = eCircularityFail;
 			}
 		}
-#if 0
-		if(status == eOK)
+#if 1
+		if(status == eOK && particleList.area_threshold > 0)
 		{
 			// particle area
 			VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &area));

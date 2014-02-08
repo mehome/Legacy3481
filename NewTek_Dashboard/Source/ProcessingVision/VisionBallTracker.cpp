@@ -29,11 +29,11 @@ VisionBallTracker::VisionBallTracker()
 
 	SetBallThreshold( m_bBallColor );
 
-	particleList.SetParticleParams( 0.55f, 0.8f, 1.2f, 1.02f );	// area threshold, aspect min, max, circularity max
-	FirstPassParticleList.SetParticleParams( 0.55f, 0.8f, 1.2f, 1.02f );	// area threshold, aspect min, max, circularity max
+	particleList.SetParticleParams( 0.0f, 0.8f, 1.2f, 1.02f );	// area threshold, aspect min, max, circularity max
+	FirstPassParticleList.SetParticleParams( 0.0f, 0.0f, 0.0f, 0.0f );	// area threshold, aspect min, max, circularity max
 
-	EnableObjectSeparation( false );
-	EnableObjectJoin( false );
+	EnableObjectSeparation( true );
+	EnableObjectJoin( true );
 
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};

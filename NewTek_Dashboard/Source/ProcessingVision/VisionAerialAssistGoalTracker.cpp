@@ -31,12 +31,6 @@ VisionAerialAssistGoalTracker::VisionAerialAssistGoalTracker()
 	SetUseConvexHull(false);
 
 	// particle filter parameters
-	//MeasurementType FilterMeasureTypes[] = {IMAQ_MT_BOUNDING_RECT_WIDTH, IMAQ_MT_BOUNDING_RECT_HEIGHT};
-	//float plower[] = {40, 30};	
-	//float pUpper[] = {630, 470};
-	//int pCalibrated[] = {0,0};
-	//int pExclude[] = {0,0};
-
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_AREA};
 	float plower[] = {150};	
 	float pUpper[] = {65535};
@@ -78,8 +72,7 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 	int min_y = SourceImageInfo.yRes + 1;
 	int index = 0;
 
-	particleList.SetParticleParams( 0.75f, 0.0f, 0.0f, (4.0f/32), (23.5f/4) );	// area threshold, aspect min, max
-//	particleList.SetParticleParams( 0.75f, 0.0f, 0.0f, (1.2f/11.6f), (10.0f/1.0f) );	// area threshold, aspect min, max
+	particleList.SetParticleParams( 0.0f, 0.0f, 0.0f, (4.0f/32), (23.5f/4) );	// area threshold, aspect min, max
 
 	//-----------------------------------------------------------------//
 	//  Threshold                                                      //
