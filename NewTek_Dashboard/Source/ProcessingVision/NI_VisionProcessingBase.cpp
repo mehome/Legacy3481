@@ -326,10 +326,10 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double bound_height = bound_bottom - bound_top;
 		double aspect = bound_width / bound_height;
 		double bound_area = bound_width * bound_height;
+		double hv_aspect_score_limit = 65;
 
 		DOUT("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
 
-#if 1
 		// if aspect is not in range, skip it.
 		if( particleList.aspectMin > 0 && particleList.aspectMax > 0)
 		{
@@ -343,22 +343,22 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		{
 			if( bound_width > bound_height)
 			{
-				if(ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp) < 50)
+				if(ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp) < hv_aspect_score_limit)
 				{
-					DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp));
+					DOUT("rejected - vert asp score %f < %f\n", ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp), hv_aspect_score_limit);
 					status = eAspectFail;
 				}
 			}
 			else
 			{
-				if(ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp) < 50)
+				if(ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp) < hv_aspect_score_limit)
 				{
-					DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp));
+					DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp), hv_aspect_score_limit);
 					status = eAspectFail;
 				}
 			}
 		}
-#endif
+
 		if(status == eOK && particleList.circularity_limit > 0)
 		{
 			double circularity;
@@ -371,7 +371,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				status = eCircularityFail;
 			}
 		}
-#if 1
+
 		if(status == eOK && particleList.area_threshold > 0)
 		{
 			// particle area
@@ -384,7 +384,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				status = eAreaFail;
 			}
 		}
-#endif
+
 		// all good, fill the values and add new entry to the list.
 		ParticleData newParticle;
 		particleList.numParticles++;
