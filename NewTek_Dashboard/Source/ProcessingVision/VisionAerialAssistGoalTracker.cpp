@@ -72,7 +72,8 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 	int min_y = SourceImageInfo.yRes + 1;
 	int index = 0;
 
-	particleList.SetParticleParams( 0.55f, 0.0f, 0.0f, (4.0f/32), (23.5f/4) );	// area threshold, aspect min, max
+	particleList.SetParticleParams( 0.0f /*0.55f*/, 0.0f, 0.0f, (4.0f/32), (23.5f/4) );	// area threshold, aspect min, max
+	// TODO: make 2 lists: one vert, on horz. much like we do with the ball. 
 
 	//-----------------------------------------------------------------//
 	//  Threshold                                                      //
@@ -137,6 +138,9 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 	{
 		imaqMask(InputImageRGB, InputImageRGB, ThresholdImageU8);
 	}
+
+	// TODO: redo this porttion much like the example code:
+	// http://wpilib.screenstepslive.com/s/3120/m/8731/l/91395-c-java-code#!prettyPhoto
 
 	if(particleList.numParticles > 0)
 	{

@@ -310,6 +310,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double eq_long_side;
 		double eq_short_side;
 		eStatus status = eOK;
+		eAspectType aspect_type = eUnknown;
 
 		// Computes the requested pixel measurements about the particle.
 
@@ -326,7 +327,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double bound_height = bound_bottom - bound_top;
 		double aspect = bound_width / bound_height;
 		double bound_area = bound_width * bound_height;
-		double hv_aspect_score_limit = 65;
+		double hv_aspect_score_limit = 68.5;
 
 		DOUT("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
 
@@ -338,24 +339,29 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				DOUT("rejected - min %f < asp %f < max %f\n", particleList.aspectMin, aspect, particleList.aspectMax);
 				status = eAspectFail;
 			}
-		}
+			aspect_type = eSquare;
+		}	//TODO: separate these out
 		else if( particleList.ideal_horz_asp > 0 && particleList.ideal_vert_asp > 0 )
 		{
 			if( bound_width > bound_height)
-			{
+			{	double score = ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp);
+				DOUT("long side - %f  short side - %f  score - %f\n", eq_long_side, eq_short_side, score);
 				if(ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp) < hv_aspect_score_limit)
 				{
-					DOUT("rejected - vert asp score %f < %f\n", ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp), hv_aspect_score_limit);
+					DOUT("rejected - horz asp score %f < %f\n", ratioToScore((eq_long_side/eq_short_side)/particleList.ideal_horz_asp), hv_aspect_score_limit);
 					status = eAspectFail;
 				}
+				aspect_type = eHorz;
 			}
 			else
-			{
+			{	double score = ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp);
+				DOUT("long side - %f  short side - %f  score - %f\n", eq_long_side, eq_short_side, score);
 				if(ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp) < hv_aspect_score_limit)
 				{
 					DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp), hv_aspect_score_limit);
 					status = eAspectFail;
 				}
+				aspect_type = eVert;
 			}
 		}
 

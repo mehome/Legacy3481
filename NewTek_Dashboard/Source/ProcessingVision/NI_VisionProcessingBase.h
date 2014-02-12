@@ -29,6 +29,14 @@ enum eStatus
 	eCircularityFail
 };
 
+enum eAspectType // TODO: can probably just reverse this change. won't need with 2 lists.
+{
+	eUnknown,
+	eSquare,
+	eVert,
+	eHorz
+};
+
 struct LineSegment
 {
 	PointFloat p1;
@@ -47,6 +55,7 @@ struct ParticleData
 	int bound_bottom;
 	int bound_width;
 	int bound_height;
+	eAspectType aspect_type;
 	LineSegment lines[4];
 	PointFloat Intersections[4];
 };
