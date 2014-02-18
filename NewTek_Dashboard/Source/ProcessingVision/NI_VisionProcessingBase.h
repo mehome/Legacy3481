@@ -25,16 +25,10 @@ enum eStatus
 {
 	eOK,
 	eAspectFail,
+	eAspectVertFail,
+	eAspectHorzFail,
 	eAreaFail,
 	eCircularityFail
-};
-
-enum eAspectType // TODO: can probably just reverse this change. won't need with 2 lists.
-{
-	eUnknown,
-	eSquare,
-	eVert,
-	eHorz
 };
 
 struct LineSegment
@@ -55,7 +49,9 @@ struct ParticleData
 	int bound_bottom;
 	int bound_width;
 	int bound_height;
-	eAspectType aspect_type;
+	int image_particle_index;
+	double eq_rect_long_side;
+	double eq_rect_short_side;
 	LineSegment lines[4];
 	PointFloat Intersections[4];
 };

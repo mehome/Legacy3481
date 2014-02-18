@@ -10,5 +10,19 @@ public:
 	void SetDefaultThreshold(void);
 
 private:
-	ParticleList particleList;	// our results data structure
+	ParticleList particleListVert;	// our results data structure
+	ParticleList particleListHorz;
+
+	struct TargetReport {
+		int verticalIndex;
+		int horizontalIndex;
+		bool Hot;
+		double totalScore;
+		double leftScore;
+		double rightScore;
+		double tapeWidthScore;
+		double verticalScore;
+	} target;
+
+	bool hotOrNot(TargetReport target);
 };

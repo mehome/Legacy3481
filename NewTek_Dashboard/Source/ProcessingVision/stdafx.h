@@ -17,7 +17,7 @@
 
 // TODO: reference additional headers your program requires here
 
-#if 0
+#if 1
 #define DOUT(...) FrameWork::DebugOutput(__VA_ARGS__);
 #else
 #define DOUT(...)

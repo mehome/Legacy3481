@@ -141,7 +141,8 @@ CompositorProps = {
 		--Types	"none","square","composite","bypass","pathalign"
 		sequence =
 		{
-			sequence_1 = 
+			sequence_1 = {	type="bypass" },
+			sequence_2 = 
 			{	
 				type="composite",
 				composite=
@@ -156,7 +157,7 @@ CompositorProps = {
 					composite_4 = {	type="pathalign" }
 				}
 			},
-			sequence_2 = 
+			sequence_3 = 
 			{
 				type="composite",
 				composite=
@@ -165,7 +166,6 @@ CompositorProps = {
 					composite_2 = {	type="square", selection=3	},
 				}
 			},
-			sequence_3 = {	type="bypass" },
 			sequence_4 = {	type="line_plot", selection=1	},
 			sequence_5 = {	type="line_plot", selection=2	},
 			sequence_6 = {	type="line_plot", selection=3	},
