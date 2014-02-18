@@ -8,6 +8,9 @@
 #define VERTICAL_SCORE_LIMIT 50
 #define LR_SCORE_LIMIT 50
 
+#define IS_LEFT 1
+#define IS_RIGHT 2
+
 VisionAerialAssistGoalTracker::VisionAerialAssistGoalTracker()
 {	
 	m_ThresholdMode = eThreshRGB;
@@ -150,12 +153,13 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 		imaqMask(InputImageRGB, InputImageRGB, ParticleImageU8);	// mask image onto InputImageRGB
 	}
 
+	target.totalScore = target.leftScore = target.rightScore = target.tapeWidthScore = target.verticalScore = 0;
+	target.verticalIndex = -1;
+
+	Rect rect;
+
 	if(particleListVert.numParticles > 0)
 	{
-		Rect rect;
-
-		target.totalScore = target.leftScore = target.rightScore = target.tapeWidthScore = target.verticalScore = 0;
-		target.verticalIndex = -1;
 		for(int i = 0; i < particleListVert.numParticles; i++)
 		{
 			for(int j = 0; j < particleListHorz.numParticles; j++ )
@@ -251,7 +255,7 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 						continue;
 					}
 
-					if( particleListHorz.particleData[i].status == eOK )
+					if( particleListHorz.particleData[j].status == eOK )
 					{
 						// write some text to show aiming point 
 						Point TextPoint;
@@ -319,13 +323,37 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 
 		DOUT("\nleft score %f  right score %f  is hot %d\n", target.leftScore, target.rightScore, target.Hot);
 
+		// TODO: calculate the new center and update below
+
+		//// draw a line from target CoM to center of screen
+		//P1.x = particleList.particleData[i].center.x;
+		//P1.y = particleList.particleData[i].center.y;
+		//P2.x = SourceImageInfo.xRes / 2;
+		//P2.y = SourceImageInfo.yRes / 2;
+		//imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
+
+		//// small crosshair at center of mass
+		//P1.x = particleListHorz.particleData[j].center.x - 6;
+		//P1.y = particleListHorz.particleData[j].center.y;
+		//P2.x = particleListHorz.particleData[j].center.x + 6;
+		//P2.y = particleListHorz.particleData[j].center.y;
+
+		//imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+
+		//P1.x = particleListHorz.particleData[j].center.x;
+		//P1.y = particleListHorz.particleData[j].center.y - 6;
+		//P2.x = particleListHorz.particleData[j].center.x;
+		//P2.y = particleListHorz.particleData[j].center.y + 6;
+
+		//imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+
 		// center box
 		rect.top = SourceImageInfo.yRes / 2 - 5;
 		rect.left = SourceImageInfo.xRes / 2 - 5;
 		rect.height = 10;
 		rect.width = 10; 
 
-		float Color = target.Hot ? COLOR_RED : COLOR_GREEN;
+		float Color = target.Hot ? COLOR_GREEN : COLOR_RED;
 		imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_PAINT_VALUE, IMAQ_SHAPE_RECT, Color );
 
 	}	// num particles > 0
@@ -333,12 +361,38 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 		success = 0;
 
 Error:
+	// Get return for x, y target values;
+	if( target.totalScore > 0 )
+	{
+		switch ( target.Hot )
+		{
+		case IS_LEFT:	// TODO: use new value.
+			// if hot, target the "box" where the lower goal should be.
+			x_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.x;
+			y_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.y;
+			break;
+		case IS_RIGHT:
+			x_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.x;
+			y_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.y;
+			break;
+		default:
+			// if not hot, center on the vertical target
+			x_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.x;
+			y_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.y;
+			break;
+		}
+	}
+	else
+	{
+		x_target = 0.0;
+		y_target = 0.0;
+	}
 
 	int error = imaqGetLastError();
 	return success;
 }
 
-bool VisionAerialAssistGoalTracker::hotOrNot(TargetReport target)
+int VisionAerialAssistGoalTracker::hotOrNot(TargetReport target)
 {
 	bool isHot = true;
 
@@ -346,5 +400,8 @@ bool VisionAerialAssistGoalTracker::hotOrNot(TargetReport target)
 	isHot &= target.verticalScore >= VERTICAL_SCORE_LIMIT;
 	isHot &= (target.leftScore > LR_SCORE_LIMIT) | (target.rightScore > LR_SCORE_LIMIT);
 
-	return isHot;
+	if( isHot )
+		return target.leftScore > target.rightScore ? IS_LEFT : IS_RIGHT;
+	else
+		return 0;
 }

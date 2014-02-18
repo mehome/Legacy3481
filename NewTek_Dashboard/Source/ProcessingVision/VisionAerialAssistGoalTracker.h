@@ -16,7 +16,7 @@ private:
 	struct TargetReport {
 		int verticalIndex;
 		int horizontalIndex;
-		bool Hot;
+		int Hot;
 		double totalScore;
 		double leftScore;
 		double rightScore;
@@ -24,5 +24,5 @@ private:
 		double verticalScore;
 	} target;
 
-	bool hotOrNot(TargetReport target);
+	int hotOrNot(TargetReport target);
 };
