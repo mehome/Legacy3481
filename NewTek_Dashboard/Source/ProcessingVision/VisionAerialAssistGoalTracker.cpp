@@ -154,9 +154,12 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 	}
 
 	target.totalScore = target.leftScore = target.rightScore = target.tapeWidthScore = target.verticalScore = 0;
-	target.verticalIndex = -1;
+	target.verticalIndex = 0;
 
 	Rect rect;
+	ParticleData HotTarget;
+	Point P1;
+	Point P2;
 
 	if(particleListVert.numParticles > 0)
 	{
@@ -164,9 +167,6 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 		{
 			for(int j = 0; j < particleListHorz.numParticles; j++ )
 			{
-				Point P1;
-				Point P2;
-
 				double horizWidth, horizHeight, vertWidth, leftScore, rightScore, tapeWidthScore, verticalScore, total;
 
 				horizWidth = particleListHorz.particleData[j].eq_rect_long_side;
@@ -323,29 +323,103 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 
 		DOUT("\nleft score %f  right score %f  is hot %d\n", target.leftScore, target.rightScore, target.Hot);
 
-		// TODO: calculate the new center and update below
 
-		//// draw a line from target CoM to center of screen
-		//P1.x = particleList.particleData[i].center.x;
-		//P1.y = particleList.particleData[i].center.y;
-		//P2.x = SourceImageInfo.xRes / 2;
-		//P2.y = SourceImageInfo.yRes / 2;
-		//imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
+		if(target.Hot == IS_LEFT)
+		{
+			HotTarget.bound_left = particleListHorz.particleData[target.horizontalIndex].bound_left;
+			HotTarget.bound_top = particleListHorz.particleData[target.horizontalIndex].bound_top;
+			HotTarget.bound_right = particleListVert.particleData[target.verticalIndex].bound_right;
+			HotTarget.bound_bottom = particleListVert.particleData[target.verticalIndex].bound_bottom;
+			HotTarget.bound_width = HotTarget.bound_right - HotTarget.bound_left;
+			HotTarget.bound_height = HotTarget.bound_bottom - HotTarget.bound_top;
+			HotTarget.center.x = HotTarget.bound_left + HotTarget.bound_width/2;
+			HotTarget.center.y = HotTarget.bound_top + HotTarget.bound_height/2;
+			// convert to aiming system coords
+			HotTarget.AimSys.x = (float)((HotTarget.center.x - (SourceImageInfo.xRes/2.0)) / (SourceImageInfo.xRes/2.0)) * (SourceImageInfo.xRes / SourceImageInfo.yRes);
+			HotTarget.AimSys.y = (float)((HotTarget.center.y - (SourceImageInfo.yRes/2.0)) / (SourceImageInfo.yRes/2.0));
+		}
+		else if(target.Hot == IS_RIGHT)
+		{
+			HotTarget.bound_left = particleListVert.particleData[target.verticalIndex].bound_left;
+			HotTarget.bound_top = particleListHorz.particleData[target.horizontalIndex].bound_top;
+			HotTarget.bound_right = particleListHorz.particleData[target.horizontalIndex].bound_right;
+			HotTarget.bound_bottom = particleListVert.particleData[target.verticalIndex].bound_bottom;
+			HotTarget.bound_width = HotTarget.bound_right - HotTarget.bound_left;
+			HotTarget.bound_height = HotTarget.bound_bottom - HotTarget.bound_top;
+			HotTarget.center.x = HotTarget.bound_left + HotTarget.bound_width/2;
+			HotTarget.center.y = HotTarget.bound_top + HotTarget.bound_height/2;
+			// convert to aiming system coords
+			HotTarget.AimSys.x = (float)((HotTarget.center.x - (SourceImageInfo.xRes/2.0)) / (SourceImageInfo.xRes/2.0)) * (SourceImageInfo.xRes / SourceImageInfo.yRes);
+			HotTarget.AimSys.y = (float)((HotTarget.center.y - (SourceImageInfo.yRes/2.0)) / (SourceImageInfo.yRes/2.0));
+		}
 
-		//// small crosshair at center of mass
-		//P1.x = particleListHorz.particleData[j].center.x - 6;
-		//P1.y = particleListHorz.particleData[j].center.y;
-		//P2.x = particleListHorz.particleData[j].center.x + 6;
-		//P2.y = particleListHorz.particleData[j].center.y;
+		if(m_bShowOverlays)
+		{
+			if(target.Hot)
+			{
+				// bounding box
+				rect.top = HotTarget.bound_top;
+				rect.left = HotTarget.bound_left;
+				rect.height = HotTarget.bound_height;
+				rect.width = HotTarget.bound_width;
 
-		//imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_YELLOW );
 
-		//P1.x = particleListHorz.particleData[j].center.x;
-		//P1.y = particleListHorz.particleData[j].center.y - 6;
-		//P2.x = particleListHorz.particleData[j].center.x;
-		//P2.y = particleListHorz.particleData[j].center.y + 6;
+				// draw a line from target CoM to center of screen
+				P1.x = HotTarget.center.x;
+				P1.y = HotTarget.center.y;
+				P2.x = SourceImageInfo.xRes / 2;
+				P2.y = SourceImageInfo.yRes / 2;
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
 
-		//imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+				// small crosshair at center of mass
+				P1.x = HotTarget.center.x - 6;
+				P1.y = HotTarget.center.y;
+				P2.x = HotTarget.center.x + 6;
+				P2.y = HotTarget.center.y;
+
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+
+				P1.x = HotTarget.center.x;
+				P1.y = HotTarget.center.y - 6;
+				P2.x = HotTarget.center.x;
+				P2.y = HotTarget.center.y + 6;
+
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+			}
+			else
+			{
+				// bounding box
+				rect.top = particleListVert.particleData[target.verticalIndex].bound_top;
+				rect.left = particleListVert.particleData[target.verticalIndex].bound_left;
+				rect.height = particleListVert.particleData[target.verticalIndex].bound_height;
+				rect.width = particleListVert.particleData[target.verticalIndex].bound_width;
+
+				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+
+				// draw a line from target CoM to center of screen
+				P1.x = particleListVert.particleData[target.verticalIndex].center.x;
+				P1.y = particleListVert.particleData[target.verticalIndex].center.y;
+				P2.x = SourceImageInfo.xRes / 2;
+				P2.y = SourceImageInfo.yRes / 2;
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_RED );
+
+				// small crosshair at center of mass
+				P1.x = particleListVert.particleData[target.verticalIndex].center.x - 6;
+				P1.y = particleListVert.particleData[target.verticalIndex].center.y;
+				P2.x = particleListVert.particleData[target.verticalIndex].center.x + 6;
+				P2.y = particleListVert.particleData[target.verticalIndex].center.y;
+
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+
+				P1.x = particleListVert.particleData[target.verticalIndex].center.x;
+				P1.y = particleListVert.particleData[target.verticalIndex].center.y - 6;
+				P2.x = particleListVert.particleData[target.verticalIndex].center.x;
+				P2.y = particleListVert.particleData[target.verticalIndex].center.y + 6;
+
+				imaqDrawLineOnImage(InputImageRGB, InputImageRGB, IMAQ_DRAW_VALUE, P1, P2, COLOR_WHITE );
+			}
+		}
 
 		// center box
 		rect.top = SourceImageInfo.yRes / 2 - 5;
@@ -364,22 +438,16 @@ Error:
 	// Get return for x, y target values;
 	if( target.totalScore > 0 )
 	{
-		switch ( target.Hot )
+		if ( target.Hot )
 		{
-		case IS_LEFT:	// TODO: use new value.
-			// if hot, target the "box" where the lower goal should be.
-			x_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.x;
-			y_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.y;
-			break;
-		case IS_RIGHT:
-			x_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.x;
-			y_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.y;
-			break;
-		default:
+			x_target = (double)HotTarget.AimSys.x;
+			y_target = (double)HotTarget.AimSys.y;
+		}
+		else
+		{
 			// if not hot, center on the vertical target
 			x_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.x;
 			y_target = (double)particleListVert.particleData[target.verticalIndex].AimSys.y;
-			break;
 		}
 	}
 	else
