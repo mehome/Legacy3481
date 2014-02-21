@@ -326,7 +326,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 		double bound_height = bound_bottom - bound_top;
 		double aspect = bound_width / bound_height;
 		double bound_area = bound_width * bound_height;
-		double hv_aspect_score_limit = 67;
+		double hv_aspect_score_limit = 35;
 
 		DOUT("p=%d  width=%f height=%f aspect=%f\n", i, bound_width, bound_height, aspect);
 
@@ -365,7 +365,7 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 				DOUT("long side - %f  short side - %f  score - %f\n", eq_long_side, eq_short_side, score);
 				if(ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp) < hv_aspect_score_limit)
 				{
-					DOUT("rejected - vert asp score %f < 50\n", ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp), hv_aspect_score_limit);
+					DOUT("rejected - vert asp score %f < %f\n", ratioToScore((eq_short_side/eq_long_side)/particleList.ideal_vert_asp), hv_aspect_score_limit);
 					status = eAspectVertFail;
 				}
 			}

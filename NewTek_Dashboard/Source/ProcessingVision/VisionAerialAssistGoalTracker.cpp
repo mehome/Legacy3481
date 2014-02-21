@@ -74,8 +74,8 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 {
 	int success = 1;
 
-	particleListVert.SetParticleParams( 0.0f /*0.55f*/, 0.0f, 0.0f, (4.0f/32), 0.0f);	// area threshold, aspect min, max
-	particleListHorz.SetParticleParams( 0.0f /*0.55f*/, 0.0f, 0.0f,  0.0f,     (23.5f/4) );	// area threshold, aspect min, max
+	particleListVert.SetParticleParams( 0.0f, 0.0f, 0.0f, (4.0f/32), 0.0f);	// area threshold, aspect min, max
+	particleListHorz.SetParticleParams( 0.0f, 0.0f, 0.0f,  0.0f,     (23.5f/4) );	// area threshold, aspect min, max
 
 	//-----------------------------------------------------------------//
 	//  Threshold                                                      //
