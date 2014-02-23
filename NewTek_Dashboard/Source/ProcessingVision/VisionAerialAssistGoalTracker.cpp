@@ -3,6 +3,7 @@
 #include "profile.h"
 #include "NI_VisionProcessingBase.h"
 #include "VisionAerialAssistGoalTracker.h"
+#include "../SmartDashboard/SmartDashboard_Import.h"
 
 #define TAPE_WIDTH_LIMIT 50
 #define VERTICAL_SCORE_LIMIT 50
@@ -322,7 +323,9 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 		target.Hot = hotOrNot(target);
 
 		DOUT("\nleft score %f  right score %f  is hot %d\n", target.leftScore, target.rightScore, target.Hot);
-
+		SmartDashboard::PutNumber("TargetLeftScore",target.leftScore);
+		SmartDashboard::PutNumber("TargetRightScore",target.leftScore);
+		SmartDashboard::PutNumber("TargetHot",(double)target.Hot);
 
 		if(target.Hot == IS_LEFT)
 		{
