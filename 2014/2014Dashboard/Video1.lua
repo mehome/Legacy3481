@@ -17,11 +17,10 @@ DashboardProps =
 		url= "black_33_600x800",
 		robot_ip_address= "localhost",
 		stream_profile= "default",
-		--TODO offload to the save file
-		left= 275,
+		left= 475,
 		top= 42,
 		right= 1075,
-		bottom= 642,
+		bottom= 842,
 
 		smart_dashboard= "java -jar C:\\WindRiver\\WPILib\\SmartDashboard.jar ip localhost",
 		--smart_dashboard="none",

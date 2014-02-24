@@ -57,7 +57,7 @@ CompositorProps = {
 			-- draw_shape -- may be "square", "circle", or "cube".
 			shape_reticle_1 =
 			{
-				remote_name="apex_reticle",
+				--remote_name="apex_reticle",
 				size_in=25,
 				r=0,g=255,b=100,
 				plane_selection="xy_and_xz",
@@ -65,7 +65,7 @@ CompositorProps = {
 			},
 			shape_reticle_2 =
 			{
-				remote_name="land_reticle",
+				--remote_name="land_reticle",
 				size_in=25,
 				r=250,g=250,b=0,
 				plane_selection="xy",
