@@ -326,7 +326,7 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 		SmartDashboard::PutNumber("TargetLeftScore",target.leftScore);
 		SmartDashboard::PutNumber("TargetRightScore",target.leftScore);
 		SmartDashboard::PutNumber("TargetHot",(double)target.Hot);
-
+		// make an aiming box for hot targets
 		if(target.Hot == IS_LEFT)
 		{
 			HotTarget.bound_left = particleListHorz.particleData[target.horizontalIndex].bound_left;
@@ -355,6 +355,28 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 			HotTarget.AimSys.x = (float)((HotTarget.center.x - (SourceImageInfo.xRes/2.0)) / (SourceImageInfo.xRes/2.0)) * (SourceImageInfo.xRes / SourceImageInfo.yRes);
 			HotTarget.AimSys.y = (float)((HotTarget.center.y - (SourceImageInfo.yRes/2.0)) / (SourceImageInfo.yRes/2.0));
 		}
+
+		// calc distance
+		double RectLong = particleListVert.particleData[target.verticalIndex].eq_rect_long_side;
+		double height = (double)particleListVert.particleData[target.verticalIndex].bound_height;
+		height = min(height, RectLong);
+		int TargetHeight = 16;	// TODO: fix - real target is 32
+#define VIEW_ANGLE 42.3
+
+		double Distance = SourceImageInfo.yRes * TargetHeight / (height * 12 * 2 * tan(VIEW_ANGLE * M_PI/(180*2)));
+
+		if( m_bShowBoundsText )
+		{
+			Point TextPoint;
+			int fu;
+
+			TextPoint.x = 40;
+			TextPoint.y = 40;
+
+			// show size of bounding box
+			sprintf_s(TextBuffer, 256, "  Distance: %.2f", Distance);
+			imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+		}	
 
 		if(m_bShowOverlays)
 		{
