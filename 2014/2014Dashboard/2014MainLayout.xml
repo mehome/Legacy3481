@@ -1,5 +1,18 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Timer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="447" y="459"/>
+		<width>130</width>
+		<property name="Font Size" value="30"/>
+	</widget>
+	<widget field="Auton Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="468" y="540"/>
+		<width>113</width>
+	</widget>
+	<widget field="Auton BallCount" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="461" y="513"/>
+		<width>120</width>
+	</widget>
 	<widget field="RollerVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="354" y="408"/>
 		<width>148</width>
