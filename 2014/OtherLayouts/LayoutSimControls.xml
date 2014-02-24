@@ -1,5 +1,24 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Sequence" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="495" y="94"/>
+		<width>100</width>
+	</widget>
+	<widget field="CatcherShooter" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="213" y="563"/>
+	</widget>
+	<widget field="CatcherIntake" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="396" y="565"/>
+	</widget>
+	<widget field="catcher_shooter_5_6_1" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="212" y="581"/>
+	</widget>
+	<widget field="catcher_intake_7_8_1" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="395" y="584"/>
+	</widget>
+	<widget field="use_low_gear_1_2_1" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="601" y="97"/>
+	</widget>
 	<widget field="rollers_10_1" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="383" y="515"/>
 		<width>124</width>
@@ -62,9 +81,6 @@
 	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="568" y="43"/>
 	</widget>
-	<widget field="Sequence" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="42"/>
-	</widget>
 	<widget field="ClutchEngaged" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="183" y="428"/>
 	</widget>
@@ -87,17 +103,11 @@
 	<widget field="LimitIntakeMin1" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="340" y="289"/>
 	</widget>
-	<widget field="Waypoint_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="21"/>
-	</widget>
-	<widget field="Waypoint_x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="0"/>
-	</widget>
 	<widget field="DriverOverride" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="406" y="238"/>
 	</widget>
 	<widget field="UseHighGear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="497" y="101"/>
+		<location x="602" y="76"/>
 	</widget>
 	<widget field="Heading" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
 		<location x="298" y="92"/>
@@ -157,7 +167,7 @@
 		<property name="Tick Interval" value="45.0"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="505" y="74"/>
+		<location x="497" y="71"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
 	<widget field="Y Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
