@@ -3050,7 +3050,8 @@ class Compositor
 			case Compositor_Props::eBypass:
 				{
 					//Enable this to profile the bypass plugin
-					#if 1
+					//Keep this disabled... use one with processing vision instead
+					#if 0
 					using namespace FrameWork;
 					time_type Profile=time_type::get_current_time();
 					ret=m_Bypass.Callback_ProcessFrame_UYVY(Frame);
