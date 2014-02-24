@@ -17,7 +17,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Edit Position RearView" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="1218" y="30"/>
+		<location x="1300" y="34"/>
 	</widget>
 	<widget field="UseHighGear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="291" y="233"/>
@@ -144,7 +144,7 @@
 		<property name="Tick Interval" value="2.8"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="1143" y="36"/>
+		<location x="1228" y="39"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
 </dashboard>
