@@ -12,6 +12,8 @@
 #define IS_LEFT 1
 #define IS_RIGHT 2
 
+#undef _USE_FOR_SIM_
+
 VisionAerialAssistGoalTracker::VisionAerialAssistGoalTracker()
 {	
 	m_ThresholdMode = eThreshRGB;
@@ -38,6 +40,9 @@ VisionAerialAssistGoalTracker::VisionAerialAssistGoalTracker()
 	SetRejectBorderObjs(false);
 	SetUseConvexHull(false);
 
+#ifdef _USE_FOR_SIM_
+	SetUseConvexHull(true);
+#endif
 	// particle filter parameters
 	MeasurementType FilterMeasureTypes[] = {IMAQ_MT_AREA};
 	float plower[] = {150};	
@@ -322,10 +327,8 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 		// determine if target is hot
 		target.Hot = hotOrNot(target);
 
-		DOUT("\nleft score %f  right score %f  is hot %d\n", target.leftScore, target.rightScore, target.Hot);
-		SmartDashboard::PutNumber("TargetLeftScore",target.leftScore);
-		SmartDashboard::PutNumber("TargetRightScore",target.leftScore);
 		SmartDashboard::PutNumber("TargetHot",(double)target.Hot);
+
 		// make an aiming box for hot targets
 		if(target.Hot == IS_LEFT)
 		{
@@ -360,10 +363,16 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 		double RectLong = particleListVert.particleData[target.verticalIndex].eq_rect_long_side;
 		double height = (double)particleListVert.particleData[target.verticalIndex].bound_height;
 		height = min(height, RectLong);
-		int TargetHeight = 16;	// TODO: fix - real target is 32
+		int TargetHeight = 32;	
+
+		// TODO: recalibrate
+		// Angle = arctan(vertical hight in feet * image height / (2 * vertical target hight in pixels * distance in feet)) * RADS_TO_DEG
+		// vertical hight is 32 in - so 2.66 ft.  So my test was: arctan(2.66 * 480 / (2 * 121 * 6.83)  (actually, my test was half scale, so hight was 1.33)
 #define VIEW_ANGLE 42.3
 
 		double Distance = SourceImageInfo.yRes * TargetHeight / (height * 12 * 2 * tan(VIEW_ANGLE * M_PI/(180*2)));
+
+		SmartDashboard::PutNumber("TargetDistance", Distance);
 
 		if( m_bShowBoundsText )
 		{
