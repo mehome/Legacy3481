@@ -86,7 +86,9 @@ MainRobot = {
 	MaxTorqueYaw =  gMaxTorqueYaw,
 	MaxTorqueYaw_High = gMaxTorqueYaw * 5,
 	rotate_to_scale = 1.0, rotate_to_scale_high = 1.0,
-	
+	rotation_tolerance=Deg2Rad * 2,
+	rotation_distance_scalar=1.0,
+
 	MAX_SPEED = HighGearSpeed,
 	ACCEL = 10,    -- Thruster Acceleration m/s2 (1g = 9.8)
 	BRAKE = ACCEL,
@@ -425,8 +427,24 @@ MainRobot = {
 			Winch_SetGoalShot = {type="joystick_button", key=2, on_off=false},
 			Winch_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			Winch_Fire={type="joystick_button", key=1, keyboard='j', on_off=true},
+		},
+		Joystick_4 =
+		{
+			control = "controller (xbox 360 for windows)",
+			Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
+			--Joystick_SetRight_XAxis = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
+			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			Robot_SetLowGearOff = {type="joystick_button", key=2, on_off=false},
+			Robot_SetLowGearOn = {type="joystick_button", key=1, on_off=false},
+						
+			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
+			Turn_180_Hold = {type="joystick_button", key=6, on_off=true},
+			FlipY_Hold = {type="joystick_button", key=6, on_off=true},
+			SlideHold = {type="joystick_button", key=6, on_off=true}
 		}
-
 	},
 	
 	--This is only used in the AI tester, can be ignored
