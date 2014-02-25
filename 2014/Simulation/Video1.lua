@@ -1,6 +1,7 @@
 --This is used load persistence of the coordinates last saved etc
 function GetSettings()
 	local loaded_file = loadfile("Video1Save.lua")
+	--local loaded_file = loadfile("Video1_1280_Save.lua")
 	if (loaded_file==nil) then
 		return nil
 	else
