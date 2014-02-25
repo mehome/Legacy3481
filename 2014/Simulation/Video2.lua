@@ -17,6 +17,7 @@ DashboardProps =
 		title= "RearView",
 		url= "black_33_640x480",
 		robot_ip_address= "localhost",
+		--robot_ip_address= "10.28.1.2",
 		stream_profile= "default",
 		left= 1244,
 		top= 189,
