@@ -1,5 +1,11 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="CatcherIntake" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="328" y="481"/>
+	</widget>
+	<widget field="CatcherShooter" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="203" y="480"/>
+	</widget>
 	<widget field="Timer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="447" y="459"/>
 		<width>130</width>
@@ -32,7 +38,7 @@
 		<location x="1477" y="39"/>
 	</widget>
 	<widget field="Main_Is_Targeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="487" y="319"/>
+		<location x="494" y="318"/>
 	</widget>
 	<widget field="RearView_Is_Targeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="1339" y="37"/>
@@ -112,7 +118,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="LeftEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="180" y="176"/>
+		<location x="179" y="191"/>
 		<width>107</width>
 		<height>30</height>
 		<property name="Foreground" value="51.153.255.255"/>
@@ -141,8 +147,8 @@
 		<location x="297" y="101"/>
 		<width>94</width>
 		<height>65</height>
-		<property name="Upper Limit" value="180.0"/>
-		<property name="Lower Limit" value="-180.0"/>
+		<property name="Upper Limit" value="135.0"/>
+		<property name="Lower Limit" value="-135.0"/>
 		<property name="Tick Interval" value="45.0"/>
 	</widget>
 	<widget field="Rotation Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
@@ -164,7 +170,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="LeftVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="182" y="121"/>
+		<location x="179" y="137"/>
 		<width>104</width>
 		<height>30</height>
 		<property name="Foreground" value="0.204.0.255"/>
