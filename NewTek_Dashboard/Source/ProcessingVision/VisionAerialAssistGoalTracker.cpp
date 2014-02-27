@@ -368,7 +368,7 @@ int VisionAerialAssistGoalTracker::ProcessImage(double &x_target, double &y_targ
 		// TODO: recalibrate
 		// Angle = arctan(vertical hight in feet * image height / (2 * vertical target hight in pixels * distance in feet)) * RADS_TO_DEG
 		// vertical hight is 32 in - so 2.66 ft.  So my test was: arctan(2.66 * 480 / (2 * 121 * 6.83)  (actually, my test was half scale, so hight was 1.33)
-#define VIEW_ANGLE 42.3
+#define VIEW_ANGLE 42.25
 
 		double Distance = SourceImageInfo.yRes * TargetHeight / (height * 12 * 2 * tan(VIEW_ANGLE * M_PI/(180*2)));
 
