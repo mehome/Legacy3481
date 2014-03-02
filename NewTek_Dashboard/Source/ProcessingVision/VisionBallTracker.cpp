@@ -3,12 +3,13 @@
 #include "profile.h"
 #include "NI_VisionProcessingBase.h"
 #include "VisionBallTracker.h"
+#include "../SmartDashboard/SmartDashboard_Import.h"
 
 VisionBallTracker::VisionBallTracker()
 {
 	m_ThresholdMode = eThreshRGB;
 
-	SetDefaultThreshold();
+	SetDefaultThreshold();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 
 	switch(m_ThresholdMode)
 	{
@@ -255,19 +256,7 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 				rect.height = FirstPassParticleList.particleData[i].bound_height;
 				rect.width = FirstPassParticleList.particleData[i].bound_width;
 
-				//if( FirstPassParticleList.particleData[i].status == eOK )
-					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_WHITE );
-				//else
-				//{
-				//	float BBoxColor = COLOR_WHITE;
-					//if( FirstPassParticleList.particleData[i].status == eAspectFail )
-					//	BBoxColor = COLOR_BLUE;
-					//else if( FirstPassParticleList.particleData[i].status == eAreaFail)
-					//	BBoxColor = COLOR_MAGENT;
-					//else if( FirstPassParticleList.particleData[i].status == eCircularityFail)
-					//	BBoxColor = COLOR_YELLOW;
-				//	imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, BBoxColor );
-				//}
+				imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_WHITE );
 			}
 		}
 
@@ -354,37 +343,6 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 				if( particleList.particleData[i].status == eOK )
 				{
 					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
-
-					int ballSize_top = 999999;
-					int ballSize_left = 999999;
-					int ballSize_bottom = 0;
-					int ballSize_right = 0;
-
-					// find the actual size
-					for(int x = 0; x < FirstPassParticleList.numParticles; x++)
-					{	// find the first pass items within the bounds of this object
-						if( (FirstPassParticleList.particleData[x].bound_top >= particleList.particleData[i].bound_top) &&
-							(FirstPassParticleList.particleData[x].bound_left >= particleList.particleData[i].bound_left) &&
-							(FirstPassParticleList.particleData[x].bound_bottom <= particleList.particleData[i].bound_bottom) &&
-							(FirstPassParticleList.particleData[x].bound_right <= particleList.particleData[i].bound_right) )
-						{
-							if( FirstPassParticleList.particleData[x].bound_top < ballSize_top )
-								ballSize_top = FirstPassParticleList.particleData[x].bound_top;
-							if( FirstPassParticleList.particleData[x].bound_left < ballSize_left )
-								ballSize_left = FirstPassParticleList.particleData[x].bound_left;
-							if( FirstPassParticleList.particleData[x].bound_bottom > ballSize_bottom )
-								ballSize_bottom = FirstPassParticleList.particleData[x].bound_bottom;
-							if( FirstPassParticleList.particleData[x].bound_right > ballSize_right )
-								ballSize_right = FirstPassParticleList.particleData[x].bound_right;
-						}
-					}
-
-					rect.top = ballSize_top;
-					rect.left = ballSize_left;
-					rect.height = ballSize_bottom - ballSize_top;
-					rect.width = ballSize_right - ballSize_left;
-
-					imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
 				}
 				else
 				{
@@ -401,6 +359,69 @@ int VisionBallTracker::ProcessImage(double &x_target, double &y_target)
 					}
 				}
 			}	// show overlays
+
+			if( particleList.particleData[i].status == eOK )
+			{
+				int ballSize_top = 999999;
+				int ballSize_left = 999999;
+				int ballSize_bottom = 0;
+				int ballSize_right = 0;
+
+				// find the actual size
+				for(int x = 0; x < FirstPassParticleList.numParticles; x++)
+				{	// find the first pass items within the bounds of this object
+					if( (FirstPassParticleList.particleData[x].bound_top >= particleList.particleData[i].bound_top) &&
+						(FirstPassParticleList.particleData[x].bound_left >= particleList.particleData[i].bound_left) &&
+						(FirstPassParticleList.particleData[x].bound_bottom <= particleList.particleData[i].bound_bottom) &&
+						(FirstPassParticleList.particleData[x].bound_right <= particleList.particleData[i].bound_right) )
+					{
+						if( FirstPassParticleList.particleData[x].bound_top < ballSize_top )
+							ballSize_top = FirstPassParticleList.particleData[x].bound_top;
+						if( FirstPassParticleList.particleData[x].bound_left < ballSize_left )
+							ballSize_left = FirstPassParticleList.particleData[x].bound_left;
+						if( FirstPassParticleList.particleData[x].bound_bottom > ballSize_bottom )
+							ballSize_bottom = FirstPassParticleList.particleData[x].bound_bottom;
+						if( FirstPassParticleList.particleData[x].bound_right > ballSize_right )
+							ballSize_right = FirstPassParticleList.particleData[x].bound_right;
+					}
+				}
+
+				if(ballSize_top != 999999 && ballSize_left != 999999)
+				{
+					rect.top = ballSize_top;
+					rect.left = ballSize_left;
+					rect.height = ballSize_bottom - ballSize_top;
+					rect.width = ballSize_right - ballSize_left;
+
+					if(m_bShowOverlays)
+						imaqDrawShapeOnImage(InputImageRGB, InputImageRGB, rect, IMAQ_DRAW_VALUE, IMAQ_SHAPE_RECT, COLOR_GREEN );
+
+					// calc distance
+					int TargetHeight = 25;	
+
+					// TODO: recalibrate
+					// Angle = arctan(vertical hight in feet * image height / (2 * vertical target hight in pixels * distance in feet)) * RADS_TO_DEG
+					// vertical hight is 32 in - so 2.66 ft.  So my test was: arctan(2.66 * 480 / (2 * 121 * 6.83)  (actually, my test was half scale, so hight was 1.33)
+#define VIEW_ANGLE 33
+
+					double Distance = SourceImageInfo.yRes * TargetHeight / (rect.height * 12 * 2 * tan(VIEW_ANGLE * M_PI/(180*2)));
+
+					SmartDashboard::PutNumber("TargetDistance", Distance);
+
+					if( m_bShowBoundsText )
+					{
+						Point TextPoint;
+						int fu;
+
+						TextPoint.x = 40;
+						TextPoint.y = 40;
+
+						// show size of bounding box
+						sprintf_s(TextBuffer, 256, "  Distance: %.2f", Distance);
+						imaqDrawTextOnImage(InputImageRGB, InputImageRGB, TextPoint, TextBuffer, &textOps, &fu); 
+					}	
+				}
+			}
 		}	// particle loop
 
 		// center box
