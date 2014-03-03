@@ -1,0 +1,161 @@
+task 0xcf75c8 (FTP Server Connection Thread) deleted: errno=0 (0) status=0 (0)
+task 0xcfd868 (FTP Server Connection Thread) deleted: errno=0 (0) status=0 (0)
+task 0xcf75c8 (FTP Server Connection Thread) deleted: errno=0 (0) status=0 (0)
+task 0xcfd868 (FTP Server Connection Thread) deleted: errno=0 (0) status=0 (0)
+
+-> * Loading debug.o: debug
+Debugging is up, target server mounted at /tsfs
+
+
+                VxWorks
+
+Copyright 1984-2006  Wind River Systems, Inc.
+
+             CPU: MPC5200 -- Wind River Lite5200 BSP.
+    Runtime Name: VxWorks
+ Runtime Version: 6.3
+     BSP version: 2.0/10
+         Created: May 23 2013, 16:04:29
+ED&R Policy Mode: Deployed
+   WDB Comm Type: WDB_COMM_END
+             WDB: Ready.
+
+* Loading nisysrpc.out: nisysrpc
+* Loading NiRioRpc.out: NiRioRpc
+* Loading nivissvc.out: nivissvc
+* Loading nivision.out: nivision
+task 0xe2f388 (Service Locator Thread 4) deleted: errno=0 (0) status=0 (0)
+NI-RIO Server 13.0 started successfully.
+task 0xe20fa8 (NiRioRpc) deleted: errno=0 (0) status=0 (0)
+* Loading visa32.out: visa32
+* Loading niserial.out: niserial
+* Loading NiFpgaLv.out: NiFpgaLv
+* Loading FRC_FPGA_ChipObject.out: FRC_FPGA_ChipObject
+* Loading FRC_NetworkCommunication.out: FRC_NetworkCommunication
+FRC_NetworkCommunication version: p4-1.4.0a18
+FPGA Hardware GUID: 0xA14C11BDE4BB64AEF6A86FC52A294CD9
+FPGA Software GUID: 0xA14C11BDE4BB64AEF6A86FC52A294CD9
+FPGA Hardware Version: 2012
+FPGA Software Version: 2012
+FPGA Hardware Revision: 1.6.4
+FPGA Software Revision: 1.6.4
+* Loading FRC_UserProgram.out: FRC_UserProgram
+WPILib was compiled from SVN revision exported
+[NT] NetworkTable::GetTable()...
+[NT] 	Initializing...
+[NT] NetworkTable::CheckInit()...
+[NT] NetworkTable::Initialize()...
+Starti
+Welcome to LabVIEW Real-Time 13.0
+ng task: Server Incomitask 0xcfc408 (sysapi-rpc) deleted: errno=0 (0) status=0 (0)
+ng Stream Monitor Thread
+Starting task: Write Manager Thread
+[NT] ...NetworkTable::Initialize().
+[NT] ...Ready to get Table.
+[NT] NetworkTable::GetTable()...
+[NT] ...Ready to get Table.
+Version=1.30
+
+
+>>>>ERROR: Attempted to reuse an allocated resource: DIO 1 (Module 1) ...in Allocate() in C:/WindRiver/workspace/WPILib/Resource.cpp at line 92
+
+
+>>>>ERROR: Attempted to reuse an allocated resource: DIO 1 (Module 1) ...in Allocate() in C:/WindRiver/workspace/WPILib/Resource.cpp at line 92
+
+
+>>>>ERROR: A pointer parameter to a method is NULL:  ...in RobotDrive() in C:/WindRiver/workspace/WPILib/RobotDrive.cpp at line 143
+RobotControl::ResetPos Compressor->Stop()
+[NT] NetworkTable::GetTable()...
+[NT] ...Ready to get Table.
+[NT] NetworkTable::GetTable()...
+[NT] ...Ready to get Table.
+Default RobotInit() method... Override me!
+Default Disabled() method... Override me!
+task 0x16fb8d0 (FTP Server Connection Thread) deleted: errno=0 (0) status=0 (0)
+task 0x16fb8d0 (FTP Server Connection Thread) deleted: errno=0 (0) status=0 (0)
+
+-> * Loading debug.o: debug
+Debugging is up, target server mounted at /tsfs
+
+
+                VxWorks
+
+Copyright 1984-2006  Wind River Systems, Inc.
+
+             CPU: MPC5200 -- Wind River Lite5200 BSP.
+    Runtime Name: VxWorks
+ Runtime Version: 6.3
+     BSP version: 2.0/10
+         Created: May 23 2013, 16:04:29
+ED&R Policy Mode: Deployed
+   WDB Comm Type: WDB_COMM_END
+             WDB: Ready.
+
+* Loading nisysrpc.out: nisysrpc
+* Loading NiRioRpc.out: NiRioRpc
+* Loading nivissvc.out: nivissvc
+* Loading nivision.out: nivision
+task 0xe2f348 (Service Locator Thread 4) deleted: errno=0 (0) status=0 (0)
+NI-RIO Server 13.0 started successfully.
+task 0xe20f68 (NiRioRpc) deleted: errno=0 (0) status=0 (0)
+* Loading visa32.out: visa32
+* Loading niserial.out: niserial
+* Loading NiFpgaLv.out: NiFpgaLv
+* Loading FRC_FPGA_ChipObject.out: FRC_FPGA_ChipObject
+* Loading FRC_NetworkCommunication.out: FRC_NetworkCommunication
+FRC_NetworkCommunication version: p4-1.4.0a18
+FPGA Hardware GUID: 0xA14C11BDE4BB64AEF6A86FC52A294CD9
+FPGA Software GUID: 0xA14C11BDE4BB64AEF6A86FC52A294CD9
+FPGA Hardware Version: 2012
+FPGA Software Version: 2012
+FPGA Hardware Revision: 1.6.4
+FPGA Software Revision: 1.6.4
+* Loading FRC_UserProgram.out: FRC_UserProgram
+...FRC_UserProgram failed to load.
+
+Welcome to LabVIEW Real-Time 13.0
+task 0xcfc3c8 (sysapi-rpc) deleted: errno=0 (0) status=0 (0)
+task 0xeea8a0 (t1) deleted: errno=0 (0) status=0 (0)
+
+Break at 0x01535b44: FRC_UserProgram_StartupLibraryInit   Task: 0x172c868 (tFRC_UserProgram_StartupLibraryInit)
+WPILib was compiled from SVN revision exported
+task 0x172c868 (tFRC_UserProgram_StartupLibraryInit) deleted: errno=0 (0) status=0 (0)
+[NT] NetworkTable::GetTable()...
+[NT] 	Initializing...
+[NT] NetworkTable::CheckInit()...
+[NT] NetworkTable::Initialize()...
+Starting task: Server Incoming Stream Monitor Thread
+Starting task: Write Manager Thread
+[NT] ...NetworkTable::Initialize().
+[NT] ...Ready to get Table.
+[NT] NetworkTable::GetTable()...
+[NT] ...Ready to get Table.
+Version=1.30
+
+
+>>>>ERROR: Attempted to reuse an allocated resource: DIO 1 (Module 1) ...in Allocate() in C:/WindRiver/workspace/WPILib/Resource.cpp at line 92
+
+
+>>>>ERROR: Attempted to reuse an allocated resource: DIO 1 (Module 1) ...in Allocate() in C:/WindRiver/workspace/WPILib/Resource.cpp at line 92
+
+Break at 0x01527140: Tank_Robot_Control::Initialize(const Entity_Properties *)+0xc8     Task: 0x173d880 (FRC_RobotTask)
+
+Break at 0x01527160: Tank_Robot_Control::Initialize(const Entity_Properties *)+0xe8     Task: 0x173d880 (FRC_RobotTask)
+
+Break at 0x015271a8: Tank_Robot_Control::Initialize(const Entity_Properties *)+0x130    Task: 0x173d880 (FRC_RobotTask)
+
+Break at 0x015271f0: Tank_Robot_Control::Initialize(const Entity_Properties *)+0x178    Task: 0x173d880 (FRC_RobotTask)
+
+Break at 0x01527238: Tank_Robot_Control::Initialize(const Entity_Properties *)+0x1c0    Task: 0x173d880 (FRC_RobotTask)
+
+Break at 0x0152727c: Tank_Robot_Control::Initialize(const Entity_Properties *)+0x204    Task: 0x173d880 (FRC_RobotTask)
+
+Break at 0x01561b70: RobotDrive::RobotDrive(SpeedController *, SpeedController *, SpeedController *, SpeedController *)+0x7c     Task: 0x173d880 (FRC_RobotTask)
+
+Break at 0x01561b84: RobotDrive::RobotDrive(SpeedController *, SpeedController *, SpeedController *, SpeedController *)+0x90     Task: 0x173d880 (FRC_RobotTask)
+
+Break at 0x01561ba8: RobotDrive::RobotDrive(SpeedController *, SpeedController *, SpeedController *, SpeedController *)+0xb4     Task: 0x173d880 (FRC_RobotTask)
+task 0x173d880 (FRC_RobotTask) deleted: errno=0 (0) status=0 (0)
+task 0x1716f30 (FRC_Server Incoming Stream Monitor Thread) deleted: errno=3997700 (0x3d0004) status=0 (0)
+task 0x171d2e0 (FRC_Write Manager Thread) deleted: errno=0 (0) status=0 (0)
+task 0x1723d18 (FRC_DriverStation) deleted: errno=0 (0) status=0 (0)
