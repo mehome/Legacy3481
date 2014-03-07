@@ -28,7 +28,7 @@ FDIOStream::FDIOStream(int _fd){
 	// Set the TCP socket to be non-blocking
 #if defined(_WRS_KERNEL)
 	int on = 1;
-	if (ioctl(fd, FIONBIO, (char*)&on) < 0)
+	if (ioctl(fd, FIONBIO, (int)&on) < 0)
 #elif defined(_WIN32)
 	u_long on = 1;
 	if (ioctlsocket(fd, FIONBIO, &on))
