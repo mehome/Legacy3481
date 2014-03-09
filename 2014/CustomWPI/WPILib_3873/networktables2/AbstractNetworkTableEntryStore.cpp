@@ -43,7 +43,7 @@
 	
 	NetworkTableEntry* AbstractNetworkTableEntryStore::GetEntry(EntryId entryId){
 		{ 
-			NTSynchronized sync(LOCK);
+			NTSynchronized sync(block_namedEntries);
 			
 			std::map<EntryId, NetworkTableEntry*>::iterator value_itr = idEntries.find(entryId);
 			if(value_itr != idEntries.end()) {
