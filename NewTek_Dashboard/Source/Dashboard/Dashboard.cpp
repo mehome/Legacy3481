@@ -1793,6 +1793,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 
 #else
+
+
+//http://stackoverflow.com/questions/865152/how-can-i-get-a-process-handle-by-its-name-in-c
+#include <TlHelp32.h>
+
+
 int APIENTRY _tWinMain(HINSTANCE hInstance,
 					   HINSTANCE hPrevInstance,
 					   LPTSTR    lpCmdLine,
@@ -1807,7 +1813,41 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 		if ( ::GetLastError() == ERROR_ALREADY_EXISTS )
 		{
 			DebugOutput("Another copy of this application is already running.\n");
-			return 1;
+
+			const wchar_t *name=L"Dashboard.exe";
+			{
+				DWORD pid = 0;
+
+				// Create toolhelp snapshot.
+				HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+				PROCESSENTRY32 process;
+				ZeroMemory(&process, sizeof(process));
+				process.dwSize = sizeof(process);
+
+				// Walk through all processes.
+				if (Process32First(snapshot, &process))
+				{
+					do
+					{
+						// Compare process.szExeFile based on format of name, i.e., trim file path
+						// trim .exe if necessary, etc.
+						if (wcsicmp(process.szExeFile, name)==0)
+						{
+							pid = process.th32ProcessID;
+							//make sure this is not this process
+							//We may want to refine this more for multiple instance case, but if it is locked up there may not be anymore information available
+							if ((pid!=GetCurrentProcessId()) && (pid!=0))
+							{
+								HANDLE process=OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+								TerminateProcess(process,0);
+								CloseHandle(process);
+							}
+						}
+					} while (Process32Next(snapshot, &process));
+				}
+
+				CloseHandle(snapshot);
+			}
 		}
 	}
 
