@@ -92,6 +92,8 @@ IOStream* SocketServerStreamProvider::accept(){
 
 		FD_ZERO(&fdSet);
 		FD_SET(serverSocket, &fdSet);
+		timeout.tv_sec = 1;
+		timeout.tv_usec = 0;
 		if (select(FD_SETSIZE, &fdSet, NULL, NULL, &timeout) > 0)
 		{
 			if (FD_ISSET(serverSocket, &fdSet))
