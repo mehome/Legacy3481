@@ -261,6 +261,10 @@ class DDraw_Preview
 			} window_type;
 			std::wstring source_name;
 			std::wstring IP_Address;
+			//If this is non-zero this may embed the port number within the URL... typically this is for RTSP if it needs to be
+			//other than 554... like 1180 as specified in the FMS white paper.  The camera setting must reflect the port used as well
+			//see options here: system options/network/tcp_ip/advanced
+			LONG Port;
 			FrameGrabber::ReaderFormat ReaderFormat;
 			std::wstring smart_file;			//startup this parent window app
 			std::wstring ClassName,WindowName;  //find this window
@@ -806,7 +810,7 @@ void DDraw_Preview::Controls_Plugin::LoadPlugIn(const wchar_t Plugin[])
 
 
 DDraw_Preview::DDraw_Preview(const DDraw_Preview_Props &props) : m_Window(NULL),m_ParentHwnd(NULL),m_DD_StreamOut(NULL),
-	m_FrameGrabber(NULL,props.IP_Address.c_str(),props.ReaderFormat),m_ProcessingVision(NULL),m_IsStreaming(false),m_InitRecord(false)
+	m_FrameGrabber(NULL,props.IP_Address.c_str(),props.ReaderFormat,props.Port),m_ProcessingVision(NULL),m_IsStreaming(false),m_InitRecord(false)
 {
 	m_Controls_PlugIn.LoadPlugIn(props.controls_plugin_file.c_str());
 	Dashboard_Controller_Interface *l_Dashboard_Interface=m_FrameGrabber.GetDashboard_Controller_Interface();
@@ -1312,6 +1316,10 @@ private:
 			AssignWstring(script,"url","Black",props.IP_Address);  //It was so confusing to call this IP_Address url should be a better name
 			//Robot_IP_Address= localhost
 			AssignWstring(script,"robot_ip_address","localhost",m_AncillaryProps.Robot_IP_Address);
+
+			err = script.GetField("port",NULL,NULL,&dTest);
+			props.Port=err?20:(LONG)dTest;
+
 			//StreamProfile= default
 			AssignWstring(script,"stream_profile","default",m_AncillaryProps.StreamProfile);
 			InitReaderFormatProp();

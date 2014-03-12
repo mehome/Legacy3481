@@ -128,7 +128,7 @@ public:
 		eHttpReader,
 		eHttpReader2
 	};
-	FrameGrabber(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"",ReaderFormat format=eTestPattern);
+	FrameGrabber(FrameWork::Outstream_Interface *Preview=NULL,const wchar_t *IPAddress=L"",ReaderFormat format=eTestPattern,LONG Port=0);
 	virtual ~FrameGrabber();
 
 	//allow late binding of the output (hence start streaming exists for this delay)

@@ -3120,7 +3120,7 @@ void FrameGrabber_FFMpeg::StopStreaming()
  /*													FrameGrabber												*/
 /***************************************************************************************************************/
 
-FrameGrabber::FrameGrabber(Outstream_Interface *Preview,const wchar_t *IPAddress,ReaderFormat format) : m_VideoStream(NULL)
+FrameGrabber::FrameGrabber(Outstream_Interface *Preview,const wchar_t *IPAddress,ReaderFormat format,LONG Port) : m_VideoStream(NULL)
 {
 	if (IPAddress[0]!=0)
 		FrameWork::DebugOutput("FrameGrabber [%p] Ip Address=%ls\n",this,IPAddress);
@@ -3137,7 +3137,12 @@ FrameGrabber::FrameGrabber(Outstream_Interface *Preview,const wchar_t *IPAddress
 			wchar_t Buffer[1024];
 			//this is lazy but effective... TODO parse numbers remove leading zero's as this will cause it to fail
 			if (format==eFFMPeg_Reader)
-				swprintf(Buffer,1024,L"rtsp://FRC:FRC@%s/axis-media/media.amp",IPToUse.c_str());
+			{
+				if (Port==0)
+					swprintf(Buffer,1024,L"rtsp://FRC:FRC@%s/axis-media/media.amp",IPToUse.c_str());
+				else
+					swprintf(Buffer,1024,L"rtsp://FRC:FRC@%s:%d/axis-media/media.amp",IPToUse.c_str(),Port);
+			}
 			else
 				swprintf(Buffer,1024,L"http://FRC:FRC@%s/mjpg/video.mjpg",IPToUse.c_str());
 			IPToUse=Buffer;
