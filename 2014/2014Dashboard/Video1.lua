@@ -14,17 +14,19 @@ DashboardProps =
 	settings =
 	{
 		title= "Main",
-		url= "black_33_600x800",
-		robot_ip_address= "localhost",
-		--robot_ip_address= "10.34.82.1",
+		--url= "black_33_600x800",
+		url= "10.34.81.11",
+		port=1180,
+		--robot_ip_address= "localhost",
+		robot_ip_address= "10.34.81.2",
 		--robot_ip_address= "10.34.82.2",
 		stream_profile= "default",
 		left= 596,
 		top= 8,
 		right= 1196,
 		bottom= 808,
-		smart_dashboard= "java -jar C:\\WindRiver\\WPILib\\SmartDashboard.jar ip localhost",
-		--smart_dashboard= "C:\\WindRiver\\WPILib\\SmartDashboard.jar",
+		--smart_dashboard= "java -jar C:\\WindRiver\\WPILib\\SmartDashboard.jar ip localhost",
+		smart_dashboard= "C:\\WindRiver\\WPILib\\SmartDashboard.jar",
 		--smart_dashboard="none",
 		window_name= "SmartDashboard",
 		is_popup= 0,
@@ -36,7 +38,7 @@ DashboardProps =
 		
 		--We can control which of these we want to have persistence
 		--ignore_position=true,
-		--ignore_url=true,
+		ignore_url=true,
 		--ignore_popup=true,
 		--ignore_record=true,
 		
