@@ -26,8 +26,8 @@ g_wheel_diameter_in=4   --This will determine the correct distance try to make a
 WheelBase_Width_In=26.5	  --The wheel base will determine the turn rate, must be as accurate as possible!
 WheelBase_Length_In=10  --was 9.625
 WheelTurningDiameter_In= ( (WheelBase_Width_In * WheelBase_Width_In) + (WheelBase_Length_In * WheelBase_Length_In) ) ^ 0.5
-HighGearSpeed = (733.14 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  --RPM's from Parker
-LowGearSpeed  = (167.06 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters
+HighGearSpeed = (873.53 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  --RPM's from Parker
+LowGearSpeed  = (403.92 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters
 Drive_MaxAccel=5
 skid=math.cos(math.atan2(WheelBase_Length_In,WheelBase_Width_In))
 gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) * skid
@@ -135,7 +135,7 @@ MainRobot = {
 		{
 			wheel_mass=1.5,
 			cof_efficiency=1.0,
-			gear_reduction=5310.0/733.14,
+			gear_reduction=5310.0/873.53,
 			torque_on_wheel_radius=Inches2Meters * 1,
 			drive_wheel_radius=Inches2Meters * 2,
 			number_of_motors=1,
@@ -302,8 +302,9 @@ MainRobot = {
 			--While it is true we have more torque for low gear, we have to be careful that we do not make this too powerful as it could
 			--cause slipping if driver "high sticks" to start or stop quickly.
 			MaxAccelLeft = 10, MaxAccelRight = 10, MaxAccelForward = 10 * 2, MaxAccelReverse = 10 * 2, 
-			MaxTorqueYaw = 25 * 2, 
-			
+			MaxTorqueYaw = 25 * 2,
+			MaxTorqueYaw_High = 25 * 2,
+
 			MAX_SPEED = LowGearSpeed,
 			ACCEL = 10*2,    -- Thruster Acceleration m/s2 (1g = 9.8)
 			BRAKE = ACCEL, 
@@ -321,7 +322,7 @@ MainRobot = {
 				{p=25, i=0, d=5},
 				right_pid=
 				{p=25, i=0, d=5},					--These should always match, but able to be made different
-				latency=0.300,
+				--latency=0.300,
 				--I'm explicitly keeping this here to show that we have the same ratio (it is conceivable that this would not always be true)
 				--This is obtainer from encoder RPM's of 1069.2 and Wheel RPM's 427.68 (both high and low have same ratio)
 				encoder_to_wheel_ratio=0.4,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
@@ -331,7 +332,21 @@ MainRobot = {
 				reverse_steering='no',
 				 left_encoder_reversed='no',
 				right_encoder_reversed='no',
-				inv_max_accel = 0.0  --solved empiracally
+				inv_max_accel = 1/15,  --solved empiracally
+				motor_specs =
+				{
+					wheel_mass=1.5,
+					cof_efficiency=1.0,
+					gear_reduction=5310.0/403.92,
+					torque_on_wheel_radius=Inches2Meters * 1,
+					drive_wheel_radius=Inches2Meters * 2,
+					number_of_motors=1,
+					
+					free_speed_rpm=5310.0,
+					stall_torque=6.561,
+					stall_current_amp=399,
+					free_current_amp=8.1
+				}
 			}
 		}
 	},
@@ -345,9 +360,11 @@ MainRobot = {
 			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetRight_XAxis = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
 			--scaled down to 0.5 to allow fine tuning and a good top acceleration speed (may change with the lua script tweaks)
 			--Turret_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
@@ -359,7 +376,7 @@ MainRobot = {
 			Turn_180_Hold = {type="joystick_button", key=7, on_off=true},
 			FlipY_Hold = {type="joystick_button", key=7, on_off=true},
 			SlideHold = {type="joystick_button", key=7, on_off=true},
-			Robot_TestWaypoint={type="joystick_button", key=3, on_off=true},
+			TestWaypoint={type="joystick_button", key=3, keyboard='q', on_off=true},
 			
 			Winch_SetChipShot = {type="joystick_button", key=4, on_off=false},
 			Winch_SetGoalShot = {type="joystick_button", key=2, on_off=false},
@@ -374,7 +391,6 @@ MainRobot = {
 			Winch_Advance={type="keyboard", key='k', on_off=true},
 			Robot_CatcherShooter={type="keyboard", key='u', on_off=true},
 			Robot_CatcherIntake={type="keyboard", key='i', on_off=true},
-			TestWaypoint={type="keyboard", key='q', on_off=true},
 			TestAuton={type="keyboard", key='g', on_off=false},
 			--Slide={type="keyboard", key='g', on_off=false},
 		},
@@ -383,12 +399,14 @@ MainRobot = {
 		{
 			control = "logitech dual action",
 			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
+			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetRight_XAxis = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			Analog_Turn = {type="joystick_culver", key_x=2, key_y=5, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Turret_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=false, multiplier=0.5, filter=0.1, curve_intensity=0.0},
 			Robot_SetLowGearOff = {type="joystick_button", key=6, on_off=false},
 			Robot_SetLowGearOn = {type="joystick_button", key=5, on_off=false},
@@ -408,12 +426,15 @@ MainRobot = {
 		Joystick_3 =
 		{
 			control = "gamepad f310 (controller)",
-			Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			Turret_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
-			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
+			PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
 			
 			--IntakeRollers_Grip = {type="joystick_button", key=?, on_off=true},
 			--IntakeRollers_Squirt = {type="joystick_button", key=?, on_off=true},
@@ -431,11 +452,13 @@ MainRobot = {
 		Joystick_4 =
 		{
 			control = "controller (xbox 360 for windows)",
-			Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
+			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Joystick_SetRight_XAxis = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			Robot_SetLowGearOff = {type="joystick_button", key=2, on_off=false},
 			Robot_SetLowGearOn = {type="joystick_button", key=1, on_off=false},
 						
