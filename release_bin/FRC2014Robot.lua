@@ -84,10 +84,10 @@ MainRobot = {
 	MaxAccelForward = Drive_MaxAccel, MaxAccelReverse = Drive_MaxAccel, 
 	MaxAccelForward_High = Drive_MaxAccel * 2, MaxAccelReverse_High = Drive_MaxAccel * 2, 
 	MaxTorqueYaw =  gMaxTorqueYaw * 0.78,
-	MaxTorqueYaw_High = gMaxTorqueYaw  * 0.78 * 5,
+	MaxTorqueYaw_High = gMaxTorqueYaw * 5,
 	MaxTorqueYaw_SetPoint = gMaxTorqueYaw * 5,
-	rotate_to_scale = 1.0, rotate_to_scale_high = 1.0,
-	rotation_tolerance=Deg2Rad * 3,
+	MaxTorqueYaw_SetPoint_High = gMaxTorqueYaw * 10,
+	rotation_tolerance=Deg2Rad * 2,
 	rotation_distance_scalar=1.0,
 
 	MAX_SPEED = HighGearSpeed,
