@@ -1,12 +1,18 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="support_hotspot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="799" y="90"/>
+	</widget>
+	<widget field="TargetHot" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="209" y="516"/>
+	</widget>
+	<widget field="load_ball_roller_speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="722" y="195"/>
+	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="721" y="134"/>
+		<location x="711" y="95"/>
 		<property name="Text" value="Support Hotspot"/>
 	</static-widget>
-	<widget field="support_hotspot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="825" y="130"/>
-	</widget>
 	<widget field="DriverOverride" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="545" y="178"/>
 	</widget>
@@ -14,26 +20,27 @@
 		<location x="548" y="151"/>
 	</widget>
 	<widget field="third_ball_distance_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="703" y="303"/>
+		<location x="707" y="325"/>
 		<height>22</height>
 	</widget>
 	<widget field="third_ball_angle_deg" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="706" y="276"/>
+		<location x="708" y="291"/>
+		<height>20</height>
 	</widget>
 	<widget field="second_move_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="717" y="158"/>
+		<location x="686" y="63"/>
 	</widget>
 	<widget field="second_ball_roller_time" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="722" y="205"/>
+		<location x="719" y="216"/>
 	</widget>
 	<widget field="roller_drive_speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="720" y="231"/>
+		<location x="722" y="241"/>
 	</widget>
 	<widget field="land_on_ball_roller_time" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="697" y="89"/>
+		<location x="736" y="164"/>
 	</widget>
 	<widget field="land_on_ball_roller_speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="689" y="60"/>
+		<location x="729" y="135"/>
 	</widget>
 	<widget field="first_move_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="691" y="33"/>
@@ -241,8 +248,15 @@
 		<location x="1228" y="39"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="494" y="286"/>
+		<property name="Text" value="Edit Position"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="1228" y="39"/>
+		<property name="Text" value="Edit Position"/>
+	</static-widget>
 </dashboard>
 <live-window>
 </live-window>
-	<hidden field="Tweak180"/>
 </xml>
