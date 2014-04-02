@@ -1,5 +1,15 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="scoot_back_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="782" y="122"/>
+	</widget>
+	<widget field="Main_Is_Targeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="562" y="310"/>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="479" y="313"/>
+		<property name="Text" value="Main Is Targeting"/>
+	</static-widget>
 	<widget field="support_hotspot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="799" y="90"/>
 	</widget>
@@ -40,7 +50,7 @@
 		<location x="736" y="164"/>
 	</widget>
 	<widget field="land_on_ball_roller_speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="729" y="135"/>
+		<location x="722" y="142"/>
 	</widget>
 	<widget field="first_move_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="691" y="33"/>
@@ -83,6 +93,7 @@
 	<widget field="RollerVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="354" y="408"/>
 		<width>148</width>
+		<property name="Foreground" value="0.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
@@ -96,9 +107,6 @@
 	</widget>
 	<widget field="IsBallTargeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="1477" y="39"/>
-	</widget>
-	<widget field="Main_Is_Targeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="494" y="318"/>
 	</widget>
 	<widget field="RearView_Is_Targeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="1339" y="37"/>
@@ -181,6 +189,7 @@
 		<location x="179" y="191"/>
 		<width>107</width>
 		<height>30</height>
+		<property name="Foreground" value="0.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="3.844"/>
 		<property name="Minimum" value="-3.844"/>
@@ -188,6 +197,7 @@
 	<widget field="RightEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="406" y="186"/>
 		<width>115</width>
+		<property name="Foreground" value="0.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="3.844"/>
 		<property name="Minimum" value="-3.844"/>
