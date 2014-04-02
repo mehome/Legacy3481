@@ -75,13 +75,13 @@ CompositorProps = {
 		
 		path_align =
 		{
-			width_in = 25, length_ft = 12,
+			width_in = 25, length_ft = 27,
 			pivot_in = 2,
-			camera_position =	{ x_in=0, y_in=7.94, z_in=-1.0 },
-			camera_rotation =	{ x=0, y_deg=20, z=0 },
+			camera_position =	{ x_in=0, y_in=12.5, z_in=-5.0 },
+			camera_rotation =	{ x=0, y_deg=0, z=0 },
 			fov=45,
 			r=0,g=255,b=100,
-			num_segments=12,
+			num_segments=27,
 			draw_shape = "path",
 			-- draw_shape -- may be "path", "square", "circle", or "cube".
 		},
