@@ -32,9 +32,9 @@ DashboardProps =
 		window_name= "SmartDashboard",
 		is_popup= 0,
 		plug_in= "Compositor.dll",
-		aux_startup_file="Dashboard.exe",
-		aux_startup_file_args="Video2.lua",
-		record_frames= 0,
+		--aux_startup_file="Dashboard.exe",
+		--aux_startup_file_args="Video2.lua",
+		record_frames= 1,
 		record_path= "D:/media/Robot_Capture/",
 		
 		--We can control which of these we want to have persistence
