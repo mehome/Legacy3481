@@ -1,17 +1,19 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="loaded_ball_wait" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="733" y="264"/>
+	</widget>
+	<widget field="first_move_wait" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="691" y="56"/>
+	</widget>
 	<widget field="scoot_back_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="782" y="122"/>
 	</widget>
 	<widget field="Main_Is_Targeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="562" y="310"/>
+		<location x="582" y="311"/>
 	</widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="479" y="313"/>
-		<property name="Text" value="Main Is Targeting"/>
-	</static-widget>
 	<widget field="support_hotspot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="799" y="90"/>
+		<location x="799" y="98"/>
 	</widget>
 	<widget field="TargetHot" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="209" y="516"/>
@@ -19,10 +21,6 @@
 	<widget field="load_ball_roller_speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="722" y="195"/>
 	</widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="711" y="95"/>
-		<property name="Text" value="Support Hotspot"/>
-	</static-widget>
 	<widget field="DriverOverride" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="545" y="178"/>
 	</widget>
@@ -30,7 +28,7 @@
 		<location x="548" y="151"/>
 	</widget>
 	<widget field="third_ball_distance_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="707" y="325"/>
+		<location x="705" y="314"/>
 		<height>22</height>
 	</widget>
 	<widget field="third_ball_angle_deg" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
@@ -38,7 +36,7 @@
 		<height>20</height>
 	</widget>
 	<widget field="second_move_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="686" y="63"/>
+		<location x="709" y="354"/>
 	</widget>
 	<widget field="second_ball_roller_time" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="719" y="216"/>
@@ -160,12 +158,8 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="494" y="286"/>
-		<property name="Text" value="Edit Position"/>
-	</static-widget>
 	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="562" y="284"/>
+		<location x="578" y="284"/>
 	</widget>
 	<widget field="Sequence" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="438" y="235"/>
@@ -259,12 +253,16 @@
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="494" y="286"/>
+		<location x="503" y="286"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="1228" y="39"/>
-		<property name="Text" value="Edit Position"/>
+		<location x="495" y="316"/>
+		<property name="Text" value="Main Is Targeting"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="711" y="103"/>
+		<property name="Text" value="Support Hotspot"/>
 	</static-widget>
 </dashboard>
 <live-window>
