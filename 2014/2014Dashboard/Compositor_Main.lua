@@ -78,10 +78,11 @@ CompositorProps = {
 			width_in = 25, length_ft = 27,
 			pivot_in = 2,
 			camera_position =	{ x_in=0, y_in=12.5, z_in=-5.0 },
-			camera_rotation =	{ x=0, y_deg=0, z=0 },
+			camera_rotation =	{ x_deg=0, y_deg=7.30457, z=0 },
 			fov=45,
 			r=0,g=255,b=100,
 			num_segments=27,
+			disable_turns="y", --Using path align to gauge distance to target landing
 			draw_shape = "path",
 			-- draw_shape -- may be "path", "square", "circle", or "cube".
 		},
@@ -96,9 +97,9 @@ CompositorProps = {
 				{
 					composite_1 = {	type="bypass" },
 					composite_2 = {	type="square", selection=1 },
-					composite_3 = { type="shape", selection=1, y=2.62243 , z=2.04425 },
-					composite_4 = { type="shape", selection=2,  y=0.310857 , z=3.74754 },
-					composite_5 = {	type="pathalign" }
+					composite_3 = { type="shape", selection=1, x=0, y=2.29786 , z=3.94196 },
+					composite_4 = { type="shape", selection=2,  y=0.310857 , z=8.0574 },
+					composite_5 = {	type="pathalign"}
 				}
 			},
 			sequence_2 = {	type="bypass" },
