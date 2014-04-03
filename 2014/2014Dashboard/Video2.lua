@@ -20,6 +20,7 @@ DashboardProps =
 		--robot_ip_address= "localhost",
 		robot_ip_address= "10.34.81.2",
 		--robot_ip_address= "10.34.82.2",
+		--robot_ip_address= "10.28.1.2",
 		stream_profile= "default",
 		left= 1244,
 		top= 189,
@@ -37,7 +38,7 @@ DashboardProps =
 		
 		--We can control which of these we want to have persistence
 		--ignore_position=true,
-		--ignore_url=true,
+		ignore_url=true,
 		--ignore_popup=true,
 		--ignore_record=true,
 		
