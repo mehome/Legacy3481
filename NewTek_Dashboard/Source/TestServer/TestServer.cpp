@@ -45,12 +45,25 @@ void DisplayHelp()
 		"cls clears screen\n"
 		"Sequence <#>\n"
 		"Edit <off on>\n"
+		"Velocity <feet per second>\n"
+		"Turn <in radians e.g. 0.01>\n"
 		"Help (displays this)\n"
 		"\nType \"Quit\" at anytime to exit this application\n"
 		);
 }
 
 #pragma warning(disable : 4996)
+
+bool GetBool(const char *arg)
+{
+	bool ret=false;
+	if (_stricmp("on",arg)==0)
+		ret=true;
+	else if (arg[0]=='1' || arg[0]=='y' || arg[0]=='Y')
+		ret=true;
+	return ret;
+}
+
 void CommandLineInterface()
 {
 	char input_line[128];
@@ -88,12 +101,15 @@ void CommandLineInterface()
 			}
 			else if (!_strnicmp( input_line, "edit", 4)) 
 			{
-				bool Edit=false;
-				if (_stricmp("on",str_1)==0)
-					Edit=true;
-				else if (str_1[0]=='1' || str_1[0]=='y' || str_1[0]=='Y')
-					Edit=true;
-				SmartDashboard::PutBoolean("Edit Position",Edit);
+				SmartDashboard::PutBoolean("Edit Position Main",GetBool(str_1));
+			}
+			else if (!_strnicmp( input_line, "Velocity", 3))  //or vel for short
+			{
+				SmartDashboard::PutNumber("Velocity",atof(str_1));
+			}
+			else if (!_strnicmp( input_line, "Turn", 4))
+			{
+				SmartDashboard::PutNumber("Rotation Velocity",atof(str_1));
 			}
 			else if (!_strnicmp( input_line, "Help", 4))
 				DisplayHelp();
