@@ -852,6 +852,7 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 			pal_props.rot_z=0.0;
 			pal_props.FOV_x=pal_props.FOV_y=47.0;
 			pal_props.path_type=PathProps::eDefaultPath;
+			pal_props.NumberSegments=10;
 			props.PathAlign=pal_props;
 		}
 	} //while (!fieldtable_err);
