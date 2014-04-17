@@ -2485,32 +2485,10 @@ class Compositor
 				const bool FromNext=NewSequenceIndex<m_SequenceIndex;
 				//issue the update
 				m_SequenceIndex=NewSequenceIndex;
-				m_LinePlot.FlushCache();  //there may be a new list of colors on the next sequence
-				const Compositor_Props::Sequence_Packet &seq_pkt=Sequence[m_SequenceIndex];
+
 				bool CompositeUpdate=false;
-				if ((m_IsEditable)&&(m_RecurseIntoComposite)&&(seq_pkt.type==Compositor_Props::eComposite))
-				{
-					//check this before pushing onto the stack
-					if (m_PositionTracker.empty())
-						SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
-					PositionPacket pkt;
-					pkt.pSequence=m_pSequence;
-					pkt.SequenceIndex=m_SequenceIndex;
-					pkt.m_Xpos=m_Xpos_Offset;
-					pkt.m_Ypos=m_Ypos_Offset;
-					m_PositionTracker.push(pkt);  //keep track of where we were we can pop out once we hit the ends
-					//Now to step in to the sub sequence
-					m_pSequence=seq_pkt.specific_data.Composite;
-					//add the overall parent offset
-					m_Xpos_Offset+=seq_pkt.PositionX;
-					m_Ypos_Offset+=seq_pkt.PositionY;
-					//set the index to the begin or end based on the direction it happened
-					assert(m_pSequence->size()); //we should not have any empty sequences! (LUA need to have at least one per level)
-					m_SequenceIndex=FromNext?m_pSequence->size()-1:0;
-					NewSequenceIndex=m_SequenceIndex;
-					CompositeUpdate=true;
-				}
-		
+
+				//bounds check the new value
 				if (m_SequenceIndex==-1)
 				{
 					//reached beginning
@@ -2548,6 +2526,33 @@ class Compositor
 					else
 						m_SequenceIndex=0;
 				}
+
+				m_LinePlot.FlushCache();  //there may be a new list of colors on the next sequence
+				const Compositor_Props::Sequence_Packet &seq_pkt=Sequence[m_SequenceIndex];
+
+				if ((m_IsEditable)&&(m_RecurseIntoComposite)&&(seq_pkt.type==Compositor_Props::eComposite))
+				{
+					//check this before pushing onto the stack
+					if (m_PositionTracker.empty())
+						SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
+					PositionPacket pkt;
+					pkt.pSequence=m_pSequence;
+					pkt.SequenceIndex=m_SequenceIndex;
+					pkt.m_Xpos=m_Xpos_Offset;
+					pkt.m_Ypos=m_Ypos_Offset;
+					m_PositionTracker.push(pkt);  //keep track of where we were we can pop out once we hit the ends
+					//Now to step in to the sub sequence
+					m_pSequence=seq_pkt.specific_data.Composite;
+					//add the overall parent offset
+					m_Xpos_Offset+=seq_pkt.PositionX;
+					m_Ypos_Offset+=seq_pkt.PositionY;
+					//set the index to the begin or end based on the direction it happened
+					assert(m_pSequence->size()); //we should not have any empty sequences! (LUA need to have at least one per level)
+					m_SequenceIndex=FromNext?m_pSequence->size()-1:0;
+					NewSequenceIndex=m_SequenceIndex;
+					CompositeUpdate=true;
+				}
+		
 				if (m_PositionTracker.empty())
 					SmartDashboard::PutNumber("Sequence",(double)(m_SequenceIndex+1));
 				//Modify position to last saved... using m_pSequence... since this may change when stepping into composite

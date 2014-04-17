@@ -40,8 +40,8 @@
 #endif	_SECURE_SCL
 
 // STL defines
-#define _SECURE_SCL 0
-#define _HAS_ITERATOR_DEBUGGING 0
+//#define _SECURE_SCL 0
+//#define _HAS_ITERATOR_DEBUGGING 0
 
 #ifndef NOMINMAX
 #	define NOMINMAX
