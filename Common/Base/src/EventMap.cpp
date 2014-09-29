@@ -6,7 +6,7 @@
 using namespace Framework::Base;
 using namespace std;
 
-Framework::Base::FrameLogger::FrameLogger(string logFileName) : m_logFileName(logFileName), m_active(false), m_currRecordedTimeSet(NULL)
+Framework::Base::FrameLogger::FrameLogger(string logFileName) : m_lastTime(0.0),m_logFileName(logFileName), m_active(false), m_currRecordedTimeSet(NULL)
 {
 }
 //////////////////////////////////////////////////////////////////////////
