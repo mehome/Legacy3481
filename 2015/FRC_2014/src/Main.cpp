@@ -4,9 +4,9 @@
 #include "Robot_Tester.h"
 
 #include "FRC2014_Robot.h"
-#include "Common/InOut_Interface.h"
-#include "TankDrive/Tank_Robot_Control.h"
-#include "TankDrive/Servo_Robot_Control.h"
+#include "Common/src/InOut_Interface.h"
+#include "TankDrive/src/Tank_Robot_Control.h"
+#include "TankDrive/src/Servo_Robot_Control.h"
 #include "FRC2014_InOut_Interface.h"
 
 const bool c_UseDefaultControls=false;
@@ -126,7 +126,7 @@ class SetUp_Manager
 //This is the main robot class used for FRC
 //The SimpleRobot class is the base of a robot application that will automatically call your
  //Autonomous and OperatorControl methods at the right time as controlled by the switches on the driver station or the field controls.
-class Robot_Main : public SimpleRobot
+class Robot_Main : public SampleRobot
 {
 	SetUp_Manager m_Manager;
 

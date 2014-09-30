@@ -2010,7 +2010,7 @@ class FRC_2014_Goals_Impl : public AtomicGoal
 
 Goal *FRC_2014_Goals::Get_FRC2014_Autonomous(FRC_2014_Robot *Robot)
 {
-	Goal_NotifyWhenComplete *MainGoal=new Goal_NotifyWhenComplete(*Robot->GetEventMap(),"Complete");
+	Goal_NotifyWhenComplete *MainGoal=new Goal_NotifyWhenComplete(*Robot->GetEventMap(),(char *)"Complete");
 	SmartDashboard::PutNumber("Sequence",1.0);  //ensure we are on the right sequence
 	//Inserted in reverse since this is LIFO stack list
 	MainGoal->AddSubgoal(new FRC_2014_Goals_Impl(*Robot));
@@ -2212,7 +2212,9 @@ void FRC_2014_Robot_Control::ResetPos()
 	printf("RobotControl::ResetPos Compressor->Stop()\n");
 	#ifndef Robot_TesterCode
 	//Allow driver station to control if they want to run the compressor
-	if (DriverStation::GetInstance()->GetDigitalIn(8))
+	//if (DriverStation::GetInstance()->GetDigitalIn(8))
+	//TODO use smart dashboard checkbox for compressor
+	if (false)
 	#endif
 	{
 		printf("RobotControl::ResetPos Compressor->Start()\n");
