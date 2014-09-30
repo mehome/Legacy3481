@@ -2214,7 +2214,7 @@ void FRC_2014_Robot_Control::ResetPos()
 	//Allow driver station to control if they want to run the compressor
 	//if (DriverStation::GetInstance()->GetDigitalIn(8))
 	//TODO use smart dashboard checkbox for compressor
-	if (false)
+	if (true)
 	#endif
 	{
 		printf("RobotControl::ResetPos Compressor->Start()\n");
