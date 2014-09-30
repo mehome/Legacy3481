@@ -54,7 +54,7 @@ static void LoadControlElement_1C_Internal(Scripting::Script& script,Control_Ass
 				double fTest;
 				err = script.GetField("channel",NULL,NULL,&fTest);
 				assert(!err);
-				newElement.Channel=(size_t)fTest;
+				newElement.Channel=(size_t)fTest-1;  //make ordinal
 				err = script.GetField("name",&newElement.name,NULL,NULL);
 				assert(!err);
 				err = script.GetField("module",NULL,NULL,&fTest);
@@ -89,12 +89,12 @@ static void LoadControlElement_2C_Internal(Scripting::Script& script,Control_Ass
 				if (err)
 					err=script.GetField("a_channel",NULL,NULL,&fTest);
 				assert(!err);
-				newElement.ForwardChannel=(size_t)fTest;
+				newElement.ForwardChannel=(size_t)fTest-1;  //make ordinal
 				err = script.GetField("reverse_channel",NULL,NULL,&fTest);
 				if (err)
 					err=script.GetField("b_channel",NULL,NULL,&fTest);
 				assert(!err);
-				newElement.ReverseChannel=(size_t)fTest;
+				newElement.ReverseChannel=(size_t)fTest-1;  //make ordinal
 				err = script.GetField("name",&newElement.name,NULL,NULL);
 				assert(!err);
 				err = script.GetField("module",NULL,NULL,&fTest);
