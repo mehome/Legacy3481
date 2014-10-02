@@ -2213,8 +2213,19 @@ void FRC_2014_Robot_Control::ResetPos()
 	#ifndef Robot_TesterCode
 	//Allow driver station to control if they want to run the compressor
 	//if (DriverStation::GetInstance()->GetDigitalIn(8))
-	//TODO use smart dashboard checkbox for compressor
-	if (true)
+
+	bool EnableCompressor=true;
+	try
+	{
+		EnableCompressor=SmartDashboard::GetBoolean("Enable Compressor");
+	}
+	catch (...)
+	{
+		//I may need to prime the pump here
+		SmartDashboard::PutBoolean("Enable Compressor",EnableCompressor);
+	}
+
+	if (EnableCompressor)
 	#endif
 	{
 		printf("RobotControl::ResetPos Compressor->Start()\n");
