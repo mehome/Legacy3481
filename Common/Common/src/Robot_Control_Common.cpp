@@ -98,8 +98,8 @@ static void LoadControlElement_2C_Internal(Scripting::Script& script,Control_Ass
 				err = script.GetField("name",&newElement.name,NULL,NULL);
 				assert(!err);
 				err = script.GetField("module",NULL,NULL,&fTest);
-				newElement.Module=(err)?1:(size_t)fTest;
-				assert(newElement.Module!=0);  //sanity check... this is cardinal
+				newElement.Module=(err)?0:(size_t)fTest;
+				//assert(newElement.Module!=0);  //note: All module parameters are all ordinal for roboRIO
 			}
 			Output.push_back(newElement);
 			script.Pop();
