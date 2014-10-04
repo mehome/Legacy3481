@@ -2365,6 +2365,18 @@ void FRC_2014_Robot_Control::Robot_Control_TimeChange(double dTime_s)
 	SmartDashboard::PutBoolean("LimitIntakeMin2",m_Limit_IntakeMin2);
 	SmartDashboard::PutBoolean("LimitIntakeMax2",m_Limit_IntakeMax2);
 	SmartDashboard::PutBoolean("LimitCatapult",m_Limit_Catapult);
+
+	#ifndef Robot_TesterCode
+	const bool ShowPDP=true;
+	if (ShowPDP)
+	{
+		SmartDashboard::PutNumber("Temperature",m_PDP.GetTemperature());
+		SmartDashboard::PutNumber("pdp 1",m_PDP.GetCurrent(1));
+		SmartDashboard::PutNumber("pdp 12",m_PDP.GetCurrent(12));
+		SmartDashboard::PutNumber("pdp 13",m_PDP.GetCurrent(13));
+		SmartDashboard::PutNumber("pdp 4",m_PDP.GetCurrent(4));
+	}
+	#endif
 }
 
 void FRC_2014_Robot_Control::UpdateLeftRightVoltage(double LeftVoltage,double RightVoltage) 

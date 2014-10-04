@@ -480,6 +480,9 @@ class FRC_2014_Robot_Control : public RobotControlCommon, public FRC_2014_Contro
 		Tank_Robot_Control m_TankRobotControl;
 		Tank_Drive_Control_Interface * const m_pTankRobotControl;  //This allows access to protected members
 		Compressor *m_Compressor;
+		#ifndef Robot_TesterCode
+		PowerDistributionPanel m_PDP;
+		#endif
 		double m_WinchVoltage;  //used in simulation but no harm in leaving enabled for wind-river
 		//All digital input reads are done on time change and cached to avoid multiple reads to the FPGA
 		bool m_Limit_IntakeMin1,m_Limit_IntakeMin2,m_Limit_IntakeMax1,m_Limit_IntakeMax2;
