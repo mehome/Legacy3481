@@ -13,6 +13,7 @@ typedef long long __int64;
 #include <assert.h>
 #include <limits.h>
 #include <errno.h>
+#include <stddef.h>
 
 #define LUA_API
 #define LUALIB_API
