@@ -105,17 +105,17 @@ bool Driver_Station_Joystick::read_joystick (size_t nr, JoyState &Info)
 	int Number=(int)nr;
 	Number-=m_StartingPort;
 	bool ret=false;
-	nr++;  //DOH the number selection is cardinal!  :(
+	//nr++;  //DOH the number selection is cardinal!  :(
 	if ((Number>=0) && (Number<m_NoJoysticks) && (m_JoyInfo[nr-1].bPresent))
 	{
 		memset(&Info,0,sizeof(JoyState));  //zero the memory
 		//The axis selection is also ordinal
-		Info.lX=m_ds->GetStickAxis(nr,1);
-		Info.lY=m_ds->GetStickAxis(nr,2);
-		Info.lZ=m_ds->GetStickAxis(nr,3);
-		Info.lRx=m_ds->GetStickAxis(nr,4);
-		Info.lRy=m_ds->GetStickAxis(nr,5);
-		Info.lRz=m_ds->GetStickAxis(nr,6);
+		Info.lX=m_ds->GetStickAxis(nr,0);
+		Info.lY=m_ds->GetStickAxis(nr,1);
+		Info.lZ=m_ds->GetStickAxis(nr,2);
+		Info.lRx=m_ds->GetStickAxis(nr,3);
+		Info.lRy=m_ds->GetStickAxis(nr,4);
+		Info.lRz=m_ds->GetStickAxis(nr,5);
 		Info.ButtonBank[0]=m_ds->GetStickButtons(nr);
 		ret=true;
 	}
