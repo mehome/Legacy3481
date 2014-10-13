@@ -110,12 +110,24 @@ bool Driver_Station_Joystick::read_joystick (size_t nr, JoyState &Info)
 	{
 		memset(&Info,0,sizeof(JoyState));  //zero the memory
 		//The axis selection is also ordinal
-		Info.lX=m_ds->GetStickAxis(nr,0);
-		Info.lY=m_ds->GetStickAxis(nr,1);
-		Info.lZ=m_ds->GetStickAxis(nr,2);
-		Info.lRx=m_ds->GetStickAxis(nr,3);
-		Info.lRy=m_ds->GetStickAxis(nr,4);
-		Info.lRz=m_ds->GetStickAxis(nr,5);
+		Info.lX=m_ds->GetStickAxis(nr,1);
+		Info.lY=m_ds->GetStickAxis(nr,2);
+		Info.lZ=m_ds->GetStickAxis(nr,3);
+		Info.lRx=m_ds->GetStickAxis(nr,4);
+		Info.lRy=m_ds->GetStickAxis(nr,5);
+		Info.lRz=m_ds->GetStickAxis(nr,6);
+		//Testing---
+		#if 0
+		if (nr==0)
+		{
+			SmartDashboard::PutNumber("axis0",Info.lX);
+			SmartDashboard::PutNumber("axis1",Info.lY);
+			SmartDashboard::PutNumber("axis2",Info.lZ);
+			SmartDashboard::PutNumber("axis3",Info.lRx);
+			SmartDashboard::PutNumber("axis4",Info.lRy);
+			SmartDashboard::PutNumber("axis5",Info.lRz);
+		}
+		#endif
 		Info.ButtonBank[0]=m_ds->GetStickButtons(nr);
 		ret=true;
 	}
