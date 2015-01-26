@@ -902,7 +902,7 @@ void Rotary_Properties::Init()
 	props.PID_Console_Dump=false;  //Always false unless you want to analyze PID (only one system at a time!)
 	props.UseAggressiveStop=false;  //This is only for angular so false is a good default (must be explicit in script otherwise)
 	props.Voltage_Terms.Init();
-	props.InverseMaxAccel=props.InverseMaxAccel=0.0;
+	props.InverseMaxAccel=props.InverseMaxDecel=0.0;
 	props.Positive_DeadZone=props.Negative_DeadZone=0.0;
 	props.MaxLimitRange=props.MinLimitRange=0.0;  //just zero out; these are optionally used and explicitly set when used
 	Rotary_Props::Rotary_Arm_GainAssist_Props &arm=props.ArmGainAssist; 
