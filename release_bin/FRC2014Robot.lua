@@ -15,7 +15,7 @@ Catapult_PotentiometerToArmRatio=1/3
 Catapult_PotentiometerToMotorRatio=Catapult_PotentiometerToArmRatio * Catapult_ArmToMotorRatio
 --TODO get max speed of bag motor under load
 --Catapult_MaxSpeed=(8000.0/60.0) * Pi2
-Catapult_MaxSpeed=(8000.0/60.0) * Pi2 * 0.125
+Catapult_MaxSpeed=(8000.0/60.0) * Pi2 * 0.125 * 0.15
 
 Intake_ArmToMotorRatio=1.0
 Intake_MotorToArmRatio=1.0/Intake_ArmToMotorRatio
@@ -26,8 +26,8 @@ g_wheel_diameter_in=4   --This will determine the correct distance try to make a
 WheelBase_Width_In=26.5	  --The wheel base will determine the turn rate, must be as accurate as possible!
 WheelBase_Length_In=10  --was 9.625
 WheelTurningDiameter_In= ( (WheelBase_Width_In * WheelBase_Width_In) + (WheelBase_Length_In * WheelBase_Length_In) ) ^ 0.5
-HighGearSpeed = (873.53 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  --RPM's from Parker
-LowGearSpeed  = (403.92 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters
+HighGearSpeed = (873.53 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.85 --RPM's from Parker
+LowGearSpeed  = (403.92 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9
 Drive_MaxAccel=5
 skid=math.cos(math.atan2(WheelBase_Length_In,WheelBase_Width_In))
 gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) * skid
@@ -38,21 +38,25 @@ MainRobot = {
 		--by default module is 1, so only really need it for 2
 		victor =
 		{
-			id_1 = { name= "left_drive_1", channel=1, module=1}, 
-			id_2 = { name= "left_drive_2", channel=2}, 
-			id_3 = { name="right_drive_1", channel=3},
-			id_4 = { name="right_drive_2", channel=4},
-			id_5 = { name= "left_drive_3", channel=5}, 
-			id_6 = { name="right_drive_3", channel=6},
+			id_1 = { name= "right_drive_1", channel=1, module=1}, 
+			id_2 = { name= "right_drive_2", channel=2}, 
+			id_3 = { name= "right_drive_3", channel=3}, 
+			id_4 = { name="left_drive_1", channel=4},
+			id_5 = { name="left_drive_2", channel=5},
+			id_6 = { name="left_drive_3", channel=6},
 			id_7 = { name="winch",         channel=7}, 
 			id_8 = { name="intake_arm_1",  channel=8},
 			id_9 = { name="intake_arm_2",  channel=9},
-			id_10= { name="rollers",       channel=10},
+			id_10= { name="rollers",       channel=10}
+		},
+		relay =
+		{
+			id_1 = { name= "CameraLED", channel=1}
 		},
 		double_solenoid =
 		{
-			id_1 = { name="use_low_gear",    forward_channel=1, reverse_channel=2},
-			id_2 = { name="release_clutch",  forward_channel=3, reverse_channel=4},
+			id_1 = { name="use_low_gear",    forward_channel=2, reverse_channel=1},
+			id_2 = { name="release_clutch",  forward_channel=4, reverse_channel=3},
 			id_3 = { name="catcher_shooter", forward_channel=5, reverse_channel=6},
 			id_4 = { name="catcher_intake",	 forward_channel=7, reverse_channel=8}
 		},
@@ -70,8 +74,8 @@ MainRobot = {
 		{	
 			--encoder names must be the same name list from the victor (or other speed controls)
 			--These channels must be unique to digital input channels as well
-			id_1 = { name= "left_drive_1",  a_channel=1, b_channel=2},
-			id_2 = { name="right_drive_1",  a_channel=3, b_channel=4},
+			id_1 = { name= "left_drive_1",  a_channel=3, b_channel=4},
+			id_2 = { name="right_drive_1",  a_channel=1, b_channel=2},
 			id_3 = { name="winch",  a_channel=5, b_channel=6}
 		},
 		compressor	=	{ relay=8, limit=14 }
@@ -85,7 +89,7 @@ MainRobot = {
 	MaxAccelForward_High = Drive_MaxAccel * 2, MaxAccelReverse_High = Drive_MaxAccel * 2, 
 	MaxTorqueYaw =  gMaxTorqueYaw * 0.78,
 	MaxTorqueYaw_High = gMaxTorqueYaw * 5,
-	MaxTorqueYaw_SetPoint = gMaxTorqueYaw * 5,
+	MaxTorqueYaw_SetPoint = gMaxTorqueYaw * 2,
 	MaxTorqueYaw_SetPoint_High = gMaxTorqueYaw * 10,
 	rotation_tolerance=Deg2Rad * 2,
 	rotation_distance_scalar=1.0,
@@ -118,7 +122,7 @@ MainRobot = {
 		drive_to_scale=0.50,				--For 4 to 10 50% gives a 5 inch tolerance
 		left_max_offset=0.0 , right_max_offset=0.0,   --Ensure both tread top speeds are aligned
 		--This is obtainer from encoder RPM's of 1069.2 and Wheel RPM's 427.68 (both high and low have same ratio)
-		encoder_to_wheel_ratio=0.4,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
+		encoder_to_wheel_ratio=0.5,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
 		voltage_multiply=1.0,				--May be reversed using -1.0
 		curve_voltage=
 		{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
@@ -162,6 +166,7 @@ MainRobot = {
 			--This allows gain assist to apply max voltage to its descent
 			chipshot_angle_deg=45,
 			goalshot_angle_deg=90,
+			auto_deploy_arm='y',
 		},
 		intake=
 		{
@@ -176,7 +181,21 @@ MainRobot = {
 
 		auton =
 		{
-			ball_target_distance_ft=4,
+			first_move_ft=2,
+			first_move_wait=0.600,
+			second_move_ft=4,
+			support_hotspot='n',
+			land_on_ball_roller_speed=-1.0,
+			land_on_ball_roller_time=1.0,
+			scoot_back_ft=0.0,
+			second_ball_roller_time=1.5,
+			load_ball_roller_speed = -1.0,
+			roller_drive_speed=-1.0,
+			loaded_ball_wait=0.500,
+			third_ball_angle_deg=45,
+			-- (x / cos(theta)) should be same distance back, use negative to come backwards
+			third_ball_distance_ft=-(2/math.cos(45 * Deg2Rad)),
+			show_auton_variables='y'
 		},
 		
 		winch =
@@ -201,7 +220,7 @@ MainRobot = {
 			--reach full speed which should be very quick
 			max_accel_forward=Catapult_MaxSpeed * 10,
 			max_accel_reverse=Catapult_MaxSpeed * 10,
-			using_range=1,					--Warning Only use range if we have a potentiometer!
+			using_range=0,					--Warning Only use range if we have a potentiometer!
 			--These are arm converted to gear ratio
 			--The winch is set up to force the numbers to go up from 0 - 90 where 0 is pointing up
 			max_range_deg= 92 * Catapult_ArmToMotorRatio,
@@ -326,7 +345,7 @@ MainRobot = {
 				--latency=0.300,
 				--I'm explicitly keeping this here to show that we have the same ratio (it is conceivable that this would not always be true)
 				--This is obtainer from encoder RPM's of 1069.2 and Wheel RPM's 427.68 (both high and low have same ratio)
-				encoder_to_wheel_ratio=0.4,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
+				encoder_to_wheel_ratio=0.5,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
 				voltage_multiply=1.0,				--May be reversed using -1.0
 				curve_voltage=
 				{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
@@ -354,6 +373,8 @@ MainRobot = {
 
 	controls =
 	{
+		--field_centric_x_axis_threshold=0.40,
+		--tank_steering_tolerance=0.05,
 		Joystick_1 =
 		{
 			control = "airflo",
@@ -361,17 +382,19 @@ MainRobot = {
 			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetRight_XAxis = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Analog_Turn = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			IntakeRollers_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			FieldCentric_Enable = {type="joystick_button", key=4, on_off=false},
 			Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
 			--scaled down to 0.5 to allow fine tuning and a good top acceleration speed (may change with the lua script tweaks)
 			--Turret_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
 			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
-			Robot_SetLowGearOff = {type="joystick_button", key=8, on_off=false},
-			Robot_SetLowGearOn = {type="joystick_button", key=6, on_off=false},
+			Robot_SetLowGearOff = {type="joystick_button", key=8, keyboard=';', on_off=false},
+			Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},
 			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Turn_180 = {type="joystick_button", key=7, on_off=false},
 			Turn_180_Hold = {type="joystick_button", key=7, on_off=true},
@@ -379,19 +402,20 @@ MainRobot = {
 			SlideHold = {type="joystick_button", key=7, on_off=true},
 			TestWaypoint={type="joystick_button", key=3, keyboard='q', on_off=true},
 			
-			Winch_SetChipShot = {type="joystick_button", key=4, on_off=false},
+			--Winch_SetChipShot = {type="joystick_button", key=4, on_off=false},
 			Winch_SetGoalShot = {type="joystick_button", key=2, on_off=false},
 			--Winch_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			Winch_Fire={type="joystick_button", key=1, keyboard='j', on_off=true},
+			Winch_FireManager={type="joystick_button", key=1, keyboard='j', on_off=true},
 			Winch_Advance={type="keyboard", key='k', on_off=true},
-			IntakeArm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			IntakeArm_SetDeployed={type="keyboard", key='l', on_off=false},
-			IntakeArm_SetStowed={type="keyboard", key=';', on_off=false},
+			--IntakeArm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			--IntakeArm_SetDeployed={type="keyboard", key='l', on_off=false},
+			--IntakeArm_SetStowed={type="keyboard", key=';', on_off=false},
 			Robot_BallTargeting_On={type="keyboard", key='t', on_off=false},
 			Robot_BallTargeting_Off={type="keyboard", key='y', on_off=false},
 			Winch_Advance={type="keyboard", key='k', on_off=true},
-			Robot_CatcherShooter={type="keyboard", key='u', on_off=true},
-			Robot_CatcherIntake={type="keyboard", key='i', on_off=true},
+			--Robot_CatcherShooter={type="keyboard", key='u', on_off=true},
+			--Robot_CatcherIntake={type="keyboard", key='i', on_off=true},
+			IntakeArm_DeployManager={type="keyboard", key='u', on_off=true},
 			TestAuton={type="keyboard", key='g', on_off=false},
 			--Slide={type="keyboard", key='g', on_off=false},
 		},
@@ -428,27 +452,28 @@ MainRobot = {
 		{
 			control = "gamepad f310 (controller)",
 			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			Turret_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
-			PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
+			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			--Turret_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
+			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
 			
 			--IntakeRollers_Grip = {type="joystick_button", key=?, on_off=true},
 			--IntakeRollers_Squirt = {type="joystick_button", key=?, on_off=true},
 			IntakeRollers_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--FieldCentric_EnableValue = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 
 			Robot_SetLowGearOff = {type="joystick_button", key=6, on_off=false},
 			Robot_SetLowGearOn = {type="joystick_button", key=5, on_off=false},
-			Robot_TestWaypoint={type="joystick_button", key=3, on_off=true},
+			TestWaypoint={type="joystick_button", key=3, on_off=true},
 			
 			Winch_SetChipShot = {type="joystick_button", key=4, on_off=false},
 			Winch_SetGoalShot = {type="joystick_button", key=2, on_off=false},
 			Winch_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			Winch_Fire={type="joystick_button", key=1, keyboard='j', on_off=true},
+			Winch_Fire={type="joystick_button", key=1, on_off=true},
 		},
 		Joystick_4 =
 		{
