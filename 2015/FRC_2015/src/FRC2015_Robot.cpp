@@ -148,6 +148,147 @@ void FRC_2015_Robot::Kicker_Wheel::BindAdditionalEventControls(bool Bind)
 }
 
   /***********************************************************************************************************************************/
+ /*													FRC_2015_Robot::Robot_Arm														*/
+/***********************************************************************************************************************************/
+
+FRC_2015_Robot::Robot_Arm::Robot_Arm(FRC_2015_Robot *parent,Rotary_Control_Interface *robot_control) : 
+Rotary_Position_Control("Arm",robot_control,eArm),m_pParent(parent),m_Advance(false),m_Retract(false)
+{
+}
+
+
+void FRC_2015_Robot::Robot_Arm::Advance(bool on)
+{
+	m_Advance=on;
+}
+void FRC_2015_Robot::Robot_Arm::Retract(bool on)
+{
+	m_Retract=on;
+}
+
+void FRC_2015_Robot::Robot_Arm::TimeChange(double dTime_s)
+{
+	const double Accel=m_Ship_1D_Props.ACCEL;
+	const double Brake=m_Ship_1D_Props.BRAKE;
+
+	//Get in my button values now use xor to only set if one or the other is true (not setting automatically zero's out)
+	if (m_Advance ^ m_Retract)
+		SetCurrentLinearAcceleration(m_Advance?Accel:-Brake);
+
+	__super::TimeChange(dTime_s);
+#if 0
+#ifdef __DebugLUA__
+	Dout(m_pParent->m_RobotProps.GetIntakeDeploymentProps().GetRotaryProps().Feedback_DiplayRow,7,"p%.1f",RAD_2_DEG(GetPos_m()));
+#endif
+#endif
+#ifdef Robot_TesterCode
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	const double c_GearToArmRatio=1.0/props.ArmToGearRatio;
+	double Pos_m=GetPos_m();
+	double height=AngleToHeight_m(Pos_m);
+	DOUT4("Arm=%f Angle=%f %fft %fin",m_Physics.GetVelocity(),RAD_2_DEG(Pos_m*c_GearToArmRatio),height*3.2808399,height*39.3700787);
+#endif
+}
+
+
+double FRC_2015_Robot::Robot_Arm::AngleToHeight_m(double Angle_r) const
+{
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	const double c_GearToArmRatio=1.0/props.ArmToGearRatio;
+
+	return (sin(Angle_r*c_GearToArmRatio)*props.ArmLength)+props.GearHeightOffset;
+}
+double FRC_2015_Robot::Robot_Arm::Arm_AngleToHeight_m(double Angle_r) const
+{
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	return (sin(Angle_r)*props.ArmLength)+props.GearHeightOffset;
+}
+
+double FRC_2015_Robot::Robot_Arm::HeightToAngle_r(double Height_m) const
+{
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	return asin((Height_m-props.GearHeightOffset)/props.ArmLength) * props.ArmToGearRatio;
+}
+
+double FRC_2015_Robot::Robot_Arm::PotentiometerRaw_To_Arm_r(double raw) const
+{
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	const int RawRangeHalf=512;
+	double ret=((raw / RawRangeHalf)-1.0) * DEG_2_RAD(270.0/2.0);  //normalize and use a 270 degree scalar (in radians)
+	ret*=props.PotentiometerToArmRatio;  //convert to arm's gear ratio
+	return ret;
+}
+
+double FRC_2015_Robot::Robot_Arm::GetPosRest()
+{
+	return HeightToAngle_r(-0.02);
+}
+void FRC_2015_Robot::Robot_Arm::SetPosRest()
+{
+	SetIntendedPosition(GetPosRest()  );
+}
+void FRC_2015_Robot::Robot_Arm::SetPos0feet()
+{
+	SetIntendedPosition( HeightToAngle_r(0.0) );
+}
+void FRC_2015_Robot::Robot_Arm::SetPos3feet()
+{
+	//Not used, but kept for reference
+	SetIntendedPosition(HeightToAngle_r(0.9144));
+}
+void FRC_2015_Robot::Robot_Arm::SetPos6feet()
+{
+	SetIntendedPosition( HeightToAngle_r(1.8288) );
+}
+void FRC_2015_Robot::Robot_Arm::SetPos9feet()
+{
+	SetIntendedPosition( HeightToAngle_r(2.7432) );
+}
+void FRC_2015_Robot::Robot_Arm::CloseRist(bool Close)
+{
+	m_pParent->m_RobotControl->CloseSolenoid(eRist,Close);
+}
+
+void FRC_2015_Robot::Robot_Arm::BindAdditionalEventControls(bool Bind)
+{
+	Base::EventMap *em=GetEventMap(); //grrr had to explicitly specify which EventMap
+	if (Bind)
+	{
+		em->EventValue_Map["Arm_SetCurrentVelocity"].Subscribe(ehl,*this, &FRC_2015_Robot::Robot_Arm::SetRequestedVelocity_FromNormalized);
+		em->EventOnOff_Map["Arm_SetPotentiometerSafety"].Subscribe(ehl,*this, &FRC_2015_Robot::Robot_Arm::SetPotentiometerSafety);
+
+		em->Event_Map["Arm_SetPosRest"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPosRest);
+		em->Event_Map["Arm_SetPos0feet"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPos0feet);
+		em->Event_Map["Arm_SetPos3feet"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPos3feet);
+		em->Event_Map["Arm_SetPos6feet"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPos6feet);
+		em->Event_Map["Arm_SetPos9feet"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPos9feet);
+
+		em->EventOnOff_Map["Arm_Advance"].Subscribe(ehl,*this, &FRC_2015_Robot::Robot_Arm::Advance);
+		em->EventOnOff_Map["Arm_Retract"].Subscribe(ehl,*this, &FRC_2015_Robot::Robot_Arm::Retract);
+
+		em->EventOnOff_Map["Arm_Rist"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::CloseRist);
+	}
+	else
+	{
+		em->EventValue_Map["Arm_SetCurrentVelocity"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetRequestedVelocity_FromNormalized);
+		em->EventOnOff_Map["Arm_SetPotentiometerSafety"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPotentiometerSafety);
+
+		em->Event_Map["Arm_SetPosRest"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPosRest);
+		em->Event_Map["Arm_SetPos0feet"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPos0feet);
+		em->Event_Map["Arm_SetPos3feet"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPos3feet);
+		em->Event_Map["Arm_SetPos6feet"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPos6feet);
+		em->Event_Map["Arm_SetPos9feet"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPos9feet);
+
+		em->EventOnOff_Map["Arm_Advance"].Remove(*this, &FRC_2015_Robot::Robot_Arm::Advance);
+		em->EventOnOff_Map["Arm_Retract"].Remove(*this, &FRC_2015_Robot::Robot_Arm::Retract);
+
+		em->EventOnOff_Map["Arm_Rist"]  .Remove(*this, &FRC_2015_Robot::Robot_Arm::CloseRist);
+	}
+}
+
+
+
+  /***********************************************************************************************************************************/
  /*															FRC_2015_Robot															*/
 /***********************************************************************************************************************************/
 
@@ -159,7 +300,7 @@ const double c_HalfCourtWidth=c_CourtWidth/2.0;
 FRC_2015_Robot::FRC_2015_Robot(const char EntityName[],FRC_2015_Control_Interface *robot_control,bool IsAutonomous) : 
 	Tank_Robot(EntityName,robot_control,IsAutonomous), m_RobotControl(robot_control), 
 		m_Turret(this,robot_control),m_PitchRamp(this,robot_control),
-		m_Kicker_Wheel(this,robot_control),m_LatencyCounter(0.0),
+		m_Kicker_Wheel(this,robot_control),m_Arm(this,robot_control),m_LatencyCounter(0.0),
 		m_YawErrorCorrection(1.0),m_PowerErrorCorrection(1.0),m_DefensiveKeyNormalizedDistance(0.0),m_DefaultPresetIndex(0),
 		m_AutonPresetIndex(0),
 		m_DisableTurretTargetingValue(false),m_POVSetValve(false),m_SetLowGear(false),m_SetDriverOverride(false)
@@ -183,12 +324,14 @@ void FRC_2015_Robot::Initialize(Entity2D_Kind::EventMap& em, const Entity_Proper
 	//set to the default key position
 	//const FRC_2015_Robot_Props &robot2015props=RobotProps->GetFRC2015RobotProps();
 	m_Kicker_Wheel.Initialize(em,RobotProps?&RobotProps->GetKickerWheelProps():NULL);
+	m_Arm.Initialize(em,RobotProps?&RobotProps->GetArmProps():NULL);
 }
 void FRC_2015_Robot::ResetPos()
 {
 	__super::ResetPos();
 	m_Turret.ResetPos();
 	m_PitchRamp.ResetPos();
+	m_Arm.ResetPos();
 	//TODO this is tacky... will have better low gear method soon
 	if (!GetBypassPosAtt_Update())
 	{
@@ -269,6 +412,7 @@ void FRC_2015_Robot::TimeChange(double dTime_s)
 	m_Turret.TimeChange(dTime_s);
 	m_PitchRamp.TimeChange(dTime_s);
 	m_Kicker_Wheel.AsEntity1D().TimeChange(dTime_s);
+	m_Arm.AsEntity1D().TimeChange(dTime_s);
 
 	#ifdef __EnableShapeTrackingSimulation__
 	{
@@ -393,6 +537,8 @@ void FRC_2015_Robot::BindAdditionalEventControls(bool Bind)
 	m_Turret.BindAdditionalEventControls(Bind);
 	m_PitchRamp.BindAdditionalEventControls(Bind);
 	m_Kicker_Wheel.AsShip1D().BindAdditionalEventControls(Bind);
+	m_Arm.AsShip1D().BindAdditionalEventControls(Bind);
+
 	#ifdef Robot_TesterCode
 	m_RobotControl->BindAdditionalEventControls(Bind,GetEventMap(),ehl);
 	#endif
@@ -574,6 +720,9 @@ const char * const g_FRC_2015_Controls_Events[] =
 	"Robot_SetDriverOverride",
 	"IntakeArm_DeployManager",
 	"KickerWheel_SetCurrentVelocity",
+	"Arm_SetCurrentVelocity","Arm_SetPotentiometerSafety","Arm_SetPosRest",
+	"Arm_SetPos0feet","Arm_SetPos3feet","Arm_SetPos6feet","Arm_SetPos9feet",
+	"Arm_Rist","Arm_Advance","Arm_Retract",
 	"TestAuton"
 };
 
@@ -641,6 +790,12 @@ void FRC_2015_Robot_Properties::LoadFromScript(Scripting::Script& script)
 		if (!err)
 		{
 			m_PitchRampProps.LoadFromScript(script);
+			script.Pop();
+		}
+		err = script.GetFieldTable("arm");
+		if (!err)
+		{
+			m_ArmProps.LoadFromScript(script);
 			script.Pop();
 		}
 
@@ -866,6 +1021,11 @@ void FRC_2015_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 		//  [1/24/2015 JamesK]
 		SmartDashboard::PutNumber("RollerVoltage",Voltage);
 		break;
+	case FRC_2015_Robot::eArm:
+		Voltage=Voltage * m_RobotProps.GetArmProps().GetRotaryProps().VoltageScalar;
+		Victor_UpdateVoltage(index,Voltage);
+		SmartDashboard::PutNumber("ArmVoltage",Voltage);
+		break;
 	case FRC_2015_Robot::eCameraLED:
 		TranslateToRelay(index,Voltage);
 		//I don't need this since we have another variable that represents it, but enable for diagnostics
@@ -987,6 +1147,14 @@ void FRC_2015_Robot_Control::OpenSolenoid(size_t index,bool Open)
 	{
 	case FRC_2015_Robot::eUseLowGear:
 		SmartDashboard::PutBoolean("UseHighGear",!Open);
+		Solenoid_Open(index,Open);
+		break;
+	case FRC_2015_Robot::eClaw:
+		SmartDashboard::PutBoolean("Claw",!Open);
+		Solenoid_Open(index,Open);
+		break;
+	case FRC_2015_Robot::eRist:
+		SmartDashboard::PutBoolean("Wrist",!Open);
 		Solenoid_Open(index,Open);
 		break;
 	}

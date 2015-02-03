@@ -19,6 +19,17 @@ public:
 struct FRC_2015_Robot_Props
 {
 public:
+	//TODO evaluate how this translates into the dart
+	//everything in meters and radians
+	double OptimalAngleUp;
+	double OptimalAngleDn;
+	double ArmLength;
+	double ArmToGearRatio;
+	double PotentiometerToArmRatio;
+	double PotentiometerMaxRotation;
+	double GearHeightOffset;
+	double MotorToWheelGearRatio;
+
 	struct Autonomous_Properties
 	{
 		void ShowAutonParameters(); //This will show SmartDashboard variables if ShowParameters is true
@@ -37,6 +48,7 @@ class FRC_2015_Robot_Properties : public Tank_Robot_Properties
 		const Rotary_Properties &GetTurretProps() const {return m_TurretProps;}
 		const Rotary_Properties &GetPitchRampProps() const {return m_PitchRampProps;}
 		const Rotary_Properties &GetKickerWheelProps() const {return m_KickerWheelProps;}
+		const Rotary_Properties &GetArmProps() const {return m_ArmProps;}
 
 		const Tank_Robot_Properties &GetLowGearProps() const {return m_LowGearProps;}
 		const FRC_2015_Robot_Props &GetFRC2015RobotProps() const {return m_FRC2015RobotProps;}
@@ -47,7 +59,7 @@ class FRC_2015_Robot_Properties : public Tank_Robot_Properties
 		#ifndef Robot_TesterCode
 		typedef Tank_Robot_Properties __super;
 		#endif
-		Rotary_Properties m_TurretProps,m_PitchRampProps,m_KickerWheelProps;
+		Rotary_Properties m_TurretProps,m_PitchRampProps,m_KickerWheelProps,m_ArmProps;
 		Tank_Robot_Properties m_LowGearProps;
 		FRC_2015_Robot_Props m_FRC2015RobotProps;
 
@@ -91,6 +103,7 @@ class FRC_2015_Robot : public Tank_Robot
 			eRightDrive3,
 			#endif
 			eKickerWheel,
+			eArm,
 			eCameraLED  //Full forward is on 0 is off
 		};
 
@@ -101,6 +114,8 @@ class FRC_2015_Robot : public Tank_Robot
 		enum SolenoidDevices
 		{
 			eUseLowGear,		//If the OpenSolenoid() is called with true then it should be in low gear; otherwise high gear
+			eClaw,
+			eRist
 		};
 
 		static SolenoidDevices GetSolenoidDevices_Enum (const char *value)
@@ -176,10 +191,49 @@ class FRC_2015_Robot : public Tank_Robot
 				double m_Velocity; //adds all axis velocities then assigns on the time change
 		};
 
+		class Robot_Arm : public Rotary_Position_Control
+		{
+			public:
+				Robot_Arm(FRC_2015_Robot *parent,Rotary_Control_Interface *robot_control);
+				IEvent::HandlerList ehl;
+				//The parent needs to call initialize
+				double HeightToAngle_r(double Height_m) const;
+				double Arm_AngleToHeight_m(double Angle_r) const;
+				double AngleToHeight_m(double Angle_r) const;
+				double GetPosRest();
+				//given the raw potentiometer converts to the arm angle
+				double PotentiometerRaw_To_Arm_r(double raw) const;
+				void CloseRist(bool Close);
+			protected:
+				//Intercept the time change to obtain current height as well as sending out the desired velocity
+				virtual void BindAdditionalEventControls(bool Bind);
+				void Advance(bool on);
+				void Retract(bool on);
+				//events are a bit picky on what to subscribe so we'll just wrap from here
+				void SetRequestedVelocity_FromNormalized(double Velocity) {__super::SetRequestedVelocity_FromNormalized(Velocity);}
+
+				void SetPotentiometerSafety(bool DisableFeedback) {__super::SetPotentiometerSafety(DisableFeedback);}
+				virtual void TimeChange(double dTime_s);
+
+			private:
+				#ifndef Robot_TesterCode
+				typedef Rotary_Position_Control __super;
+				#endif
+				void SetPosRest();
+				void SetPos0feet();
+				void SetPos3feet();
+				void SetPos6feet();
+				void SetPos9feet();
+				FRC_2015_Robot * const m_pParent;
+				bool m_Advance, m_Retract;
+		};
+
 	public: //Autonomous public access (wind river has problems with friend technique)
 		const FRC_2015_Robot_Properties &GetRobotProps() const;
 		FRC_2015_Robot_Props::Autonomous_Properties &GetAutonProps();
 		bool GetCatapultLimit() const;
+		//Accessors needed for setting goals
+		Robot_Arm &GetArm() {return m_Arm;}
 	protected:
 		virtual void BindAdditionalEventControls(bool Bind);
 		virtual void BindAdditionalUIControls(bool Bind, void *joy, void *key);
@@ -193,6 +247,7 @@ class FRC_2015_Robot : public Tank_Robot
 		Turret m_Turret;
 		PitchRamp m_PitchRamp;
 		Kicker_Wheel m_Kicker_Wheel;
+		Robot_Arm m_Arm;
 		FRC_2015_Robot_Properties m_RobotProps;  //saves a copy of all the properties
 		Vec2D m_DefensiveKeyPosition;
 		double m_LatencyCounter;
