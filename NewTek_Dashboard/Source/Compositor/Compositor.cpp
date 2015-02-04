@@ -209,6 +209,13 @@ struct Compositor_Props
 				//These help define where to position the origin of the handle typically 0.5,0.5 is center
 				double XBisect,YBisect;
 			} Square;
+			struct Cube_Props  //Cubes use this
+			{
+				double Length,Width,Depth;
+				Shapes2D_Orientation_Props Orientation;
+				//These help define where to position the origin of the handle typically 0.5,0.5 is center
+				double XBisect,YBisect,ZBisect;
+			} Cube;
 		} specific_data;
 
 		enum shape_types 
@@ -471,6 +478,7 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 	typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
 	typedef ShapeProps::type_specifics::Shapes2D_Props Shapes2D_Props;
 	typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Square_Props SquareProps;
+	typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Cube_Props CubeProps;
 
 	std::string sTest;
 	err = script.GetField("remote_name",&shape_props.RemoteVariableName,NULL,NULL);
@@ -497,10 +505,92 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 	switch (shape)
 	{
 	case ShapeProps::e_Cube:
-		if (LoadMeasuredValue(script,"size",value))
-			shape_props.specific_data.Size_1D=value;
-		else
-			shape_props.specific_data.Size_1D= 12 * 0.0254;	
+		{
+			CubeProps &cube_props=shape_props.specific_data.Cube;
+			if (LoadMeasuredValue(script,"size",value))
+			{
+				shape_props.specific_data.Size_1D=value;
+				cube_props.Length=cube_props.Width=cube_props.Depth=value;
+			}
+			else
+				shape_props.specific_data.Size_1D= 12 * 0.0254;	
+			if (LoadMeasuredValue(script,"length",value))
+				cube_props.Length=value;
+			else
+				cube_props.Length= shape_props.specific_data.Size_1D;	
+
+			if (LoadMeasuredValue(script,"width",value))
+				cube_props.Width=value;
+			else
+				cube_props.Width= cube_props.Length;	
+
+			if (LoadMeasuredValue(script,"depth",value))
+				cube_props.Depth=value;
+			else
+				cube_props.Depth= cube_props.Depth;	
+
+			//TODO move this in sequence packet when live edit comes on-line
+			double fTest;
+			err = script.GetField("x_bisect",NULL,NULL,&fTest);
+			cube_props.XBisect=(err==NULL) ? fTest : 0.5;
+
+			err = script.GetField("y_bisect",NULL,NULL,&fTest);
+			cube_props.YBisect=(err==NULL) ? fTest : 0.5;
+
+			err = script.GetField("z_bisect",NULL,NULL,&fTest);
+			cube_props.ZBisect=(err==NULL) ? fTest : 0.5;
+
+			err = script.GetFieldTable("rotation");
+			if (!err)
+			{
+				err=script.GetField("x_deg", NULL, NULL, &fTest);
+				if (!err) cube_props.Orientation.Yaw=DEG_2_RAD(fTest);
+				else
+				{
+					err = script.GetField("x",NULL,NULL,&fTest);
+					assert(!err);
+					cube_props.Orientation.Yaw=fTest;
+				}
+				err=script.GetField("y_deg", NULL, NULL, &fTest);
+				if (!err) cube_props.Orientation.Pitch=DEG_2_RAD(fTest);
+				else
+				{
+					err = script.GetField("y",NULL,NULL,&fTest);
+					assert(!err);
+					cube_props.Orientation.Pitch=fTest;
+				}
+				err=script.GetField("z_deg", NULL, NULL, &fTest);
+				if (!err) cube_props.Orientation.Roll=DEG_2_RAD(fTest);
+				else
+				{
+					err = script.GetField("z",NULL,NULL,&fTest);
+					assert(!err);
+					cube_props.Orientation.Roll=fTest;
+				}
+				script.Pop();
+			}
+			else
+			{
+
+				cube_props.Orientation.Yaw=0.0;
+				cube_props.Orientation.Pitch=0.0;
+				cube_props.Orientation.Roll=0.0;
+			}
+			if (shape_props.RemoteVariableName.c_str()[0]!=0)
+			{
+				sTest=shape_props.RemoteVariableName;
+				sTest+="_rot_x";
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(cube_props.Orientation.Yaw));
+				sTest=shape_props.RemoteVariableName;
+				sTest+="_rot_y";
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(cube_props.Orientation.Pitch));
+				sTest=shape_props.RemoteVariableName;
+				sTest+="_rot_z";
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(cube_props.Orientation.Roll));
+			}
+
+		}		
+
 		break;
 	case ShapeProps::e_Circle:
 		//The rest should be the shapes 2D kind
@@ -2099,13 +2189,12 @@ public:
 	void InitCube(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
 	{
 		using namespace osg;
-		typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Square_Props SquareProps;
-		//const SquareProps &sqr_props=props.specific_data.Square;
-		const double Length=props.specific_data.Size_1D;
-		const double Width=Length;
-		const double Depth=Width;
-		const double Yaw=0.0,Pitch=0.0,Roll=0.0;
-		Quat orientation=From_Rot_Radians(Yaw,Pitch,Roll);
+		typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Cube_Props CubeProps;
+		const CubeProps &cube_props=props.specific_data.Cube;
+		const double Length=cube_props.Length;
+		const double Width=cube_props.Width;
+		const double Depth=cube_props.Depth;
+		Quat orientation=From_Rot_Radians(cube_props.Orientation.Yaw,cube_props.Orientation.Pitch,cube_props.Orientation.Roll);
 
 		Vec3d FwdDir(orientation*Vec3d(0,1,0));
 		Vec3d BackDir=FwdDir;
@@ -2114,7 +2203,7 @@ public:
 		Vec3d RightDir(orientation*Vec3d(1,0,0));
 		Vec3d LeftDir=RightDir;
 
-		const double YBisect=0.5,XBisect=0.5,ZBisect=0.5;
+		const double YBisect=cube_props.YBisect,XBisect=cube_props.XBisect,ZBisect=cube_props.ZBisect;
 		//Scale normalized by size
 		UpDir   *=(Length * YBisect); //bisect length and width to work with that origin
 		DownDir *=(Length * (1.0-YBisect));
@@ -3009,6 +3098,19 @@ class Compositor
 						if (shape_props.draw_shape==ShapeProps::e_Square)
 						{
 							ShapeProps::type_specifics::Square_Props &orientation_rw=shape_props_rw.specific_data.Square;
+							sTest=shape_props.RemoteVariableName;
+							sTest+="_rot_x";
+							orientation_rw.Orientation.Yaw=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							sTest=shape_props.RemoteVariableName;
+							sTest+="_rot_y";
+							orientation_rw.Orientation.Pitch=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+							sTest=shape_props.RemoteVariableName;
+							sTest+="_rot_z";
+							orientation_rw.Orientation.Roll=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+						}
+						else if (shape_props.draw_shape==ShapeProps::e_Cube)
+						{
+							ShapeProps::type_specifics::Cube_Props &orientation_rw=shape_props_rw.specific_data.Cube;
 							sTest=shape_props.RemoteVariableName;
 							sTest+="_rot_x";
 							orientation_rw.Orientation.Yaw=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
