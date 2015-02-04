@@ -1,10 +1,11 @@
 Pi=3.14159265358979323846
 BallDiameter=2.34
 BallRadius=BallDiameter/2
+CubeSize=5.3
 
 --This is used load persistence of the coordinates last saved etc
 function GetSettings()
-	local loaded_file = loadfile("CompositorSave_Main.lua")
+	local loaded_file = loadfile("CompositorSave_FOV_Test.lua")
 	if (loaded_file==nil) then
 		return nil
 	else
@@ -67,9 +68,9 @@ CompositorProps = {
 			shape_reticle_2 =
 			{
 				--remote_name="land_reticle",
-				size_in=BallDiameter,
+				size_in=CubeSize,
 				r=250,g=250,b=0,
-				draw_shape="circle"
+				draw_shape="cube"
 			}
 		},
 		
@@ -77,8 +78,9 @@ CompositorProps = {
 		{
 			width_in = 8.5, length_in = 11,
 			pivot_in = 2,
-			camera_position =	{ x_in=0, y_in=2, z_in=-1.0 },
-			camera_rotation =	{ x_deg=0, y_deg=0, z=0 },
+			--Using 2.0 for regular axis stand... using 5.52 for 2015 camera mount with angle pointing down
+			camera_position =	{ x_in=0, y_in=6, z_in=-5.0 },
+			camera_rotation =	{ x_deg=0, y_deg=-17.158, z=0 },
 			fov=45,
 			r=0,g=255,b=100,
 			num_segments=11,
@@ -99,7 +101,7 @@ CompositorProps = {
 					composite_1 = {	type="bypass" },
 					composite_2 = {	type="square", selection=1 },
 					composite_3 = { type="shape", selection=1, x=0, y_in=BallRadius , z_in=5 },
-					composite_4 = { type="shape", selection=2,  y_in=BallRadius , z_in=10 },
+					composite_4 = { type="shape", selection=2,  y_in=CubeSize/2 , z_in=13 + CubeSize/2},
 					composite_5 = {	type="pathalign"}
 				}
 			},
