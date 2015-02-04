@@ -69,7 +69,12 @@ CompositorProps = {
 			{
 				--remote_name="land_reticle",
 				size_in=CubeSize,
+				--length_in=CubeSize*2,width_in=CubeSize,depth_in=CubeSize,y_bisect=0.75,
+				--width_in=CubeSize*2;
+				--depth_in=CubeSize*2,z_bisect=0.75;
 				r=250,g=250,b=0,
+				--test orientation
+				--rotation =	{ x_deg=0, y_deg=17.158, z=0 },
 				draw_shape="cube"
 			}
 		},
