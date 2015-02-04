@@ -2098,15 +2098,42 @@ public:
 
 	void InitCube(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
 	{
-		// points for cube - 1 x 1 meter centered at 0,0,0.
-		cube[0].x = -0.5, cube[0].y =  0.5, cube[0].z =  0.5;
-		cube[1].x =  0.5, cube[1].y =  0.5, cube[1].z =  0.5;
-		cube[2].x = -0.5, cube[2].y =  0.5, cube[2].z = -0.5;
-		cube[3].x =  0.5, cube[3].y =  0.5, cube[3].z = -0.5;
-		cube[4].x = -0.5, cube[4].y = -0.5, cube[4].z =  0.5;
-		cube[5].x =  0.5, cube[5].y = -0.5, cube[5].z =  0.5;
-		cube[6].x = -0.5, cube[6].y = -0.5, cube[6].z = -0.5;
-		cube[7].x =  0.5, cube[7].y = -0.5, cube[7].z = -0.5;
+		using namespace osg;
+		typedef Compositor_Props::Shape3D_Renderer_Props::type_specifics::Square_Props SquareProps;
+		//const SquareProps &sqr_props=props.specific_data.Square;
+		const double Length=props.specific_data.Size_1D;
+		const double Width=Length;
+		const double Depth=Width;
+		const double Yaw=0.0,Pitch=0.0,Roll=0.0;
+		Quat orientation=From_Rot_Radians(Yaw,Pitch,Roll);
+
+		Vec3d FwdDir(orientation*Vec3d(0,1,0));
+		Vec3d BackDir=FwdDir;
+		Vec3d UpDir(orientation*Vec3d(0,0,1));
+		Vec3d DownDir=UpDir;
+		Vec3d RightDir(orientation*Vec3d(1,0,0));
+		Vec3d LeftDir=RightDir;
+
+		const double YBisect=0.5,XBisect=0.5,ZBisect=0.5;
+		//Scale normalized by size
+		UpDir   *=(Length * YBisect); //bisect length and width to work with that origin
+		DownDir *=(Length * (1.0-YBisect));
+		LeftDir *=(Width  * XBisect);
+		RightDir*=(Width  * (1.0-XBisect));
+		FwdDir *=(Depth * ZBisect);
+		BackDir *=(Depth * (1.0-ZBisect));
+		//Now to apply position offset
+		Vec3d Offset(XPos,ZPos,YPos);
+
+		cube[0]= -LeftDir +   UpDir + FwdDir + Offset;
+		cube[1]= RightDir +   UpDir + FwdDir + Offset;
+		cube[2]= -LeftDir + -DownDir + FwdDir + Offset;
+		cube[3]= RightDir + -DownDir + FwdDir + Offset;
+
+		cube[4]= -LeftDir +   UpDir + -BackDir + Offset;
+		cube[5]= RightDir +   UpDir + -BackDir + Offset;
+		cube[6]= -LeftDir + -DownDir + -BackDir + Offset;
+		cube[7]= RightDir + -DownDir + -BackDir + Offset;
 	}
 	void InitSquare(double XPos,double YPos,double ZPos,const Compositor_Props::Shape3D_Renderer_Props &props)
 	{
@@ -2300,7 +2327,7 @@ public:
 
 private:
 	const projection &m_Projection;
-	_3Dpoint cube[8];
+	osg::Vec3d cube[8];
 	osg::Vec3d square[4];
 	_3Dpoint circle[40];
 };
