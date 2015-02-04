@@ -186,7 +186,7 @@ struct Compositor_Props
 
 		union type_specifics
 		{
-			double Size_1D;  //cubes use this... kept as generic name for shapes that just need size
+			double Size_1D;  //All shapes use this... kept as generic name for shapes that just need size
 			struct Shapes2D_Props  //circles use this
 			{
 				double Size_1D;  
@@ -204,6 +204,7 @@ struct Compositor_Props
 			} Shapes2D;
 			struct Square_Props  //Squares use this
 			{
+				Shapes2D_Props Props2D;
 				double Length,Width;
 				Shapes2D_Orientation_Props Orientation;
 				//These help define where to position the origin of the handle typically 0.5,0.5 is center
@@ -211,6 +212,7 @@ struct Compositor_Props
 			} Square;
 			struct Cube_Props  //Cubes use this
 			{
+				double Size_1D;
 				double Length,Width,Depth;
 				Shapes2D_Orientation_Props Orientation;
 				//These help define where to position the origin of the handle typically 0.5,0.5 is center
@@ -509,7 +511,7 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 			CubeProps &cube_props=shape_props.specific_data.Cube;
 			if (LoadMeasuredValue(script,"size",value))
 			{
-				shape_props.specific_data.Size_1D=value;
+				cube_props.Size_1D=value;
 				cube_props.Length=cube_props.Width=cube_props.Depth=value;
 			}
 			else
@@ -517,7 +519,7 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 			if (LoadMeasuredValue(script,"length",value))
 				cube_props.Length=value;
 			else
-				cube_props.Length= shape_props.specific_data.Size_1D;	
+				cube_props.Length= cube_props.Size_1D;	
 
 			if (LoadMeasuredValue(script,"width",value))
 				cube_props.Width=value;
@@ -684,6 +686,15 @@ static void LoadShapeReticleProps_Internal(Scripting::Script& script,Compositor_
 				SmartDashboard::PutNumber(sTest,RAD_2_DEG(sqr_props.Orientation.Roll));
 			}
 
+			//plane selection 
+			err = script.GetField("plane_selection",&sTest,NULL,NULL);
+			if (!err)
+			{
+				Shapes2D_Props::PlaneSelection_enum selection=Shapes2D_Props::GetPlaneSelection_Enum(sTest.c_str());
+				sqr_props.Props2D.PlaneSelection=selection;
+			}
+			else
+				sqr_props.Props2D.PlaneSelection=ShapeProps::type_specifics::Shapes2D_Props::e_xy_plane;
 		}		
 		break;
 
@@ -2231,6 +2242,19 @@ public:
 		const SquareProps &sqr_props=props.specific_data.Square;
 		Quat orientation=From_Rot_Radians(sqr_props.Orientation.Yaw,sqr_props.Orientation.Pitch,sqr_props.Orientation.Roll);
 
+		switch (sqr_props.Props2D.PlaneSelection)
+		{
+		case Shapes2D_Props::e_xy_plane:
+		case Shapes2D_Props::e_xy_and_xz_plane:
+			break;
+		case Shapes2D_Props::e_xz_plane:
+			orientation*=From_Rot_Radians(0,PI_2,0);
+			break;
+		case Shapes2D_Props::e_yz_plane:
+			orientation*=From_Rot_Radians(PI_2,0,0);
+			break;
+		}
+
 		//A square is a 2D object therefore has no depth or the forward direction
 		//Vec3d ForwardDir(orientation*Vec3d(0,1,0));
 
@@ -2238,6 +2262,7 @@ public:
 		Vec3d DownDir=UpDir;
 		Vec3d RightDir(orientation*Vec3d(1,0,0));
 		Vec3d LeftDir=RightDir;
+
 		//Scale normalized by the length and width
 		UpDir   *=(sqr_props.Length * sqr_props.YBisect); //bisect length and width to work with that origin
 		DownDir *=(sqr_props.Length * (1.0-sqr_props.YBisect));

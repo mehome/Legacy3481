@@ -76,6 +76,12 @@ CompositorProps = {
 				--test orientation
 				--rotation =	{ x_deg=0, y_deg=17.158, z=0 },
 				draw_shape="cube"
+				
+				--Testing the square shape:
+				--draw_shape="square",
+				--xy, xz, yz, xy_and_xz
+				--xy_and_xz  not yet supported
+				--plane_selection='xz'
 			}
 		},
 		
