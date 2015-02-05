@@ -150,8 +150,8 @@ struct Compositor_Props
 	{
 		//This can be left empty for no remote control
 		//If filled in the following suffix on names are as follows:
-		// _x,_y,_z controls the position of the shape
-		// _enabled controls whether or not it is enabled
+		// _x,_y,_z controls the position of the camera
+		// _rot_x,_rot_y,_rot_z controls the orientation of the camera
 		std::string RemoteVariableName;
 
 		double width,length;
@@ -182,6 +182,7 @@ struct Compositor_Props
 		//This can be left empty for no remote control
 		//If filled in the following suffix on names are as follows:
 		// _x,_y,_z controls the position of the shape
+		// _rot_x,_rot_y,_rot_z controls the orientation of the shape (Not all shapes have this)
 		// _enabled controls whether or not it is enabled
 		std::string RemoteVariableName;
 		BYTE rgb[3];  //shape color
@@ -3174,6 +3175,7 @@ class Compositor
 					Compositor_Props::Shape3D_Renderer_Props &shape_props_rw=props_rw.shapes_3D_reticle[seq_pkt.specific_data.SquareReticle_SelIndex];
 					double Xpos,Ypos,Zpos;
 					std::string sTest=shape_props.RemoteVariableName;
+					bool RenderShape=true;
 					if ((!m_IsEditable)&&(shape_props.RemoteVariableName.c_str()[0]!=0))
 					{
 						sTest+="_x";
@@ -3184,6 +3186,9 @@ class Compositor
 						sTest=shape_props.RemoteVariableName;
 						sTest+="_z";
 						Zpos=UI2UnitMeasure(SmartDashboard::GetNumber(sTest));
+						sTest=shape_props.RemoteVariableName;
+						sTest+="_enabled";
+						RenderShape=SmartDashboard::GetBoolean(sTest);
 
 						typedef Compositor_Props::Shape3D_Renderer_Props ShapeProps;
 						if (shape_props.draw_shape==ShapeProps::e_Square)
@@ -3269,8 +3274,8 @@ class Compositor
 							//}
 						}
 					}
-
-					m_ShapeRender(Frame,Xpos,Ypos,Zpos,shape_props,EnableFlash&&!m_Flash);
+					if (RenderShape)
+						m_ShapeRender(Frame,Xpos,Ypos,Zpos,shape_props,EnableFlash&&!m_Flash);
 				}
 				break;
 			case Compositor_Props::eBypass:
