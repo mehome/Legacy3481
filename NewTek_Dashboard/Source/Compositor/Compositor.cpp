@@ -148,6 +148,12 @@ struct Compositor_Props
 
 	struct PathAlign_Container_Props
 	{
+		//This can be left empty for no remote control
+		//If filled in the following suffix on names are as follows:
+		// _x,_y,_z controls the position of the shape
+		// _enabled controls whether or not it is enabled
+		std::string RemoteVariableName;
+
 		double width,length;
 		double pivot_point_length;
 		double pos_x,pos_y,pos_z;
@@ -890,6 +896,33 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 				pal_props.rot_y=0.33;
 				pal_props.rot_z=0.0;
 			}
+
+
+			std::string sTest;
+			err = script.GetField("remote_name",&pal_props.RemoteVariableName,NULL,NULL);
+			if (pal_props.RemoteVariableName.c_str()[0]!=0)
+			{
+				sTest=pal_props.RemoteVariableName;
+				sTest+="_x";
+				SmartDashboard::PutNumber(sTest,UnitMeasure2UI(pal_props.pos_x));
+				sTest=pal_props.RemoteVariableName;
+				sTest+="_y";
+				SmartDashboard::PutNumber(sTest,UnitMeasure2UI(pal_props.pos_z));
+				sTest=pal_props.RemoteVariableName;
+				sTest+="_z";
+				SmartDashboard::PutNumber(sTest,UnitMeasure2UI(pal_props.pos_y));
+
+				sTest=pal_props.RemoteVariableName;
+				sTest+="_rot_x";
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(pal_props.rot_x));
+				sTest=pal_props.RemoteVariableName;
+				sTest+="_rot_y";
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(pal_props.rot_y));
+				sTest=pal_props.RemoteVariableName;
+				sTest+="_rot_z";
+				SmartDashboard::PutNumber(sTest,RAD_2_DEG(pal_props.rot_z));
+			}
+
 			err = script.GetField("fov",NULL,NULL,&fTest);
 			if (!err)
 				pal_props.FOV_x=pal_props.FOV_y=fTest;
@@ -906,7 +939,7 @@ static void LoadPathAlignProps(Scripting::Script& script,Compositor_Props &props
 				else
 					pal_props.FOV_x=pal_props.FOV_y=47.0;  //using default
 			}
-			std::string sTest;
+
 			err = script.GetField("draw_selection",&sTest,NULL,NULL);
 			if (!err)
 			{
@@ -3090,6 +3123,39 @@ class Compositor
 						}
 					}
 					#endif
+
+					std::string sTest=pa_props.RemoteVariableName;
+					if ((!m_IsEditable)&&(pa_props.RemoteVariableName.c_str()[0]!=0))
+					{
+						sTest+="_x";
+						const double Camera_x=SmartDashboard::GetNumber(sTest);
+						sTest=pa_props.RemoteVariableName;
+						sTest+="_y";
+						const double Camera_y=SmartDashboard::GetNumber(sTest);
+						sTest=pa_props.RemoteVariableName;
+						sTest+="_z";
+						const double Camera_z=SmartDashboard::GetNumber(sTest);
+
+						if ((Camera_x!=pa_props.pos_x)||(Camera_y!=pa_props.pos_y)||(Camera_z!=pa_props.pos_z))
+						{
+							pa_props_rw.pos_x=UI2UnitMeasure(Camera_x);
+							pa_props_rw.pos_y=UI2UnitMeasure(Camera_z);
+							pa_props_rw.pos_z=UI2UnitMeasure(Camera_y);
+							_3Dpoint Camera_position = _3Dpoint(pa_props.pos_x,pa_props.pos_y,pa_props.pos_z);
+							m_PathPlotter.projector.camera.from=Camera_position;
+							m_PathPlotter.projector.Trans_Initialise();
+						}
+
+						sTest=pa_props.RemoteVariableName;
+						sTest+="_rot_x";
+						pa_props_rw.rot_x=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+						sTest=pa_props.RemoteVariableName;
+						sTest+="_rot_y";
+						pa_props_rw.rot_y=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+						sTest=pa_props.RemoteVariableName;
+						sTest+="_rot_z";
+						pa_props_rw.rot_z=DEG_2_RAD(SmartDashboard::GetNumber(sTest));
+					}
 
 					//Treating Xpos and Ypos as degrees will keep the scale to feel about right
 					m_PathPlotter.Compute_LookAtFromAngles(DEG_2_RAD(Xpos)+pa_props.rot_x,DEG_2_RAD(Ypos)+pa_props.rot_y,DEG_2_RAD(Zpos)+pa_props.rot_z);
