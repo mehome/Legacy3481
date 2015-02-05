@@ -4,6 +4,24 @@
 #include "stdafx.h"
 #include "../SmartDashboard/SmartDashboard_import.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+#ifndef M_PIF
+#define M_PIF 3.141592654f
+#endif
+#define M_PID 3.14159265358979323846
+
+#define DEG_2_RAD(x)		((x)*M_PI/180.0)
+#define RAD_2_DEG(x)		((x)*180.0/M_PI)
+#define ARRAY_SIZE(things)	((sizeof(things)/sizeof(*(things))))
+
+#define Inches2Meters(x)	((x)*0.0254)
+#define Feet2Meters(x)		((x)*0.3048)
+#define Meters2Feet(x)		((x)*3.2808399)
+#define Meters2Inches(x)	((x)*39.3700787)
+
 using namespace std;
 
 /************************************************************************
@@ -47,6 +65,7 @@ void DisplayHelp()
 		"Edit <off on>\n"
 		"Velocity <feet per second>\n"
 		"Turn <in radians e.g. 0.01>\n"
+		"test <#>\n"
 		"Help (displays this)\n"
 		"\nType \"Quit\" at anytime to exit this application\n"
 		);
@@ -110,6 +129,40 @@ void CommandLineInterface()
 			else if (!_strnicmp( input_line, "Turn", 4))
 			{
 				SmartDashboard::PutNumber("Rotation Velocity",atof(str_1));
+			}
+			else if (!_strnicmp( input_line, "Test", 4))
+			{
+				const double min_angle=-17.158;
+				const double max_angle=17.158*2.0;
+				const double NoSteps=100.0;
+
+				const double StandAdjustedAngle=min_angle;  //it so happens they are equal in this test
+				const double StandFrameDiameter_in=3.1;
+				const double StandFrameRadius_in=StandFrameDiameter_in/2;
+				const double pivot_radius_in=sqrt((6*6)+(StandFrameDiameter_in*StandFrameDiameter_in));
+				const double Camera_Z_offset=-1.954 + -5.0;
+				const double Camera_Y_offset=-0.4;
+
+				const double Arm_Length_in=17.0;
+				const double CubeSize=5.3;
+
+				for (double i=0.0; i<NoSteps; i++)
+				{
+					const double Scalar=i/NoSteps;
+					const double pitch=max_angle*Scalar + min_angle;
+					//pitch is the sensed angle use this to determine other geometry
+					const double stand_angle=pitch+StandAdjustedAngle;  //determine angle of stand  
+					const double height=sin(DEG_2_RAD(pitch)) * Arm_Length_in + CubeSize;  //5.3 is cube height
+					SmartDashboard::PutNumber("Camera_rot_y",pitch);
+					SmartDashboard::PutNumber("Camera_y",cos(DEG_2_RAD(pitch))*pivot_radius_in+Camera_Y_offset);
+					SmartDashboard::PutNumber("Camera_z",sin(DEG_2_RAD(-pitch))*pivot_radius_in+Camera_Z_offset);
+					SmartDashboard::PutNumber("Height",height);
+					Sleep(33);
+				}
+				Sleep(2000);
+				SmartDashboard::PutNumber("Camera_rot_y",min_angle);
+				SmartDashboard::PutNumber("Camera_y",6.0);
+				SmartDashboard::PutNumber("Camera_z",-5.0);
 			}
 			else if (!_strnicmp( input_line, "Help", 4))
 				DisplayHelp();
