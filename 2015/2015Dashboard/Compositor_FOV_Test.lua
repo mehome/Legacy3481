@@ -67,7 +67,7 @@ CompositorProps = {
 			},
 			shape_reticle_2 =
 			{
-				--remote_name="land_reticle",
+				remote_name="low_box",
 				size_in=CubeSize,
 				--length_in=CubeSize*2,width_in=CubeSize,depth_in=CubeSize,y_bisect=0.75,
 				--width_in=CubeSize*2;
@@ -82,11 +82,26 @@ CompositorProps = {
 				--xy, xz, yz, xy_and_xz
 				--xy_and_xz  not yet supported
 				--plane_selection='xz'
+			},
+			shape_reticle_3 =
+			{
+				remote_name="medium_box",
+				size_in=CubeSize,
+				r=0,g=0,b=250,
+				draw_shape="cube"
+			},
+			shape_reticle_4 =
+			{
+				remote_name="high_box",
+				size_in=CubeSize,
+				r=250,g=0,b=0,
+				draw_shape="cube"
 			}
 		},
 		
 		path_align =
 		{
+			remote_name="Camera",
 			width_in = 8.5, length_in = 11,
 			pivot_in = 2,
 			--Using 2.0 for regular axis stand... using 5.52 for 2015 camera mount with angle pointing down
@@ -113,7 +128,9 @@ CompositorProps = {
 					composite_2 = {	type="square", selection=1 },
 					composite_3 = { type="shape", selection=1, x=0, y_in=BallRadius , z_in=5 },
 					composite_4 = { type="shape", selection=2,  y_in=CubeSize/2 , z_in=13 + CubeSize/2},
-					composite_5 = {	type="pathalign"}
+					composite_5 = { type="shape", selection=3,  y_in=CubeSize/2 + CubeSize , z_in=13 + CubeSize/2},
+					composite_6 = { type="shape", selection=4,  y_in=CubeSize/2 + CubeSize*2 , z_in=13 + CubeSize/2},
+					composite_7 = {	type="pathalign"}
 				}
 			},
 			sequence_2 = {	type="bypass" },
