@@ -60,10 +60,11 @@ CompositorProps = {
 			-- draw_shape -- may be "square", "circle", or "cube".
 			shape_reticle_1 =
 			{
-				--remote_name="apex_reticle",
-				size_in=BallDiameter,
-				r=0,g=255,b=100,
-				draw_shape="circle"
+				remote_name="height_indicator",
+				size_in=CubeSize,
+				r=100,g=0,b=100,
+				plane_selection='xz',
+				draw_shape="square"
 			},
 			shape_reticle_2 =
 			{
@@ -126,7 +127,7 @@ CompositorProps = {
 				{
 					composite_1 = {	type="bypass" },
 					composite_2 = {	type="square", selection=1 },
-					composite_3 = { type="shape", selection=1, x=0, y_in=BallRadius , z_in=5 },
+					composite_3 = { type="shape", selection=1, x=0, y_in=0.0 , z_in=13 },
 					composite_4 = { type="shape", selection=2,  y_in=CubeSize/2 , z_in=13 + CubeSize/2},
 					composite_5 = { type="shape", selection=3,  y_in=CubeSize/2 + CubeSize , z_in=13 + CubeSize/2},
 					composite_6 = { type="shape", selection=4,  y_in=CubeSize/2 + CubeSize*2 , z_in=13 + CubeSize/2},

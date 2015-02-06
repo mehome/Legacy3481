@@ -18,9 +18,9 @@ DashboardProps =
 		--title= "Main_2014",
 		title= "FOV_Test",
 		--No camera!  use this
-		--url= "black_33_600x800",
+		url= "black_33_600x800",
 		--url= "10.34.81.11",
-		url="10.28.1.20",
+		--url="10.28.1.20",
 		--by default RTSP uses 554 and is now allowed for FMS
 		port=554,
 		--port=1180,  --This has worked in past years... good backup if there are any issues

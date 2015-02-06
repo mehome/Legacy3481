@@ -132,37 +132,145 @@ void CommandLineInterface()
 			}
 			else if (!_strnicmp( input_line, "Test", 4))
 			{
-				const double min_angle=-17.158;
-				const double max_angle=17.158*2.0;
-				const double NoSteps=100.0;
-
-				const double StandAdjustedAngle=min_angle;  //it so happens they are equal in this test
-				const double StandFrameDiameter_in=3.1;
-				const double StandFrameRadius_in=StandFrameDiameter_in/2;
-				const double pivot_radius_in=sqrt((6*6)+(StandFrameDiameter_in*StandFrameDiameter_in));
-				const double Camera_Z_offset=-1.954 + -5.0;
-				const double Camera_Y_offset=-0.4;
-
-				const double Arm_Length_in=17.0;
-				const double CubeSize=5.3;
-
-				for (double i=0.0; i<NoSteps; i++)
+				int Test=atoi(str_1);
+				enum
 				{
-					const double Scalar=i/NoSteps;
-					const double pitch=max_angle*Scalar + min_angle;
-					//pitch is the sensed angle use this to determine other geometry
-					const double stand_angle=pitch+StandAdjustedAngle;  //determine angle of stand  
-					const double height=sin(DEG_2_RAD(pitch)) * Arm_Length_in + CubeSize;  //5.3 is cube height
-					SmartDashboard::PutNumber("Camera_rot_y",pitch);
-					SmartDashboard::PutNumber("Camera_y",cos(DEG_2_RAD(pitch))*pivot_radius_in+Camera_Y_offset);
-					SmartDashboard::PutNumber("Camera_z",sin(DEG_2_RAD(-pitch))*pivot_radius_in+Camera_Z_offset);
-					SmartDashboard::PutNumber("Height",height);
-					Sleep(33);
+					eCurrent,
+					eFOVSweepTest,
+					eRobotSweepTest,
+				};
+				const char * const TestName[]=
+				{
+					"current",
+					"FOVTest",
+					"RobotSweepTest",
+				};
+
+				//if the first character is not a number then translate the string
+				if (((str_1[0]<'0')||(str_1[0]>'9'))&&(str_1[0]!=0))
+				{
+					Test=-1;
+					for (size_t i=0;i<_countof(TestName);i++)
+					{
+						if (stricmp(TestName[i],str_1)==0)
+						{
+							Test=i;
+							break;
+						}
+					}
+					if (Test==-1)
+					{
+						printf("No match found.  Try:\n");
+						for (size_t i=0;i<_countof(TestName);i++)
+							printf("%s, ",TestName[i]);
+						printf("\n");
+						return;
+					}
 				}
-				Sleep(2000);
-				SmartDashboard::PutNumber("Camera_rot_y",min_angle);
-				SmartDashboard::PutNumber("Camera_y",6.0);
-				SmartDashboard::PutNumber("Camera_z",-5.0);
+
+				switch(Test)
+				{
+				
+				case eCurrent:
+				case eFOVSweepTest:
+					{
+						//Note: I usually work with radians and meters... but in this small example I've
+						//chosen to work in degrees and inches for easier readability
+						const double min_angle=-17.158;
+						const double max_angle=17.158*3.0;
+						const double NoSteps=100.0;
+
+						const double StandAdjustedAngle=min_angle;  //it so happens they are equal in this test
+						const double StandFrameDiameter_in=3.1;
+						const double StandFrameRadius_in=StandFrameDiameter_in/2;
+						const double pivot_radius_in=sqrt((6*6)+(StandFrameDiameter_in*StandFrameDiameter_in));
+						const double Camera_Z_offset=-1.954 + -5.0;
+						const double Camera_Y_offset=-0.4;
+
+						const double Arm_Length_in=17.0;
+						const double CubeSize=5.3;
+
+						for (double i=0.0; i<NoSteps; i++)
+						{
+							const double Scalar=i/NoSteps;
+							const double pitch=max_angle*Scalar + min_angle;
+							//pitch is the sensed angle use this to determine other geometry
+							const double stand_angle=pitch+StandAdjustedAngle;  //determine angle of stand  
+							const double height=sin(DEG_2_RAD(pitch)) * Arm_Length_in + CubeSize;  //5.3 is cube height
+							SmartDashboard::PutNumber("Camera_rot_y",pitch);
+							SmartDashboard::PutNumber("Camera_y",cos(DEG_2_RAD(pitch))*pivot_radius_in+Camera_Y_offset);
+							SmartDashboard::PutNumber("Camera_z",sin(DEG_2_RAD(-pitch))*pivot_radius_in+Camera_Z_offset);
+							SmartDashboard::PutNumber("Height",height);
+							SmartDashboard::PutNumber("height_indicator_y",height);
+							SmartDashboard::PutNumber("ArmAngle",pitch);
+							SmartDashboard::PutBoolean("medium_box_enabled",height>CubeSize);
+							SmartDashboard::PutBoolean("high_box_enabled",height>CubeSize*2);
+							Sleep(33);
+						}
+						Sleep(2000);
+						SmartDashboard::PutNumber("Camera_rot_y",min_angle);
+						SmartDashboard::PutNumber("Camera_y",6.0);
+						SmartDashboard::PutNumber("Camera_z",-5.0);
+						SmartDashboard::PutNumber("Height",0.0);
+						SmartDashboard::PutNumber("height_indicator_y",0.0);
+						SmartDashboard::PutNumber("ArmAngle",min_angle);
+						SmartDashboard::PutBoolean("medium_box_enabled",false);
+						SmartDashboard::PutBoolean("high_box_enabled",false);
+					}
+					break;
+				case eRobotSweepTest:
+					{
+						//These angles were pulled from .\Design\2015\Prototyping\Arm Prototype\ArmSketch4.SLDPRT
+						//subject to change
+						const double min_angle=-43.32;
+						const double max_angle=52.36;
+						const double NoSteps=100.0;
+
+						//This is a rough estimate of a 5.75 height looking down a 50 inch arm... will know better once tower assembly
+						//is cleaned up with camera mounted
+						const double StandAdjustedAngle=-6.56;  
+						const double StandFrameDiameter_in=3.1;  //this is correct
+						const double StandFrameRadius_in=StandFrameDiameter_in/2;
+						//TODO will need to find pivot point and use distance formula on it
+						const double pivot_radius_in=sqrt((6*6)+(StandFrameDiameter_in*StandFrameDiameter_in));
+						//TODO get these from solid works once camera is mounted
+						const double Camera_Z_offset=-1.954 + -5.0;
+						const double Camera_Y_offset=-0.4;
+
+						const double Arm_Length_in=17.0;
+						const double CubeSize=5.3;
+
+						for (double i=0.0; i<NoSteps; i++)
+						{
+							const double Scalar=i/NoSteps;
+							const double pitch=max_angle*Scalar + min_angle;
+							//pitch is the sensed angle use this to determine other geometry
+							const double stand_angle=pitch+StandAdjustedAngle;  //determine angle of stand  
+							const double height=sin(DEG_2_RAD(pitch)) * Arm_Length_in + CubeSize;  //5.3 is cube height
+							SmartDashboard::PutNumber("Camera_rot_y",pitch);
+							SmartDashboard::PutNumber("Camera_y",cos(DEG_2_RAD(pitch))*pivot_radius_in+Camera_Y_offset);
+							SmartDashboard::PutNumber("Camera_z",sin(DEG_2_RAD(-pitch))*pivot_radius_in+Camera_Z_offset);
+							SmartDashboard::PutNumber("Height",height);
+							SmartDashboard::PutNumber("height_indicator_y",height);
+							SmartDashboard::PutNumber("ArmAngle",pitch);
+							//TODO use a different naming convention for the totes
+							//SmartDashboard::PutBoolean("medium_box_enabled",height>CubeSize);
+							//SmartDashboard::PutBoolean("high_box_enabled",height>CubeSize*2);
+							Sleep(33);
+						}
+						Sleep(2000);
+						SmartDashboard::PutNumber("Camera_rot_y",min_angle);
+						SmartDashboard::PutNumber("Camera_y",6.0);
+						SmartDashboard::PutNumber("Camera_z",-5.0);
+						SmartDashboard::PutNumber("Height",0.0);
+						SmartDashboard::PutNumber("height_indicator_y",0.0);
+						SmartDashboard::PutNumber("ArmAngle",min_angle);
+						//TODO use a different naming convention for the totes
+						//SmartDashboard::PutBoolean("medium_box_enabled",false);
+						//SmartDashboard::PutBoolean("high_box_enabled",false);
+					}
+					break;
+				}
 			}
 			else if (!_strnicmp( input_line, "Help", 4))
 				DisplayHelp();
