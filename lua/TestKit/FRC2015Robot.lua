@@ -99,7 +99,7 @@ MainRobot = {
 	
 	tank_drive =
 	{
-		is_closed=1,
+		is_closed=0,
 		show_pid_dump='no',
 		--we should turn this off in bench mark testing
 		use_aggressive_stop=1,  --we are in small area want to have responsive stop
@@ -275,6 +275,7 @@ MainRobot = {
 
 	controls =
 	{
+		slotlist = {slot_1="airflo"},
 		--field_centric_x_axis_threshold=0.40,
 		--tank_steering_tolerance=0.05,
 		Joystick_1 =
@@ -284,14 +285,14 @@ MainRobot = {
 			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetRight_XAxis = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			Analog_Turn = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			FieldCentric_Enable = {type="joystick_button", key=4, on_off=false},
-			Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
+			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			--FieldCentric_Enable = {type="joystick_button", key=4, on_off=false},
+			--Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
 			--scaled down to 0.5 to allow fine tuning and a good top acceleration speed (may change with the lua script tweaks)
 			--Turret_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
 			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
@@ -299,10 +300,10 @@ MainRobot = {
 			Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},
 			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Turn_180 = {type="joystick_button", key=7, on_off=false},
-			Turn_180_Hold = {type="joystick_button", key=7, on_off=true},
-			FlipY_Hold = {type="joystick_button", key=7, on_off=true},
-			SlideHold = {type="joystick_button", key=7, on_off=true},
-			TestWaypoint={type="joystick_button", key=3, keyboard='q', on_off=true},
+			--Turn_180_Hold = {type="joystick_button", key=7, on_off=true},
+			--FlipY_Hold = {type="joystick_button", key=7, on_off=true},
+			--SlideHold = {type="joystick_button", key=7, on_off=true},
+			--TestWaypoint={type="joystick_button", key=3, keyboard='q', on_off=true},
 			
 			Robot_BallTargeting_On={type="keyboard", key='t', on_off=false},
 			Robot_BallTargeting_Off={type="keyboard", key='y', on_off=false},
@@ -319,7 +320,7 @@ MainRobot = {
 			Arm_Retract={type="keyboard", key='j', on_off=true},
 			
 			--Claw_SetCurrentVelocity  --not used
-			Claw_Close =	 {type="joystick_button", key=6, keyboard='c', on_off=true},
+			Claw_Close =	 {type="joystick_button", key=7, keyboard='c', on_off=true},
 		},
 		
 		Joystick_2 =
