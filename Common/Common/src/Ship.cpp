@@ -786,6 +786,7 @@ const char * const csz_RobotNames[] =
 	"Robot2012",
 	"Robot2013",
 	"Robot2014",
+	"Robot2015",
 	"RobotHikingViking"
 };
 
