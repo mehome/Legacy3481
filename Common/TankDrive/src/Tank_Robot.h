@@ -250,6 +250,7 @@ class DRIVE_API Tank_Robot_Control :  public RobotControlCommon, public Tank_Dri
 		{	return Tank_Robot::GetSpeedControllerDevices_Enum(name);
 		}
 		virtual size_t RobotControlCommon_Get_DigitalInput_EnumValue(const char *name) const  	{	return (size_t)-1;	}
+		virtual size_t RobotControlCommon_Get_AnalogInput_EnumValue(const char *name) const  	{	return (size_t)-1;	}
 		virtual size_t RobotControlCommon_Get_DoubleSolenoid_EnumValue(const char *name) const 	{	return (size_t)-1;	}
 
 	protected: //from Robot_Control_Interface
