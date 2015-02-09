@@ -92,6 +92,11 @@ const char * const csz_FRC_2015_Robot_BoolSensorDevices_Enum[] =
 	"catapult_limit"
 };
 
+const char * const csz_FRC_2015_Robot_AnalogInputs_Enum[] =
+{
+	"arm_potentiometer"
+};
+
 
 class FRC_2015_Robot : public Tank_Robot
 {
@@ -129,6 +134,15 @@ class FRC_2015_Robot : public Tank_Robot
 
 		static BoolSensorDevices GetBoolSensorDevices_Enum (const char *value)
 		{	return Enum_GetValue<BoolSensorDevices> (value,csz_FRC_2015_Robot_BoolSensorDevices_Enum,_countof(csz_FRC_2015_Robot_BoolSensorDevices_Enum));
+		}
+
+		enum AnalogInputs
+		{
+			eArmPotentiometer
+		};
+
+		static AnalogInputs GetAnalogInputs_Enum (const char *value)
+		{	return Enum_GetValue<AnalogInputs> (value,csz_FRC_2015_Robot_AnalogInputs_Enum,_countof(csz_FRC_2015_Robot_AnalogInputs_Enum));
 		}
 
 		FRC_2015_Robot(const char EntityName[],FRC_2015_Control_Interface *robot_control,bool IsAutonomous=false);
@@ -316,6 +330,9 @@ class FRC_2015_Robot_Control : public RobotControlCommon, public FRC_2015_Contro
 		}
 		virtual size_t RobotControlCommon_Get_DigitalInput_EnumValue(const char *name) const  
 		{	return FRC_2015_Robot::GetBoolSensorDevices_Enum(name);
+		}
+		virtual size_t RobotControlCommon_Get_AnalogInput_EnumValue(const char *name) const  
+		{	return FRC_2015_Robot::GetAnalogInputs_Enum(name);
 		}
 		virtual size_t RobotControlCommon_Get_DoubleSolenoid_EnumValue(const char *name) const  
 		{	return FRC_2015_Robot::GetSolenoidDevices_Enum(name);

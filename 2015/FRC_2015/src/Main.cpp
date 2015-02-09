@@ -15,7 +15,7 @@ class SetUp_Manager
 {
 	protected:
 		//Note: The order of the members are critical, as they are instantiated in the constructor
-		Driver_Station_Joystick m_Joystick;  
+		Driver_Station_Joystick m_Joystick;
 		Framework::UI::JoyStick_Binder m_JoyBinder;
 		FRC_2015_Robot_Properties m_RobotProps;
 		FRC_2015_Robot_Control m_Control; // robot drive system
@@ -24,12 +24,12 @@ class SetUp_Manager
 		Framework::Base::EventMap m_EventMap;
 		IEvent::HandlerList ehl;
 	public:
-		
+
 		void GoalComplete()
 		{
 			printf("Goals completed!\n");
 		}
-		
+
 		SetUp_Manager(bool UseSafety,bool UseEncoders=false) : m_Joystick(3,0), //3 joysticks starting at port 0
 			m_JoyBinder(m_Joystick),m_Control(UseSafety),m_pRobot(NULL),m_pUI(NULL)
 		{
@@ -70,12 +70,12 @@ class SetUp_Manager
 		void TimeChange(double dTime_s)
 		{
 			if (dTime_s==0.0) return; //avoid division by zero errors
-			
+
 			//I put this if check to ensure joystick readings were not made but it appears I already have this logic in place
 			//when I start in auto pilot, so I need not do this here.  I do want to keep this for future reference... I believe it
 			//caused some implicit problems of variables that were set do to non-driving controls.
 			//if (!m_pUI->GetAutoPilot())
-			
+
 			m_JoyBinder.UpdateJoyStick(dTime_s);
 			//This is called implicitly within the robot (for ease of compatability with AI)
 			//m_Control.TimeChange(dTime_s);
@@ -102,8 +102,8 @@ class SetUp_Manager
 		void SetAutoPilot(bool autoPilot) {m_pUI->SetAutoPilot(autoPilot);}
 		FRC_2015_Robot *GetRobot() const {return m_pRobot;}
 		void SetSafety(bool UseSafety) {m_Control.SetSafety(UseSafety);}
-		void ResetPos() 
-		{	
+		void ResetPos()
+		{
 			//TODO scope this within __DebugLUA__
 			#ifdef  __DebugLUA__
 			{
@@ -125,7 +125,11 @@ class SetUp_Manager
 //This is the main robot class used for FRC
 //The SimpleRobot class is the base of a robot application that will automatically call your
  //Autonomous and OperatorControl methods at the right time as controlled by the switches on the driver station or the field controls.
+#ifdef __USE_LEGACY_WPI_LIBRARIES__
+class Robot_Main : public SimpleRobot
+#else
 class Robot_Main : public SampleRobot
+#endif
 {
 	SetUp_Manager m_Manager;
 
@@ -133,7 +137,7 @@ public:
 	Robot_Main(void) : m_Manager(false) //disable safety by default
 	{
 	}
-	
+
 	void Autonomous(void)
 	{
 		m_Manager.ResetPos();  //We must reset the position to ensure the distance is measured properly
@@ -151,7 +155,7 @@ public:
 		Goal *oldgoal=Robot->ClearGoal();
 		if (oldgoal)
 			delete oldgoal;
-		
+
 		const bool DoAutonomous=true;
 		if (DoAutonomous)
 		{
@@ -161,9 +165,9 @@ public:
 				goal->Activate(); //now with the goal(s) loaded activate it
 			Robot->SetGoal(goal);
 		}
-		
+
 		double LastTime = GetTime();
-		
+
 		while (IsAutonomous() && !IsDisabled())
 		{
 			const double CurrentTime=GetTime();
@@ -174,7 +178,7 @@ public:
 			//time=0.020;
 			m_Manager.TimeChange(DeltaTime);
 			//using this from test runs from robo wranglers code
-			Wait(0.010);				
+			Wait(0.010);
 		}
 		printf("Autonomouse loop end IsA=%d IsD=%d \n",IsAutonomous(),IsDisabled());
 		oldgoal=Robot->ClearGoal();
@@ -182,7 +186,7 @@ public:
 			delete oldgoal;
 		Robot->SetGoal(NULL);
 	}
-	
+
 	void OperatorControl(void)
 	{
 		if (c_UseDefaultControls)
@@ -190,8 +194,8 @@ public:
 			RobotDrive myRobot(1,2,3,4); // robot drive system
 			Joystick stick(1); // only 1 joystick
 			myRobot.SetExpiration(0.1);
-			
-			// Runs the motors with arcade steering. 
+
+			// Runs the motors with arcade steering.
 			myRobot.SetSafetyEnabled(true);
 			while (IsOperatorControl())
 			{
