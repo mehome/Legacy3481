@@ -1,5 +1,9 @@
 #pragma once
 
+//It is still not yet certain how the cRIO support will unfold in regards to updated WPI libraries, so until that is settled... enable this to build with cRIO
+//  [1/24/2015 JamesK]
+#undef __USE_LEGACY_WPI_LIBRARIES__
+
 //This parses out the LUA into two table for each control element... its population properties and LUT
 class COMMON_API Control_Assignment_Properties
 {
@@ -274,13 +278,15 @@ class COMMON_API RobotControlCommon
 		//digital input encoders
 		__inline double Encoder_GetRate(size_t index) {return LUT_VALID(m_EncoderLUT)?m_Encoders[m_EncoderLUT[index]]->GetRate():0.0;}
 		__inline double Encoder_GetDistance(size_t index) {return LUT_VALID(m_EncoderLUT)?m_Encoders[m_EncoderLUT[index]]->GetDistance():0.0;}
-#if 0
+
+		#ifdef __USE_LEGACY_WPI_LIBRARIES__
 		__inline void Encoder_Start(size_t index) { IF_LUT(m_EncoderLUT) m_Encoders[m_EncoderLUT[index]]->Start();}
 		__inline void Encoder_Stop(size_t index)  { IF_LUT(m_EncoderLUT) m_Encoders[m_EncoderLUT[index]]->Stop();}
-#else
+		#else
 		__inline void Encoder_Start(size_t index) { }
 		__inline void Encoder_Stop(size_t index)  { }
-#endif
+		#endif
+
 		__inline void Encoder_Reset(size_t index) {	IF_LUT(m_EncoderLUT) m_Encoders[m_EncoderLUT[index]]->Reset();}
 		__inline void Encoder_SetDistancePerPulse(size_t index,double distancePerPulse) {IF_LUT(m_EncoderLUT) m_Encoders[m_EncoderLUT[index]]->SetDistancePerPulse(distancePerPulse);}
 		__inline void Encoder_SetReverseDirection(size_t index,bool reverseDirection)   {IF_LUT(m_EncoderLUT) m_Encoders[m_EncoderLUT[index]]->SetReverseDirection(reverseDirection);}
@@ -292,8 +298,11 @@ class COMMON_API RobotControlCommon
 		void TranslateToRelay(size_t index,double Voltage);
 		__inline Compressor *CreateCompressor()
 		{
+			#ifdef __USE_LEGACY_WPI_LIBRARIES__
+			return new Compressor(m_Props.GetCompressorLimit(),m_Props.GetCompressorRelay());
+			#else
 			return new Compressor(0);  //This is now the PCM node ID
-			//return new Compressor(m_Props.GetCompressorLimit(),m_Props.GetCompressorRelay());
+			#endif
 		}
 		__inline void DestroyCompressor(Compressor *instance) {delete instance;}
 	protected:

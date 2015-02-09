@@ -54,12 +54,24 @@ static void LoadControlElement_1C_Internal(Scripting::Script& script,Control_Ass
 				double fTest;
 				err = script.GetField("channel",NULL,NULL,&fTest);
 				assert(!err);
+
+				#ifdef __USE_LEGACY_WPI_LIBRARIES__
+				newElement.Channel=(size_t)fTest;
+				#else
 				newElement.Channel=(size_t)fTest-1;  //make ordinal
+				#endif
+
 				err = script.GetField("name",&newElement.name,NULL,NULL);
 				assert(!err);
 				err = script.GetField("module",NULL,NULL,&fTest);
+
+				#ifdef __USE_LEGACY_WPI_LIBRARIES__
+				newElement.Module=(err)?1:(size_t)fTest;
+				assert(newElement.Module!=0);  //sanity check... this is cardinal
+				#else
 				newElement.Module=(err)?0:(size_t)fTest;
 				//assert(newElement.Module!=0);  //note: All module parameters are all ordinal for roboRIO
+				#endif
 			}
 			Output.push_back(newElement);
 			script.Pop();
@@ -89,17 +101,34 @@ static void LoadControlElement_2C_Internal(Scripting::Script& script,Control_Ass
 				if (err)
 					err=script.GetField("a_channel",NULL,NULL,&fTest);
 				assert(!err);
+
+				#ifdef __USE_LEGACY_WPI_LIBRARIES__
+				newElement.ForwardChannel=(size_t)fTest;
+				#else
 				newElement.ForwardChannel=(size_t)fTest-1;  //make ordinal
+				#endif
+
 				err = script.GetField("reverse_channel",NULL,NULL,&fTest);
 				if (err)
 					err=script.GetField("b_channel",NULL,NULL,&fTest);
 				assert(!err);
+
+				#ifdef __USE_LEGACY_WPI_LIBRARIES__
+				newElement.ReverseChannel=(size_t)fTest;
+				#else
 				newElement.ReverseChannel=(size_t)fTest-1;  //make ordinal
+				#endif
 				err = script.GetField("name",&newElement.name,NULL,NULL);
 				assert(!err);
 				err = script.GetField("module",NULL,NULL,&fTest);
+
+				#ifdef __USE_LEGACY_WPI_LIBRARIES__
+				newElement.Module=(err)?1:(size_t)fTest;
+				assert(newElement.Module!=0);  //sanity check... this is cardinal
+				#else
 				newElement.Module=(err)?0:(size_t)fTest;
 				//assert(newElement.Module!=0);  //note: All module parameters are all ordinal for roboRIO
+				#endif
 			}
 			Output.push_back(newElement);
 			script.Pop();
@@ -191,7 +220,11 @@ __inline void Initialize_1C_LUT(const Control_Assignment_Properties::Controls_1C
 		#ifdef Robot_TesterCode
 		T *NewElement=new T(element.Module,element.Channel,element.name.c_str());  //adding name for UI
 		#else
+		#ifdef __USE_LEGACY_WPI_LIBRARIES__
+		T *NewElement=new T(element.Module,element.Channel);
+		#else
 		T *NewElement=new T(element.Channel);
+		#endif
 		#endif
 		const size_t LUT_index=constrols.size(); //get size before we add it in
 		//const size_t PopulationIndex=constrols.size();  //get the ordinal value before we add it
@@ -492,8 +525,11 @@ void RobotDrive::StopMotor()
 	if (m_rearRightMotor != NULL) m_rearRightMotor->Disable();
 }
 
+//Ideally we have only one robot control for both the tester and the main app... we can use this macro in tester to control if we want to see that the calls
+//are correctly working.  Typically we shouldn't need to enable this unless there is a problem, or alternatively to verify the actual controls are being sent out
+//#define __SHOW_SMARTDASHBOARD__
 
-
+#ifdef __SHOW_SMARTDASHBOARD__
   /***********************************************************************************************************************************/
  /*														Control_1C_Element_UI														*/
 /***********************************************************************************************************************************/
@@ -582,5 +618,86 @@ double Control_2C_Element_UI::get_number() const
 {
 	return SmartDashboard::GetNumber(m_Name);
 }
-#endif
 
+
+#else  //__SHOW_SMARTDASHBOARD__
+
+  /***********************************************************************************************************************************/
+ /*														Control_1C_Element_UI														*/
+/***********************************************************************************************************************************/
+
+Control_1C_Element_UI::Control_1C_Element_UI(uint8_t moduleNumber, uint32_t channel,const char *name,double DefaultNumber) : m_DefaultNumber(DefaultNumber),
+	m_PutNumber_Used(false),m_PutBoolUsed(false)
+{
+	m_Name=name;
+	char Buffer[4];
+	m_Name+="_";
+	itoa(channel,Buffer,10);
+	m_Name+=Buffer;
+	m_Name+="_";
+	itoa(moduleNumber,Buffer,10);
+	m_Name+=Buffer;
+}
+
+void Control_1C_Element_UI::display_number(double value)
+{
+}
+
+void Control_1C_Element_UI::display_bool(bool value)
+{
+}
+
+//Note: For the get implementation, I restrict use of the bool used members to these functions as a first run
+//It's just makes there use-case more restricted
+
+bool Control_1C_Element_UI::get_bool() const
+{
+	return false;
+}
+
+double Control_1C_Element_UI::get_number() const
+{
+	return 0.0;
+}
+
+  /***********************************************************************************************************************************/
+ /*														Control_2C_Element_UI														*/
+/***********************************************************************************************************************************/
+
+Control_2C_Element_UI::Control_2C_Element_UI(uint8_t moduleNumber, uint32_t forward_channel, uint32_t reverse_channel,const char *name)
+{
+	m_Name=name;
+	char Buffer[4];
+	m_Name+="_";
+	itoa(forward_channel,Buffer,10);
+	m_Name+=Buffer;
+	m_Name+="_";
+	itoa(reverse_channel,Buffer,10);
+	m_Name+=Buffer;
+	m_Name+="_";
+	itoa(moduleNumber,Buffer,10);
+	m_Name+=Buffer;
+}
+
+void Control_2C_Element_UI::display_bool(bool value)
+{
+}
+
+void Control_2C_Element_UI::display_number(double value)
+{
+}
+
+bool Control_2C_Element_UI::get_bool() const
+{
+	return false;
+}
+
+double Control_2C_Element_UI::get_number() const
+{
+	return 0.0;
+}
+
+#endif  //__SHOW_SMARTDASHBOARD__
+
+
+#endif  //Robot_TesterCode
