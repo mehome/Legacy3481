@@ -25,12 +25,12 @@
 
 #include "Base/src/Joystick.h"
 #include "Base/src/JoystickBinder.h"
-
 //#include "UI_Controller.h"
 //#include "PIDController.h"
 
 #include "InOut_Interface.h"
 #include "Debug.h"
+#include "Robot_Control_Common.h"
 
 using namespace Framework::Base;
 #undef __DisableTankDrive__
@@ -105,7 +105,9 @@ bool Driver_Station_Joystick::read_joystick (size_t nr, JoyState &Info)
 	int Number=(int)nr;
 	Number-=m_StartingPort;
 	bool ret=false;
-	//nr++;  //DOH the number selection is cardinal!  :(
+	#ifdef __USE_LEGACY_WPI_LIBRARIES__
+	nr++;  //DOH the number selection is cardinal!  :(
+	#endif
 	if ((Number>=0) && (Number<m_NoJoysticks) && (m_JoyInfo[nr-1].bPresent))
 	{
 		memset(&Info,0,sizeof(JoyState));  //zero the memory

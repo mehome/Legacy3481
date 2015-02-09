@@ -104,8 +104,14 @@ class UDP_Listener
 	     struct sockaddr_in fromAddr; 
 	     int fromSize = sizeof(fromAddr);
 	     //By default this will wait for an event signal of receiving a packet, so in the case of success a sleep occurred within this call
-   		 int n=recvfrom(m_sockfd, buffer, 255, 0, (struct sockaddr *) &fromAddr,(socklen_t *) &fromSize);
-	     
+		#if 1
+		//roboRIO version
+		int n=recvfrom(m_sockfd, buffer, 255, 0, (struct sockaddr *) &fromAddr,(socklen_t *) &fromSize);
+		#else
+		//cRIO win32
+		int n=recvfrom(m_sockfd, buffer, 255, 0, (struct sockaddr *) &fromAddr, &fromSize);
+		#endif
+
 	     if (n>0)
 	     {
 	    	 for (size_t i=0;i<m_Client.size();i++)
