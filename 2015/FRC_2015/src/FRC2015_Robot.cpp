@@ -738,6 +738,8 @@ void FRC_2015_Robot_Props::Autonomous_Properties::ShowAutonParameters()
 	{
 		const char * const SmartNames[]={"first_move_ft"};
 		double * const SmartVariables[]={&FirstMove_ft};
+
+		#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
 		for (size_t i=0;i<_countof(SmartNames);i++)
 		try
 		{
@@ -757,7 +759,17 @@ void FRC_2015_Robot_Props::Autonomous_Properties::ShowAutonParameters()
 			//I may need to prime the pump here
 			SmartDashboard::PutBoolean("support_hotspot",IsSupportingHotSpot);
 		}
-
+		#else
+		//for whatever reason the Thunder RIO solution is having an issue with using catch(...) with a recurcive termination
+		//TODO find more specific catch type to see if it resolves issue
+		for (size_t i=0;i<_countof(SmartNames);i++)
+		{
+			//I may need to prime the pump here
+			SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+		}
+		//I may need to prime the pump here
+		SmartDashboard::PutBoolean("support_hotspot",IsSupportingHotSpot);
+		#endif
 	}
 }
 
