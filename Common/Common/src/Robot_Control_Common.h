@@ -29,12 +29,13 @@ class COMMON_API Control_Assignment_Properties
 		const Controls_1C &GetVictors() const {return m_Victors;}
 		const Controls_1C &GetRelays() const {return m_Relays;}
 		const Controls_1C &GetDigitalInputs() const {return m_Digital_Inputs;}
+		const Controls_1C &GetAnalogInputs() const {return m_Analog_Inputs;}
 		const Controls_2C &GetDoubleSolenoids() const {return m_Double_Solenoids;}
 		const Controls_2C &GetEncoders() const {return m_Encoders;}
 		size_t GetCompressorRelay() {return m_Compressor_Relay;}
 		size_t GetCompressorLimit() {return m_Compressor_Limit;}
 	private:
-		Controls_1C m_Victors,m_Relays,m_Digital_Inputs;
+		Controls_1C m_Victors,m_Relays,m_Digital_Inputs,m_Analog_Inputs;
 		Controls_2C m_Double_Solenoids,m_Encoders;
 		size_t m_Compressor_Relay,m_Compressor_Limit;
 };
@@ -46,6 +47,7 @@ typedef unsigned     int uint32_t;
 typedef unsigned    char uint8_t;
 typedef unsigned	 int UINT32;
 typedef              int int32_t;
+typedef			   short int16_t;
 
 class Control_1C_Element_UI
 {
@@ -96,6 +98,20 @@ public:
 		m_ModuleNumber(moduleNumber), m_Channel(channel) {}
 	uint32_t Get() {return get_number();}
 	uint32_t GetChannel() {return m_Channel;}
+private:
+	uint8_t m_ModuleNumber;
+	uint32_t m_Channel;
+};
+
+class AnalogChannel : public Control_1C_Element_UI
+{
+public:
+	AnalogChannel(uint8_t moduleNumber, uint32_t channel,const char *name) : Control_1C_Element_UI(moduleNumber,channel,name,1.0),
+		m_ModuleNumber(moduleNumber), m_Channel(channel) {}
+
+	int16_t GetValue() {return (int16_t)get_number();}
+	int32_t GetAverageValue()  {return (int32_t)get_number();}
+	uint32_t GetChannel()  {return m_Channel;}
 private:
 	uint8_t m_ModuleNumber;
 	uint32_t m_Channel;
@@ -295,6 +311,10 @@ class COMMON_API RobotControlCommon
 		#endif
 		__inline Encoder2 *Encoder_GetInstance(size_t index) {return LUT_VALID(m_EncoderLUT)?m_Encoders[m_EncoderLUT[index]] : NULL;}
 
+		//analog channel inputs
+		__inline int Analog_GetValue(size_t index) {return LUT_VALID(m_AnalogInputLUT)?m_AnalogInputs[m_AnalogInputLUT[index]]->GetValue():0.0;}
+		__inline int Analog_GetAverageValue(size_t index) {return LUT_VALID(m_AnalogInputLUT)?m_AnalogInputs[m_AnalogInputLUT[index]]->GetAverageValue():0.0;}
+
 		void TranslateToRelay(size_t index,double Voltage);
 		__inline Compressor *CreateCompressor()
 		{
@@ -310,14 +330,16 @@ class COMMON_API RobotControlCommon
 		//Override by derived class
 		virtual size_t RobotControlCommon_Get_Victor_EnumValue(const char *name) const =0;
 		virtual size_t RobotControlCommon_Get_DigitalInput_EnumValue(const char *name) const =0;
+		virtual size_t RobotControlCommon_Get_AnalogInput_EnumValue(const char *name) const =0;
 		virtual size_t RobotControlCommon_Get_DoubleSolenoid_EnumValue(const char *name) const =0;
 	private:
 		Control_Assignment_Properties m_Props;  //cache a copy of the assignment props
 		std::vector<Victor *> m_Victors;
 		std::vector<Relay *> m_Relays;
 		std::vector<DigitalInput *> m_DigitalInputs;
+		std::vector<AnalogChannel *> m_AnalogInputs;
 		std::vector<DoubleSolenoid *> m_DoubleSolenoids;
 		std::vector<Encoder2 *> m_Encoders;
 
-		Controls_LUT m_VictorLUT,m_RelayLUT,m_DigitalInputLUT,m_DoubleSolenoidLUT,m_EncoderLUT;
+		Controls_LUT m_VictorLUT,m_RelayLUT,m_DigitalInputLUT,m_AnalogInputLUT,m_DoubleSolenoidLUT,m_EncoderLUT;
 };
