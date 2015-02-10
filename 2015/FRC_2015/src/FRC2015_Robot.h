@@ -76,10 +76,10 @@ class FRC_2015_Robot_Properties : public Tank_Robot_Properties
 
 const char * const csz_FRC_2015_Robot_SpeedControllerDevices_Enum[] =
 {
+	"arm","kicker_wheel","CameraLED"
 	#ifdef __USING_6CIMS__
-	"left_drive_3","right_drive_3",
+	"left_drive_3","right_drive_3"
 	#endif
-	"kicker_wheel","CameraLED"
 };
 
 const char * const csz_FRC_2015_Robot_SolenoidDevices_Enum[] =
@@ -92,6 +92,7 @@ const char * const csz_FRC_2015_Robot_BoolSensorDevices_Enum[] =
 	"catapult_limit"
 };
 
+//Note: rotary systems share the same index as their speed controller counterpart
 const char * const csz_FRC_2015_Robot_AnalogInputs_Enum[] =
 {
 	"arm_potentiometer"
@@ -103,13 +104,13 @@ class FRC_2015_Robot : public Tank_Robot
 	public:
 		enum SpeedControllerDevices
 		{
+			eArm,
+			eKickerWheel,
+			eCameraLED  //Full forward is on 0 is off
 			#ifdef __USING_6CIMS__
 			eLeftDrive3,
 			eRightDrive3,
 			#endif
-			eKickerWheel,
-			eArm,
-			eCameraLED  //Full forward is on 0 is off
 		};
 
 		static SpeedControllerDevices GetSpeedControllerDevices_Enum (const char *value)
@@ -353,6 +354,9 @@ class FRC_2015_Robot_Control : public RobotControlCommon, public FRC_2015_Contro
 		//All digital input reads are done on time change and cached to avoid multiple reads to the FPGA
 		bool m_Limit_IntakeMin1,m_Limit_IntakeMin2,m_Limit_IntakeMax1,m_Limit_IntakeMax2;
 		bool m_Limit_Catapult;
+	private:
+		KalmanFilter m_KalFilter_Arm;
+		Averager<double,5> m_ArmAverager;
 };
 
 #ifdef Robot_TesterCode
