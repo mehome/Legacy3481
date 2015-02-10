@@ -42,7 +42,8 @@ MainRobot = {
 			id_2 = { name= "right_drive_2", channel=6}, 
 			id_3 = { name="left_drive_1", channel=3},
 			id_4 = { name="left_drive_2", channel=4},
-			id_5= { name="kicker_wheel", channel=1}
+			id_5= { name="kicker_wheel", channel=1},
+			id_6= { name="arm", channel=2}
 			--If we decide we need more power we can assign these
 			--id_3 = { name= "right_drive_3", channel=3}, 
 			--id_6 = { name="left_drive_3", channel=6},
@@ -64,6 +65,10 @@ MainRobot = {
 			id_3 = { name="intake_min_2",  channel=9},
 			id_4 = { name="intake_max_2",  channel=10}, 
 			id_5 = { name="catapult_limit",channel=11} 
+		},
+		analog_input =
+		{
+			id_1 = { name="arm_potentiometer",  channel=2},
 		},
 		digital_input_encoder =
 		{	
@@ -165,7 +170,7 @@ MainRobot = {
 			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
-			use_pid_up_only='n',
+			use_pid_up_only='y',
 			pid_up=
 			{p=100, i=0, d=0},
 			pid_down=
@@ -174,33 +179,33 @@ MainRobot = {
 			tolerance_count=20,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			curve_voltage=
-			{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
+			--curve_voltage=
+			--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
 			
 			--max_speed=(19300/64/60) * Pi2,	--This is about 5 rps (a little slower than hiking viking drive)
 			max_speed=8.8,	--loaded max speed (see sheet) which is 2.69 rps
-			accel=0.5,						--We may indeed have a two button solution (match with max accel)
-			brake=0.5,
-			max_accel_forward=1,			--These are in radians, just go with what feels right
-			max_accel_reverse=1,
+			accel=1.0,						--We may indeed have a two button solution (match with max accel)
+			brake=1.0,
+			max_accel_forward=10,			--These are in radians, just go with what feels right
+			max_accel_reverse=10,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These are arm converted to gear ratio
 			max_range_deg= 70 * ArmToGearRatio,
 			min_range_deg=(-50) * ArmToGearRatio,
 			use_aggressive_stop = 'yes',
-			inv_max_accel_up = 0.05,
-			inv_max_decel_up = 0.0,
-			inv_max_accel_down = 0.05,
-			inv_max_decel_down = 0.01,
-			slow_velocity_voltage = 4.0,
-			slow_velocity = 2.0,
-			predict_up=.400,
-			predict_down=.400,
+			--inv_max_accel_up = 0.05,
+			--inv_max_decel_up = 0.0,
+			--inv_max_accel_down = 0.05,
+			--inv_max_decel_down = 0.01,
+			--slow_velocity_voltage = 4.0,
+			--slow_velocity = 2.0,
+			--predict_up=.400,
+			--predict_down=.400,
 			--pulse_burst_time=0.06,
 			--pulse_burst_range=0.5,
 			--reverse_deadzone=0.10,
-			slow_angle_scalar = GearToArmRatio,
-			distance_scale = 0.5,
+			--slow_angle_scalar = GearToArmRatio,
+			--distance_scale = 0.5,
 			motor_specs =
 			{
 				wheel_mass=Pounds2Kilograms * 16.27,
