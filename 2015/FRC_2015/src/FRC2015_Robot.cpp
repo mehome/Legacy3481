@@ -641,6 +641,32 @@ FRC_2015_Robot_Properties::FRC_2015_Robot_Properties()  : m_TurretProps(
 
 		FRC_2015_Robot_Props props;
 
+		{	//arm potentiometer and arm ratios
+			const double c_OptimalAngleUp_r=DEG_2_RAD(70.0);
+			const double c_OptimalAngleDn_r=DEG_2_RAD(50.0);
+			const double c_ArmLength_m=1.8288;  //6 feet
+			const double c_ArmToGearRatio=72.0/28.0;
+			//const double c_GearToArmRatio=1.0/c_ArmToGearRatio;
+			//const double c_PotentiometerToGearRatio=60.0/32.0;
+			//const double c_PotentiometerToArmRatio=c_PotentiometerToGearRatio * c_GearToArmRatio;
+			const double c_PotentiometerToArmRatio=36.0/54.0;
+			//const double c_PotentiometerToGearRatio=c_PotentiometerToArmRatio * c_ArmToGearRatio;
+			const double c_PotentiometerMaxRotation=DEG_2_RAD(270.0);
+			const double c_GearHeightOffset=1.397;  //55 inches
+			const double c_WheelDiameter=0.1524;  //6 inches
+			const double c_MotorToWheelGearRatio=12.0/36.0;
+
+			props.OptimalAngleUp=c_OptimalAngleUp_r;
+			props.OptimalAngleDn=c_OptimalAngleDn_r;
+			props.ArmLength=c_ArmLength_m;
+			props.ArmToGearRatio=c_ArmToGearRatio;
+			props.PotentiometerToArmRatio=c_PotentiometerToArmRatio;
+			props.PotentiometerMaxRotation=c_PotentiometerMaxRotation;
+			props.GearHeightOffset=c_GearHeightOffset;
+			props.MotorToWheelGearRatio=c_MotorToWheelGearRatio;
+			m_FRC2015RobotProps=props;
+		}
+
 		FRC_2015_Robot_Props::Autonomous_Properties &auton=props.Autonomous_Props;
 		auton.FirstMove_ft=2.0;
 		m_FRC2015RobotProps=props;
@@ -1140,16 +1166,32 @@ void FRC_2015_Robot_Control::UpdateLeftRightVoltage(double LeftVoltage,double Ri
 double FRC_2015_Robot_Control::GetRotaryCurrentPorV(size_t index)
 {
 	double result=0.0;
-	//const FRC_2015_Robot_Props &props=m_RobotProps.GetFRC2015RobotProps();
+	const FRC_2015_Robot_Props &props=m_RobotProps.GetFRC2015RobotProps();
 
-	//switch (index)
-	//{
-	//case FRC_2015_Robot::eIntakeArm1:
-	//case FRC_2015_Robot::eIntakeArm2:
-	//	assert(false);  //no potentiometer 
-	//	break;
-	//}
+	switch (index)
+	{
+		case FRC_2015_Robot::eArmPotentiometer:
+		{
+			//double raw_value = (double)m_Potentiometer.GetAverageValue();
+			double raw_value=(double)Analog_GetAverageValue(FRC_2015_Robot::eArmPotentiometer);
+			raw_value = m_KalFilter_Arm(raw_value);  //apply the Kalman filter
+			raw_value=m_ArmAverager.GetAverage(raw_value); //and Ricks x element averager
+			//Note the value is inverted with the negative operator
+			double PotentiometerRaw_To_Arm;
+			{
+				const int RawRangeHalf=512;
+				PotentiometerRaw_To_Arm=((raw_value / RawRangeHalf)-1.0) * DEG_2_RAD(270.0/2.0);  //normalize and use a 270 degree scalar (in radians)
+				PotentiometerRaw_To_Arm*=props.PotentiometerToArmRatio;  //convert to arm's gear ratio
+			}
+			result=(-PotentiometerRaw_To_Arm) + m_RobotProps.GetArmProps().GetRotaryProps().PotentiometerOffset;
+			SmartDashboard::PutNumber("ArmAngle",RAD_2_DEG(result));
+			const double height= (sin(result)*props.ArmLength)+props.GearHeightOffset;
+			SmartDashboard::PutNumber("Height",height*3.2808399);
 
+			//Now to convert to the motor gear ratio as this is what we work in
+			result*=props.ArmToGearRatio;
+		}
+	}
 	return result;
 }
 
