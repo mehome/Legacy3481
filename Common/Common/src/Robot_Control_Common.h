@@ -4,10 +4,6 @@
 //  [1/24/2015 JamesK]
 #undef __USE_LEGACY_WPI_LIBRARIES__
 
-#ifdef __USE_LEGACY_WPI_LIBRARIES__
-typedef AnalogChannel AnalogInput;
-#endif
-
 //This parses out the LUA into two table for each control element... its population properties and LUT
 class COMMON_API Control_Assignment_Properties
 {
@@ -264,6 +260,10 @@ private:
 
 #define LUT_VALID(x) ((index<x.size()) && (x[index]!=(size_t)-1))
 #define IF_LUT(x) if ((index<x.size()) && (x[index]!=(size_t)-1))
+
+#ifdef __USE_LEGACY_WPI_LIBRARIES__
+typedef AnalogChannel AnalogInput;
+#endif
 
 class COMMON_API RobotControlCommon
 {
