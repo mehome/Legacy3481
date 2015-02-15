@@ -4,6 +4,10 @@
 //  [1/24/2015 JamesK]
 #undef __USE_LEGACY_WPI_LIBRARIES__
 
+#ifdef __USE_LEGACY_WPI_LIBRARIES__
+typedef AnalogChannel AnalogInput;
+#endif
+
 //This parses out the LUA into two table for each control element... its population properties and LUT
 class COMMON_API Control_Assignment_Properties
 {
@@ -337,7 +341,7 @@ class COMMON_API RobotControlCommon
 		std::vector<Victor *> m_Victors;
 		std::vector<Relay *> m_Relays;
 		std::vector<DigitalInput *> m_DigitalInputs;
-		std::vector<AnalogChannel *> m_AnalogInputs;
+		std::vector<AnalogInput *> m_AnalogInputs;
 		std::vector<DoubleSolenoid *> m_DoubleSolenoids;
 		std::vector<Encoder2 *> m_Encoders;
 
