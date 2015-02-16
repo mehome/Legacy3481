@@ -276,6 +276,9 @@ MainRobot = {
 	{
 		--field_centric_x_axis_threshold=0.40,
 		--tank_steering_tolerance=0.05,
+		slotlist = {slot_1="controller (xbox 360 for windows)"},
+		--slotlist = {slot_1="controller (xbox 360 for windows)", slot_2="gamepad f310 (controller)", slot_3="logitech dual action"},
+		
 		Joystick_1 =
 		{
 			control = "airflo",
@@ -378,10 +381,10 @@ MainRobot = {
 			Robot_SetLowGearOn = {type="joystick_button", key=1, on_off=false},
 						
 			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
+			--Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
 			Turn_180_Hold = {type="joystick_button", key=6, on_off=true},
-			FlipY_Hold = {type="joystick_button", key=6, on_off=true},
-			SlideHold = {type="joystick_button", key=6, on_off=true}
+			--FlipY_Hold = {type="joystick_button", key=6, on_off=true},
+			--SlideHold = {type="joystick_button", key=6, on_off=true}
 		}
 	},
 	
