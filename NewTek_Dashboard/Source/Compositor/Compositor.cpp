@@ -1987,7 +1987,9 @@ public:
 
 	void SetNumPoints(size_t NumSegments)
 	{
-		if (NumSegments>(size_t)NumPoints)
+		//TODO ask Cary why this check was here
+		//if (NumSegments>(size_t)NumPoints)
+
 		{
 			delete[] Left;
 			delete[] Center;
