@@ -1,8 +1,11 @@
 Pi=3.14159265358979323846
+BallDiameter=2.34
+BallRadius=BallDiameter/2
+CubeSize=5.3
 
 --This is used load persistence of the coordinates last saved etc
 function GetSettings()
-	local loaded_file = loadfile("CompositorSave_Main.lua")
+	local loaded_file = loadfile("CompositorSave_FOV_Test.lua")
 	if (loaded_file==nil) then
 		return nil
 	else
@@ -57,32 +60,81 @@ CompositorProps = {
 			-- draw_shape -- may be "square", "circle", or "cube".
 			shape_reticle_1 =
 			{
-				--remote_name="apex_reticle",
-				size_in=25,
-				r=0,g=255,b=100,
-				plane_selection="xy_and_xz",
-				draw_shape="circle"
+				remote_name="height_indicator_1",
+				length_in=20,
+				width_in=1,
+				y_bisect=1,
+				r=100,g=0,b=100,
+				plane_selection='xz',
+				draw_shape="square"
 			},
 			shape_reticle_2 =
 			{
-				--remote_name="land_reticle",
-				size_in=25,
+				remote_name="height_indicator_2",
+				length_in=20,
+				width_in=1,
+				y_bisect=1,
+				r=100,g=0,b=100,
+				plane_selection='xz',
+				draw_shape="square"
+			},
+			shape_reticle_3 =
+			{
+				remote_name="height_indicator_3",
+				length_in=1,
+				width_in=30,
+				y_bisect=0,
+				r=100,g=0,b=100,
+				plane_selection='xz',
+				draw_shape="square"
+			},
+
+			shape_reticle_4 =
+			{
+				remote_name="low_box",
+				--size_in=CubeSize,
+				length_in=12.1,
+				width_in=26.9;
+				depth_in=16.9,
+				y_bisect=1,
+				z_bisect=1,
 				r=250,g=250,b=0,
-				plane_selection="xy",
-				draw_shape="circle"
+				--test orientation
+				--rotation =	{ x_deg=0, y_deg=17.158, z=0 },
+				--draw_shape="cube"
+				--xy, xz, yz, xy_and_xz
+				--xy_and_xz  not yet supported
+				plane_selection='xy',
+				draw_shape="square"
+			},
+			shape_reticle_5 =
+			{
+				remote_name="medium_box",
+				size_in=CubeSize,
+				r=0,g=0,b=250,
+				draw_shape="cube"
+			},
+			shape_reticle_6 =
+			{
+				remote_name="high_box",
+				size_in=CubeSize,
+				r=250,g=0,b=0,
+				draw_shape="cube"
 			}
 		},
 		
 		path_align =
 		{
-			width_in = 25, length_ft = 27,
+			remote_name="Camera",
+			width_in = 27, length_in = 20,
 			pivot_in = 2,
-			camera_position =	{ x_in=0, y_in=12.5, z_in=-5.0 },
-			camera_rotation =	{ x_deg=0, y_deg=7.30457, z=0 },
-			fov=45,
+			camera_position =	{ x_in=0, y_in=49.77, z_in=-28.51 },
+			camera_rotation =	{ x_deg=0, y_deg=-53.23, z=0 },
+			fov=60,
 			r=0,g=255,b=100,
-			num_segments=27,
+			num_segments=2,
 			disable_turns="y", --Using path align to gauge distance to target landing
+			disable_motion=1,
 			draw_shape = "path",
 			-- draw_shape -- may be "path", "square", "circle", or "cube".
 		},
@@ -95,11 +147,14 @@ CompositorProps = {
 				type="composite",
 				composite=
 				{
-					composite_1 = {	type="bypass" },
-					composite_2 = {	type="square", selection=1 },
-					composite_3 = { type="shape", selection=1, x=0, y=2.29786 , z=3.94196 },
-					composite_4 = { type="shape", selection=2,  y=0.310857 , z=8.0574 },
-					composite_5 = {	type="pathalign"}
+					composite_1 = {	type="square", selection=1 },
+					composite_2 = { type="shape", selection=1, x_in=15, y_in=5.81 , z_in=0 },
+					composite_3 = { type="shape", selection=2, x_in=-15, y_in=5.81 , z_in=0 },
+					composite_4 = { type="shape", selection=3, x=0, y_in=5.81 , z_in=20 },
+					composite_5 = { type="shape", selection=4,  y_in=0 , z_in=20},
+					--composite_5 = { type="shape", selection=3,  y_in=CubeSize/2 + CubeSize , z_in=13 + CubeSize/2},
+					--composite_6 = { type="shape", selection=4,  y_in=CubeSize/2 + CubeSize*2 , z_in=13 + CubeSize/2},
+					composite_6 = {	type="pathalign"}
 				}
 			},
 			sequence_2 = {	type="bypass" },

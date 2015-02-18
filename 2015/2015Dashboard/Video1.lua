@@ -14,9 +14,9 @@ DashboardProps =
 	settings =
 	{
 		--Pick which overlay you wish to use by giving it a title name
-		--title= "Main",
+		title= "Main",
 		--title= "Main_2014",
-		title= "FOV_Test",
+		--title= "FOV_Test",
 		--No camera!  use this
 		url= "black_33_600x800",
 		--url= "10.34.81.11",
