@@ -1,11 +1,15 @@
 Pi=3.14159265358979323846
-BallDiameter=2.34
-BallRadius=BallDiameter/2
-CubeSize=5.3
+Tote_hieght=12.1    --This is the maximum height of the tote itself
+Tote_stack_hieght=11.75 --This height is the stacked height which insets about a 0.5" sunk down from the outer lip 
+Tote_width=26.9
+Tote_depth=16.9
+ForkTine_length=20.0
+ForkTine_MaxWidth=30.0
 
---This is used load persistence of the coordinates last saved etc
+
+--This is used load persistence of the coordinates last saved etc.
 function GetSettings()
-	local loaded_file = loadfile("CompositorSave_FOV_Test.lua")
+	local loaded_file = loadfile("CompositorSave_Main.lua")
 	if (loaded_file==nil) then
 		return nil
 	else
@@ -54,14 +58,14 @@ CompositorProps = {
 				r=0,g=255,b=255
 			}
 		},
-		--Shape reticles depend on the path align to setup the camera confiruation even if the path align is never used
+		--Shape reticles depend on the path align to setup the camera configuration even if the path align is never used
 		shape_reticle_props =
 		{
 			-- draw_shape -- may be "square", "circle", or "cube".
 			shape_reticle_1 =
 			{
-				remote_name="height_indicator_1",
-				length_in=20,
+				remote_name="fork_right",
+				length_in=ForkTine_length,
 				width_in=1,
 				y_bisect=1,
 				r=100,g=0,b=100,
@@ -70,8 +74,8 @@ CompositorProps = {
 			},
 			shape_reticle_2 =
 			{
-				remote_name="height_indicator_2",
-				length_in=20,
+				remote_name="fork_left",
+				length_in=ForkTine_length,
 				width_in=1,
 				y_bisect=1,
 				r=100,g=0,b=100,
@@ -80,9 +84,9 @@ CompositorProps = {
 			},
 			shape_reticle_3 =
 			{
-				remote_name="height_indicator_3",
+				remote_name="height_indicator",
 				length_in=1,
-				width_in=30,
+				width_in=ForkTine_MaxWidth,
 				y_bisect=0,
 				r=100,g=0,b=100,
 				plane_selection='xz',
@@ -91,14 +95,14 @@ CompositorProps = {
 
 			shape_reticle_4 =
 			{
-				remote_name="low_box",
+				remote_name="tote_1",
 				--size_in=CubeSize,
 				length_in=12.1,
 				width_in=26.9;
 				depth_in=16.9,
 				y_bisect=1,
 				z_bisect=1,
-				r=250,g=250,b=0,
+				r=250,g=0,b=0,
 				--test orientation
 				--rotation =	{ x_deg=0, y_deg=17.158, z=0 },
 				--draw_shape="cube"
@@ -109,17 +113,43 @@ CompositorProps = {
 			},
 			shape_reticle_5 =
 			{
-				remote_name="medium_box",
-				size_in=CubeSize,
-				r=0,g=0,b=250,
-				draw_shape="cube"
+				remote_name="tote_2",
+				length_in=Tote_hieght,width_in=Tote_width,depth_in=Tote_depth,
+				y_bisect=1,plane_selection='xy',
+				r=250,g=128,b=0,
+				draw_shape="square"
 			},
 			shape_reticle_6 =
 			{
-				remote_name="high_box",
-				size_in=CubeSize,
-				r=250,g=0,b=0,
-				draw_shape="cube"
+				remote_name="tote_3",
+				length_in=Tote_hieght,width_in=Tote_width,depth_in=Tote_depth,
+				y_bisect=1,plane_selection='xy',
+				r=250,g=250,b=0,
+				draw_shape="square"
+			},
+			shape_reticle_7 =
+			{
+				remote_name="tote_4",
+				length_in=Tote_hieght,width_in=Tote_width,depth_in=Tote_depth,
+				y_bisect=1,plane_selection='xy',
+				r=0,g=250,b=0,
+				draw_shape="square"
+			},
+			shape_reticle_8 =
+			{
+				remote_name="tote_5",
+				length_in=Tote_hieght,width_in=Tote_width,depth_in=Tote_depth,
+				y_bisect=1,plane_selection='xy',
+				r=0,g=0,b=250,
+				draw_shape="square"
+			},
+			shape_reticle_9 =
+			{
+				remote_name="tote_6",
+				length_in=Tote_hieght,width_in=Tote_width,depth_in=Tote_depth,
+				y_bisect=1,plane_selection='xy',
+				r=250,g=0,b=250,
+				draw_shape="square"
 			}
 		},
 		
@@ -148,13 +178,16 @@ CompositorProps = {
 				composite=
 				{
 					composite_1 = {	type="square", selection=1 },
-					composite_2 = { type="shape", selection=1, x_in=15, y_in=5.81 , z_in=0 },
-					composite_3 = { type="shape", selection=2, x_in=-15, y_in=5.81 , z_in=0 },
-					composite_4 = { type="shape", selection=3, x=0, y_in=5.81 , z_in=20 },
-					composite_5 = { type="shape", selection=4,  y_in=0 , z_in=20},
-					--composite_5 = { type="shape", selection=3,  y_in=CubeSize/2 + CubeSize , z_in=13 + CubeSize/2},
-					--composite_6 = { type="shape", selection=4,  y_in=CubeSize/2 + CubeSize*2 , z_in=13 + CubeSize/2},
-					composite_6 = {	type="pathalign"}
+					composite_2 = { type="shape", selection=1, x_in=15, y_in=5.81 , z_in=0 },  --Fork Right
+					composite_3 = { type="shape", selection=2, x_in=-15, y_in=5.81 , z_in=0 },  --Fork Left
+					composite_4 = { type="shape", selection=3, x=0, y_in=5.81 , z_in=ForkTine_length }, --Height indicator
+					composite_5 = { type="shape", selection=4,  y_in=0 , z_in=ForkTine_length},         --Tote 1
+					composite_6 = { type="shape", selection=5,  y_in=Tote_stack_hieght , z_in=ForkTine_length},  --Tote 2
+					composite_7 = { type="shape", selection=6,  y_in=Tote_stack_hieght*2 , z_in=ForkTine_length}, --Tote 3
+					composite_8 = { type="shape", selection=7,  y_in=Tote_stack_hieght*3 , z_in=ForkTine_length},  --Tote 4
+					composite_9 = { type="shape", selection=8,  y_in=Tote_stack_hieght*4 , z_in=ForkTine_length},  --Tote 5
+					composite_10 = { type="shape", selection=9,  y_in=Tote_stack_hieght*5 , z_in=ForkTine_length}, --Tote 6
+					composite_11 = { type="pathalign"}
 				}
 			},
 			sequence_2 = {	type="bypass" },
