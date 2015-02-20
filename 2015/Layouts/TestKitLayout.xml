@@ -1,16 +1,40 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="support_hotspot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="502" y="333"/>
+	</widget>
+	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="756" y="361"/>
+	</widget>
+	<widget field="height_indicator_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="740" y="229"/>
+	</widget>
+	<widget field="first_move_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="496" y="442"/>
+	</widget>
+	<widget field="Camera_z" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="748" y="256"/>
+	</widget>
+	<widget field="Camera_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="747" y="280"/>
+	</widget>
+	<widget field="Camera_x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="749" y="303"/>
+	</widget>
+	<widget field="Camera_rot_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="751" y="329"/>
+	</widget>
 	<widget field="FieldCentricDrive_Mode" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="17" y="484"/>
+		<location x="500" y="371"/>
 	</widget>
 	<widget field="DriverOverride" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="13" y="461"/>
+		<location x="507" y="354"/>
 	</widget>
 	<widget field="LimitCatapult" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="16" y="439"/>
+		<location x="498" y="394"/>
 	</widget>
 	<widget field="UseHighGear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="18" y="414"/>
+		<location x="498" y="419"/>
 	</widget>
 	<widget field="AutoPilot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="20" y="385"/>
@@ -144,4 +168,82 @@
 </dashboard>
 <live-window>
 </live-window>
+	<hidden field="inner_fork_left_x"/>
+	<hidden field="tote_3_rot_x"/>
+	<hidden field="inner_fork_left_y"/>
+	<hidden field="tote_3_rot_y"/>
+	<hidden field="inner_fork_left_z"/>
+	<hidden field="tote_3_rot_z"/>
+	<hidden field="tote_2_y"/>
+	<hidden field="tote_6_rot_z"/>
+	<hidden field="tote_2_x"/>
+	<hidden field="fork_right_enabled"/>
+	<hidden field="Camera_rot_x"/>
+	<hidden field="tote_6_rot_x"/>
+	<hidden field="tote_4_y"/>
+	<hidden field="tote_4_x"/>
+	<hidden field="tote_2_z"/>
+	<hidden field="tote_6_rot_y"/>
+	<hidden field="inner_fork_right_enabled"/>
+	<hidden field="inner_fork_right_rot_y"/>
+	<hidden field="tote_6_y"/>
+	<hidden field="inner_fork_right_rot_z"/>
+	<hidden field="tote_6_x"/>
+	<hidden field="tote_4_z"/>
+	<hidden field="inner_fork_right_rot_x"/>
+	<hidden field="tote_6_z"/>
+	<hidden field="height_indicator_rot_z"/>
+	<hidden field="Camera_rot_z"/>
+	<hidden field="height_indicator_rot_x"/>
+	<hidden field="height_indicator_rot_y"/>
+	<hidden field="tote_2_enabled"/>
+	<hidden field="fork_right_rot_y"/>
+	<hidden field="fork_right_rot_x"/>
+	<hidden field="fork_right_rot_z"/>
+	<hidden field="tote_4_enabled"/>
+	<hidden field="tote_5_rot_x"/>
+	<hidden field="tote_5_rot_y"/>
+	<hidden field="inner_fork_right_x"/>
+	<hidden field="tote_5_rot_z"/>
+	<hidden field="inner_fork_right_y"/>
+	<hidden field="inner_fork_right_z"/>
+	<hidden field="height_indicator_enabled"/>
+	<hidden field="tote_2_rot_y"/>
+	<hidden field="tote_2_rot_x"/>
+	<hidden field="tote_6_enabled"/>
+	<hidden field="tote_2_rot_z"/>
+	<hidden field="fork_right_z"/>
+	<hidden field="fork_right_y"/>
+	<hidden field="fork_right_x"/>
+	<hidden field="tote_1_rot_x"/>
+	<hidden field="tote_3_x"/>
+	<hidden field="tote_1_z"/>
+	<hidden field="height_indicator_x"/>
+	<hidden field="tote_1_y"/>
+	<hidden field="tote_3_z"/>
+	<hidden field="tote_5_x"/>
+	<hidden field="tote_3_y"/>
+	<hidden field="height_indicator_z"/>
+	<hidden field="fork_left_x"/>
+	<hidden field="tote_5_z"/>
+	<hidden field="tote_5_y"/>
+	<hidden field="tote_1_rot_z"/>
+	<hidden field="fork_left_z"/>
+	<hidden field="inner_fork_left_enabled"/>
+	<hidden field="tote_1_rot_y"/>
+	<hidden field="fork_left_y"/>
+	<hidden field="fork_left_rot_z"/>
+	<hidden field="fork_left_rot_y"/>
+	<hidden field="fork_left_rot_x"/>
+	<hidden field="tote_1_x"/>
+	<hidden field="fork_left_enabled"/>
+	<hidden field="tote_1_enabled"/>
+	<hidden field="tote_4_rot_x"/>
+	<hidden field="tote_3_enabled"/>
+	<hidden field="tote_4_rot_y"/>
+	<hidden field="tote_4_rot_z"/>
+	<hidden field="inner_fork_left_rot_x"/>
+	<hidden field="inner_fork_left_rot_y"/>
+	<hidden field="inner_fork_left_rot_z"/>
+	<hidden field="tote_5_enabled"/>
 </xml>

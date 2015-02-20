@@ -216,8 +216,9 @@ CompositorProps = {
 				}
 			},
 			sequence_2 = {	type="bypass" },
+			--I may keep this disabled as I need to sort out how to properly deal with remote control shapes
 			--This must stay here to load the settings
-			load_settings = GetSettings(),
+			--load_settings = GetSettings(),
 		}
 	},
 	controls =
