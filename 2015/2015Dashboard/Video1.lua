@@ -18,8 +18,8 @@ DashboardProps =
 		--title= "Main_2014",
 		--title= "FOV_Test",
 		--No camera!  use this
-		url= "black_33_600x800",
-		--url= "10.34.81.11",
+		--url= "black_33_600x800",
+		url= "10.34.81.11",
 		--url="10.28.1.20",
 		--by default RTSP uses 554 and is now allowed for FMS
 		port=554,
@@ -34,8 +34,8 @@ DashboardProps =
 		right= 1196,
 		bottom= 808,
 		--smart_dashboard= "java -jar C:\\WindRiver\\WPILib\\SmartDashboard.jar ip localhost",
-		--smart_dashboard= "C:\\WindRiver\\WPILib\\SmartDashboard.jar",
-		smart_dashboard="none",
+		smart_dashboard= "java -jar C:\\WindRiver\\WPILib\\SmartDashboard.jar ip roboRIO-3481.local",
+		--smart_dashboard="none",
 		--window_name= "SmartDashboard",
 		is_popup= 1,
 		plug_in= "Compositor.dll",
