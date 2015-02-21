@@ -24,7 +24,8 @@ DashboardProps =
 		--by default RTSP uses 554 and is now allowed for FMS
 		port=554,
 		--port=1180,  --This has worked in past years... good backup if there are any issues
-		robot_ip_address= "localhost",
+		--robot_ip_address= "localhost",
+		robot_ip_address= "roboRIO-3481.local",
 		--robot_ip_address= "10.34.81.2",
 		--robot_ip_address= "10.34.82.2",
 		--robot_ip_address= "10.28.1.2",
