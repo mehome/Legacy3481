@@ -219,34 +219,50 @@ double FRC_2015_Robot::Robot_Arm::PotentiometerRaw_To_Arm_r(double raw) const
 	return ret;
 }
 
-double FRC_2015_Robot::Robot_Arm::GetPosRest()
-{
-	return HeightToAngle_r(-0.02);
-}
 void FRC_2015_Robot::Robot_Arm::SetPosRest()
 {
-	SetIntendedPosition(GetPosRest()  );
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	SetIntendedPosition(HeightToAngle_r(Inches2Meters(props.ToteRestHeight))  );
 }
-void FRC_2015_Robot::Robot_Arm::SetPos0feet()
+void FRC_2015_Robot::Robot_Arm::SetTote2Height()
 {
-	SetIntendedPosition( HeightToAngle_r(0.0) );
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	SetIntendedPosition( HeightToAngle_r(Inches2Meters(props.Tote2Height)) );
 }
-void FRC_2015_Robot::Robot_Arm::SetPos3feet()
+void FRC_2015_Robot::Robot_Arm::SetTote3Height()
 {
-	//Not used, but kept for reference
-	SetIntendedPosition(HeightToAngle_r(0.9144));
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	SetIntendedPosition(HeightToAngle_r(Inches2Meters(props.Tote3Height)));
 }
-void FRC_2015_Robot::Robot_Arm::SetPos6feet()
+void FRC_2015_Robot::Robot_Arm::SetTote4Height()
 {
-	SetIntendedPosition( HeightToAngle_r(1.8288) );
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	SetIntendedPosition( HeightToAngle_r(Inches2Meters(props.Tote4Height)) );
 }
-void FRC_2015_Robot::Robot_Arm::SetPos9feet()
+void FRC_2015_Robot::Robot_Arm::SetTote5Height()
 {
-	SetIntendedPosition( HeightToAngle_r(2.7432) );
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	SetIntendedPosition( HeightToAngle_r(Inches2Meters(props.Tote5Height)) );
 }
-void FRC_2015_Robot::Robot_Arm::CloseRist(bool Close)
+void FRC_2015_Robot::Robot_Arm::SetTote6Height()
 {
-	m_pParent->m_RobotControl->CloseSolenoid(eRist,Close);
+	const FRC_2015_Robot_Props &props=m_pParent->GetRobotProps().GetFRC2015RobotProps();
+	SetIntendedPosition( HeightToAngle_r(Inches2Meters(props.Tote6Height)) );
+}
+
+void FRC_2015_Robot::Robot_Arm::CloseForkRight(bool Close)
+{
+	m_pParent->m_RobotControl->CloseSolenoid(eForkRight,Close);
+}
+void FRC_2015_Robot::Robot_Arm::CloseForkLeft(bool Close)
+{
+	m_pParent->m_RobotControl->CloseSolenoid(eForkLeft,Close);
+}
+
+void FRC_2015_Robot::Robot_Arm::CloseForkBoth(bool Close)
+{
+	CloseForkLeft(Close);
+	CloseForkRight(Close);
 }
 
 void FRC_2015_Robot::Robot_Arm::BindAdditionalEventControls(bool Bind)
@@ -258,15 +274,18 @@ void FRC_2015_Robot::Robot_Arm::BindAdditionalEventControls(bool Bind)
 		em->EventOnOff_Map["Arm_SetPotentiometerSafety"].Subscribe(ehl,*this, &FRC_2015_Robot::Robot_Arm::SetPotentiometerSafety);
 
 		em->Event_Map["Arm_SetPosRest"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPosRest);
-		em->Event_Map["Arm_SetPos0feet"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPos0feet);
-		em->Event_Map["Arm_SetPos3feet"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPos3feet);
-		em->Event_Map["Arm_SetPos6feet"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPos6feet);
-		em->Event_Map["Arm_SetPos9feet"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetPos9feet);
+		em->Event_Map["Arm_SetTote2Height"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetTote2Height);
+		em->Event_Map["Arm_SetTote3Height"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetTote3Height);
+		em->Event_Map["Arm_SetTote4Height"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetTote4Height);
+		em->Event_Map["Arm_SetTote5Height"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetTote5Height);
+		em->Event_Map["Arm_SetTote6Height"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::SetTote6Height);
 
 		em->EventOnOff_Map["Arm_Advance"].Subscribe(ehl,*this, &FRC_2015_Robot::Robot_Arm::Advance);
 		em->EventOnOff_Map["Arm_Retract"].Subscribe(ehl,*this, &FRC_2015_Robot::Robot_Arm::Retract);
 
-		em->EventOnOff_Map["Arm_Rist"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::CloseRist);
+		em->EventOnOff_Map["Arm_ForkRight"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::CloseForkRight);
+		em->EventOnOff_Map["Arm_ForkLeft"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::CloseForkLeft);
+		em->EventOnOff_Map["Arm_ForkBoth"].Subscribe(ehl, *this, &FRC_2015_Robot::Robot_Arm::CloseForkBoth);
 	}
 	else
 	{
@@ -274,15 +293,18 @@ void FRC_2015_Robot::Robot_Arm::BindAdditionalEventControls(bool Bind)
 		em->EventOnOff_Map["Arm_SetPotentiometerSafety"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPotentiometerSafety);
 
 		em->Event_Map["Arm_SetPosRest"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPosRest);
-		em->Event_Map["Arm_SetPos0feet"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPos0feet);
-		em->Event_Map["Arm_SetPos3feet"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPos3feet);
-		em->Event_Map["Arm_SetPos6feet"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPos6feet);
-		em->Event_Map["Arm_SetPos9feet"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetPos9feet);
+		em->Event_Map["Arm_SetTote2Height"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetTote2Height);
+		em->Event_Map["Arm_SetTote3Height"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetTote3Height);
+		em->Event_Map["Arm_SetTote4Height"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetTote4Height);
+		em->Event_Map["Arm_SetTote5Height"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetTote5Height);
+		em->Event_Map["Arm_SetTote6Height"].Remove(*this, &FRC_2015_Robot::Robot_Arm::SetTote6Height);
 
 		em->EventOnOff_Map["Arm_Advance"].Remove(*this, &FRC_2015_Robot::Robot_Arm::Advance);
 		em->EventOnOff_Map["Arm_Retract"].Remove(*this, &FRC_2015_Robot::Robot_Arm::Retract);
 
-		em->EventOnOff_Map["Arm_Rist"]  .Remove(*this, &FRC_2015_Robot::Robot_Arm::CloseRist);
+		em->EventOnOff_Map["Arm_ForkRight"]  .Remove(*this, &FRC_2015_Robot::Robot_Arm::CloseForkRight);
+		em->EventOnOff_Map["Arm_ForkLeft"]  .Remove(*this, &FRC_2015_Robot::Robot_Arm::CloseForkLeft);
+		em->EventOnOff_Map["Arm_ForkBoth"]  .Remove(*this, &FRC_2015_Robot::Robot_Arm::CloseForkBoth);
 	}
 }
 
@@ -622,13 +644,11 @@ FRC_2015_Robot_Properties::FRC_2015_Robot_Properties()  : m_TurretProps(
 	DEG_2_RAD(45-3),DEG_2_RAD(70+3) //add padding for quick response time (as close to limits will slow it down)
 	),
 	m_KickerWheelProps(
-	"Rollers",
-	2.0,    //Mass
+	"Kicker",
+	50,    //Mass (about 110 pounds)
 	0.0,   //Dimension  (this really does not matter for this, there is currently no functionality for this property, although it could impact limits)
-	//RS-550 motor with 64:1 BaneBots transmission, so this is spec at 19300 rpm free, and 17250 peak efficiency
-	//17250 / 64 = 287.5 = rps of motor / 64 reduction = 4.492 rps * 2pi = 28.22524
-	28,   //Max Speed (rounded as we need not have precision)
-	112.0,112.0, //ACCEL, BRAKE  (These work with the buttons, give max acceleration)
+	42,   //with 13.2 gear reduction in radians
+	10.0,10.0, //ACCEL, BRAKE  (These work with the buttons, give max acceleration)
 	112.0,112.0, //Max Acceleration Forward/Reverse  these can be real fast about a quarter of a second
 	Ship_1D_Props::eSimpleMotor,
 	false	//No limit ever!
@@ -644,7 +664,7 @@ FRC_2015_Robot_Properties::FRC_2015_Robot_Properties()  : m_TurretProps(
 		{	//arm potentiometer and arm ratios
 			const double c_OptimalAngleUp_r=DEG_2_RAD(70.0);
 			const double c_OptimalAngleDn_r=DEG_2_RAD(50.0);
-			const double c_ArmLength_m=1.8288;  //6 feet
+			const double c_ArmLength_m=Inches2Meters(48);
 			const double c_ArmToGearRatio=72.0/28.0;
 			//const double c_GearToArmRatio=1.0/c_ArmToGearRatio;
 			//const double c_PotentiometerToGearRatio=60.0/32.0;
@@ -652,7 +672,7 @@ FRC_2015_Robot_Properties::FRC_2015_Robot_Properties()  : m_TurretProps(
 			const double c_PotentiometerToArmRatio=36.0/54.0;
 			//const double c_PotentiometerToGearRatio=c_PotentiometerToArmRatio * c_ArmToGearRatio;
 			const double c_PotentiometerMaxRotation=DEG_2_RAD(270.0);
-			const double c_GearHeightOffset=1.397;  //55 inches
+			const double c_GearHeightOffset=Inches2Meters(38.43);
 			const double c_WheelDiameter=0.1524;  //6 inches
 			const double c_MotorToWheelGearRatio=12.0/36.0;
 
@@ -664,6 +684,16 @@ FRC_2015_Robot_Properties::FRC_2015_Robot_Properties()  : m_TurretProps(
 			props.PotentiometerMaxRotation=c_PotentiometerMaxRotation;
 			props.GearHeightOffset=c_GearHeightOffset;
 			props.MotorToWheelGearRatio=c_MotorToWheelGearRatio;
+
+			//Get some good defaults
+			const double Tote_stack_Height=11.75;
+			const double Clearance=2;
+			props.ToteRestHeight=0.0;
+			props.Tote2Height=Tote_stack_Height*1+Clearance;
+			props.Tote3Height=Tote_stack_Height*2+Clearance;
+			props.Tote4Height=Tote_stack_Height*3+Clearance;
+			props.Tote5Height=Tote_stack_Height*4+Clearance;
+			props.Tote6Height=Tote_stack_Height*5+Clearance;
 			m_FRC2015RobotProps=props;
 		}
 
@@ -747,8 +777,8 @@ const char * const g_FRC_2015_Controls_Events[] =
 	"IntakeArm_DeployManager",
 	"KickerWheel_SetCurrentVelocity",
 	"Arm_SetCurrentVelocity","Arm_SetPotentiometerSafety","Arm_SetPosRest",
-	"Arm_SetPos0feet","Arm_SetPos3feet","Arm_SetPos6feet","Arm_SetPos9feet",
-	"Arm_Rist","Arm_Advance","Arm_Retract",
+	"Arm_SetTote2Height","Arm_SetTote3Height","Arm_SetTote4Height","Arm_SetTote5Height","Arm_SetTote6Height",
+	"Arm_ForkRight","Arm_ForkLeft","Arm_ForkBoth","Arm_Advance","Arm_Retract",
 	"TestAuton"
 };
 
@@ -801,7 +831,7 @@ void FRC_2015_Robot_Props::Autonomous_Properties::ShowAutonParameters()
 
 void FRC_2015_Robot_Properties::LoadFromScript(Scripting::Script& script)
 {
-	//FRC_2015_Robot_Props &props=m_FRC2015RobotProps;
+	FRC_2015_Robot_Props &props=m_FRC2015RobotProps;
 
 	const char* err=NULL;
 	{
@@ -836,12 +866,42 @@ void FRC_2015_Robot_Properties::LoadFromScript(Scripting::Script& script)
 			m_ArmProps.LoadFromScript(script);
 			script.Pop();
 		}
+		err = script.GetFieldTable("kicker");
+		if (!err)
+		{
+			m_KickerWheelProps.LoadFromScript(script);
+			script.Pop();
+		}
 
 		m_LowGearProps=*this;  //copy redundant data first
 		err = script.GetFieldTable("low_gear");
 		if (!err)
 		{
 			m_LowGearProps.LoadFromScript(script);
+			script.Pop();
+		}
+		err = script.GetFieldTable("height_presets");
+		if (!err)
+		{
+			double fTest;
+			err=script.GetField("rest", NULL, NULL, &fTest);
+			if (!err)
+				props.ToteRestHeight=fTest;
+			err=script.GetField("tote_2", NULL, NULL, &fTest);
+			if (!err)
+				props.Tote2Height=fTest;
+			err=script.GetField("tote_3", NULL, NULL, &fTest);
+			if (!err)
+				props.Tote3Height=fTest;
+			err=script.GetField("tote_4", NULL, NULL, &fTest);
+			if (!err)
+				props.Tote4Height=fTest;
+			err=script.GetField("tote_5", NULL, NULL, &fTest);
+			if (!err)
+				props.Tote5Height=fTest;
+			err=script.GetField("tote_6", NULL, NULL, &fTest);
+			if (!err)
+				props.Tote6Height=fTest;
 			script.Pop();
 		}
 
@@ -1063,6 +1123,10 @@ void FRC_2015_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 		Voltage=Voltage * m_RobotProps.GetArmProps().GetRotaryProps().VoltageScalar;
 		Victor_UpdateVoltage(index,Voltage);
 		SmartDashboard::PutNumber("ArmVoltage",Voltage);
+		#ifdef Robot_TesterCode
+		m_Potentiometer.UpdatePotentiometerVoltage(Voltage);
+		m_Potentiometer.TimeChange();  //have this velocity immediately take effect
+		#endif
 		break;
 	case FRC_2015_Robot::eCameraLED:
 		TranslateToRelay(index,Voltage);
@@ -1101,6 +1165,16 @@ FRC_2015_Robot_Control::~FRC_2015_Robot_Control()
 void FRC_2015_Robot_Control::Reset_Rotary(size_t index)
 {
 	Encoder_Reset(index);  //This will check for encoder existence implicitly
+
+	switch (index)
+	{
+	case FRC_2015_Robot::eArm:
+		m_KalFilter_Arm.Reset();
+		#ifdef Robot_TesterCode
+		m_Potentiometer.ResetPos();
+		#endif
+		break;
+	}
 }
 
 #ifdef Robot_TesterCode
@@ -1121,7 +1195,15 @@ void FRC_2015_Robot_Control::Initialize(const Entity_Properties *props)
 		m_RobotProps=*robot_props;  //save a copy
 
 		Rotary_Properties turret_props=robot_props->GetTurretProps();
-		turret_props.SetUsingRange(false); //TODO why is this here?		
+		turret_props.SetUsingRange(false); //TODO why is this here?	
+
+		#ifdef Robot_TesterCode
+		Rotary_Properties writeable_arm_props=robot_props->GetArmProps();
+		//m_ArmMaxSpeed=writeable_arm_props.GetMaxSpeed();
+		//This is not perfect but will work for our simulation purposes
+		writeable_arm_props.RotaryProps().EncoderToRS_Ratio=robot_props->GetFRC2015RobotProps().ArmToGearRatio;
+		m_Potentiometer.Initialize(&writeable_arm_props);
+		#endif
 	}
 	
 	//Note: Initialize may be called multiple times so we'll only set this stuff up on first run
@@ -1143,6 +1225,10 @@ void FRC_2015_Robot_Control::Robot_Control_TimeChange(double dTime_s)
 {
 	m_Limit_Catapult=BoolSensor_GetState(FRC_2015_Robot::eCatapultLimit);
 	SmartDashboard::PutBoolean("LimitCatapult",m_Limit_Catapult);
+
+	#ifdef Robot_TesterCode
+	m_Potentiometer.SetTimeDelta(dTime_s);
+	#endif
 }
 
 void FRC_2015_Robot_Control::UpdateLeftRightVoltage(double LeftVoltage,double RightVoltage) 
@@ -1172,6 +1258,7 @@ double FRC_2015_Robot_Control::GetRotaryCurrentPorV(size_t index)
 	{
 		case FRC_2015_Robot::eArmPotentiometer:
 		{
+			#ifndef Robot_TesterCode
 			//double raw_value = (double)m_Potentiometer.GetAverageValue();
 			double raw_value=(double)Analog_GetAverageValue(FRC_2015_Robot::eArmPotentiometer);
 			raw_value = m_KalFilter_Arm(raw_value);  //apply the Kalman filter
@@ -1184,10 +1271,45 @@ double FRC_2015_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				PotentiometerRaw_To_Arm*=props.PotentiometerToArmRatio;  //convert to arm's gear ratio
 			}
 			result=(-PotentiometerRaw_To_Arm) + m_RobotProps.GetArmProps().GetRotaryProps().PotentiometerOffset;
+			#else
+			result=(m_Potentiometer.GetPotentiometerCurrentPosition()) + 0.0;
+			#endif
+
 			SmartDashboard::PutNumber("ArmAngle",RAD_2_DEG(result));
 			const double height= (sin(result)*props.ArmLength)+props.GearHeightOffset;
 			SmartDashboard::PutNumber("Height",height*3.2808399);
+			{
+				//Now to have some camera hud aligning updates in vision
+				//Note: I usually work with radians and meters... but in this small example I've
+				//chosen to work in degrees and inches for easier readability
 
+				const double StandAdjustedAngle=-7.2;  //in degrees
+				const double pivot_radius_in=7.3;  //distance from pivot point to camera lens
+				const double pivot_offset=-18.80; //This takes into account the offset of the camera mounted position
+				const double Camera_Z_offset=-32.45; //distance from lens to front of robot
+				const double Camera_Y_offset=49.77 - pivot_radius_in;
+
+				const double Arm_Length_in=17.0;
+				//pitch is the sensed angle use this to determine other geometry (it's the ArmAngle)
+				const double pitch=RAD_2_DEG(result);
+				const double Tote_stack_Height=11.75;
+
+				const double stand_angle=pitch+StandAdjustedAngle;  //determine angle of stand  
+				const double height_in=Meters2Inches(height);
+				SmartDashboard::PutNumber("Camera_rot_y",stand_angle);
+				SmartDashboard::PutNumber("Camera_y",cos(DEG_2_RAD(pitch+pivot_offset))*pivot_radius_in+Camera_Y_offset);
+				SmartDashboard::PutNumber("Camera_z",sin(DEG_2_RAD(-(pitch+pivot_offset)))*pivot_radius_in+Camera_Z_offset);
+				SmartDashboard::PutNumber("height_indicator_y",height_in);
+				SmartDashboard::PutNumber("fork_right_y",height_in);
+				SmartDashboard::PutNumber("fork_left_y",height_in);
+				SmartDashboard::PutNumber("inner_fork_right_y",height_in);
+				SmartDashboard::PutNumber("inner_fork_left_y",height_in);
+				SmartDashboard::PutBoolean("tote_2_enabled",height_in>Tote_stack_Height);
+				SmartDashboard::PutBoolean("tote_3_enabled",height_in>Tote_stack_Height*2);
+				SmartDashboard::PutBoolean("tote_4_enabled",height_in>Tote_stack_Height*3);
+				SmartDashboard::PutBoolean("tote_5_enabled",height_in>Tote_stack_Height*4);
+				SmartDashboard::PutBoolean("tote_6_enabled",height_in>Tote_stack_Height*5);
+			}
 			//Now to convert to the motor gear ratio as this is what we work in
 			result*=props.ArmToGearRatio;
 		}
@@ -1203,12 +1325,12 @@ void FRC_2015_Robot_Control::OpenSolenoid(size_t index,bool Open)
 		SmartDashboard::PutBoolean("UseHighGear",!Open);
 		Solenoid_Open(index,Open);
 		break;
-	case FRC_2015_Robot::eClaw:
-		SmartDashboard::PutBoolean("Claw",!Open);
+	case FRC_2015_Robot::eForkLeft:
+		SmartDashboard::PutBoolean("ForkLeft",!Open);
 		Solenoid_Open(index,Open);
 		break;
-	case FRC_2015_Robot::eRist:
-		SmartDashboard::PutBoolean("Wrist",!Open);
+	case FRC_2015_Robot::eForkRight:
+		SmartDashboard::PutBoolean("ForkRight",!Open);
 		Solenoid_Open(index,Open);
 		break;
 	}
