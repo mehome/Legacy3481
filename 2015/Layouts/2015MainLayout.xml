@@ -1,14 +1,20 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="LimitDartLower" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="496" y="420"/>
+	</widget>
+	<widget field="LimitDartUpper" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="498" y="395"/>
+	</widget>
+	<widget field="Auton GoalSelection" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="34" y="450"/>
+	</widget>
 	<widget field="Timer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="43" y="381"/>
 		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="Auton Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="39" y="423"/>
-	</widget>
-	<widget field="Auton BallCount" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="36" y="447"/>
 	</widget>
 	<widget field="ForkLeft" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="59" y="330"/>
@@ -17,7 +23,7 @@
 		<location x="127" y="327"/>
 	</widget>
 	<widget field="support_hotspot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="502" y="333"/>
+		<location x="755" y="405"/>
 	</widget>
 	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="756" y="361"/>
@@ -43,14 +49,8 @@
 	<widget field="FieldCentricDrive_Mode" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="500" y="371"/>
 	</widget>
-	<widget field="DriverOverride" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="507" y="354"/>
-	</widget>
-	<widget field="LimitCatapult" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="498" y="394"/>
-	</widget>
 	<widget field="UseHighGear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="498" y="419"/>
+		<location x="497" y="349"/>
 	</widget>
 	<widget field="AutoPilot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="598" y="170"/>
@@ -216,6 +216,7 @@
 	<hidden field="tote_2_rot_y"/>
 	<hidden field="tote_2_rot_x"/>
 	<hidden field="tote_6_enabled"/>
+	<hidden field="LimitCatapult"/>
 	<hidden field="tote_2_rot_z"/>
 	<hidden field="fork_right_z"/>
 	<hidden field="fork_right_y"/>
@@ -238,6 +239,7 @@
 	<hidden field="inner_fork_left_enabled"/>
 	<hidden field="tote_1_rot_y"/>
 	<hidden field="fork_left_y"/>
+	<hidden field="DriverOverride"/>
 	<hidden field="fork_left_rot_z"/>
 	<hidden field="fork_left_rot_y"/>
 	<hidden field="fork_left_rot_x"/>
@@ -253,6 +255,7 @@
 	<hidden field="inner_fork_left_rot_y"/>
 	<hidden field="inner_fork_left_rot_z"/>
 	<hidden field="tote_5_enabled"/>
+	<hidden field="Auton BallCount"/>
 </dashboard>
 <live-window>
 </live-window>
@@ -300,6 +303,7 @@
 	<hidden field="tote_2_rot_y"/>
 	<hidden field="tote_2_rot_x"/>
 	<hidden field="tote_6_enabled"/>
+	<hidden field="LimitCatapult"/>
 	<hidden field="tote_2_rot_z"/>
 	<hidden field="fork_right_z"/>
 	<hidden field="fork_right_y"/>
@@ -322,6 +326,7 @@
 	<hidden field="inner_fork_left_enabled"/>
 	<hidden field="tote_1_rot_y"/>
 	<hidden field="fork_left_y"/>
+	<hidden field="DriverOverride"/>
 	<hidden field="fork_left_rot_z"/>
 	<hidden field="fork_left_rot_y"/>
 	<hidden field="fork_left_rot_x"/>
@@ -337,4 +342,5 @@
 	<hidden field="inner_fork_left_rot_y"/>
 	<hidden field="inner_fork_left_rot_z"/>
 	<hidden field="tote_5_enabled"/>
+	<hidden field="Auton BallCount"/>
 </xml>
