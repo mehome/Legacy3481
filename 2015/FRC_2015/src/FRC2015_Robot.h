@@ -35,7 +35,7 @@ public:
 	struct Autonomous_Properties
 	{
 		void ShowAutonParameters(); //This will show SmartDashboard variables if ShowParameters is true
-		double FirstMove_ft; //TODO this is just a place holder to be replaced by this years game
+		double FirstMove_ft; //For first auton... just moving forward
 		bool IsSupportingHotSpot;  //TODO this is just a place holder to be replaced by this years game
 		bool ShowParameters;   //If true ShowAutonParameters will populate SmartDashboard with autonomous parameters
 	} Autonomous_Props;
@@ -91,7 +91,7 @@ const char * const csz_FRC_2015_Robot_SolenoidDevices_Enum[] =
 
 const char * const csz_FRC_2015_Robot_BoolSensorDevices_Enum[] =
 {
-	"catapult_limit"
+	"dart_upper_limit",	"dart_lower_limit"
 };
 
 //Note: rotary systems share the same index as their speed controller counterpart
@@ -132,7 +132,7 @@ class FRC_2015_Robot : public Tank_Robot
 
 		enum BoolSensorDevices
 		{
-			eCatapultLimit
+			eDartUpper,eDartLower
 		};
 
 		static BoolSensorDevices GetBoolSensorDevices_Enum (const char *value)
@@ -252,7 +252,6 @@ class FRC_2015_Robot : public Tank_Robot
 	public: //Autonomous public access (wind river has problems with friend technique)
 		const FRC_2015_Robot_Properties &GetRobotProps() const;
 		FRC_2015_Robot_Props::Autonomous_Properties &GetAutonProps();
-		bool GetCatapultLimit() const;
 		//Accessors needed for setting goals
 		Robot_Arm &GetArm() {return m_Arm;}
 	protected:
@@ -359,7 +358,7 @@ class FRC_2015_Robot_Control : public RobotControlCommon, public FRC_2015_Contro
 		Compressor *m_Compressor;
 		//All digital input reads are done on time change and cached to avoid multiple reads to the FPGA
 		bool m_Limit_IntakeMin1,m_Limit_IntakeMin2,m_Limit_IntakeMax1,m_Limit_IntakeMax2;
-		bool m_Limit_Catapult;
+		bool m_Limit_DartUpper,m_Limit_DartLower;
 	private:
 		KalmanFilter m_KalFilter_Arm;
 		Averager<double,5> m_ArmAverager;

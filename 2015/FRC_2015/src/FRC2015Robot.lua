@@ -62,11 +62,8 @@ MainRobot = {
 		{
 			--These channels must be unique to digital input encoder channels as well
 			--Also ensure you do not use the slot for the compressor ;)
-			id_1 = { name="intake_min_1",  channel=7},
-			id_2 = { name="intake_max_1",  channel=8}, 
-			id_3 = { name="intake_min_2",  channel=9},
-			id_4 = { name="intake_max_2",  channel=10}, 
-			id_5 = { name="catapult_limit",channel=11} 
+			id_1 = { name="dart_upper_limit",  channel=5},
+			id_2 = { name="dart_lower_limit",  channel=6}
 		},
 		analog_input =
 		{

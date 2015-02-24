@@ -473,11 +473,6 @@ FRC_2015_Robot_Props::Autonomous_Properties &FRC_2015_Robot::GetAutonProps()
 	return m_RobotProps.GetFRC2015RobotProps_rw().Autonomous_Props;
 }
 
-bool FRC_2015_Robot::GetCatapultLimit() const
-{
-	return m_RobotControl->GetBoolSensorState(eCatapultLimit);
-}
-
 void FRC_2015_Robot::SetLowGear(bool on) 
 {
 	if (m_IsAutonomous) return;  //We don't want to read joystick settings during autonomous
@@ -698,7 +693,7 @@ FRC_2015_Robot_Properties::FRC_2015_Robot_Properties()  : m_TurretProps(
 		}
 
 		FRC_2015_Robot_Props::Autonomous_Properties &auton=props.Autonomous_Props;
-		auton.FirstMove_ft=2.0;
+		auton.FirstMove_ft=5.0;
 		m_FRC2015RobotProps=props;
 	}
 	{
@@ -956,7 +951,6 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 				m_AutonProps=m_Robot.GetRobotProps().GetFRC2015RobotProps().Autonomous_Props;
 			}
 		};
-
 		class goal_clock : public AtomicGoal
 		{
 		private:
@@ -966,12 +960,13 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			void Activate()  {	m_Status=eActive;	}
 			Goal_Status Process(double dTime_s)
 			{
+				const double AutonomousTimeLimit=15.0;
 				double &Timer=m_Parent->m_Timer;
 				if (m_Status==eActive)
 				{
-					SmartDashboard::PutNumber("Timer",10.0-Timer);
+					SmartDashboard::PutNumber("Timer",AutonomousTimeLimit-Timer);
 					Timer+=dTime_s;
-					if (Timer>=10.0)
+					if (Timer>=AutonomousTimeLimit)
 						m_Status=eCompleted;
 				}
 				return m_Status;
@@ -982,13 +977,30 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 		bool m_IsHot;
 		bool m_HasSecondShotFired;
 
-		class OneBallAuton : public Generic_CompositeGoal, public SetUpProps
+		static Goal * Move_Straight(FRC_2015_Goals_Impl *Parent,double length_ft,double RollerScalar=0.0)
+		{
+			FRC_2015_Robot *Robot=&Parent->m_Robot;
+			//Construct a way point
+			WayPoint wp;
+			const Vec2d Local_GoalTarget(0.0,Feet2Meters(length_ft));
+			wp.Position=Local_GoalTarget;
+			wp.Power=1.0;
+			//Now to setup the goal
+			const bool LockOrientation=true;
+			const double PrecisionTolerance=Robot->GetRobotProps().GetTankRobotProps().PrecisionTolerance;
+			Goal_Ship_MoveToPosition *goal_drive=NULL;
+			goal_drive=new Goal_Ship_MoveToRelativePosition(Robot->GetController(),wp,true,LockOrientation,PrecisionTolerance);
+			return goal_drive;
+		}
+
+		class MoveForward : public Generic_CompositeGoal, public SetUpProps
 		{
 		public:
-			OneBallAuton(FRC_2015_Goals_Impl *Parent)	: SetUpProps(Parent) {	m_Status=eActive;	}
+			MoveForward(FRC_2015_Goals_Impl *Parent)	: SetUpProps(Parent) {	m_Status=eActive;	}
 			virtual void Activate()
 			{
 				AddSubgoal(new Goal_Wait(0.500));  //ensure catapult has finished launching ball before moving
+				AddSubgoal(Move_Straight(m_Parent,m_AutonProps.FirstMove_ft));
 				m_Status=eActive;
 			}
 		};
@@ -996,7 +1008,7 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 		enum AutonType
 		{
 			eDoNothing,
-			eOneBall,
+			eJustMoveForward,
 			eNoAutonTypes
 		} m_AutonType;
 		enum Robot_Position
@@ -1019,16 +1031,16 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			//pull parameters from SmartDashboard
 			try
 			{
-				const double fBallCount=SmartDashboard::GetNumber("Auton BallCount");
-				int BallCount=(size_t)fBallCount;
-				if ((BallCount<0)||(BallCount>eNoAutonTypes))
-					BallCount=eDoNothing;
-				m_AutonType=(AutonType)BallCount;
+				const double fGoalSelection=SmartDashboard::GetNumber("Auton GoalSelection");
+				int GoalSelection=(size_t)fGoalSelection;
+				if ((GoalSelection<0)||(GoalSelection>eNoAutonTypes))
+					GoalSelection=eDoNothing;
+				m_AutonType=(AutonType)GoalSelection;
 			}
 			catch (...)
 			{
 				m_AutonType=eDoNothing;
-				SmartDashboard::PutNumber("Auton BallCount",0.0);
+				SmartDashboard::PutNumber("Auton GoalSelection",0.0);
 			}
 
 			try
@@ -1051,8 +1063,8 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			printf("ball count=%d position=%d\n",m_AutonType,m_RobotPosition);
 			switch(m_AutonType)
 			{
-			case eOneBall:
-				m_Primer.AddGoal(new OneBallAuton(this));
+			case eJustMoveForward:
+				m_Primer.AddGoal(new MoveForward(this));
 				break;
 			case eDoNothing:
 			case eNoAutonTypes: //grrr windriver and warning 1250
@@ -1141,8 +1153,11 @@ bool FRC_2015_Robot_Control::GetBoolSensorState(size_t index) const
 	bool ret;
 	switch (index)
 	{
-	case FRC_2015_Robot::eCatapultLimit:
-		ret=m_Limit_Catapult;
+	case FRC_2015_Robot::eDartUpper:
+		ret=m_Limit_DartUpper;
+		break;
+	case FRC_2015_Robot::eDartLower:
+		ret=m_Limit_DartLower;
 		break;
 	default:
 		assert (false);
@@ -1223,8 +1238,10 @@ void FRC_2015_Robot_Control::Initialize(const Entity_Properties *props)
 
 void FRC_2015_Robot_Control::Robot_Control_TimeChange(double dTime_s)
 {
-	m_Limit_Catapult=BoolSensor_GetState(FRC_2015_Robot::eCatapultLimit);
-	SmartDashboard::PutBoolean("LimitCatapult",m_Limit_Catapult);
+	m_Limit_DartUpper=BoolSensor_GetState(FRC_2015_Robot::eDartUpper);
+	SmartDashboard::PutBoolean("LimitDartUpper",m_Limit_DartUpper);
+	m_Limit_DartLower=BoolSensor_GetState(FRC_2015_Robot::eDartLower);
+	SmartDashboard::PutBoolean("LimitDartLower",m_Limit_DartLower);
 
 	#ifdef Robot_TesterCode
 	m_Potentiometer.SetTimeDelta(dTime_s);
