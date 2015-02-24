@@ -1,5 +1,15 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Timer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="43" y="381"/>
+		<property name="Font Size" value="20"/>
+	</widget>
+	<widget field="Auton Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="39" y="423"/>
+	</widget>
+	<widget field="Auton BallCount" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="36" y="447"/>
+	</widget>
 	<widget field="ForkLeft" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="59" y="330"/>
 	</widget>
@@ -16,7 +26,7 @@
 		<location x="740" y="229"/>
 	</widget>
 	<widget field="first_move_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="496" y="442"/>
+		<location x="36" y="473"/>
 	</widget>
 	<widget field="Camera_z" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="748" y="256"/>
@@ -162,6 +172,87 @@
 		<location x="803" y="114"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
+	<hidden field="inner_fork_left_x"/>
+	<hidden field="tote_3_rot_x"/>
+	<hidden field="inner_fork_left_y"/>
+	<hidden field="tote_3_rot_y"/>
+	<hidden field="inner_fork_left_z"/>
+	<hidden field="tote_3_rot_z"/>
+	<hidden field="Deployment"/>
+	<hidden field="tote_2_y"/>
+	<hidden field="tote_6_rot_z"/>
+	<hidden field="tote_2_x"/>
+	<hidden field="fork_right_enabled"/>
+	<hidden field="Camera_rot_x"/>
+	<hidden field="tote_6_rot_x"/>
+	<hidden field="tote_4_y"/>
+	<hidden field="tote_4_x"/>
+	<hidden field="tote_2_z"/>
+	<hidden field="tote_6_rot_y"/>
+	<hidden field="inner_fork_right_enabled"/>
+	<hidden field="inner_fork_right_rot_y"/>
+	<hidden field="tote_6_y"/>
+	<hidden field="inner_fork_right_rot_z"/>
+	<hidden field="tote_6_x"/>
+	<hidden field="tote_4_z"/>
+	<hidden field="inner_fork_right_rot_x"/>
+	<hidden field="tote_6_z"/>
+	<hidden field="height_indicator_rot_z"/>
+	<hidden field="Camera_rot_z"/>
+	<hidden field="height_indicator_rot_x"/>
+	<hidden field="height_indicator_rot_y"/>
+	<hidden field="tote_2_enabled"/>
+	<hidden field="fork_right_rot_y"/>
+	<hidden field="fork_right_rot_x"/>
+	<hidden field="fork_right_rot_z"/>
+	<hidden field="tote_4_enabled"/>
+	<hidden field="tote_5_rot_x"/>
+	<hidden field="tote_5_rot_y"/>
+	<hidden field="inner_fork_right_x"/>
+	<hidden field="tote_5_rot_z"/>
+	<hidden field="inner_fork_right_y"/>
+	<hidden field="inner_fork_right_z"/>
+	<hidden field="height_indicator_enabled"/>
+	<hidden field="tote_2_rot_y"/>
+	<hidden field="tote_2_rot_x"/>
+	<hidden field="tote_6_enabled"/>
+	<hidden field="tote_2_rot_z"/>
+	<hidden field="fork_right_z"/>
+	<hidden field="fork_right_y"/>
+	<hidden field="fork_right_x"/>
+	<hidden field="tote_1_rot_x"/>
+	<hidden field="tote_3_x"/>
+	<hidden field="tote_1_z"/>
+	<hidden field="Wrist"/>
+	<hidden field="height_indicator_x"/>
+	<hidden field="tote_1_y"/>
+	<hidden field="tote_3_z"/>
+	<hidden field="tote_5_x"/>
+	<hidden field="tote_3_y"/>
+	<hidden field="height_indicator_z"/>
+	<hidden field="fork_left_x"/>
+	<hidden field="tote_5_z"/>
+	<hidden field="tote_5_y"/>
+	<hidden field="tote_1_rot_z"/>
+	<hidden field="fork_left_z"/>
+	<hidden field="inner_fork_left_enabled"/>
+	<hidden field="tote_1_rot_y"/>
+	<hidden field="fork_left_y"/>
+	<hidden field="fork_left_rot_z"/>
+	<hidden field="fork_left_rot_y"/>
+	<hidden field="fork_left_rot_x"/>
+	<hidden field="tote_1_x"/>
+	<hidden field="Claw"/>
+	<hidden field="fork_left_enabled"/>
+	<hidden field="tote_1_enabled"/>
+	<hidden field="tote_4_rot_x"/>
+	<hidden field="tote_3_enabled"/>
+	<hidden field="tote_4_rot_y"/>
+	<hidden field="tote_4_rot_z"/>
+	<hidden field="inner_fork_left_rot_x"/>
+	<hidden field="inner_fork_left_rot_y"/>
+	<hidden field="inner_fork_left_rot_z"/>
+	<hidden field="tote_5_enabled"/>
 </dashboard>
 <live-window>
 </live-window>
