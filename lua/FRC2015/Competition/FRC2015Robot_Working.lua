@@ -1,4 +1,3 @@
-
 Pi=3.14159265358979323846
 Pi2=Pi*2
 Inches2Meters=0.0254
@@ -62,11 +61,8 @@ MainRobot = {
 		{
 			--These channels must be unique to digital input encoder channels as well
 			--Also ensure you do not use the slot for the compressor ;)
-			id_1 = { name="intake_min_1",  channel=7},
-			id_2 = { name="intake_max_1",  channel=8}, 
-			id_3 = { name="intake_min_2",  channel=9},
-			id_4 = { name="intake_max_2",  channel=10}, 
-			id_5 = { name="catapult_limit",channel=11} 
+			id_1 = { name="dart_upper_limit",  channel=5},
+			id_2 = { name="dart_lower_limit",  channel=6}
 		},
 		analog_input =
 		{
@@ -172,7 +168,7 @@ MainRobot = {
 
 		arm =
 		{
-			is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -191,7 +187,7 @@ MainRobot = {
 			brake=1.0,
 			max_accel_forward=10,			--These are in radians, just go with what feels right
 			max_accel_reverse=10,
-			using_range=1,					--Warning Only use range if we have a potentiometer!
+			using_range=0,					--Warning Only use range if we have a potentiometer!
 			--These min/max are arm converted to gear ratio (TODO reseach this more)
 			max_range_deg= 52.36 * ArmToGearRatio,
 			--Note the sketch used -43.33, but tests on actual assembly show -46.12
@@ -307,8 +303,10 @@ MainRobot = {
 	{
 		--slotlist = {slot_1="controller (xbox 360 for windows)"},
 		slotlist = {slot_1="logitech attack 3"},
+		--slotlist = {slot_1="controller (xbox 360 for windows)", slot_2="gamepad f310 (controller)", slot_3="logitech dual action"},
 		--field_centric_x_axis_threshold=0.40,
 		--tank_steering_tolerance=0.05,
+
 		Joystick_1 =
 		{
 			control = "controller (xbox 360 for windows)",
@@ -333,27 +331,33 @@ MainRobot = {
 			Arm_Rist={type="joystick_button", key=5, keyboard='r', on_off=true},
 			Arm_Advance={type="keyboard", key='k', on_off=true},
 			Arm_Retract={type="keyboard", key='j', on_off=true},
-			
-			Arm_SetPosRest     = {type="keyboard", key='1', on_off=false},
-			Arm_SetTote2Height = {type="keyboard", key='2', on_off=false},
-			Arm_SetTote3Height = {type="keyboard", key='3', on_off=false},
-			Arm_SetTote4Height = {type="keyboard", key='4', on_off=false},
-			Arm_SetTote5Height = {type="keyboard", key='5', on_off=false},
-			Arm_SetTote6Height = {type="keyboard", key='6', on_off=false},
+
 			
 			--Claw_SetCurrentVelocity  --not used
 			Claw_Close =	 {type="joystick_button", key=7, keyboard='c', on_off=true},
 		},
+
 		Joystick_2 =
 		{
+			--Ryan's Joystick
 			control = "logitech attack 3",
 			Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			
 			--Arm_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
 						
+		},
+
+		Joystick_3 =
+		{
+			
+			control = "ch throttle quadrant",
+						
+			--Arm_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
+						
 		}
-	
+
+			
 	},
 	
 	--This is only used in the AI tester, can be ignored
