@@ -41,11 +41,13 @@ MainRobot = {
 			id_2 = { name= "right_drive_2", channel=2}, 
 			id_3 = { name="left_drive_1", channel=3},
 			id_4 = { name="left_drive_2", channel=4},
-			id_5= { name="kicker_wheel", channel=5}
+			id_5= { name="kicker_wheel", channel=5},
+			id_6= { name="arm", channel=6}
 			--If we decide we need more power we can assign these
 			--id_3 = { name= "right_drive_3", channel=3}, 
 			--id_6 = { name="left_drive_3", channel=6},
 		},
+
 		relay =
 		{
 			id_1 = { name= "CameraLED", channel=1}
@@ -161,45 +163,44 @@ MainRobot = {
 
 		arm =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
-			use_pid_up_only='n',
+			use_pid_up_only='y',
 			pid_up=
-			{p=100, i=0, d=0},
+			{p=100, i=0, d=25},
 			pid_down=
-			{p=100, i=0, d=0},
+			{p=100, i=0, d=25},
 			tolerance=0.15,
 			tolerance_count=20,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			curve_voltage=
-			{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
 			
 			--max_speed=(19300/64/60) * Pi2,	--This is about 5 rps (a little slower than hiking viking drive)
 			max_speed=8.8,	--loaded max speed (see sheet) which is 2.69 rps
-			accel=0.5,						--We may indeed have a two button solution (match with max accel)
-			brake=0.5,
-			max_accel_forward=1,			--These are in radians, just go with what feels right
-			max_accel_reverse=1,
+			accel=1.0,						--We may indeed have a two button solution (match with max accel)
+			brake=1.0,
+			max_accel_forward=10,			--These are in radians, just go with what feels right
+			max_accel_reverse=10,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These are arm converted to gear ratio
-			max_range_deg= 70 * ArmToGearRatio,
-			min_range_deg=(-50) * ArmToGearRatio,
+			max_range_deg= 52.36 * ArmToGearRatio,
+			--Note the sketch used -43.33, but tests on actual assembly show -46.12
+			min_range_deg=(-46.12) * ArmToGearRatio,
 			use_aggressive_stop = 'yes',
-			inv_max_accel_up = 0.05,
-			inv_max_decel_up = 0.0,
-			inv_max_accel_down = 0.05,
-			inv_max_decel_down = 0.01,
-			slow_velocity_voltage = 4.0,
-			slow_velocity = 2.0,
-			predict_up=.400,
-			predict_down=.400,
+			--inv_max_accel_up = 0.05,
+			--inv_max_decel_up = 0.0,
+			--inv_max_accel_down = 0.05,
+			--inv_max_decel_down = 0.01,
+			--slow_velocity_voltage = 4.0,
+			--slow_velocity = 2.0,
+			--predict_up=.400,
+			--predict_down=.400,
 			--pulse_burst_time=0.06,
 			--pulse_burst_range=0.5,
 			--reverse_deadzone=0.10,
-			slow_angle_scalar = GearToArmRatio,
-			distance_scale = 0.5,
+			--slow_angle_scalar = GearToArmRatio,
+			--distance_scale = 0.5,
 			motor_specs =
 			{
 				wheel_mass=Pounds2Kilograms * 16.27,
@@ -214,6 +215,27 @@ MainRobot = {
 				stall_current_amp=18.6,
 				free_current_amp=1.8
 			}
+		},
+
+
+		kicker =
+		{
+			is_closed=0,
+			show_pid_dump='no',
+			ds_display_row=-1,				--Use this display to determine max speed (try to get a good match)
+			pid=
+			{p=100, i=0, d=50 },
+			latency=0.0,
+			voltage_multiply=1.0,
+
+			length_in=4,					--6 inch diameter (we shouldn't worry about tweaking this just measure it and be done)
+			max_speed=42,					--with 13.2 gear reduction in radians (default is 42)					
+			accel=10.0,						--These are only needed if we bind keys for power in meters per second
+			brake=10.0,
+			--These are low because of traction
+			max_accel_forward=50,
+			max_accel_reverse=50,
+			--inv_max_accel = 1/23,  --solved empiracally
 		},
 
 		low_gear = 
@@ -277,26 +299,44 @@ MainRobot = {
 		--field_centric_x_axis_threshold=0.40,
 		--tank_steering_tolerance=0.05,
 		slotlist = {slot_1="controller (xbox 360 for windows)"},
-		--slotlist = {slot_1="controller (xbox 360 for windows)", slot_2="gamepad f310 (controller)", slot_3="logitech dual action"},
+		--slotlist = {slot_1="controller (xbox 360 for windows)", slot_2="gamepad f310 (controller)"},
 		
 			Joystick_1 =
 		{
 			control = "controller (xbox 360 for windows)",
-			Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			Joystick_SetRight_XAxis = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
+			--Joystick_SetRight_XAxis = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
+			Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Robot_SetLowGearOff = {type="joystick_button", key=2, on_off=false},
 			--Robot_SetLowGearOn = {type="joystick_button", key=1, on_off=false},
 			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},			
+			--Arm_SetPos0feet = {type="joystick_button", key=10, keyboard='y', on_off=false},
+			--Arm_SetPos3feet = {type="joystick_button", key=3, keyboard='u', on_off=false},
+			--Arm_SetPos6feet = {type="joystick_button", key=20, keyboard='l', on_off=false},
+			--Arm_SetPos9feet = {type="joystick_button", key=4, keyboard=';', on_off=false},
+			Arm_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.6, filter=0.1, curve_intensity=3.0},
+
 			--POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
 			--Turn_180_Hold = {type="joystick_button", key=6, on_off=true},
 			--FlipY_Hold = {type="joystick_button", key=6, on_off=true},
 			--SlideHold = {type="joystick_button", key=6, on_off=true}
+		},
+
+		Joystick_2 =
+		{
+			control = "gamepad f310 (controller)"
+							
+			--Arm_SetPos0feet = {type="joystick_button", key=10, keyboard='y', on_off=false},
+			--Arm_SetPos3feet = {type="joystick_button", key=3, keyboard='u', on_off=false},
+			--Arm_SetPos6feet = {type="joystick_button", key=20, keyboard='l', on_off=false},
+			--Arm_SetPos9feet = {type="joystick_button", key=4, keyboard=';', on_off=false},
+			--Arm_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
+
 		}
 
 		},
