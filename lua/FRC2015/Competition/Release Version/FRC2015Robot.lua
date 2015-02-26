@@ -338,12 +338,12 @@ MainRobot = {
 			
 			Arm_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
 		
-			Arm_ForkBoth = {type="joystick_button", key=4, keyboard='y', on_off=true},
-			Arm_ForkRight = {type="joystick_button", key=2, keyboard='u', on_off=true},
-			Arm_ForkLeft = {type="joystick_button", key=3, keyboard='l', on_off=true},
+			Arm_ForkBoth = {type="joystick_button", key=4, on_off=true},
+			Arm_ForkRight = {type="joystick_button", key=2, on_off=true},
+			Arm_ForkLeft = {type="joystick_button", key=3, on_off=true},
 			
 			
-			Claw_Close =	 {type="joystick_button", key=7, keyboard='c', on_off=true},
+			Claw_Close =	 {type="joystick_button", key=7, on_off=true},
 		},
 	
 
