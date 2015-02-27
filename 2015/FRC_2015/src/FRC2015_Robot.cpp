@@ -166,6 +166,16 @@ void FRC_2015_Robot::Robot_Arm::Retract(bool on)
 	m_Retract=on;
 }
 
+bool FRC_2015_Robot::Robot_Arm::DidHitMinLimit() const
+{
+	return m_pParent->m_RobotControl->GetBoolSensorState(eDartLower);
+}
+
+bool FRC_2015_Robot::Robot_Arm::DidHitMaxLimit() const
+{
+	return m_pParent->m_RobotControl->GetBoolSensorState(eDartUpper);
+}
+
 void FRC_2015_Robot::Robot_Arm::TimeChange(double dTime_s)
 {
 	const double Accel=m_Ship_1D_Props.ACCEL;
@@ -977,7 +987,7 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 		bool m_IsHot;
 		bool m_HasSecondShotFired;
 
-		static Goal * Move_Straight(FRC_2015_Goals_Impl *Parent,double length_ft,double RollerScalar=0.0)
+		static Goal * Move_Straight(FRC_2015_Goals_Impl *Parent,double length_ft)
 		{
 			FRC_2015_Robot *Robot=&Parent->m_Robot;
 			//Construct a way point
@@ -993,14 +1003,41 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			return goal_drive;
 		}
 
+		static Goal * Move_ArmPosition(FRC_2015_Goals_Impl *Parent,double height_in)
+		{
+			FRC_2015_Robot *Robot=&Parent->m_Robot;
+			FRC_2015_Robot::Robot_Arm &Arm=Robot->GetArm();
+			//const double PrecisionTolerance=Robot->GetRobotProps().GetTankRobotProps().PrecisionTolerance;
+			Goal_Ship1D_MoveToPosition *goal_arm=NULL;
+			const double position=FRC_2015_Robot::Robot_Arm::HeightToAngle_r(&Arm,Inches2Meters(height_in));
+			goal_arm=new Goal_Ship1D_MoveToPosition(Arm,position);
+			return goal_arm;
+		}
+
 		class MoveForward : public Generic_CompositeGoal, public SetUpProps
 		{
 		public:
 			MoveForward(FRC_2015_Goals_Impl *Parent)	: SetUpProps(Parent) {	m_Status=eActive;	}
 			virtual void Activate()
 			{
-				AddSubgoal(new Goal_Wait(0.500));  //ensure catapult has finished launching ball before moving
+				AddSubgoal(new Goal_Wait(0.500));  //Testing
 				AddSubgoal(Move_Straight(m_Parent,m_AutonProps.FirstMove_ft));
+				m_Status=eActive;
+			}
+		};
+
+		class SimpleOneTote : public Generic_CompositeGoal, public SetUpProps
+		{
+		public:
+			SimpleOneTote(FRC_2015_Goals_Impl *Parent)	: SetUpProps(Parent) {	m_Status=eActive;	}
+			virtual void Activate()
+			{
+				const FRC_2015_Robot_Props &props=m_Robot.GetRobotProps().GetFRC2015RobotProps();
+				AddSubgoal(Move_Straight(m_Parent,-m_AutonProps.FirstMove_ft));
+				AddSubgoal(Move_ArmPosition(m_Parent,props.Tote2Height));
+				AddSubgoal(new Goal_Wait(0.500));  //may not be needed
+				AddSubgoal(Move_Straight(m_Parent,2.0)); //TODO make property
+				AddSubgoal(Move_ArmPosition(m_Parent,props.ToteRestHeight));
 				m_Status=eActive;
 			}
 		};
@@ -1009,6 +1046,7 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 		{
 			eDoNothing,
 			eJustMoveForward,
+			eSimpleOneTote,
 			eNoAutonTypes
 		} m_AutonType;
 		enum Robot_Position
@@ -1065,6 +1103,9 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			{
 			case eJustMoveForward:
 				m_Primer.AddGoal(new MoveForward(this));
+				break;
+			case  eSimpleOneTote:
+				m_Primer.AddGoal(new SimpleOneTote(this));
 				break;
 			case eDoNothing:
 			case eNoAutonTypes: //grrr windriver and warning 1250

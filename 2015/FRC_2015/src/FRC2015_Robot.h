@@ -208,6 +208,7 @@ class FRC_2015_Robot : public Tank_Robot
 				double m_Velocity; //adds all axis velocities then assigns on the time change
 		};
 
+	public: //Autonomous public access (wind river has problems with friend technique)
 		class Robot_Arm : public Rotary_Position_Control
 		{
 			public:
@@ -215,6 +216,7 @@ class FRC_2015_Robot : public Tank_Robot
 				IEvent::HandlerList ehl;
 				//The parent needs to call initialize
 				double HeightToAngle_r(double Height_m) const;
+				static double HeightToAngle_r(Robot_Arm *instance,double Height_m)  {return instance->HeightToAngle_r(Height_m);}
 				double Arm_AngleToHeight_m(double Angle_r) const;
 				double AngleToHeight_m(double Angle_r) const;
 
@@ -234,6 +236,9 @@ class FRC_2015_Robot : public Tank_Robot
 				void SetPotentiometerSafety(bool DisableFeedback) {__super::SetPotentiometerSafety(DisableFeedback);}
 				virtual void TimeChange(double dTime_s);
 
+				//override from rotary system... will implicitly manage limit switch support
+				virtual bool DidHitMinLimit() const;
+				virtual bool DidHitMaxLimit() const;
 			private:
 				#ifndef Robot_TesterCode
 				typedef Rotary_Position_Control __super;
@@ -249,7 +254,6 @@ class FRC_2015_Robot : public Tank_Robot
 				bool m_Advance, m_Retract;
 		};
 
-	public: //Autonomous public access (wind river has problems with friend technique)
 		const FRC_2015_Robot_Properties &GetRobotProps() const;
 		FRC_2015_Robot_Props::Autonomous_Properties &GetAutonProps();
 		//Accessors needed for setting goals
