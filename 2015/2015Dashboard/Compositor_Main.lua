@@ -181,7 +181,7 @@ CompositorProps = {
 			remote_name="Camera",
 			width_in = 27, length_in = 20,
 			pivot_in = 2,
-			camera_position =	{ x_in=0, y_in=49.77, z_in=-28.51 },
+			camera_position =	{ x_in=0.5, y_in=49.77, z_in=-28.51 },
 			camera_rotation =	{ x_deg=0, y_deg=-53.23, z=0 },
 			fov=45,
 			r=0,g=255,b=100,
