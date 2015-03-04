@@ -1,5 +1,8 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="arm_height_in" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="36" y="498"/>
+	</widget>
 	<widget field="LimitDartLower" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="496" y="420"/>
 	</widget>
