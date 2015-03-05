@@ -127,7 +127,7 @@ MainRobot = {
 		--curve_voltage=
 		--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
 		force_voltage=
-		{t4=0, t3=0, t2=0, t1=0, c=1},
+		{t4=0, t3=0, t2=0, t1=1, c=0},
 		reverse_steering='no',
 		 left_encoder_reversed='no',
 		right_encoder_reversed='no',
