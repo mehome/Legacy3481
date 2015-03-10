@@ -4,3 +4,6 @@ A list of somethings I was not entirely sure how to do that the driver wanted:
 2. How to assign controls to the front buttons/axis triggers (for use as kicker wheel or feathering turning)
 
 Also, I'll see about writing a powershell script or something to make it easy to deploy Lua, since they were having trouble doing for some reason when I was not there the first day. 
+
+armRaw 3906
+armRawUpper 815
