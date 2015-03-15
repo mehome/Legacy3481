@@ -1,0 +1,9 @@
+1. Identify version of lua and check smart dashboard.
+
+2. If lua is version 1.2 (working version) revert to 0.01 (FRC2015Robot_BACKUP.lua)
+
+3. If problem persists check net console to be sure lua updated and code is running properly.
+
+3. If problem persists use version 0.02 (FRC2015Robot_DEBUG.lua), this enables pid to help with debugging. Check net console to be sure lua updated and code is running properly and that the registered values are correct.
+
+4. If problem persists check smart dashboard. If smart dash board shows correct values the code and lua are operating as expected. Begin looking for hardware fault.

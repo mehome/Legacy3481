@@ -34,7 +34,7 @@ gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) *
 
 MainRobot = {
 	--Version helps to identify a positive update to lua
-	version = 1.2;
+	version = 0.01;
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -134,7 +134,7 @@ MainRobot = {
 		 left_encoder_reversed='no',
 		right_encoder_reversed='yes',
 		inv_max_accel = 1/15.0,  --solved empiracally
-		linear_gain_assist = 0.03,
+	--linear_gain_assist = 0.03,
 		--forward_deadzone_left  = 0.02,
 		--forward_deadzone_right = 0.02,
 		--reverse_deadzone_left  = 0.02,
@@ -304,7 +304,7 @@ MainRobot = {
 			
 			Analog_Turn = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.05, curve_intensity=1.0},
 			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.5, curve_intensity=1.0},
-			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.05, curve_intensity=0.0},
+			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.2, curve_intensity=0.0},
 			
 			--Robot_SetLowGearOff = {type="joystick_button", key=8, keyboard=';', on_off=false},
 			--Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},

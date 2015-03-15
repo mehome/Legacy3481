@@ -34,7 +34,7 @@ gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) *
 
 MainRobot = {
 	--Version helps to identify a positive update to lua
-	version = 1.2;
+	version = 0.02;
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -104,7 +104,7 @@ MainRobot = {
 	tank_drive =
 	{
 		is_closed=0,
-		show_pid_dump='no',
+		show_pid_dump='yes',
 		--we should turn this off in bench mark testing
 		use_aggressive_stop=1,  --we are in small area want to have responsive stop
 		ds_display_row=-1,
@@ -134,11 +134,11 @@ MainRobot = {
 		 left_encoder_reversed='no',
 		right_encoder_reversed='yes',
 		inv_max_accel = 1/15.0,  --solved empiracally
-	--linear_gain_assist = 0.03,
-		--forward_deadzone_left  = 0.02,
-		--forward_deadzone_right = 0.02,
-		--reverse_deadzone_left  = 0.02,
-		--reverse_deadzone_right = 0.02,
+		--linear_gain_assist = 0.03,
+		forward_deadzone_left  = 0.02,
+		forward_deadzone_right = 0.02,
+		reverse_deadzone_left  = 0.02,
+		reverse_deadzone_right = 0.02,
 		motor_specs =
 		{
 			wheel_mass=1.5,
@@ -173,7 +173,7 @@ MainRobot = {
 		arm =
 		{
 			is_closed=0,
-			show_pid_dump='n',
+			show_pid_dump='y',
 			ds_display_row=-1,
 			use_pid_up_only='y',
 			pid_up=
@@ -233,7 +233,7 @@ MainRobot = {
 		kicker =
 		{
 			is_closed=0,
-			show_pid_dump='no',
+			show_pid_dump='yes',
 			ds_display_row=-1,				--Use this display to determine max speed (try to get a good match)
 			pid=
 			{p=100, i=0, d=50 },
@@ -268,7 +268,7 @@ MainRobot = {
 			tank_drive =
 			{
 				is_closed=0,
-				show_pid_dump='n',
+				show_pid_dump='y',
 				ds_display_row=-1,
 				--We must NOT use I or D for low gear, we must keep it very responsive
 				--We are always going to use the encoders in low gear to help assist to fight quickly changing gravity shifts
@@ -304,7 +304,7 @@ MainRobot = {
 			
 			Analog_Turn = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.05, curve_intensity=1.0},
 			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.5, curve_intensity=1.0},
-			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.2, curve_intensity=0.0},
+			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.05, curve_intensity=0.0},
 			
 			--Robot_SetLowGearOff = {type="joystick_button", key=8, keyboard=';', on_off=false},
 			--Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},
