@@ -82,10 +82,10 @@ MainRobot = {
 	},
 	
 	Mass = 25, -- Weight kg
-	MaxAccelLeft = 10, MaxAccelRight = 10, 
+	MaxAccelLeft =10, MaxAccelRight = 10, 
 	MaxAccelForward = Drive_MaxAccel, MaxAccelReverse = Drive_MaxAccel, 
 	MaxAccelForward_High = Drive_MaxAccel, MaxAccelReverse_High = Drive_MaxAccel, 
-	MaxTorqueYaw =  gMaxTorqueYaw,  --Note Bradley had 0.78 reduction to get the feel
+	MaxTorqueYaw =  gMaxTorqueYaw * 0.55, --Bradly's reduction feel
 	MaxTorqueYaw_High = gMaxTorqueYaw * 5,
 	MaxTorqueYaw_SetPoint = gMaxTorqueYaw * 2,
 	MaxTorqueYaw_SetPoint_High = gMaxTorqueYaw * 10,
@@ -124,7 +124,8 @@ MainRobot = {
 		left_max_offset=0.0 , right_max_offset=0.0,
 		--This is obtainer from encoder RPM's of 1069.2 and Wheel RPM's 427.68 (both high and low have same ratio)
 		encoder_to_wheel_ratio=0.25,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
-		voltage_multiply=1.0,				--May be reversed using -1.0
+		voltage_multiply=1.0,
+		--May be reversed using -1.0
 		--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
 		--curve_voltage=
 		--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
@@ -134,7 +135,7 @@ MainRobot = {
 		 left_encoder_reversed='no',
 		right_encoder_reversed='yes',
 		inv_max_accel = 1/15.0,  --solved empiracally
-	--linear_gain_assist = 0.03,
+		linear_gain_assist = 0.04,
 		--forward_deadzone_left  = 0.02,
 		--forward_deadzone_right = 0.02,
 		--reverse_deadzone_left  = 0.02,
@@ -305,8 +306,8 @@ MainRobot = {
 			Analog_Turn = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.05, curve_intensity=1.0},
 			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.5, curve_intensity=1.0},
 			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.2, curve_intensity=0.0},
-			
-			--Robot_SetLowGearOff = {type="joystick_button", key=8, keyboard=';', on_off=false},
+	t
+			--Robot_SetLowGearOff = {type="joystick_button", key=5, keyboard=';', on_off=false},
 			--Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},
 			
 			--Previously assigned to 8
@@ -321,12 +322,14 @@ MainRobot = {
 			
 			Arm_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=2.4, filter=0.1, curve_intensity=3.0},
 		
-			--Arm_ForkBoth = {type="joystick_button", key=4, on_off=true},
-			--Arm_ForkRight = {type="joystick_button", key=2, on_off=true},
-			--Arm_ForkLeft = {type="joystick_button", key=3, on_off=true},
+			--Arm_ForkBoth = {type="joystick_button", key=6, on_off=true},
+			--Arm_ForkRight = {type="joystick_button", key=4, on_off=true},
+			--Arm_ForkLeft = {type="joystick_button", key=5, on_off=true},
+				
+			Robot_SetLowGearOff = {type="joystick_button", key=5, keyboard=';', on_off=false},
+			Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},
 			
-			
-			--Claw_Close =	 {type="joystick_button", key=7, on_off=true},
+			--Claw_Close =	 {type="joystick_button", key=11, on_off=true},
 		},
 	
 
