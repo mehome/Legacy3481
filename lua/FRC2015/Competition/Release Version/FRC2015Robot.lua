@@ -85,7 +85,7 @@ MainRobot = {
 	MaxAccelLeft =10, MaxAccelRight = 10, 
 	MaxAccelForward = Drive_MaxAccel, MaxAccelReverse = Drive_MaxAccel, 
 	MaxAccelForward_High = Drive_MaxAccel, MaxAccelReverse_High = Drive_MaxAccel, 
-	MaxTorqueYaw =  gMaxTorqueYaw * 0.55, --Bradly's reduction feel
+	MaxTorqueYaw =  gMaxTorqueYaw * 0.75, --Bradly's reduction feel
 	MaxTorqueYaw_High = gMaxTorqueYaw * 5,
 	MaxTorqueYaw_SetPoint = gMaxTorqueYaw * 2,
 	MaxTorqueYaw_SetPoint_High = gMaxTorqueYaw * 10,
@@ -135,7 +135,7 @@ MainRobot = {
 		 left_encoder_reversed='no',
 		right_encoder_reversed='yes',
 		inv_max_accel = 1/15.0,  --solved empiracally
-		linear_gain_assist = 0.04,
+		linear_gain_assist = 0.03,
 		--forward_deadzone_left  = 0.02,
 		--forward_deadzone_right = 0.02,
 		--reverse_deadzone_left  = 0.02,
