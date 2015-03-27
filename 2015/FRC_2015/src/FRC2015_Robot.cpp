@@ -704,6 +704,7 @@ FRC_2015_Robot_Properties::FRC_2015_Robot_Properties()  : m_TurretProps(
 
 		FRC_2015_Robot_Props::Autonomous_Properties &auton=props.Autonomous_Props;
 		auton.FirstMove_ft=5.0;
+		auton.ArmMove_in=0.0;  //safe default
 		m_FRC2015RobotProps=props;
 	}
 	{
@@ -797,8 +798,8 @@ void FRC_2015_Robot_Props::Autonomous_Properties::ShowAutonParameters()
 {
 	if (ShowParameters)
 	{
-		const char * const SmartNames[]={"first_move_ft"};
-		double * const SmartVariables[]={&FirstMove_ft};
+		const char * const SmartNames[]={"first_move_ft","arm_height_in"};
+		double * const SmartVariables[]={&FirstMove_ft,&ArmMove_in};
 
 		#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
 		for (size_t i=0;i<_countof(SmartNames);i++)
@@ -919,6 +920,10 @@ void FRC_2015_Robot_Properties::LoadFromScript(Scripting::Script& script)
 				if (!err)
 					auton.FirstMove_ft=fTest;
 
+				err = script.GetField("arm_height_in", NULL, NULL,&fTest);
+				if (!err)
+					auton.ArmMove_in=fTest;
+
 				SCRIPT_TEST_BOOL_YES(auton.IsSupportingHotSpot,"support_hotspot");
 				SCRIPT_TEST_BOOL_YES(auton.ShowParameters,"show_auton_variables");
 				auton.ShowAutonParameters();
@@ -1026,6 +1031,20 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			}
 		};
 
+		class CanSteal : public Generic_CompositeGoal, public SetUpProps
+		{
+		public:
+			CanSteal(FRC_2015_Goals_Impl *Parent)	: SetUpProps(Parent) {	m_Status=eActive;	}
+			virtual void Activate()
+			{
+				const FRC_2015_Robot_Props &props=m_Robot.GetRobotProps().GetFRC2015RobotProps();
+				AddSubgoal(Move_Straight(m_Parent,-m_AutonProps.FirstMove_ft));
+				AddSubgoal(new Goal_Wait(0.500));  //may not be needed
+				AddSubgoal(Move_ArmPosition(m_Parent,m_AutonProps.ArmMove_in));
+				m_Status=eActive;
+			}
+		};
+
 		class SimpleOneTote : public Generic_CompositeGoal, public SetUpProps
 		{
 		public:
@@ -1046,6 +1065,7 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 		{
 			eDoNothing,
 			eJustMoveForward,
+			eCanSteal,
 			eSimpleOneTote,
 			eNoAutonTypes
 		} m_AutonType;
@@ -1103,6 +1123,9 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			{
 			case eJustMoveForward:
 				m_Primer.AddGoal(new MoveForward(this));
+				break;
+			case eCanSteal:
+				m_Primer.AddGoal(new CanSteal(this));
 				break;
 			case  eSimpleOneTote:
 				m_Primer.AddGoal(new SimpleOneTote(this));

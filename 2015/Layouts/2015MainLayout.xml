@@ -109,7 +109,6 @@
 		<location x="281" y="265"/>
 		<width>107</width>
 		<height>30</height>
-		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="3.844"/>
 		<property name="Minimum" value="-3.844"/>
@@ -117,7 +116,6 @@
 	<widget field="RightEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="512" y="260"/>
 		<width>115</width>
-		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="3.844"/>
 		<property name="Minimum" value="-3.844"/>
@@ -175,90 +173,35 @@
 		<location x="803" y="114"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
-	<hidden field="inner_fork_left_x"/>
-	<hidden field="tote_3_rot_x"/>
-	<hidden field="inner_fork_left_y"/>
-	<hidden field="tote_3_rot_y"/>
-	<hidden field="inner_fork_left_z"/>
-	<hidden field="tote_3_rot_z"/>
-	<hidden field="Deployment"/>
-	<hidden field="tote_2_y"/>
-	<hidden field="tote_6_rot_z"/>
-	<hidden field="tote_2_x"/>
-	<hidden field="fork_right_enabled"/>
-	<hidden field="Camera_rot_x"/>
-	<hidden field="tote_6_rot_x"/>
-	<hidden field="tote_4_y"/>
-	<hidden field="tote_4_x"/>
-	<hidden field="tote_2_z"/>
-	<hidden field="tote_6_rot_y"/>
-	<hidden field="inner_fork_right_enabled"/>
-	<hidden field="inner_fork_right_rot_y"/>
-	<hidden field="tote_6_y"/>
-	<hidden field="inner_fork_right_rot_z"/>
-	<hidden field="tote_6_x"/>
-	<hidden field="tote_4_z"/>
-	<hidden field="inner_fork_right_rot_x"/>
-	<hidden field="tote_6_z"/>
-	<hidden field="height_indicator_rot_z"/>
-	<hidden field="Camera_rot_z"/>
-	<hidden field="height_indicator_rot_x"/>
-	<hidden field="height_indicator_rot_y"/>
-	<hidden field="tote_2_enabled"/>
-	<hidden field="fork_right_rot_y"/>
-	<hidden field="fork_right_rot_x"/>
-	<hidden field="fork_right_rot_z"/>
-	<hidden field="tote_4_enabled"/>
-	<hidden field="tote_5_rot_x"/>
-	<hidden field="tote_5_rot_y"/>
-	<hidden field="inner_fork_right_x"/>
-	<hidden field="tote_5_rot_z"/>
-	<hidden field="inner_fork_right_y"/>
-	<hidden field="inner_fork_right_z"/>
-	<hidden field="height_indicator_enabled"/>
-	<hidden field="tote_2_rot_y"/>
-	<hidden field="tote_2_rot_x"/>
-	<hidden field="tote_6_enabled"/>
-	<hidden field="LimitCatapult"/>
-	<hidden field="tote_2_rot_z"/>
-	<hidden field="fork_right_z"/>
-	<hidden field="fork_right_y"/>
-	<hidden field="fork_right_x"/>
-	<hidden field="tote_1_rot_x"/>
-	<hidden field="tote_3_x"/>
-	<hidden field="tote_1_z"/>
-	<hidden field="Wrist"/>
-	<hidden field="height_indicator_x"/>
-	<hidden field="tote_1_y"/>
-	<hidden field="tote_3_z"/>
-	<hidden field="tote_5_x"/>
-	<hidden field="tote_3_y"/>
-	<hidden field="height_indicator_z"/>
-	<hidden field="fork_left_x"/>
-	<hidden field="tote_5_z"/>
-	<hidden field="tote_5_y"/>
-	<hidden field="tote_1_rot_z"/>
-	<hidden field="fork_left_z"/>
-	<hidden field="inner_fork_left_enabled"/>
-	<hidden field="tote_1_rot_y"/>
-	<hidden field="fork_left_y"/>
-	<hidden field="DriverOverride"/>
-	<hidden field="fork_left_rot_z"/>
-	<hidden field="fork_left_rot_y"/>
-	<hidden field="fork_left_rot_x"/>
-	<hidden field="tote_1_x"/>
-	<hidden field="Claw"/>
-	<hidden field="fork_left_enabled"/>
-	<hidden field="tote_1_enabled"/>
-	<hidden field="tote_4_rot_x"/>
-	<hidden field="tote_3_enabled"/>
-	<hidden field="tote_4_rot_y"/>
-	<hidden field="tote_4_rot_z"/>
-	<hidden field="inner_fork_left_rot_x"/>
-	<hidden field="inner_fork_left_rot_y"/>
-	<hidden field="inner_fork_left_rot_z"/>
-	<hidden field="tote_5_enabled"/>
-	<hidden field="Auton BallCount"/>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="803" y="114"/>
+		<property name="Text" value="Edit Position"/>
+	</static-widget>
+	<widget field="axis5" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="695" y="536"/>
+	</widget>
+	<widget field="axis4" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="440" y="542"/>
+	</widget>
+	<widget field="axis3" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="476" y="499"/>
+	</widget>
+	<widget field="axis2" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="305" y="534"/>
+	</widget>
+	<widget field="axis1" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="317" y="510"/>
+	</widget>
+	<widget field="axis0" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="297" y="473"/>
+	</widget>
+	<widget field="armRaw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="232"/>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="803" y="114"/>
+		<property name="Text" value="Edit Position"/>
+	</static-widget>
 </dashboard>
 <live-window>
 </live-window>

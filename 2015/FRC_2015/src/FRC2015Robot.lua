@@ -1,4 +1,3 @@
-
 Pi=3.14159265358979323846
 Pi2=Pi*2
 Inches2Meters=0.0254
@@ -32,18 +31,18 @@ skid=1
 gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) * skid
 
 MainRobot = {
-	version = 1.0;
+	version = 1.1;
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
 		victor =
 		{
-			id_1 = { name= "right_drive_1", channel=5, module=1}, 
-			id_2 = { name= "right_drive_2", channel=6}, 
+			id_1 = { name= "right_drive_1", channel=1, module=1}, 
+			id_2 = { name= "right_drive_2", channel=2}, 
 			id_3 = { name="left_drive_1", channel=3},
 			id_4 = { name="left_drive_2", channel=4},
-			id_5= { name="kicker_wheel", channel=1},
-			id_6= { name="arm", channel=2}
+			id_5= { name="kicker_wheel", channel=5},
+			id_6= { name="arm", channel=6}
 			--If we decide we need more power we can assign these
 			--id_3 = { name= "right_drive_3", channel=3}, 
 			--id_6 = { name="left_drive_3", channel=6},
@@ -162,14 +161,15 @@ MainRobot = {
 		{rest=0.0, tote_3=11.75*2 + 2 },
 		auton =
 		{
-			first_move_ft=2,
+			first_move_ft=20,
+			arm_height_in=12,
 			support_hotspot='n',
 			show_auton_variables='y'
 		},
 
 		arm =
 		{
-			is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -179,16 +179,16 @@ MainRobot = {
 			{p=100, i=0, d=25},
 			tolerance=0.15,
 			tolerance_count=20,
-			voltage_multiply=1.0,			--May be reversed
+			voltage_multiply=5.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			
+			Arm_SetPotentiometerSafety=true,	
 			--max_speed=(19300/64/60) * Pi2,	--This is about 5 rps (a little slower than hiking viking drive)
 			max_speed=8.8,	--loaded max speed (see sheet) which is 2.69 rps
 			accel=1.0,						--We may indeed have a two button solution (match with max accel)
 			brake=1.0,
 			max_accel_forward=10,			--These are in radians, just go with what feels right
 			max_accel_reverse=10,
-			using_range=1,					--Warning Only use range if we have a potentiometer!
+			using_range=0,					--Warning Only use range if we have a potentiometer!
 			--These min/max are arm converted to gear ratio (TODO reseach this more)
 			max_range_deg= 52.36 * ArmToGearRatio,
 			--Note the sketch used -43.33, but tests on actual assembly show -46.12
@@ -239,8 +239,8 @@ MainRobot = {
 			accel=10.0,						--These are only needed if we bind keys for power in meters per second
 			brake=10.0,
 			--These are low because of traction
-			max_accel_forward=75,
-			max_accel_reverse=75,
+			max_accel_forward=85,
+			max_accel_reverse=85,
 			--inv_max_accel = 1/23,  --solved empiracally
 		},
 
@@ -302,141 +302,81 @@ MainRobot = {
 
 	controls =
 	{
-		slotlist = {slot_1="airflo"},
+		--Competition Settings--
+		slotlist = {slot_1="controller (xbox 360 for windows)", slot_2="gamepad f310 (controller)"},
+
+		
+		--Testing settings--
+		--slotlist = {slot_1="controller (xbox 360 for windows)", slot_2="gamepad f310 (controller)", slot_3="ch throttle quadrant", slot_4="logitech attack 3"},
+			
 		--field_centric_x_axis_threshold=0.40,
 		--tank_steering_tolerance=0.05,
+
 		Joystick_1 =
 		{
-			control = "airflo",
-			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			--Driver
+			control = "controller (xbox 360 for windows)",
+			Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			--Joystick_SetRightVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			--Joystick_SetRight_XAxis = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			--FieldCentric_Enable = {type="joystick_button", key=4, on_off=false},
-			--Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
-			--scaled down to 0.5 to allow fine tuning and a good top acceleration speed (may change with the lua script tweaks)
-			--Turret_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
-			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
-			Robot_SetLowGearOff = {type="joystick_button", key=8, keyboard=';', on_off=false},
-			Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},
-			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			--Turn_180 = {type="joystick_button", key=7, on_off=false},
-			--Turn_180_Hold = {type="joystick_button", key=7, on_off=true},
-			--FlipY_Hold = {type="joystick_button", key=7, on_off=true},
-			--SlideHold = {type="joystick_button", key=7, on_off=true},
-			--TestWaypoint={type="joystick_button", key=3, keyboard='q', on_off=true},
+			Joystick_SetRightVelocity = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			--Joystick_SetRight_XAxis = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},			             		--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			
-			Robot_BallTargeting_On={type="keyboard", key='t', on_off=false},
-			Robot_BallTargeting_Off={type="keyboard", key='y', on_off=false},
-			TestAuton={type="keyboard", key='g', on_off=false},
-			--Slide={type="keyboard", key='g', on_off=false},
+			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			
-			Arm_ForkBoth = {type="joystick_button", key=4, keyboard='y', on_off=true},
-			Arm_ForkRight = {type="joystick_button", key=2, keyboard='u', on_off=true},
-			Arm_ForkLeft = {type="joystick_button", key=3, keyboard='l', on_off=true},
-			--Arm_ForkRight = {type="joystick_button", key=4, keyboard=';', on_off=true},
-			Arm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
-			Arm_Rist={type="joystick_button", key=5, keyboard='r', on_off=true},
-			Arm_Advance={type="keyboard", key='k', on_off=true},
-			Arm_Retract={type="keyboard", key='j', on_off=true},
+			--Robot_SetLowGearOff = {type="joystick_button", key=8, keyboard=';', on_off=false},
+			--Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},
 			
-			Arm_SetPosRest     = {type="keyboard", key='1', on_off=false},
-			Arm_SetTote2Height = {type="keyboard", key='2', on_off=false},
-			Arm_SetTote3Height = {type="keyboard", key='3', on_off=false},
-			Arm_SetTote4Height = {type="keyboard", key='4', on_off=false},
-			Arm_SetTote5Height = {type="keyboard", key='5', on_off=false},
-			Arm_SetTote6Height = {type="keyboard", key='6', on_off=false},
-			
-			--Claw_SetCurrentVelocity  --not used
-			Claw_Close =	 {type="joystick_button", key=7, keyboard='c', on_off=true},
-		},
+			--Previously assigned to 8
+			--POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},		
 		
+		},
+
 		Joystick_2 =
 		{
-			control = "logitech dual action",
-			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			--Joystick_SetRightVelocity = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			--Joystick_SetRight_XAxis = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Analog_Turn = {type="joystick_culver", key_x=2, key_y=5, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			--Turret_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=false, multiplier=0.5, filter=0.1, curve_intensity=0.0},
-			Robot_SetLowGearOff = {type="joystick_button", key=6, on_off=false},
-			Robot_SetLowGearOn = {type="joystick_button", key=5, on_off=false},
+			--Operator
+			control = "gamepad f310 (controller)",
 			
-			--Ball_Squirt = {type="joystick_button", key=1, on_off=true},
-			--PowerWheels_IsRunning = {type="joystick_button", key=7, on_off=true},
-			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			Turn_180_Hold = {type="joystick_button", key=7, on_off=true},
-			FlipY_Hold = {type="joystick_button", key=7, on_off=true},
-			SlideHold = {type="joystick_button", key=7, on_off=true}
+			Arm_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=0.6, filter=0.05, curve_intensity=3.0},
+	         	Arm_SetCurrentVelocity = {type="joystick_button", key=7, is_flipped=true, multiplier=0.6, filter=0.05, curve_intensity=3.0},
+
+			--Arm_ForkBoth = {type="joystick_button", key=4, on_off=true},
+			--Arm_ForkRight = {type="joystick_button", key=2, on_off=true},
+			--Arm_ForkLeft = {type="joystick_button", key=3, on_off=true},
+			
+			
+			--Claw_Close =	 {type="joystick_button", key=7, on_off=true},
 		},
+	
+
 		Joystick_3 =
 		{
-			control = "gamepad f310 (controller)",
-			Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			--Joystick_SetRightVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			--Turret_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
-			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
-			
-			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Arm_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
-			--FieldCentric_EnableValue = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			--Operator
+			control = "ch throttle quadrant",
+						
+			Arm_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
 
-			Robot_SetLowGearOff = {type="joystick_button", key=6, on_off=false},
-			Robot_SetLowGearOn = {type="joystick_button", key=5, on_off=false},
-			TestWaypoint={type="joystick_button", key=3, on_off=true},
+			--Arm_SetPosRest     = {type="joystick_button", key='0', on_off=false},
+			--Arm_SetTote2Height = {type="joystick_button", key='2', on_off=false},
+			--Arm_SetTote3Height = {type="joystick_button", key='4', on_off=false},
+			--Arm_SetTote4Height = {type="joystick_button", key='6', on_off=false},
+			--Arm_SetTote5Height = {type="joystick_button", key='8', on_off=false},
+			--Arm_SetTote6Height = {type="joystick_button", key='10', on_off=false},
+						
 		},
+
 		Joystick_4 =
 		{
-			control = "controller (xbox 360 for windows)",
-			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			--Joystick_SetRight_XAxis = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			Robot_SetLowGearOff = {type="joystick_button", key=2, on_off=false},
-			Robot_SetLowGearOn = {type="joystick_button", key=1, on_off=false},
-						
-			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
-			Turn_180_Hold = {type="joystick_button", key=6, on_off=true},
-			FlipY_Hold = {type="joystick_button", key=6, on_off=true},
-			SlideHold = {type="joystick_button", key=6, on_off=true}
-		},
-		Joystick_5 =
-		{	
-			control = "ch throttle quadrant",
-			PitchRamp_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=true, multiplier=1.142000, filter=0.0, curve_intensity=0.0},
-			Robot_SetTargetingValue = {type="joystick_analog", key=0, is_flipped=true, multiplier=1.142000, filter=0.0, curve_intensity=0.0},
-			PowerWheels_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0000, filter=0.0, curve_intensity=0.0},
-			Turret_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=true, multiplier=0.5, filter=0.1, curve_intensity=1.0},
-			Robot_SetDefensiveKeyValue = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--Ryan's Joystick
+			control = "logitech attack 3",
+			Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			
+			--Arm_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},						
+		}
 
-			Arm_SetPosRest     = {type="joystick_button", key=2, on_off=false},
-			Arm_SetTote2Height = {type="joystick_button", key=4, on_off=false},
-			Arm_SetTote3Height = {type="joystick_button", key=6, on_off=false},
-			Arm_SetTote4Height = {type="joystick_button", key=8, on_off=false},
-			Arm_SetTote5Height = {type="joystick_button", key=10, on_off=false},
-			Arm_SetTote6Height = {type="joystick_button", key=12, on_off=false}
-		},
-
+			
 	},
 	
 	--This is only used in the AI tester, can be ignored

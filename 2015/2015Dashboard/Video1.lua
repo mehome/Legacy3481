@@ -7,20 +7,20 @@ function GetSettings()
 		loaded_file()  --We can now make the call and it will succeed
 		return settings_load
 	end
-end
+endlure 
 
 DashboardProps = 
 {
 	settings =
 	{
 		--Pick which overlay you wish to use by giving it a title name
-		title= "Main",
+		--title= "Main",
 		--title= "Main_2014",
 		--title= "FOV_Test",
-		--title="Calibrate",
+		title="Calibrate",
 		--No camera!  use this
-		--url= "black_33_600x800",
-		url= "169.254.225.224",
+		url= "black_33_600x800",
+		--url= "169.254.225.224",
 		--url="10.28.1.20",
 		--by default RTSP uses 554 and is now allowed for FMS
 		port=554,
@@ -29,7 +29,7 @@ DashboardProps =
 		robot_ip_address= "roborio-3481.local",
 		--robot_ip_address= "172.22.11.2",
 		--robot_ip_address= "10.28.1.2",
-		stream_profile= "default",
+		stream_profile= "default", 
 		left= 596,
 		top= 8,
 		right= 1196,
