@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="no" ?>
 <!-- Testing XML format for BroncBotz 3481 FRC 2015 -->
 
-<Version version=1.3/>
+<Version version=1.8/>
 
 <!-- Contains assignments to ports and robot dimentions -->
 <Robot>
@@ -58,11 +58,12 @@
 
 	<!-- Driver assignments -->
 	<Driver>
-		<drive axis=1 breakMode=0 polarity=1 deadZone=.4 powerMultiplier=.5/>
+		<!-- breakIntensity: lower number = more intense-->
+		<drive axis=1 breakMode=1 breakTime=.05 breakIntensity=.2 accelerationFactor=.1 polarity=1 deadZone=.4 powerMultiplier=.5/>
 		<turning axis=4 polarity=1 deadZone=.4 powerMultiplier=.55/>
 
 	
-	<Kicker useAxis=0 powerMultiplier=0.75>
+	<Kicker useAxis=0 powerMultiplier=0.65>
 		<kickerAxis axis=0 polarity=1 deadZone=0.5/>
 		<kickerBtn leftButton=5 rightButton=6/>
 	</Kicker>
