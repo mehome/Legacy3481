@@ -149,6 +149,12 @@ void Control_Assignment_Properties::LoadFromScript(Scripting::Script& script)
 			LoadControlElement_1C_Internal(script,m_Victors);
 			script.Pop();
 		}
+		err = script.GetFieldTable("servo");
+		if (!err)
+		{
+			LoadControlElement_1C_Internal(script,m_Servos);
+			script.Pop();
+		}
 		err = script.GetFieldTable("relay");
 		if (!err)
 		{
@@ -287,8 +293,11 @@ void RobotControlCommon::RobotControlCommon_Initialize(const Control_Assignment_
 	typedef Control_Assignment_Properties::Controls_2C Controls_2C;
 	typedef Control_Assignment_Properties::Control_Element_2C Control_Element_2C;
 	//create control elements and their LUT's
+	//Note: Victors,Servos, and Relays share the PWM slots; therefore they share the same enumeration, and can be used interchangably in high level code
 	//victors
 	Initialize_1C_LUT<Victor>(props.GetVictors(),m_Victors,m_VictorLUT,this,&RobotControlCommon::RobotControlCommon_Get_Victor_EnumValue);
+	//servos
+	Initialize_1C_LUT<Servo>(props.GetServos(),m_Servos,m_ServoLUT,this,&RobotControlCommon::RobotControlCommon_Get_Victor_EnumValue);
 	//relays
 	Initialize_1C_LUT<Relay>(props.GetRelays(),m_Relays,m_RelayLUT,this,&RobotControlCommon::RobotControlCommon_Get_Victor_EnumValue);
 	//double solenoids

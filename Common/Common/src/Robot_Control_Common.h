@@ -27,6 +27,7 @@ class COMMON_API Control_Assignment_Properties
 		virtual void LoadFromScript(Scripting::Script& script);
 
 		const Controls_1C &GetVictors() const {return m_Victors;}
+		const Controls_1C &GetServos() const {return m_Servos;}
 		const Controls_1C &GetRelays() const {return m_Relays;}
 		const Controls_1C &GetDigitalInputs() const {return m_Digital_Inputs;}
 		const Controls_1C &GetAnalogInputs() const {return m_Analog_Inputs;}
@@ -35,7 +36,7 @@ class COMMON_API Control_Assignment_Properties
 		size_t GetCompressorRelay() {return m_Compressor_Relay;}
 		size_t GetCompressorLimit() {return m_Compressor_Limit;}
 	private:
-		Controls_1C m_Victors,m_Relays,m_Digital_Inputs,m_Analog_Inputs;
+		Controls_1C m_Victors,m_Servos,m_Relays,m_Digital_Inputs,m_Analog_Inputs;
 		Controls_2C m_Double_Solenoids,m_Encoders;
 		size_t m_Compressor_Relay,m_Compressor_Limit;
 };
@@ -86,6 +87,29 @@ public:
 	virtual void Disable() {}
 	//virtual void PIDWrite(float output);
 private:
+	uint8_t m_ModuleNumber;
+	uint32_t m_Channel;
+	float m_CurrentVoltage;
+};
+
+class Servo : public Control_1C_Element_UI
+{
+public:
+	Servo(uint8_t moduleNumber, uint32_t channel,const char *name) : Control_1C_Element_UI(moduleNumber,channel,name),
+		m_ModuleNumber(moduleNumber), m_Channel(channel) {}
+	void Set(float value) {m_CurrentVoltage=value; display_number(value);}
+	//void SetOffline();
+	float Get()  {return m_CurrentVoltage;}
+	//void SetAngle(float angle);
+	//float GetAngle();
+	//static float GetMaxAngle() { return kMaxServoAngle; };
+	//static float GetMinAngle() { return kMinServoAngle; };
+private:
+	void InitServo() {}
+	//float GetServoAngleRange() {return kMaxServoAngle - kMinServoAngle;}
+
+	//static constexpr float kMaxServoAngle = 170.0;
+	//static constexpr float kMinServoAngle = 0.0;
 	uint8_t m_ModuleNumber;
 	uint32_t m_Channel;
 	float m_CurrentVoltage;
@@ -276,6 +300,12 @@ class COMMON_API RobotControlCommon
 		__inline void Victor_UpdateVoltage(size_t index,double Voltage) {IF_LUT(m_VictorLUT) m_Victors[m_VictorLUT[index]]->Set(Voltage);}
 		__inline Victor *Victor_GetInstance(size_t index) {return LUT_VALID(m_VictorLUT)?m_Victors[m_VictorLUT[index]] : NULL;}
 
+		//servo methods
+		__inline double Servo_GetCurrentPorV(size_t index) {return LUT_VALID(m_ServoLUT)?m_Servos[m_ServoLUT[index]]->Get() : 0.0;}
+		//Note: we convert the voltage to the -1 - 1 range by adding 1 and dividing by 2
+		__inline void Servo_UpdateVoltage(size_t index,double Voltage) {IF_LUT(m_ServoLUT) m_Servos[m_ServoLUT[index]]->Set((Voltage + 1.0) / 2.0);}
+		__inline Servo *Servo_GetInstance(size_t index) {return LUT_VALID(m_ServoLUT)?m_Servos[m_ServoLUT[index]] : NULL;}
+
 		//solenoid methods
 		__inline void Solenoid_Open(size_t index,bool Open=true) 
 		{	IF_LUT(m_DoubleSolenoidLUT)
@@ -339,11 +369,12 @@ class COMMON_API RobotControlCommon
 	private:
 		Control_Assignment_Properties m_Props;  //cache a copy of the assignment props
 		std::vector<Victor *> m_Victors;
+		std::vector<Servo * > m_Servos;
 		std::vector<Relay *> m_Relays;
 		std::vector<DigitalInput *> m_DigitalInputs;
 		std::vector<AnalogInput *> m_AnalogInputs;
 		std::vector<DoubleSolenoid *> m_DoubleSolenoids;
 		std::vector<Encoder2 *> m_Encoders;
 
-		Controls_LUT m_VictorLUT,m_RelayLUT,m_DigitalInputLUT,m_AnalogInputLUT,m_DoubleSolenoidLUT,m_EncoderLUT;
+		Controls_LUT m_VictorLUT,m_ServoLUT,m_RelayLUT,m_DigitalInputLUT,m_AnalogInputLUT,m_DoubleSolenoidLUT,m_EncoderLUT;
 };
