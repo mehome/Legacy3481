@@ -206,13 +206,13 @@ void Control_Assignment_Properties::LoadFromScript(Scripting::Script& script)
 				if (!err)
 				{
 					double fTest;
-					err = script.GetField("gRate",NULL,NULL,&fTest);
+					err = script.GetField("gRange",NULL,NULL,&fTest);
 					assert(!err);
-					m_Compressor_Relay=(size_t)fTest;
+					m_Range=(size_t)fTest;
 					script.Pop();
 				}
 				else
-					m_Compressor_Relay=0;
+					m_Range=0;
 
 		script.Pop();
 	}

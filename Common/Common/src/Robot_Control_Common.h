@@ -39,6 +39,7 @@ class COMMON_API Control_Assignment_Properties
 		Controls_1C m_Victors,m_Servos,m_Relays,m_Digital_Inputs,m_Analog_Inputs;
 		Controls_2C m_Double_Solenoids,m_Encoders;
 		size_t m_Compressor_Relay,m_Compressor_Limit;
+		size_t m_Range;
 };
 
 
@@ -224,12 +225,12 @@ private:
 class COMMON_API _Accelerometer : public Control_2C_Element_UI
 {
 public:
-	_Accelerometer(uint32_t gRate) :
-	  Control_2C_Element_UI(1,gRate,"accelerometer")
+	_Accelerometer(uint32_t gRange) :
+	  Control_2C_Element_UI(1,gRange,"accelerometer")
 	  {
 		  display_bool(false);
 	  }
-
+		//Don't know what to do...
 
 	//uint32_t GetPressureSwitchValue();
 	//void SetRelayValue(Relay::Value relayValue);
