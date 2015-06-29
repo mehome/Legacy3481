@@ -704,6 +704,7 @@ FRC_2015_Robot_Properties::FRC_2015_Robot_Properties()  : m_TurretProps(
 
 		FRC_2015_Robot_Props::Autonomous_Properties &auton=props.Autonomous_Props;
 		auton.FirstMove_ft=5.0;
+		auton.SideMove_rad=20.0;
 		auton.ArmMove_in=0.0;  //safe default
 		m_FRC2015RobotProps=props;
 	}
@@ -798,8 +799,8 @@ void FRC_2015_Robot_Props::Autonomous_Properties::ShowAutonParameters()
 {
 	if (ShowParameters)
 	{
-		const char * const SmartNames[]={"first_move_ft","arm_height_in"};
-		double * const SmartVariables[]={&FirstMove_ft,&ArmMove_in};
+		const char * const SmartNames[]={"first_move_ft","side_move_rad","arm_height_in"};
+		double * const SmartVariables[]={&FirstMove_ft,&SideMove_rad,&ArmMove_in};
 
 		#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
 		for (size_t i=0;i<_countof(SmartNames);i++)
@@ -920,6 +921,10 @@ void FRC_2015_Robot_Properties::LoadFromScript(Scripting::Script& script)
 				if (!err)
 					auton.FirstMove_ft=fTest;
 
+				err = script.GetField("side_move_rad", NULL, NULL,&fTest);
+				if (!err)
+					auton.SideMove_rad=fTest;
+
 				err = script.GetField("arm_height_in", NULL, NULL,&fTest);
 				if (!err)
 					auton.ArmMove_in=fTest;
@@ -1008,6 +1013,16 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			return goal_drive;
 		}
 
+		static Goal * Move_Sideways(FRC_2015_Goals_Impl *Parent,double length_ft)
+		{
+			FRC_2015_Robot *Robot=&Parent->m_Robot;
+			FRC_2015_Robot::Kicker_Wheel &KickerWheel=Robot->GetKickerWheel();
+			//const double PrecisionTolerance=Robot->GetRobotProps().GetTankRobotProps().PrecisionTolerance;
+			Goal_Ship1D_MoveToPosition *goal_kicker=NULL;
+			goal_kicker=new Goal_Ship1D_MoveToRelativePosition(KickerWheel,length_ft);
+			return goal_kicker;
+		}
+
 		static Goal * Move_ArmPosition(FRC_2015_Goals_Impl *Parent,double height_in)
 		{
 			FRC_2015_Robot *Robot=&Parent->m_Robot;
@@ -1027,6 +1042,18 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			{
 				AddSubgoal(new Goal_Wait(0.500));  //Testing
 				AddSubgoal(Move_Straight(m_Parent,m_AutonProps.FirstMove_ft));
+				m_Status=eActive;
+			}
+		};
+
+		class MoveSideways : public Generic_CompositeGoal, public SetUpProps
+		{
+		public:
+			MoveSideways(FRC_2015_Goals_Impl *Parent)	: SetUpProps(Parent) {	m_Status=eActive;	}
+			virtual void Activate()
+			{
+				AddSubgoal(new Goal_Wait(0.500));  //Testing
+				AddSubgoal(Move_Sideways(m_Parent,m_AutonProps.SideMove_rad));
 				m_Status=eActive;
 			}
 		};
@@ -1064,6 +1091,7 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 		enum AutonType
 		{
 			eDoNothing,
+			eJustMoveSideways,
 			eJustMoveForward,
 			eCanSteal,
 			eSimpleOneTote,
@@ -1121,6 +1149,9 @@ class FRC_2015_Goals_Impl : public AtomicGoal
 			printf("ball count=%d position=%d\n",m_AutonType,m_RobotPosition);
 			switch(m_AutonType)
 			{
+			case eJustMoveSideways:
+				m_Primer.AddGoal(new MoveSideways(this));
+				break;
 			case eJustMoveForward:
 				m_Primer.AddGoal(new MoveForward(this));
 				break;

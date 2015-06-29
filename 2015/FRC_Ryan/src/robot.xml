@@ -1,0 +1,83 @@
+<?xml version="1.0" standalone="no" ?>
+<!-- Testing XML format for BroncBotz 3481 FRC 2015 -->
+<Robot>
+
+<Version version="1.8"/>
+
+<!-- Contains assignments to ports and robot dimentions -->
+<RobotDetails>
+	<mass mass="54.43"/>
+
+<!-- All vector 888 assignments -->
+<Victors>
+<!-- Drive train assignments -->
+	<DriveTrain>
+		<rightDrive_1 channel="0"/>
+		<rightDrive_2 channel="1"/>
+		<leftDrive_1 channel="2"/>
+		<leftDrive_2 channel="3"/>
+		<kickerDrive channel="4"/>
+	</DriveTrain>
+
+<!--  Arm assignments 2015 robot -->
+	<Arm>
+		<arm_1 channel="5"/>
+	</Arm>	
+
+</Victors>
+
+<!-- Encoder locations -->
+<Encoders>
+	<leftDrive channel="4"/>
+	<rightDrive channel="6"/>
+</Encoders>
+
+<!-- Double solenoid locations-->
+<Solenoids>
+	<gearSwitch positiveFlow="1" negativeFlow="0"/>
+	<manipulator  positiveFlow="2" negativeFlow="3"/>
+	<wings positiveFlow="4" negativeFlow="5"/>
+</Solenoids>
+
+<!--  Digital input/outputs -->
+<DIO>
+	<dartLimits upperChannel="4" lowerChannel="5"/>
+</DIO>
+
+<!-- Analog input/outputs -->
+<AIO>
+	<armPotentiometer channel="1"/>
+</AIO>
+
+<Compressor relay="7" limit="null"/>
+
+</RobotDetails>
+<!-- Control assignments -->
+<Controls>
+<!-- Polarity assigns direction 1=positive -1=negative -->
+<!-- 0 = false 1 = true-->
+
+	<!-- Driver assignments -->
+	<Driver>
+		<!-- breakIntensity: lower number = more intense-->
+		<drive axis="1" breakMode="1" breakTime=".02" breakIntensity=".2" accelerationFactor=".2" polarity="1" deadZone=".4" powerMultiplier="1"/>
+		<turning axis="4" polarity="1" deadZone=".4" powerMultiplier=".55"/>
+
+	
+	<Kicker useAxis="0" powerMultiplier="0.60">
+		<kickerAxis axis="0" polarity="1" deadZone="0.5"/>
+		<kickerAxisLeft axis="3" polarity="1" deadZone="0"/>
+		<kickerAxisRight axis="2" polarity="1" deadZone="0"/>
+		<kickerBtn leftButton="5" rightButton="6"/>
+	</Kicker>
+
+	</Driver>
+
+	<!-- Operator assignments -->
+	<Operator>
+		<arm axis="1" polarity="1" deadZone=".2" powerMultiplier=".7"/>
+		<manipulator toggle="5"/>
+		<wings toggle="6"/>
+	</Operator>
+</Controls>
+</Robot>

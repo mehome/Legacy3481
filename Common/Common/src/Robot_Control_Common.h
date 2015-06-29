@@ -221,6 +221,20 @@ private:
 	bool m_enabled;
 };
 
+class COMMON_API _Accelerometer : public Control_2C_Element_UI
+{
+public:
+	_Accelerometer(uint32_t gRate) :
+	  Control_2C_Element_UI(1,gRate,"accelerometer")
+	  {
+		  display_bool(false);
+	  }
+
+
+	//uint32_t GetPressureSwitchValue();
+	//void SetRelayValue(Relay::Value relayValue);
+};
+
 class COMMON_API RobotDrive
 {
 public:

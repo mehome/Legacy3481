@@ -36,6 +36,8 @@ public:
 	{
 		void ShowAutonParameters(); //This will show SmartDashboard variables if ShowParameters is true
 		double FirstMove_ft; //For first auton... just moving forward
+		double SideMove_rad; //For moving sideways in feet
+		double ArmMove_in;  //In inches height how far up to move.
 		bool IsSupportingHotSpot;  //TODO this is just a place holder to be replaced by this years game
 		bool ShowParameters;   //If true ShowAutonParameters will populate SmartDashboard with autonomous parameters
 	} Autonomous_Props;
@@ -189,6 +191,8 @@ class FRC_2015_Robot : public Tank_Robot
 				void Pitch_SetRequestedVelocity(double Velocity) {m_Velocity+=Velocity;}
 		};
 
+	public: //Autonomous public access (wind river has problems with friend technique)
+
 		class Kicker_Wheel : public Rotary_Velocity_Control
 		{
 			public:
@@ -208,7 +212,6 @@ class FRC_2015_Robot : public Tank_Robot
 				double m_Velocity; //adds all axis velocities then assigns on the time change
 		};
 
-	public: //Autonomous public access (wind river has problems with friend technique)
 		class Robot_Arm : public Rotary_Position_Control
 		{
 			public:
@@ -258,6 +261,7 @@ class FRC_2015_Robot : public Tank_Robot
 		FRC_2015_Robot_Props::Autonomous_Properties &GetAutonProps();
 		//Accessors needed for setting goals
 		Robot_Arm &GetArm() {return m_Arm;}
+		Kicker_Wheel &GetKickerWheel() {return m_Kicker_Wheel;}
 	protected:
 		virtual void BindAdditionalEventControls(bool Bind);
 		virtual void BindAdditionalUIControls(bool Bind, void *joy, void *key);

@@ -1,13 +1,13 @@
 #include "WPILib.h"
 
-#include "Base/src/Base_Includes.h"
+#include "../../Base/src/Base_Includes.h"
 #include <math.h>
 #include <assert.h>
-#include "Base/src/Vec2d.h"
-#include "Base/src/Misc.h"
-#include "Base/src/Event.h"
-#include "Base/src/EventMap.h"
-#include "Base/src/Script.h"
+#include "../../Base/src/Vec2d.h"
+#include "../../Base/src/Misc.h"
+#include "../../Base/src/Event.h"
+#include "../../Base/src/EventMap.h"
+#include "../../Base/src/Script.h"
 
 //#include "Entity_Properties.h"
 //#include "Physics_1D.h"
@@ -23,8 +23,8 @@
 //#include "Robot_Control_Interface.h"
 //#include "Rotary_System.h"
 
-#include "Base/src/Joystick.h"
-#include "Base/src/JoystickBinder.h"
+#include "../../Base/src/Joystick.h"
+#include "../../Base/src/JoystickBinder.h"
 #include "InOut_Interface.h"
 #include "Debug.h"
 
@@ -201,6 +201,18 @@ void Control_Assignment_Properties::LoadFromScript(Scripting::Script& script)
 		}
 		else
 			m_Compressor_Relay=8,m_Compressor_Limit=14;
+
+		err = script.GetFieldTable("accelerometer");
+				if (!err)
+				{
+					double fTest;
+					err = script.GetField("gRate",NULL,NULL,&fTest);
+					assert(!err);
+					m_Compressor_Relay=(size_t)fTest;
+					script.Pop();
+				}
+				else
+					m_Compressor_Relay=0;
 
 		script.Pop();
 	}
