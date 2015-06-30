@@ -1261,7 +1261,7 @@ bool FRC_2015_Robot_Control::GetBoolSensorState(size_t index) const
 }
 
 FRC_2015_Robot_Control::FRC_2015_Robot_Control(bool UseSafety) : m_TankRobotControl(UseSafety),m_pTankRobotControl(&m_TankRobotControl),
-		m_Compressor(NULL)
+		m_Compressor(NULL),m_RoboRIO_Accelerometer(NULL)
 {
 }
 
@@ -1270,6 +1270,8 @@ FRC_2015_Robot_Control::~FRC_2015_Robot_Control()
 	//Encoder_Stop(FRC_2015_Robot::eWinch);
 	DestroyCompressor(m_Compressor);
 	m_Compressor=NULL;
+	DestroyBuiltInAccelerometer(m_RoboRIO_Accelerometer);
+	m_RoboRIO_Accelerometer=NULL;
 }
 
 void FRC_2015_Robot_Control::Reset_Rotary(size_t index)
@@ -1317,10 +1319,13 @@ void FRC_2015_Robot_Control::Initialize(const Entity_Properties *props)
 	}
 	
 	//Note: Initialize may be called multiple times so we'll only set this stuff up on first run
+	//For now... we'll use m_Compressor as the variable to determine first run, but perhaps this should be its own boolean here
 	if (!m_Compressor)
 	{
 		//This one one must also be called for the lists that are specific to the robot
-		RobotControlCommon_Initialize(robot_props->Get_ControlAssignmentProps());		
+		RobotControlCommon_Initialize(robot_props->Get_ControlAssignmentProps());
+		//This may return NULL for systems that do not support it
+		m_RoboRIO_Accelerometer=CreateBuiltInAccelerometer();
 		m_Compressor=CreateCompressor();
 		//Note: RobotControlCommon_Initialize() must occur before calling any encoder startup code
 		//const double EncoderPulseRate=(1.0/360.0);
@@ -1340,6 +1345,16 @@ void FRC_2015_Robot_Control::Robot_Control_TimeChange(double dTime_s)
 
 	#ifdef Robot_TesterCode
 	m_Potentiometer.SetTimeDelta(dTime_s);
+	#endif
+
+	//Testing the accelerometer
+	#if 1
+	if (m_RoboRIO_Accelerometer)
+	{
+		SmartDashboard::PutNumber("RoboAccelX", m_RoboRIO_Accelerometer->GetX());
+		SmartDashboard::PutNumber("RoboAccelY", m_RoboRIO_Accelerometer->GetY());
+		SmartDashboard::PutNumber("RoboAccelZ", m_RoboRIO_Accelerometer->GetZ());
+	}
 	#endif
 }
 

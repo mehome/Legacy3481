@@ -364,6 +364,7 @@ class FRC_2015_Robot_Control : public RobotControlCommon, public FRC_2015_Contro
 		Tank_Robot_Control m_TankRobotControl;
 		Tank_Drive_Control_Interface * const m_pTankRobotControl;  //This allows access to protected members
 		Compressor *m_Compressor;
+		Accelerometer *m_RoboRIO_Accelerometer;
 		//All digital input reads are done on time change and cached to avoid multiple reads to the FPGA
 		bool m_Limit_IntakeMin1,m_Limit_IntakeMin2,m_Limit_IntakeMax1,m_Limit_IntakeMax2;
 		bool m_Limit_DartUpper,m_Limit_DartLower;
