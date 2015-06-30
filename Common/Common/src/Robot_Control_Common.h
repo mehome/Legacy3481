@@ -405,7 +405,7 @@ class COMMON_API RobotControlCommon
 		}
 		__inline void DestroyBuiltInAccelerometer(Accelerometer *instance) {delete instance;}
 		#else
-		__inline void *CreateBuiltInAccelerometer() {return NULL;}
+		__inline Accelerometer *CreateBuiltInAccelerometer() {return NULL;}
 		__inline void DestroyBuiltInAccelerometer(void *instance) {}
 		#endif
 	protected:
