@@ -193,8 +193,25 @@ class COMMON_API Goal_Ship1D_MoveToPosition : public AtomicGoal
 		virtual void Activate();
 		virtual Goal_Status Process(double dTime_s);
 		virtual void Terminate() {m_Terminate=true;}
-	private:
+	protected:
 		Ship_1D &m_ship;
-		double m_Position,m_Tolerance;
+		double m_Position;
+	private:
+		double m_Tolerance;
 		bool m_Terminate;
+};
+
+//This is like Goal_Ship1D_MoveToPosition except it will set the waypoint relative to its current position and orientation
+//This will also set the trajectory point x distance (1 meter default) beyond the the point to help assist in orientation
+class COMMON_API Goal_Ship1D_MoveToRelativePosition : public Goal_Ship1D_MoveToPosition
+{
+public:
+	Goal_Ship1D_MoveToRelativePosition(Ship_1D &controller,double position,double tolerance=0.10) : 
+	  Goal_Ship1D_MoveToPosition(controller,position,tolerance) {}
+	//Note: It is important for client code not to activate this... let process activate it... so that it sets the point at the correct time and current position
+	virtual void Activate();
+private:
+#ifndef Robot_TesterCode
+	typedef Goal_Ship1D_MoveToPosition __super;
+#endif
 };

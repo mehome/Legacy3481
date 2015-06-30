@@ -391,3 +391,16 @@ Goal::Goal_Status Goal_Ship1D_MoveToPosition::Process(double dTime_s)
 	}
 	return m_Status;
 }
+
+  /***********************************************************************************************************************************/
+ /*												Goal_Ship_MoveToRelativePosition													*/
+/***********************************************************************************************************************************/
+
+void Goal_Ship1D_MoveToRelativePosition::Activate()
+{
+	//Construct a way point
+	double current_pos=m_ship.GetPos_m();
+	double dest_position=m_Position+current_pos;
+	m_Position=dest_position;  //This should be a one-time assignment
+	__super::Activate();
+}
