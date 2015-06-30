@@ -39,7 +39,6 @@ class COMMON_API Control_Assignment_Properties
 		Controls_1C m_Victors,m_Servos,m_Relays,m_Digital_Inputs,m_Analog_Inputs;
 		Controls_2C m_Double_Solenoids,m_Encoders;
 		size_t m_Compressor_Relay,m_Compressor_Limit;
-		size_t m_Range;
 };
 
 
@@ -222,18 +221,42 @@ private:
 	bool m_enabled;
 };
 
-class COMMON_API _Accelerometer : public Control_2C_Element_UI
+class COMMON_API Accelerometer
 {
 public:
-	_Accelerometer(uint32_t gRange) :
-	  Control_2C_Element_UI(1,gRange,"accelerometer")
-	  {
-		  display_bool(false);
-	  }
-		//Don't know what to do...
+	virtual ~Accelerometer() {};
 
-	//uint32_t GetPressureSwitchValue();
-	//void SetRelayValue(Relay::Value relayValue);
+	enum Range
+	{
+		kRange_2G = 0,
+		kRange_4G = 1,
+		kRange_8G = 2,
+		kRange_16G = 3
+	};
+
+	virtual void SetRange(Range range) = 0;
+	virtual double GetX() = 0;
+	virtual double GetY() = 0;
+	virtual double GetZ() = 0;
+};
+
+
+class BuiltInAccelerometer : public Accelerometer, public Control_1C_Element_UI
+{
+public:
+	BuiltInAccelerometer(Range range = kRange_8G) :	Control_1C_Element_UI(0,0,"accelerometer")
+	{
+		display_bool(false);
+	}
+
+	virtual ~BuiltInAccelerometer();
+
+	// Accelerometer interface
+	virtual void SetRange(Range range);
+	//I'm not too worried about the implementation of the simulation... just one method is fine
+	virtual double GetX()  {return get_number();}
+	virtual double GetY() {return 0.0;}
+	virtual double GetZ() {return 0.0;}
 };
 
 class COMMON_API RobotDrive
@@ -374,6 +397,17 @@ class COMMON_API RobotControlCommon
 			#endif
 		}
 		__inline void DestroyCompressor(Compressor *instance) {delete instance;}
+
+		#ifndef __USE_LEGACY_WPI_LIBRARIES__
+		__inline Accelerometer *CreateBuiltInAccelerometer()
+		{
+			return new BuiltInAccelerometer();
+		}
+		__inline void DestroyBuiltInAccelerometer(Accelerometer *instance) {delete instance;}
+		#else
+		__inline void *CreateBuiltInAccelerometer() {return NULL;}
+		__inline void DestroyBuiltInAccelerometer(void *instance) {}
+		#endif
 	protected:
 		virtual void RobotControlCommon_Initialize(const Control_Assignment_Properties &props);
 		//Override by derived class
