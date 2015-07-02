@@ -198,7 +198,7 @@ class COMMON_API LUA_Controls_Properties
 					double Multiplier;
 					double FilterRange;
 					double CurveIntensity;
-
+					bool CenterPointIdle;
 				} DualAnalog;
 				struct ButtonSpecifics_rw
 				{

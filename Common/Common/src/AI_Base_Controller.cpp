@@ -93,6 +93,10 @@ const char *LUA_Controls_Properties::ExtractControllerElementProperties(Controll
 			//cast to int first, and then to the enumeration
 			JoyAxis_2=(JoyAxis_enum)((int)dJoyAxis);
 
+			bool CenterPointIdle;
+			err = script.GetField("center_point_idle", NULL, &CenterPointIdle,NULL);
+			if (err)
+				CenterPointIdle=true;  //default
 			bool IsFlipped;
 			err = script.GetField("is_flipped", NULL, &IsFlipped,NULL);
 			ASSERT_MSG(!err, err);
@@ -108,6 +112,7 @@ const char *LUA_Controls_Properties::ExtractControllerElementProperties(Controll
 
 			Controller_Element_Properties::ElementTypeSpecific::SplitAxisSpecifics_rw &set=Element.Specifics.DualAnalog;
 			set.JoyAxis_1=JoyAxis_1,set.JoyAxis_2=JoyAxis_2;
+			set.CenterPointIdle=CenterPointIdle;
 			set.IsFlipped=IsFlipped;
 			set.Multiplier=Multiplier;
 			set.FilterRange=FilterRange;
@@ -350,7 +355,7 @@ void LUA_Controls_Properties::BindAdditionalUIControls(bool Bind,void *joy,void 
 				{
 					const Controller_Element_Properties::ElementTypeSpecific::SplitAxisSpecifics_rw &analog=element.Specifics.DualAnalog;
 					//Note the cast... these are not going to change, but there is dup code to on axis enum to avoid dependency issues
-					p_joy->AddJoy_SplitAxis_Default((JoyStick_Binder::JoyAxis_enum)analog.JoyAxis_1,(JoyStick_Binder::JoyAxis_enum)analog.JoyAxis_2,element.Event.c_str(),analog.IsFlipped,analog.Multiplier,analog.FilterRange,analog.CurveIntensity,control.Controller.c_str());
+					p_joy->AddJoy_SplitAxis_Default((JoyStick_Binder::JoyAxis_enum)analog.JoyAxis_1,(JoyStick_Binder::JoyAxis_enum)analog.JoyAxis_2,analog.CenterPointIdle,element.Event.c_str(),analog.IsFlipped,analog.Multiplier,analog.FilterRange,analog.CurveIntensity,control.Controller.c_str());
 				}
 				else
 					p_joy->RemoveJoy_Analog_Binding(element.Event.c_str(),control.Controller.c_str());
