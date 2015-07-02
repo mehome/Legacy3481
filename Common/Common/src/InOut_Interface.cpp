@@ -105,19 +105,22 @@ bool Driver_Station_Joystick::read_joystick (size_t nr, JoyState &Info)
 	int Number=(int)nr;
 	Number-=m_StartingPort;
 	bool ret=false;
+	int AxisOffset=0;  //for cRIO compatibility
 	#ifdef __USE_LEGACY_WPI_LIBRARIES__
-	//nr++;  //DOH the number selection is cardinal!  :(
+	nr++;  //DOH the number selection is cardinal!  :(
+	AxisOffset=1;
 	#endif
 	if ((Number>=0) && (Number<m_NoJoysticks) && (m_JoyInfo[nr-1].bPresent))
 	{
 		memset(&Info,0,sizeof(JoyState));  //zero the memory
+
 		//The axis selection is also ordinal
-		Info.lX=m_ds->GetStickAxis(nr,0);//bad
-		Info.lY=m_ds->GetStickAxis(nr,1);//bad
-		Info.lZ=m_ds->GetStickAxis(nr,2);//bad
-		Info.lRx=m_ds->GetStickAxis(nr,3);//bad
-		Info.lRy=m_ds->GetStickAxis(nr,4);
-		Info.lRz=m_ds->GetStickAxis(nr,5);
+		Info.lX=m_ds->GetStickAxis(nr,0+AxisOffset);
+		Info.lY=m_ds->GetStickAxis(nr,1+AxisOffset);
+		Info.lZ=m_ds->GetStickAxis(nr,2+AxisOffset);
+		Info.lRx=m_ds->GetStickAxis(nr,3+AxisOffset);
+		Info.lRy=m_ds->GetStickAxis(nr,4+AxisOffset);
+		Info.lRz=m_ds->GetStickAxis(nr,5+AxisOffset);
 		//Testing---
 		#if 1
 		if (nr==0)
