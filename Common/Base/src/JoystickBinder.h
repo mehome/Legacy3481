@@ -50,7 +50,7 @@ public:
 		double CurveIntensity=0.0,const char ProductName[]="any");
 	void AddJoy_Culver_Default(JoyAxis_enum WhichXAxis,JoyAxis_enum WhichYAxis,double MagnitudeScalar_arc,double MagnitudeScalar_base,const char eventName[],bool IsFlipped=false,double Multiplier=1.0,double FilterRange=0.0,
 		double CurveIntensity=0.0,const char ProductName[]="any");
-	void AddJoy_SplitAxis_Default(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,const char eventName[],bool IsFlipped=false,double Multiplier=1.0,double FilterRange=0.0,
+	void AddJoy_SplitAxis_Default(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,bool CenterPointIdle,const char eventName[],bool IsFlipped=false,double Multiplier=1.0,double FilterRange=0.0,
 		double CurveIntensity=0.0,const char ProductName[]="any");
 	/// \param WhichButton while in theory there are up to 128 buttons supported I'm only going to support the first 32 for now
 	/// Use the JoystickTest program to determine the numbers of the buttons
@@ -76,7 +76,7 @@ private:
 		double CurveIntensity=0.0,const char ProductName[]="any");
 	void AddJoy_Culver_Binding(JoyAxis_enum WhichXAxis,JoyAxis_enum WhichYAxis,double MagnitudeScalar_arc,double MagnitudeScalar_base,const char eventName[],bool IsFlipped=false,double Multiplier=1.0,double FilterRange=0.0,
 		double CurveIntensity=0.0,const char ProductName[]="any");
-	void AddJoy_SplitAxis_Binding(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,const char eventName[],bool IsFlipped=false,double Multiplier=1.0,double FilterRange=0.0,
+	void AddJoy_SplitAxis_Binding(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,bool CenterPointIdle,const char eventName[],bool IsFlipped=false,double Multiplier=1.0,double FilterRange=0.0,
 		double CurveIntensity=0.0,const char ProductName[]="any");
 	void AddJoy_Button_Binding(size_t WhichButton,const char eventName[],bool useOnOff=true,bool dbl_click=false,const char ProductName[]="any");
 
@@ -122,7 +122,8 @@ private:
 			} culver;
 			struct SplitAxis  //data used in Split Axis entries
 			{
-				JoyAxis_enum Which2Axis;  
+				JoyAxis_enum Which2Axis;
+				bool CenterPointIdle;   //some axis idle at 0, while some idle full range
 			} split_axis;
 		} ExtraData;
 		bool operator >  (const Analog_EventEntry& rhs) const { return ((WhichAxis == rhs.WhichAxis) ? (ProductName > rhs.ProductName) : (WhichAxis > rhs.WhichAxis)); }
@@ -142,11 +143,12 @@ private:
 	};
 	struct SplitAxis_EventEntry : public Analog_EventEntry
 	{
-		SplitAxis_EventEntry(JoyAxis_enum _Which1Axis,JoyAxis_enum _Which2Axis,const char _ProductName[]="any",bool _IsFlipped=false,double _Multiplier=1.0,
+		SplitAxis_EventEntry(JoyAxis_enum _Which1Axis,JoyAxis_enum _Which2Axis,bool _CenterPointIdle=true,const char _ProductName[]="any",bool _IsFlipped=false,double _Multiplier=1.0,
 			double _FilterRange=0.0,double _CurveIntensity=false) : 
 		Analog_EventEntry(_Which1Axis,_ProductName,_IsFlipped,_Multiplier,_FilterRange,_CurveIntensity,eAnalog_EventEntryType_SplitAxis)
 		{
 			ExtraData.split_axis.Which2Axis=_Which2Axis;
+			ExtraData.split_axis.CenterPointIdle=_CenterPointIdle;
 		}
 	};
 

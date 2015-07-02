@@ -106,10 +106,10 @@ void JoyStick_Binder::AddJoy_Culver_Binding(JoyAxis_enum WhichXAxis,JoyAxis_enum
 	Add_Analog_Binding_Common(key,eventName);
 }
 
-void JoyStick_Binder::AddJoy_SplitAxis_Binding(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,const char eventName[],bool IsFlipped,double Multiplier,
+void JoyStick_Binder::AddJoy_SplitAxis_Binding(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,bool CenterPointIdle,const char eventName[],bool IsFlipped,double Multiplier,
 											double FilterRange,double CurveIntensity,const char ProductName[])
 {
-	SplitAxis_EventEntry key(Which1Axis,Which2Axis,ProductName,IsFlipped,Multiplier,FilterRange,CurveIntensity);
+	SplitAxis_EventEntry key(Which1Axis,Which2Axis,CenterPointIdle,ProductName,IsFlipped,Multiplier,FilterRange,CurveIntensity);
 	Add_Analog_Binding_Common(key,eventName);
 }
 
@@ -259,10 +259,10 @@ void JoyStick_Binder::AddJoy_Culver_Default(JoyAxis_enum WhichXAxis,JoyAxis_enum
 		AddJoy_Culver_Binding(WhichXAxis,WhichYAxis,MagnitudeScalarArc,MagnitudeScalarBase,eventName,IsFlipped,Multiplier,FilterRange,CurveIntensity,ProductName);
 }
 
-void JoyStick_Binder::AddJoy_SplitAxis_Default(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,const char eventName[],bool IsFlipped,double Multiplier,double FilterRange,double CurveIntensity,const char ProductName[])
+void JoyStick_Binder::AddJoy_SplitAxis_Default(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,bool CenterPointIdle,const char eventName[],bool IsFlipped,double Multiplier,double FilterRange,double CurveIntensity,const char ProductName[])
 {
 	//removed intercept since we are not using a config manager
-		AddJoy_SplitAxis_Binding(Which1Axis,Which2Axis,eventName,IsFlipped,Multiplier,FilterRange,CurveIntensity,ProductName);
+		AddJoy_SplitAxis_Binding(Which1Axis,Which2Axis,CenterPointIdle,eventName,IsFlipped,Multiplier,FilterRange,CurveIntensity,ProductName);
 }
 
 void JoyStick_Binder::AddJoy_Button_Default(size_t WhichButton,const char eventName[],bool useOnOff,bool dbl_click,const char ProductName[])
@@ -411,18 +411,20 @@ void JoyStick_Binder::UpdateJoyStick(double dTick_s)
 										double Value2=AnalogConversionNormal(Joy2Value,key);
 										//invert the side of the negative where by default this will put the highest value at the end
 										double Value1=-AnalogConversionNormal(Value,key);
-										//static size_t count=0;
-										//if (count++>=100)
-										//{
-										//	count=0;
-										//	printf("v1=%.2f v2=%.2f\n",Value1,Value2);
-										//}
-
-										//normalize to a 0..1 range
-										Value2=(Value2+1.0)/2.0;
-										Value1=(Value1+1.0)/2.0;
-										//Now to put Value1 on the negative range number line
-										Value1-=1.0;
+										if (key.ExtraData.split_axis.CenterPointIdle)
+										{
+											//normalize to a 0..1 range
+											Value2=fabs(Value2);
+											Value1=-fabs(Value1);
+										}
+										else
+										{
+											//normalize to a 0..1 range
+											Value2=(Value2+1.0)/2.0;
+											Value1=(Value1+1.0)/2.0;
+											//Now to put Value1 on the negative range number line
+											Value1-=1.0;
+										}
 										//Now we can add them for the final value;
 										Value=Value1+Value2;
 									}
@@ -434,7 +436,7 @@ void JoyStick_Binder::UpdateJoyStick(double dTick_s)
 	
 								std::vector<std::string>::iterator pos;
 								for (pos = AnalogEvents->begin(); pos != AnalogEvents->end(); ++pos)
-									m_controlledEventMap->EventValue_Map[*pos].Fire(Value);
+									m_controlledEventMap->EventValue_Map[*pos].Fire(key.IsFlipped?-Value:Value);
 							}
 						}
 					}
