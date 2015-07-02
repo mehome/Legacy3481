@@ -78,6 +78,41 @@ const char *LUA_Controls_Properties::ExtractControllerElementProperties(Controll
 			set.CurveIntensity=CurveIntensity;
 			//joy.AddJoy_Analog_Default(JoyAxis,Eventname,IsFlipped,Multiplier,FilterRange,IsSquared,ProductName.c_str());
 		}
+		else if (strcmp(sType.c_str(),"joystick_dual_analog")==0)
+		{
+			Element.Type=Controller_Element_Properties::eJoystickSplitAxis;
+			JoyAxis_enum JoyAxis_1,JoyAxis_2;
+			double dJoyAxis;
+			err = script.GetField("key_1", NULL, NULL,&dJoyAxis);
+			ASSERT_MSG(!err, err);
+			//cast to int first, and then to the enumeration
+			JoyAxis_1=(JoyAxis_enum)((int)dJoyAxis);
+
+			err = script.GetField("key_2", NULL, NULL,&dJoyAxis);
+			ASSERT_MSG(!err, err);
+			//cast to int first, and then to the enumeration
+			JoyAxis_2=(JoyAxis_enum)((int)dJoyAxis);
+
+			bool IsFlipped;
+			err = script.GetField("is_flipped", NULL, &IsFlipped,NULL);
+			ASSERT_MSG(!err, err);
+			double Multiplier;
+			err = script.GetField("multiplier", NULL, NULL,&Multiplier);
+			ASSERT_MSG(!err, err);
+			double FilterRange;
+			err = script.GetField("filter", NULL, NULL,&FilterRange);
+			ASSERT_MSG(!err, err);
+			double CurveIntensity;
+			err = script.GetField("curve_intensity", NULL, NULL, &CurveIntensity);
+			ASSERT_MSG(!err, err);
+
+			Controller_Element_Properties::ElementTypeSpecific::SplitAxisSpecifics_rw &set=Element.Specifics.DualAnalog;
+			set.JoyAxis_1=JoyAxis_1,set.JoyAxis_2=JoyAxis_2;
+			set.IsFlipped=IsFlipped;
+			set.Multiplier=Multiplier;
+			set.FilterRange=FilterRange;
+			set.CurveIntensity=CurveIntensity;
+		}
 		else if (strcmp(sType.c_str(),"joystick_culver")==0)
 		{
 			Element.Type=Controller_Element_Properties::eJoystickCulver;
@@ -306,6 +341,16 @@ void LUA_Controls_Properties::BindAdditionalUIControls(bool Bind,void *joy,void 
 					//Note the cast... these are not going to change, but there is dup code to on axis enum to avoid dependency issues
 					p_joy->AddJoy_Culver_Default((JoyStick_Binder::JoyAxis_enum)analog.JoyAxis_X,(JoyStick_Binder::JoyAxis_enum)analog.JoyAxis_Y,analog.MagnitudeScalarArc,
 						analog.MagnitudeScalarBase,element.Event.c_str(),analog.IsFlipped,analog.Multiplier,analog.FilterRange,analog.CurveIntensity,control.Controller.c_str());
+				}
+				else
+					p_joy->RemoveJoy_Analog_Binding(element.Event.c_str(),control.Controller.c_str());
+				break;
+			case Controller_Element_Properties::eJoystickSplitAxis:
+				if (Bind)
+				{
+					const Controller_Element_Properties::ElementTypeSpecific::SplitAxisSpecifics_rw &analog=element.Specifics.DualAnalog;
+					//Note the cast... these are not going to change, but there is dup code to on axis enum to avoid dependency issues
+					p_joy->AddJoy_SplitAxis_Default((JoyStick_Binder::JoyAxis_enum)analog.JoyAxis_1,(JoyStick_Binder::JoyAxis_enum)analog.JoyAxis_2,element.Event.c_str(),analog.IsFlipped,analog.Multiplier,analog.FilterRange,analog.CurveIntensity,control.Controller.c_str());
 				}
 				else
 					p_joy->RemoveJoy_Analog_Binding(element.Event.c_str(),control.Controller.c_str());

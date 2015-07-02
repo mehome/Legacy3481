@@ -165,6 +165,7 @@ class COMMON_API LUA_Controls_Properties
 			enum ElementType
 			{
 				eJoystickAnalog,
+				eJoystickSplitAxis,
 				eJoystickCulver,
 				eJoystickButton,
 				eKeyboard			//currently only available on simulation
@@ -189,6 +190,16 @@ class COMMON_API LUA_Controls_Properties
 					double FilterRange;
 					double CurveIntensity;
 				} Culver;
+				struct SplitAxisSpecifics_rw
+				{
+					JoyAxis_enum JoyAxis_1;
+					JoyAxis_enum JoyAxis_2;
+					bool IsFlipped;
+					double Multiplier;
+					double FilterRange;
+					double CurveIntensity;
+
+				} DualAnalog;
 				struct ButtonSpecifics_rw
 				{
 					size_t WhichButton;
