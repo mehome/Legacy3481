@@ -106,6 +106,13 @@ void JoyStick_Binder::AddJoy_Culver_Binding(JoyAxis_enum WhichXAxis,JoyAxis_enum
 	Add_Analog_Binding_Common(key,eventName);
 }
 
+void JoyStick_Binder::AddJoy_SplitAxis_Binding(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,const char eventName[],bool IsFlipped,double Multiplier,
+											double FilterRange,double CurveIntensity,const char ProductName[])
+{
+	SplitAxis_EventEntry key(Which1Axis,Which2Axis,ProductName,IsFlipped,Multiplier,FilterRange,CurveIntensity);
+	Add_Analog_Binding_Common(key,eventName);
+}
+
 void JoyStick_Binder::RemoveJoy_Analog_Binding(const char eventName[],const char ProductName[])
 {
 	AssignedJoyAnalogs::iterator iter;
@@ -239,8 +246,7 @@ void JoyStick_Binder::RemoveJoy_Button_Binding(const char eventName[],const char
 	}
 }
 
-void JoyStick_Binder::AddJoy_Analog_Default(JoyAxis_enum WhichAxis,const char eventName[],bool IsFlipped,double Multiplier,
-											double FilterRange,double CurveIntensity,const char ProductName[])
+void JoyStick_Binder::AddJoy_Analog_Default(JoyAxis_enum WhichAxis,const char eventName[],bool IsFlipped,double Multiplier,double FilterRange,double CurveIntensity,const char ProductName[])
 {
 	//removed intercept since we are not using a config manager
 		AddJoy_Analog_Binding(WhichAxis,eventName,IsFlipped,Multiplier,FilterRange,CurveIntensity,ProductName);
@@ -253,6 +259,12 @@ void JoyStick_Binder::AddJoy_Culver_Default(JoyAxis_enum WhichXAxis,JoyAxis_enum
 		AddJoy_Culver_Binding(WhichXAxis,WhichYAxis,MagnitudeScalarArc,MagnitudeScalarBase,eventName,IsFlipped,Multiplier,FilterRange,CurveIntensity,ProductName);
 }
 
+void JoyStick_Binder::AddJoy_SplitAxis_Default(JoyAxis_enum Which1Axis,JoyAxis_enum Which2Axis,const char eventName[],bool IsFlipped,double Multiplier,double FilterRange,double CurveIntensity,const char ProductName[])
+{
+	//removed intercept since we are not using a config manager
+		AddJoy_SplitAxis_Binding(Which1Axis,Which2Axis,eventName,IsFlipped,Multiplier,FilterRange,CurveIntensity,ProductName);
+}
+
 void JoyStick_Binder::AddJoy_Button_Default(size_t WhichButton,const char eventName[],bool useOnOff,bool dbl_click,const char ProductName[])
 {
 	//removed intercept since we are not using a config manager
@@ -262,6 +274,48 @@ void JoyStick_Binder::AddJoy_Button_Default(size_t WhichButton,const char eventN
 bool JoyStick_Binder::IsDoubleClicked(size_t i)
 {
 	return (m_eventTime-m_lastReleaseTime[i] < DOUBLE_CLICK_TIME);
+}
+
+double GetJoystickValue(Framework::Base::IJoystick::JoyState joyinfo,JoyStick_Binder::JoyAxis_enum whichaxis)
+{
+	double Value;
+	switch(whichaxis)
+	{
+	case JoyStick_Binder::eX_Axis:	Value=joyinfo.lX;	break;
+	case JoyStick_Binder::eY_Axis:	Value=joyinfo.lY;	break;
+	case JoyStick_Binder::eZ_Axis:	Value=joyinfo.lZ;	break;
+	case JoyStick_Binder::eX_Rot:	Value=joyinfo.lRx;	break;
+	case JoyStick_Binder::eY_Rot:	Value=joyinfo.lRy;	break;
+	case JoyStick_Binder::eZ_Rot:	Value=joyinfo.lRz;	break;
+	case JoyStick_Binder::eSlider0:	Value=joyinfo.rgSlider[0];	break;
+	case JoyStick_Binder::eSlider1:	Value=joyinfo.rgSlider[1];	break;
+	case JoyStick_Binder::ePOV_0:	Value=joyinfo.rgPOV[0];		break;
+	case JoyStick_Binder::ePOV_1:	Value=joyinfo.rgPOV[1];		break;
+	case JoyStick_Binder::ePOV_2:	Value=joyinfo.rgPOV[2];		break;
+	case JoyStick_Binder::ePOV_3:	Value=joyinfo.rgPOV[3];		break;
+	};
+	return Value;
+}
+
+inline double JoyStick_Binder::AnalogConversionNormal(double InValue,const Analog_EventEntry &key)
+{
+	double ValueABS=fabs(InValue); //take out the sign... put it back in the end
+
+	//Now to use the attributes to tweak the value
+	//First evaluate dead zone range... if out of range subtract out the offset for no loss in precision
+	//The /(1.0-filter range) will restore the full range
+
+	ValueABS=(ValueABS>=key.FilterRange) ? ValueABS-key.FilterRange:0.0; 
+
+	ValueABS=key.Multiplier*(ValueABS/(1.0-key.FilterRange)); //apply scale first then
+	if (key.CurveIntensity<=1.0)
+		ValueABS=key.CurveIntensity*pow(ValueABS,3) + (1.0-key.CurveIntensity)*ValueABS; //apply the curve intensity
+	else
+		ValueABS=pow(ValueABS,key.CurveIntensity); //apply the curve intensity
+
+	//Now to restore the sign
+	const double OutValue=(InValue<0.0)?-ValueABS:ValueABS;
+	return key.IsFlipped?-OutValue:OutValue;
 }
 
 void JoyStick_Binder::UpdateJoyStick(double dTick_s)
@@ -296,21 +350,8 @@ void JoyStick_Binder::UpdateJoyStick(double dTick_s)
 				//Only fire events for axis that the joystick supports
 				if (IsSupported)
 				{
-					switch(i)
-					{
-					case eX_Axis:	Value=joyinfo.lX,OldValue=floodcontrol.lX;	break;
-					case eY_Axis:	Value=joyinfo.lY,OldValue=floodcontrol.lY;	break;
-					case eZ_Axis:	Value=joyinfo.lZ,OldValue=floodcontrol.lZ;	break;
-					case eX_Rot:	Value=joyinfo.lRx,OldValue=floodcontrol.lRx;	break;
-					case eY_Rot:	Value=joyinfo.lRy,OldValue=floodcontrol.lRy;	break;
-					case eZ_Rot:	Value=joyinfo.lRz,OldValue=floodcontrol.lRz;	break;
-					case eSlider0:	Value=joyinfo.rgSlider[0],OldValue=floodcontrol.rgSlider[0];	break;
-					case eSlider1:	Value=joyinfo.rgSlider[1],OldValue=floodcontrol.rgSlider[1];	break;
-					case ePOV_0:	Value=joyinfo.rgPOV[0],OldValue=floodcontrol.rgPOV[0];		break;
-					case ePOV_1:	Value=joyinfo.rgPOV[1],OldValue=floodcontrol.rgPOV[1];		break;
-					case ePOV_2:	Value=joyinfo.rgPOV[2],OldValue=floodcontrol.rgPOV[2];		break;
-					case ePOV_3:	Value=joyinfo.rgPOV[3],OldValue=floodcontrol.rgPOV[3];		break;
-					};
+					Value=GetJoystickValue(joyinfo,(JoyAxis_enum)i);
+					OldValue=GetJoystickValue(floodcontrol,(JoyAxis_enum)i);
 
 					//Note: at this time I cannot perform flood control for axis controls because of the nature of how
 					//the client code needs a constant update on the position (as it will zero out afterward)
@@ -341,25 +382,59 @@ void JoyStick_Binder::UpdateJoyStick(double dTick_s)
 
 							if (AnalogEvents)
 							{
-								//Now to use the attributes to tweak the value
-								//First evaluate dead zone range... if out of range subtract out the offset for no loss in precision
-								//The /(1.0-filter range) will restore the full range
-								
-								double Temp=fabs(Value); //take out the sign... put it back in the end
-								Temp=(Temp>=key.FilterRange) ? Temp-key.FilterRange:0.0; 
 
-								Temp=key.Multiplier*(Temp/(1.0-key.FilterRange)); //apply scale first then
-								if (key.CurveIntensity<=1.0)
-									Temp=key.CurveIntensity*pow(Temp,3) + (1.0-key.CurveIntensity)*Temp; //apply the curve intensity
-								else
-									Temp=pow(Temp,key.CurveIntensity); //apply the curve intensity
+								switch (key.AnalogEntryType)
+								{
+								case Analog_EventEntry::eAnalog_EventEntryType_Culver:
+									{
+									double ValueABS=fabs(Value); //take out the sign... put it back in the end
+									double YValue=GetJoystickValue(joyinfo,key.ExtraData.culver.WhichYAxis);
+									//Find arc tangent of wheel stick relative to vertical... note relative to vertical suggests that we swap the x and y components!
+									//NOTE if we want to extend past 90 use this:   we could have logic to support it
+									//const double theta = atan2(Value,-YValue);
+									//This version limits to 90 degrees... so any down motion will be treated like up motion
+									const double theta = atan2(Value,fabs(YValue));
+									//the magnitude scalar is a blend of arc and base constants depending on the values current position
+									const double magnitude_scalar=((1.0-ValueABS) * key.ExtraData.culver.MagnitudeScalarArc)+(ValueABS * key.ExtraData.culver.MagnitudeScalarBase);
+									//Find the magnitude of the wheel stick
+									const double magnitude = sqrt(((Value * Value) + (YValue * YValue))) * magnitude_scalar;
+									//DOUT4("%.2f,%.2f,%f,%f",RAD_2_DEG(theta),magnitude,Value,theta*magnitude);
+									//Assign the new value
+									Value=theta*magnitude;   //note theta holds the sign
+									//Now to apply the other conversions to this
+									Value=AnalogConversionNormal(Value,key);
+									}
+									break;
+								case Analog_EventEntry::eAnalog_EventEntryType_SplitAxis:
+									{
+										const double Joy2Value=GetJoystickValue(joyinfo,key.ExtraData.split_axis.Which2Axis);
+										double Value2=AnalogConversionNormal(Joy2Value,key);
+										//invert the side of the negative where by default this will put the highest value at the end
+										double Value1=-AnalogConversionNormal(Value,key);
+										//static size_t count=0;
+										//if (count++>=100)
+										//{
+										//	count=0;
+										//	printf("v1=%.2f v2=%.2f\n",Value1,Value2);
+										//}
 
-								//Now to restore the sign
-								Value=(Value<0.0)?-Temp:Temp;
+										//normalize to a 0..1 range
+										Value2=(Value2+1.0)/2.0;
+										Value1=(Value1+1.0)/2.0;
+										//Now to put Value1 on the negative range number line
+										Value1-=1.0;
+										//Now we can add them for the final value;
+										Value=Value1+Value2;
+									}
+									break;
+								case Analog_EventEntry::eAnalog_EventEntryType_Normal:
+									Value=AnalogConversionNormal(Value,key);
+									break;
+								}
 	
 								std::vector<std::string>::iterator pos;
 								for (pos = AnalogEvents->begin(); pos != AnalogEvents->end(); ++pos)
-									m_controlledEventMap->EventValue_Map[*pos].Fire(key.IsFlipped?-Value:Value);
+									m_controlledEventMap->EventValue_Map[*pos].Fire(Value);
 							}
 						}
 					}
