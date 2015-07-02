@@ -304,9 +304,10 @@ MainRobot = {
 			--Joystick_SetRight_XAxis = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},			             		--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			
 			Analog_Turn = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.05, curve_intensity=1.0},
-			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.5, curve_intensity=1.0},
+		--	KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.5, curve_intensity=1.0},
+			KickerWheel_SetCurrentVelocity = {type="joystick_dual_analog", key_1=2, key_2=3, is_flipped=false, multiplier=1.0, filter=0.5, curve_intensity=1.0},
 			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.2, curve_intensity=0.0},
-	t
+	
 			--Robot_SetLowGearOff = {type="joystick_button", key=5, keyboard=';', on_off=false},
 			--Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},
 			
