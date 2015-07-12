@@ -1388,8 +1388,18 @@ double FRC_2015_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			#ifndef Robot_TesterCode
 			//double raw_value = (double)m_Potentiometer.GetAverageValue();
 			double raw_value=(double)Analog_GetAverageValue(FRC_2015_Robot::eArmPotentiometer);
-			raw_value = m_KalFilter_Arm(raw_value);  //apply the Kalman filter
-			raw_value=m_ArmAverager.GetAverage(raw_value); //and Ricks x element averager
+			//raw_value = m_KalFilter_Arm(raw_value);  //apply the Kalman filter
+			//raw_value=m_ArmAverager.GetAverage(raw_value); //and Ricks x element averager
+
+
+			raw_value = raw_value-155;//zeros the potentiometer
+			raw_value = raw_value/1125;//scales values from 0 to 1 with +- .001
+
+			  //I imagine .001 corrections will not be harmful for when in use.
+			  if (raw_value < 0) raw_value = 0;//corrects .001 or less causing a negative value
+			  if (raw_value > 1 || raw_value > .999) raw_value = 1;//corrects .001 or lass causing value greater than 1
+
+
 			//Note the value is inverted with the negative operator
 			double PotentiometerRaw_To_Arm;
 			{
@@ -1423,6 +1433,7 @@ double FRC_2015_Robot_Control::GetRotaryCurrentPorV(size_t index)
 
 				const double stand_angle=pitch+StandAdjustedAngle;  //determine angle of stand  
 				const double height_in=Meters2Inches(height);
+				SmartDashboard::PutNumber("_Potentiometer",raw_value);
 				SmartDashboard::PutNumber("Camera_rot_y",stand_angle);
 				SmartDashboard::PutNumber("Camera_y",cos(DEG_2_RAD(pitch+pivot_offset))*pivot_radius_in+Camera_Y_offset);
 				SmartDashboard::PutNumber("Camera_z",sin(DEG_2_RAD(-(pitch+pivot_offset)))*pivot_radius_in+Camera_Z_offset);

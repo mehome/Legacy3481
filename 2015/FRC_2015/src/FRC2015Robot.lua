@@ -31,7 +31,7 @@ skid=1
 gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) * skid
 
 MainRobot = {
-	version = 1.1;
+	version = 1.2,
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -76,6 +76,7 @@ MainRobot = {
 			id_2 = { name="right_drive_1",  a_channel=1, b_channel=2},
 		},
 		compressor	=	{ relay=8, limit=14 }
+		accelerometer	=	{ gRange=1 }
 	},
 	--Version helps to identify a positive update to lua
 	--version = 1;
