@@ -7,7 +7,7 @@ function GetSettings()
 		loaded_file()  --We can now make the call and it will succeed
 		return settings_load
 	end
-endlure 
+end
 
 DashboardProps = 
 {
