@@ -1332,6 +1332,8 @@ void FRC_2015_Robot_Control::Initialize(const Entity_Properties *props)
 		//Encoder_SetDistancePerPulse(FRC_2015_Robot::eWinch,EncoderPulseRate);
 		//Encoder_Start(FRC_2015_Robot::eWinch);
 		ResetPos(); //must be called after compressor is created
+		SmartDashboard::PutNumber("Arm_Raw_high",4013.0);
+		SmartDashboard::PutNumber("Arm_Raw_Range",24.0);
 	}
 
 }
@@ -1399,8 +1401,8 @@ double FRC_2015_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			const double lowRange=155;
 			const double HiRange=1125;
 			#else
-			const double LowRange=3982;
-			const double HiRange=4006;
+			const double HiRange=SmartDashboard::GetNumber("Arm_Raw_high");
+			const double LowRange=HiRange-SmartDashboard::GetNumber("Arm_Raw_Range",24.0);
 			//If this is true, the value is inverted with the negative operator
 			const bool FlipRange=true;
 			#endif
@@ -1421,7 +1423,15 @@ double FRC_2015_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			SmartDashboard::PutNumber("Arm_Raw",raw_value);
 			SmartDashboard::PutNumber("Arm_PotRaw",PotentiometerRaw_To_Arm);
 
-			result=PotentiometerRaw_To_Arm + m_RobotProps.GetArmProps().GetRotaryProps().PotentiometerOffset;
+			//Now to compute the result... we start with the normalized value and give it the apprioriate offset and scale
+			//the offset is delegated in script in the final scale units, and the scale is the total range in radians
+			result=PotentiometerRaw_To_Arm;
+			//get scale
+			const Ship_1D_Props &shipprops=m_RobotProps.GetArmProps().GetShip_1D_Props();
+			//SmartDashboard::PutNumber("Arm_ScaleTest",shipprops.MaxRange-shipprops.MinRange);
+			result*=shipprops.MaxRange-shipprops.MinRange;  //compute the total distance in radians
+			//get offset... Note: scale comes first since the offset is of that scale
+			result+=m_RobotProps.GetArmProps().GetRotaryProps().PotentiometerOffset;
 			#else
 			result=(m_Potentiometer.GetPotentiometerCurrentPosition()) + 0.0;
 			#endif
