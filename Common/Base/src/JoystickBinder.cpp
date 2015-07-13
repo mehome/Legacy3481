@@ -315,7 +315,7 @@ inline double JoyStick_Binder::AnalogConversionNormal(double InValue,const Analo
 
 	//Now to restore the sign
 	const double OutValue=(InValue<0.0)?-ValueABS:ValueABS;
-	return key.IsFlipped?-OutValue:OutValue;
+	return OutValue;
 }
 
 void JoyStick_Binder::UpdateJoyStick(double dTick_s)
