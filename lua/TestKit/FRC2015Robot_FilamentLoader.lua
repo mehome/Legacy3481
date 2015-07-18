@@ -285,11 +285,13 @@ MainRobot = {
 	controls =
 	{
 		slotlist = {slot_1="airflo"},
+		--slotlist = {slot_1="logitech dual action",slot_2="airflo"},
 		--field_centric_x_axis_threshold=0.40,
 		--tank_steering_tolerance=0.05,
 		Joystick_1 =
 		{
 			control = "airflo",
+			axis_count = 4,
 			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
@@ -298,7 +300,7 @@ MainRobot = {
 			--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			Joystick_SetCurrentSpeed_2 = {type="joystick_dual_analog", key_1=0, key_2=1 , is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			Joystick_SetCurrentSpeed_2 = {type="joystick_dual_analog", key_1=0, key_2=1, center_point_idle=false , is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--FieldCentric_Enable = {type="joystick_button", key=4, on_off=false},
@@ -336,6 +338,7 @@ MainRobot = {
 		Joystick_2 =
 		{
 			control = "logitech dual action",
+			axis_count = 5,
 			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
