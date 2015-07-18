@@ -41,7 +41,7 @@ class SetUp_Manager
 				script.NameMap["EXISTING_ENTITIES"] = "EXISTING_SHIPS";
 				m_RobotProps.SetUpGlobalTable(script);
 				m_RobotProps.LoadFromScript(script);
-				m_Joystick.SetSlotList(m_RobotProps.Get_RobotControls().GetDriverStation_SlotList());
+				m_Joystick.SetSlotList(m_RobotProps.Get_RobotControls());
 				m_pRobot->Initialize(m_EventMap,&m_RobotProps);
 			}
 			//The script must be loaded before initializing control since the wiring assignments are set there
