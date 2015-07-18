@@ -221,8 +221,14 @@ class COMMON_API LUA_Controls_Properties
 		{
 			std::vector<Controller_Element_Properties> EventList;
 			std::string Controller;
+			size_t AxisCount; //Optional axis count for roboRIO code to avoid warning
+			bool operator==(const std::string &rhs) const {return Controller==rhs;}
+			//just as a backup... the other is cleaner
+			//bool operator==(const char *rhs) const {return strcmp(rhs,Controller.c_str())==0;}
 		};
 		typedef std::vector<Control_Props> Controls_List;
+		typedef Controls_List::iterator Controls_List_iter;
+
 		typedef std::vector<std::string> DriverStation_Slot_List;
 	private:
 		//Return if element was successfully created (be sure to check as some may not be present)

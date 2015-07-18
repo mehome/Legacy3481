@@ -251,6 +251,7 @@ void LUA_Controls_Properties::LoadFromScript(Scripting::Script& script)
 	const char * Events;
 	while ( Controls="Joystick_",Controls+=itoa(i++,Buffer,10) ,	(err = script.GetFieldTable(Controls.c_str()))==NULL)
 	{
+		size_t AxisCount=6;
 		Control_Props control;
 		#ifndef Robot_TesterCode
 		//We can use the product name if we provided the slot list... testing only if we used a slot list
@@ -297,6 +298,11 @@ void LUA_Controls_Properties::LoadFromScript(Scripting::Script& script)
 		#else
 		err=script.GetField("control", &control.Controller, NULL, NULL);
 		#endif
+
+		double fTest;
+		err=script.GetField("axis_count", NULL, NULL, &fTest);
+		if (!err)
+			AxisCount=(size_t)fTest;
 		//ensure the controller is lower case
 		std::transform(control.Controller.begin(),control.Controller.end(),control.Controller.begin(),tolower);
 		j=0;
@@ -307,6 +313,7 @@ void LUA_Controls_Properties::LoadFromScript(Scripting::Script& script)
 			if (!err)
 				control.EventList.push_back(element);
 		}
+		control.AxisCount=AxisCount;
 		m_Controls.push_back(control);
 		script.Pop();
 	}
