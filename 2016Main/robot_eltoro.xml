@@ -1,0 +1,111 @@
+<Version version="2.16"/>
+<Comment comment="Configured for roboRio deployment."/>
+
+<!-- Contains assignments to ports and robot dimensions -->
+<Robot>
+
+<!-- All vector 888 assignments -->
+<Victors>
+<!-- Drive train assignments -->
+	<DriveTrain>
+		<rightDrive_1 channel="0" reversed="false"/>
+		<rightDrive_2 channel="1" reversed="false"/>
+		<leftDrive_1 channel="2" reversed="false"/>
+		<leftDrive_2 channel="3" reversed="false"/>
+		<kickerWheel channel="4" reversed="false"/>
+	</DriveTrain>
+
+<!--  Arm assignments 2015 robot -->
+	<Extra>
+		<lift_1 channel="6" reversed="false"/>
+		<lift_2 channel="7" reversed="false"/>
+	</Extra>	
+
+</Victors>
+
+<!-- Encoder locations -->
+<Encoders>
+	<!--<driveDrive aChannel="4" bChannel="6"/>-->
+</Encoders>
+
+<!-- Double solenoid locations-->
+<Solenoids>
+	<gearShift positiveFlow="1" negativeFlow="0"/>
+	<manipulator  positiveFlow="2" negativeFlow="3"/>
+    <wings positiveFlow="4" negativeFlow="5"/>
+</Solenoids>
+
+<!--  Digital input/outputs -->
+<DI>
+	<!-- for CRIO use only <compressorSwitch channel="0"/>-->
+</DI>
+
+<DO>
+	<beaconOne channel="1"/>
+	<beaconTwo channel="2"/>
+	<beaconOffState channel="3"/>
+</DO>
+
+<!-- Analog input/outputs -->
+<AIO>
+	
+</AIO>
+
+<Relays>
+	<!--for CRIO use only <Compressor relay="1"/>-->
+</Relays>
+
+</Robot>
+
+
+<!-- Control assignments -->
+<Controls>
+<!-- Polarity assigns direction 1=positive -1=negative -->
+<!-- 0 = false 1 = true-->
+
+	<!-- Driver assignments -->
+	<Driver>
+	
+		<!-- 0=Tank, 1=Arcade -->
+		<driveType type="0"/>
+		
+		<slot controllerSlot="0"/>
+		
+		<!-- fit values are linear=0, quadratic=1, exponential=2, and poly=3 -->
+		<drive driveFit="0" power="3"/>
+	
+		<!-- breakIntensity: lower number = more intense -->	
+		<break_mode breakMode="1" breakTime=".05" breakIntensity=".2"/>
+		 
+		<!-- Drive acceleration -->
+		<acceleration accelerationFactor=".5"/>
+		
+		<leftPower powerMultiplier="1"/>
+		<rightPower powerMultiplier="1"/>
+		
+		<!-- Tank -->
+		<left_drive axis="1" polarity="1" deadZone=".4"/>
+		<right_drive axis="5" polarity="1" deadZone=".4"/>
+		
+		<!-- Arcade -->
+		<drivex axis="0" polarity="1" deadZone=".4"/>
+		<turning axis="1" polarity="1" deadZone=".4"/>
+		
+		<!-- Kicker -->
+		<left_kicker axis="2" polarity="1" deadZone=".4"/>
+		<right_kicker axis="3" polarity="-1" deadZone=".4"/>
+		
+
+	</Driver>
+
+	<!-- Operator assignments -->
+	<Operator>
+		<slot controllerSlot="1"/>
+		<arm axis="0" polarity="1" deadZone=".2" powerMultiplier=".7"/>
+		<manipulator toggle="6"/>
+		<wings toggle="5"/>
+		<redMode toggle="1"/>
+		<blueMode toggle="2"/>
+	</Operator>
+</Controls>
+
