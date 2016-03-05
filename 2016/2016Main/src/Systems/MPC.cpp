@@ -1,9 +1,7 @@
-/*
- * MPC.cpp
- *
- *  Created on: 3 Jan 2016
- *      Author: cooper.ryan
- */
+/****************************** Header ******************************\
+Author(s):	Ryan Cooper
+Email:	cooper.ryan@centaurisoftware.co
+\*********************************************************************/
 
 #include "MPC.h"
 #include "WPILib.h"

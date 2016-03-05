@@ -30,6 +30,7 @@ namespace Systems {
 class Drive final
 {
 public:
+		bool enabled = true;
 	    enum DriveOrientation//!< Defines the orientation of a victor.
 		{
 			left=0,//!< Left side of the drive train.
@@ -47,12 +48,12 @@ public:
 		void CheckButtons();//!< Checks to see if any buttons defined in the driver config have been pressed.
 		void RightStop();//!< Stops the right side.
 		virtual ~Drive();//!< Virtual deconstructor.
+	    void Kill(){ enabled = false; }
 		void SetLowPowerMode(bool val) { isLowPowerMode=val; };//!< Sets the private low power flag to put the drive train into a power conserving state.
 		void AddVictor(int, DriveOrientation);//!< Adds a victor with numeral and drive orientation identifiers.
 		void SetLeftDrive(double, bool rev=true);//!< Sets the left side of the drive train to a value <=1, also if it should rev upto speed.
 		void SetRightDrive(double, bool rev=true);//!< Sets the right side of the drive train to a value <=1, also if it should rev upto speed.
 		void SetKicker(double, int);//!< Sets the kicker to a value <=1.
-
 		void Initialize() __attribute__((deprecated(UNBOUNDED)));//!< Initializes the setup and main loop of the drive system.
 
 

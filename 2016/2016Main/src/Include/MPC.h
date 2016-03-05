@@ -1,9 +1,13 @@
-/*
- * MPC.h
- *
- *  Created on: 3 Jan 2016
- *      Author: cooper.ryan
- */
+/****************************** Header ******************************\
+Class Name:  MPC
+Summary: 	 Model Predictive Control class
+Project:     FRC2016
+Copyright (c) BroncBotz.
+All rights reserved.
+
+Author(s):	Ryan Cooper
+Email:	cooper.ryan@centaurisoft.org
+\***************************************************************************/
 
 #ifndef SRC_INCLUDE_MPC_H_
 #define SRC_INCLUDE_MPC_H_

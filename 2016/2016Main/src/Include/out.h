@@ -1,9 +1,13 @@
-/*
- * out.h
- *
- *  Created on: 26 Oct 2015
- *      Author: cooper.ryan
- */
+/****************************** Header ******************************\
+Class Name:  Out
+Summary: 	 Stream redirector to cout and Log.
+Project:     FRC2016
+Copyright (c) BroncBotz.
+All rights reserved.
+
+Author(s):	Ryan Cooper
+Email:	cooper.ryan@centaurisoft.org
+\***************************************************************************/
 
 #ifndef SRC_INCLUDE_OUT_H_
 #define SRC_INCLUDE_OUT_H_

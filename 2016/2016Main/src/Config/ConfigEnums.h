@@ -1,9 +1,12 @@
-/*
- * ConfigEnums.h
- *
- *  Created on: 2 Jan 2016
- *      Author: cooper.ryan
- */
+/****************************** Header ******************************\
+Summary: 	 Contains enumerations for holding configuration values
+Project:     FRC2016
+Copyright (c) BroncBotz.
+All rights reserved.
+
+Author(s):	Ryan Cooper
+Email:	cooper.ryan@centaurisoft.org
+\*********************************************************************/
 
 #ifndef SRC_CONFIG_CONFIGENUMS_H_
 #define SRC_CONFIG_CONFIGENUMS_H_

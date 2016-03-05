@@ -1,8 +1,13 @@
 /****************************** Header ******************************\
- *
- *  Created on: 2 Jan 2016
- *      Author: cooper.ryan
- */
+Class Name:  Config
+Summary: 	 Handles the entire configuration for the robot
+Project:     FRC2016
+Copyright (c) BroncBotz.
+All rights reserved.
+
+Author(s):	Ryan Cooper
+Email:	cooper.ryan@centaurisoft.org
+\***************************************************************************/
 
 #ifndef SRC_INCLUDE_CONFIG_H_
 #define SRC_INCLUDE_CONFIG_H_
@@ -11,12 +16,13 @@
 #include <vector>
 #include <WPILib.h>
 
-#include "CommonName.h"
-#include "ConfigStructs.h"
-#include "ConfigEnums.h"
+#include "out.h"
 #include "pugixml.h"
 #include "Preproc.h"
-#include "out.h"
+#include "CommonName.h"
+#include "ControlName.h"
+#include "ControlItem.h"
+#include "ConfigStructs.h"
 
 using namespace pugi;
 using namespace std;
@@ -31,6 +37,7 @@ namespace Configuration
 	public:
 		bool IsLoaded();//!< Returns whether the config has loaded or not.
 		void Load(const char*);//!< Loads the configuration from XML markup.
+		void BuildControlSchema();
 
 		static Config* Instance();//!< Returns the instance of the config singleton.
 		 ~Config(){ instanceFlag = false; };//!< Deconstructor that sets the instance flag to false.
@@ -41,6 +48,7 @@ namespace Configuration
 		vector<VictorItem> Victors;//!< Collection of all Victors.
 		vector<EncoderItem> Encoders;//!< Collection of all Encoders.
 		vector<SolenoidItem> Solenoids;//!< Collection of all Solenoids.
+		vector<ControlItem*> Controls;//!< Collection of all ControlItems.
 
 		DrivePower _DrivePower;//!< Defines the DrivePower.
 		DriverConfig _DriverConfig;//!< Defines the Driver's configuration.
@@ -52,6 +60,7 @@ namespace Configuration
 		DigitalOutput *GetDOutput(CommonName name);//!< Searches for a digital output device that has been allocated by the config, returns the device if found.
 		SolenoidItem *GetSolenoid(CommonName name);//!< Searches for a double solenoid that has been allocated by the config, returns the solenoid if found.
 		Encoder *GetEncoder(CommonName name);//!< Searches for a Encoder that has been allocated by the config, returns the Encoder if found.
+		ControlItem *GetControlItem(ControlName name);//!< Searches for a ControlItem that has been allocated by the config, returns the Control if found.
 
 		bool QuickLoad(){return quickLoad;}
 	private:

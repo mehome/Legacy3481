@@ -1,7 +1,8 @@
 /****************************** Header ******************************\
 Author(s):	Ryan Cooper
-Email:	cooper.ryan@centaurisoft.org
+Email:	cooper.ryan@centaurisoftware.co
 \*********************************************************************/
+
 #include "Beacon.h"
 #include "Config.h"
 

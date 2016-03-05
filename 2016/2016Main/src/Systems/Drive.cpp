@@ -1,6 +1,7 @@
 /****************************** Header ******************************\
-Author(s):	Ryan Cooper
-Email:	cooper.ryan@centaurisoft.org
+Author(s):	Ryan Cooper, Dylan Watson, Sophie He
+Email:	cooper.ryan@centaurisoft.org, dylantrwatson@gmail.com,
+		binru.he@centaurisoftware.co
 \*********************************************************************/
 
 #include <WPILib.h>
@@ -8,6 +9,7 @@ Email:	cooper.ryan@centaurisoft.org
 #include "Drive.h"
 #include "Preproc.h"
 #include "DrivingFits.h"
+#include "ControlItem.h"
 #include "ConfigEnums.h"
 #include "ConfigStructs.h"
 
@@ -42,6 +44,7 @@ case DrivePower::sixCIM:
 }
 
 driver = new Joystick(driverConfig.controllerSlot);
+config->GetControlItem(ControlName::gearShift())->SetController(driver);
 
 	if(driverConfig.driveFit==DriveFit::linear)
 		driveFit=linearValueEstimator;
@@ -58,6 +61,7 @@ void Drive::Initialize()
 		d=&Drive::Tank;
 	else
 		d=&Drive::Arcade;
+
 	for(;;)
 	{
 		p_invert = invert;
@@ -191,12 +195,10 @@ void Drive::FullStop()
 
 void Drive::CheckButtons()
 {
-	if(driver->GetRawButton(driverConfig.shift_Hight))
-		config->GetSolenoid(CommonName::gearShift())->Set(DoubleSolenoid::kForward);
-	else if(driver->GetRawButton(driverConfig.shift_Low))
-			config->GetSolenoid(CommonName::gearShift())->Set(DoubleSolenoid::kReverse);
 
-	if(invertCheck && invert)
+	config->GetControlItem(ControlName::gearShift())->Update();
+
+	/*if(invertCheck)
 	{
 		if(flipper)
 		{
@@ -204,15 +206,15 @@ void Drive::CheckButtons()
 			driverConfig.leftAxis = driverConfig.rightAxis;
 			driverConfig.rightAxis = tmp;
 			flipper = false;
+
+			for(unsigned int i=0; i<leftDriveVictors.size();i++)
+				(*leftDriveVictors[i]).ReverseDirection();
+
+			for(unsigned i=0; i<rightDriveVictors.size();i++)
+				(*rightDriveVictors[i]).ReverseDirection();
 		}
-
-		for(unsigned int i=0; i<leftDriveVictors.size();i++)
-			(*leftDriveVictors[i]).ReverseDirection();
-
-		for(unsigned i=0; i<rightDriveVictors.size();i++)
-			(*rightDriveVictors[i]).ReverseDirection();
 	}
-	else if(!invertCheck && invert)
+	else
 	{
 		if(!flipper)
 		{
@@ -220,14 +222,14 @@ void Drive::CheckButtons()
 			driverConfig.leftAxis = driverConfig.rightAxis;
 			driverConfig.rightAxis = tmp;
 			flipper = true;
+
+			for(unsigned int i=0; i<leftDriveVictors.size();i++)
+				(*leftDriveVictors[i]).RestoreDirection();
+
+			for(unsigned i=0; i<rightDriveVictors.size();i++)
+				(*rightDriveVictors[i]).RestoreDirection();
 		}
-
-		for(unsigned int i=0; i<leftDriveVictors.size();i++)
-			(*leftDriveVictors[i]).RestoreDirection();
-
-		for(unsigned i=0; i<rightDriveVictors.size();i++)
-			(*rightDriveVictors[i]).RestoreDirection();
-	}
+	}*/
 
 }
 
@@ -293,6 +295,18 @@ double Drive::RightDrivePassthrough(double p_in)
 	return driveFit(p_in, driverConfig.rightDeadZone, driverConfig.polynomialFitPower);
 }*/
 
-Drive::~Drive() { }
+Drive::~Drive()
+{
+	delete driver;
+
+	for(unsigned int i=0; i<leftDriveVictors.size();i++)
+			delete leftDriveVictors[i];
+
+	for(unsigned int i=0; i<rightDriveVictors.size();i++)
+				delete rightDriveVictors[i];
+
+	delete kickerWheel;
+	delete config;
+}
 
 } /* namespace Systems */

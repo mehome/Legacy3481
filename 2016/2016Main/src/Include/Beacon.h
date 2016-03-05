@@ -1,9 +1,13 @@
-/*
- * Beacon.h
- *
- *  Created on: 2 Jan 2016
- *      Author: cooper.ryan
- */
+/****************************** Header ******************************\
+Class Name:  Beacon
+Summary: 	 Runs a mode beacon
+Project:     FRC2016
+Copyright (c) BroncBotz.
+All rights reserved.
+
+Author(s):	Ryan Cooper
+Email:	cooper.ryan@centaurisoft.org
+\***************************************************************************/
 
 #ifndef SRC_INCLUDE_BEACON_H_
 #define SRC_INCLUDE_BEACON_H_

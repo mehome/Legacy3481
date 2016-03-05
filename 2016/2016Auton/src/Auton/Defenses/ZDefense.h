@@ -11,9 +11,9 @@
 
 class ZDefense : BaseDefense{
 public:
-	ZDefense();
+	ZDefense(){};
 	virtual ~ZDefense();
-	void Start();
+	virtual void Start();
 };
 
 #endif /* SRC_AUTON_DEFENSES_ZDEFENSE_H_ */

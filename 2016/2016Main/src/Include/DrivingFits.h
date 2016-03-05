@@ -1,9 +1,13 @@
-/*
- * DrivingFits.h
- *
- *  Created on: 11 Feb 2016
- *      Author: cooper.ryan
- */
+/****************************** Header ******************************\
+Summary: 	 Contains static methods for making proportional
+				curves from joystick and deadzone
+Project:     FRC2016
+Copyright (c) BroncBotz.
+All rights reserved.
+
+Author(s):	Ryan Cooper
+Email:	cooper.ryan@centaurisoft.org
+\***************************************************************************/
 
 #ifndef SRC_INCLUDE_DRIVINGFITS_H_
 #define SRC_INCLUDE_DRIVINGFITS_H_

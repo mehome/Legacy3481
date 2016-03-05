@@ -9,11 +9,11 @@
 #define SRC_AUTON_DEFENSES_YDEFENSE_H_
 #include "BaseDefense.h"
 
-class YDefense : BaseDefense {
+class YDefense : BaseDefense{
 public:
-	YDefense();
+	YDefense(){};
 	virtual ~YDefense();
-	void Start();
+	virtual void Start();
 };
 
 #endif /* SRC_AUTON_DEFENSES_YDEFENSE_H_ */

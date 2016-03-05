@@ -56,6 +56,9 @@ public:
 	static inline CommonName BeaconSignalOne() { return CommonName("beaconOne"); }
 	static inline CommonName BeaconSignalTwo() { return CommonName("beaconTwo"); }
 	static inline CommonName BeaconSignalThree() { return CommonName("beaconOffState"); }
+
+	static inline CommonName ClimberLimitUp() { return CommonName("climberLimitUp"); }
+	static inline CommonName ClimberLimitDown() { return CommonName("climberLimitDown"); }
 private:
 	string name; //!< Private string that stores the name of the linked device.
 

@@ -50,27 +50,28 @@ static inline void fullStop()
 	stopLeftDrive();
 }
 
-class Auton
-{
-private:
-	AHRS *ahrs;
-	Ultrasonic *ultra;
-
-	XDefense xDefense();
-	YDefense yDefense();
-	ZDefense zDefense();
-
+class Auton{
 
 public:
+		AHRS *ahrs;
+		Ultrasonic *ultra;
+
+		XDefense *xDefense;
+		YDefense *yDefense;
+		ZDefense *zDefense;
+
 	Auton()
     {
 		try { ahrs = new AHRS(SPI::Port::kMXP); }
-		catch (std::exception ex )
+		catch (...)
 		{
 			std::string err_string = "Error instantiating navX MXP:  ";
-			err_string += ex.what();
 			DriverStation::ReportError(err_string.c_str());
 		}
+
+		xDefense = new XDefense();
+		yDefense = new YDefense();
+		zDefense = new ZDefense();
 
 		// Ports for Ultrasonic (InputWire, OutputWire)
 		ultra = new Ultrasonic(8,9);

@@ -1,9 +1,14 @@
-/*
- * Sensing.h
- *
- *  Created on: 3 Jan 2016
- *      Author: cooper.ryan
- */
+/****************************** Header ******************************\
+Class Name:  Sensing
+Summary: 	 Controls sensors and how to robot responds to them
+Project:     FRC2016
+Copyright (c) BroncBotz.
+All rights reserved.
+
+Author(s):	Ryan Cooper
+Email:	cooper.ryan@centaurisoft.org
+\*********************************************************************/
+
 
 #ifndef SRC_INCLUDE_SENSING_H_
 #define SRC_INCLUDE_SENSING_H_
@@ -29,7 +34,7 @@ private:
 
 public:
 	Sensing(){}//!< Default constructor.
-    virtual ~ Sensing(){} //!< Destructor.
+    ~Sensing(){} //!< Destructor.
 	void Initialize() __attribute__((deprecated(UNBOUNDED)));//!< Initialises the mainLoop for the sensing system.
 };
 

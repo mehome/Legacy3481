@@ -1,4 +1,5 @@
-<Version version="2.5"/>
+<RobotConfig>
+<Version version="3"/>
 <Comment comment="Configured for roboRio deployment."/>
 
 <!-- Absolutely do not change QuickLoad to true, only Ryan should do this. -->
@@ -10,21 +11,21 @@
 <Victors>
 <!-- Drive train assignments -->
 	<DriveTrain>
-		<rightDrive_1 channel="0" reversed="false"/>
-		<rightDrive_2 channel="1" reversed="false"/>
+		<rightDrive_1 channel="0" reversed="true"/>
+		<rightDrive_2 channel="1" reversed="true"/>
 		<!--<rightDrive_3 channel="2" reversed="false"/>-->
 		<leftDrive_1 channel="2" reversed="false"/>
-		<leftDrive_2 channel="3" reversed="false"/>
+		<leftDrive_2 channel="3" reversed="true"/>
 		<!--<leftDrive_3 channel="5" reversed="false"/>-->
 	</DriveTrain>
 
 	<Extra>
-		<climber_1 channel="6" reversed="false"/>
-		<climber_2 channel="7" reversed="false"/>
+		<climber_1 channel="6" reversed="true"/>
+		<climber_2 channel="7" reversed="true"/>
 	 	<indexerMotor channel="10" reversed="false"/>
 		<intakeMotor channel="11" reversed="false"/>
-		<shooter_1 channel="8" reversed="true"/>
-		<shooter_2 channel="9" reversed="false"/>
+		<shooter_1 channel="8" reversed="false"/>
+		<shooter_2 channel="9" reversed="true"/>
 	</Extra>	
 
 </Victors>
@@ -40,15 +41,18 @@
 <!-- Double solenoid locations-->
 <Solenoids>
 	<gearShift forward="0" reverse="1" default="forward"/>
-	<intakeShift forward="2" reverse="3" default="forward"/>
-	<shooterShift forward="4" reverse="5" default="forward"/>
-	<climberShift forward="6" reverse="7" default="reverse"/>
+	<intakeShift forward="2" reverse="3" default="off"/>
+	<shooterShift forward="4" reverse="5" default="off"/>
+	<climberShift forward="6" reverse="7" default="off"/>
 
 </Solenoids>
 
-<!--  Digital input/outputs -->
+<!--  Digital input/outputs !!!!NOTE!!!! DI and DO are on the same line ad the Encoders -->
+<!--  so DO NOT have matching channel numbers, that allocated drifferent resources in the same spot.-->
 <DI>
 	<!-- for CRIO use only <compressorSwitch channel="0"/>-->
+	<climberLimitUp channel="6"/>
+	<climberLimitDown channel="7"/>
 </DI>
 
 <DO>
@@ -81,7 +85,7 @@
 		<slot controllerSlot="0"/>
 		
 		<!-- fit values are linear=0, quadratic=1, exponential=2, and poly=3 -->
-		<drive driveFit="0" power="3"/>
+		<drive driveFit="2" power="3"/>
 		 
 		<!-- Drive acceleration -->
 		<acceleration accelerationFactor=".1"/>
@@ -90,8 +94,8 @@
 		<rightPower powerMultiplier="1"/>
 		
 		<!-- Tank -->
-		<left_drive axis="5" polarity="1" deadZone=".05"/>
-		<right_drive axis="1" polarity="1" deadZone=".05"/>
+		<left_drive axis="1" polarity="1" deadZone=".05"/>
+		<right_drive axis="5" polarity="1" deadZone=".05"/>
 		
 		<!-- Arcade -->
 		<drivex axis="0" polarity="1" deadZone=".4"/>
@@ -101,10 +105,9 @@
 		<left_kicker axis="2" polarity="1" deadZone=".4"/>
 		<right_kicker axis="3" polarity="-1" deadZone=".4"/>
 		
-		<shift_High button="8"/>
-		<shift_Low button="7"/>
+		<shiftGear button="6"/>
 		
-		<reverse button_a="5" button_b="6"/>
+		<reverse button_a="7" button_b="8"/>
 		
 
 	</Driver>
@@ -113,14 +116,15 @@
 	<Operator>
 		<slot controllerSlot="1"/>
 		<intake inButton="2" outButton="1" polarity="1" powerMultiplier="1"/>
-		<indexer axis="3" polarity="1" powerMultiplier="1"/>
-		<shooter axis="2" polarity="1" powerMultiplier=".75"/>
-		<climber upButton="4" downButton="3" polarity="1" powerMultiplier=".5"/>
+		<indexer inButton="4" outButton="3" polarity="1" powerMultiplier="1"/>
+		<!-- <indexer axis="5" deadZone="0" polarity="1" powerMultiplier="1"/> -->
+		<shooter axis="3" deadZone="0" polarity="1" powerMultiplier="1"/>
+		<climber axis="1" deadZone=".15" polarity="-1" powerMultiplier="1"/>
 		
-		<climber_shift button ="6"/>
+		<climber_shift button ="5"/>
 		<intake_shift button ="7"/>
-		<shooter_shift button ="8"/>
+		<shooter_shift button ="6"/>
 		
 	</Operator>
 </Controls>
-
+</RobotConfig>

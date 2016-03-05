@@ -1,12 +1,13 @@
 /****************************** Header ******************************\
 Author(s):	Ryan Cooper
-Email:	cooper.ryan@centaurisoft.org
+Email:	cooper.ryan@centaurisoftware.co
 \*********************************************************************/
-#include <string>
+
 #include <ctime>
-#include <iostream>
-#include <fstream>
 #include <cstdio>
+#include <string>
+#include <fstream>
+#include <iostream>
 
 #include "Log.h"
 

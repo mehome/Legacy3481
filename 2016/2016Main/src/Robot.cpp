@@ -44,7 +44,9 @@ using namespace std;
 using namespace Systems;
 using namespace Configuration;
 
-#define VERSION 26 //!< Defines the program version for the entire program.
+
+#define VERSION 27 //!< Defines the program version for the entire program.
+#define REVISION "D" //!< Defines the revision of this version of the program.
 
 /*! BroncBotz class is the entry point of the program (where WPILib sends it's calls for
  *  robot control, operation, auton, test etc. */
@@ -77,8 +79,8 @@ public:
 			Log::Instance().DestroyLog();
 			Log::Instance().SetLog_SetLongLog("/log.txt", "/long_log.txt");
 
-			Log::Instance().Append("Program Version: " + VERSION);
-			cout << "Program Version: " << VERSION << endl;
+			Log::Instance().Append("Program Version: " + VERSION );
+			cout << "Program Version: " << VERSION << " Revision: " << REVISION << endl;
 
 			ifstream infile(configFile);
 			if(infile.good())
@@ -91,6 +93,7 @@ public:
 
 			config = Config::Instance();
 			config->Load(configFile);
+			config->BuildControlSchema();
 		}
 
 		void Autonomous()
@@ -133,10 +136,10 @@ public:
 					}
 
 			//clean-up
-			//delete sensing;
-			//delete operation;
-			//delete drive;
-			//assert("Safety reboot.");//fixes the twitching bug, something is wrong in memory somewhere, so we are restarting the program.
+			delete sensing;
+			delete operation;
+			delete drive;
+			//assert(0);//fixes the twitching bug, something is wrong in memory somewhere, so we are restarting the program.
 			SystemsCollection::Instance().Reset();
 		}
 
