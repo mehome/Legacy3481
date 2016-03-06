@@ -40,3 +40,5 @@ From this... our dashboard with show the black with the square... use the pov ha
 
 The robot can programatically write to determine the sequence and if it is targeting... so auton can use sequence 2, while teleop can use sequence 1.  The POV can be disabled for competition if necessary, by the settings in Compositor_Main.lua.  Note: some of the other joystick controls in there only are used when in edit mode, only the POV is always active.
 
+One other thing worth mentioning... I'd recommend reading Main_Is_Targeting to control when to turn on the ring lights... in testing at home these get hot and drain the battery.  It probably will be fine in competition, but during practice it may really help make a difference... it also can help you determine if it is in the right sequence and that it is turned on during auton.
+
