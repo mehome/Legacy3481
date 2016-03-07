@@ -235,6 +235,22 @@
 			<File
 				RelativePath=".\VisionAerialAssistGoalTracker.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\VisionBallTracker.cpp"
@@ -243,9 +259,45 @@
 			<File
 				RelativePath=".\VisionGoalTracker.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\VisionRinTinTinTracker.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\VisionStrongholdGoalTracker.cpp"
 				>
 			</File>
 		</Filter>
@@ -292,6 +344,10 @@
 			</File>
 			<File
 				RelativePath=".\VisionRinTinTinTracker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VisionStrongholdGoalTracker.h"
 				>
 			</File>
 		</Filter>

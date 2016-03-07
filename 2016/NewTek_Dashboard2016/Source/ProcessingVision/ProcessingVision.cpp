@@ -3,9 +3,10 @@
 #include "../FrameWork/FrameWork.h"
 #include "ProcessingVision.h"
 #include "NI_VisionProcessingBase.h"
-#include "VisionGoalTracker.h"
-#include "VisionRinTinTinTracker.h"
-#include "VisionAerialAssistGoalTracker.h"
+//#include "VisionGoalTracker.h"
+//#include "VisionRinTinTinTracker.h"
+//#include "VisionArialAssistTracker.h"
+#include "VisionStrongholdGoalTracker.h"
 #include "VisionBallTracker.h"
 
 //#define __Using_UDP__
@@ -64,7 +65,8 @@ Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double 
 	if( g_pTracker[SelectedTracker] == NULL )
 	{
 		if( SelectedTracker == eGoalTracker )
-			g_pTracker[eGoalTracker] = new VisionAerialAssistGoalTracker();
+			g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
+//			g_pTracker[eGoalTracker] = new VisionAerialAssistGoalTracker();
 //		if( SelectedTracker == eFrisbeTracker )
 //			g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker();
 		if( SelectedTracker == eBallTracker )
@@ -228,7 +230,8 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 				if( g_pTracker[SelectedTracker] == NULL )
 					SelectedTracker = PendingTracker;
 				if( PendingTracker == eGoalTracker )
-					g_pTracker[eGoalTracker] = new VisionAerialAssistGoalTracker();
+					g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
+//					g_pTracker[eGoalTracker] = new VisionAerialAssistGoalTracker();
 //				if( PendingTracker == eFrisbeTracker )
 //					g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
 				if( PendingTracker == eBallTracker )
@@ -311,7 +314,8 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 	if( g_pTracker[PendingTracker] == NULL )
 	{
 		if( PendingTracker == eGoalTracker )
-			g_pTracker[eGoalTracker] = new VisionAerialAssistGoalTracker();
+			g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
+//			g_pTracker[eGoalTracker] = new VisionAerialAssistGoalTracker();
 //		if( PendingTracker == eFrisbeTracker )
 //			g_pTracker[eFrisbeTracker] = new VisionRinTinTinTracker(); 
 		if( PendingTracker == eBallTracker )
