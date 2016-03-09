@@ -387,15 +387,25 @@ int VisionTracker::GetParticles(Image* image, int connectivity, ParticleList& pa
 			}
 		}
 
-		if(status == eOK && particleList.area_threshold > 0)
+		if(status == eOK && particleList.area_thresholdMin > 0)
 		{
 			// particle area
 			VisionErrChk(imaqMeasureParticle(image, i, FALSE, IMAQ_MT_AREA, &area));
 
 			// if particle area fills too much bounding area enough skip it.
-			if( bound_area > 0 && (area / bound_area < particleList.area_threshold) )
+			if( bound_area > 0 && (area / bound_area < particleList.area_thresholdMin) )
 			{
-				DOUT("rejected - area ratio %f < threshold %f\n", area / bound_area, particleList.area_threshold);
+				DOUT("rejected - area ratio %f < threshold %f\n", area / bound_area, particleList.area_thresholdMin);
+				status = eAreaFail;
+			}
+		}
+
+		if(status == eOK && particleList.area_thresholdMax > 0)
+		{
+			// if particle area fills too little bounding area enough skip it.
+			if( bound_area > 0 && (area / bound_area > particleList.area_thresholdMax) )
+			{
+				DOUT("rejected - area ratio %f > threshold %f\n", area / bound_area, particleList.area_thresholdMax);
 				status = eAreaFail;
 			}
 		}
@@ -460,8 +470,6 @@ Error:
 int VisionTracker::FindParticleCorners(Image* image, ParticleList& particleList)
 {
 	int success = 1;
-
-	float area_threshold = 0.8f;
 
 	for(int i=0; i < particleList.numParticles; i++ )
 	{
