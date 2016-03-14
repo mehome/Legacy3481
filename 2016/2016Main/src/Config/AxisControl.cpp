@@ -12,8 +12,17 @@ void AxisControl::Update()
 	double raw = joy->GetRawAxis(axis);
 
 	if(raw > deadzone || raw < -deadzone)
-		setVictors(linearValueEstimator(raw, deadzone)*polarity);
+	{
+		if(raw > deadzone && !onlyReverse)
+			setVictors(linearValueEstimator(raw, deadzone)*polarity);
+		else if(raw < -deadzone && !onlyForward)
+			setVictors(linearValueEstimator(raw, deadzone)*polarity);
+		isRunning = true;
+	}
 	else
+	{
 		setVictors(0);
+		isRunning = false;
+	}
 
 }

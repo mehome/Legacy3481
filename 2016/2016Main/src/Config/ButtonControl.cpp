@@ -11,22 +11,36 @@ void ButtonControl::Update()
 {
 	if(!isPneumatic)
 	{
-		if(joy->GetRawButton(button_A))
+		if(joy->GetRawButton(button_A) && !onlyReverse)
+		{
 			setVictors(multiplier);
-		else if(joy->GetRawButton(button_B))
+			isRunning = true;
+		}
+		else if(joy->GetRawButton(button_B) && !onlyForward)
+		{
 			setVictors(-multiplier);
-		else setVictors(0);
+			isRunning = true;
+		}
+		else
+		{
+			setVictors(0);
+			isRunning = false;
+		}
 	}
 	else
 	{
 		if(joy->GetRawButton(button_A))
 		{
 			setSolenoids(DoubleSolenoid::kForward);
+			isRunning = true;
 		}
 		else if(joy->GetRawButton(button_B))
 		{
 			setVictors(DoubleSolenoid::kReverse);
+			isRunning = true;
 		}
+		else
+			isRunning = false;
 
 	}
 }

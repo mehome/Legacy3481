@@ -44,6 +44,17 @@ static inline void stopRightDrive(){
 		Config::Instance()->GetVictor(CommonName::rightDrive_3())->Stop();
 }
 
+static inline void setShooter(double valInput)
+{
+	Config::Instance()->GetVictor(CommonName::shooter_1())->Set(valInput);
+	Config::Instance()->GetVictor(CommonName::shooter_2())->Set(valInput);
+}
+
+static inline void setIntake(double valInput)
+{
+	Config::Instance()->GetVictor(CommonName::intakeMotor())->Set(valInput);
+}
+
 /*! Interface for autonomous functions to stop the entire drive train.*/
 static inline void fullStop()
 {
@@ -57,6 +68,7 @@ private:
 	AHRS *ahrs;
 	Ultrasonic *ultra;
 public:
+
 	/*! Default constructor that also initialises the AHRS class for the NavX.*/
 	Auton()
     {
@@ -67,10 +79,12 @@ public:
 			err_string += ex.what();
 			DriverStation::ReportError(err_string.c_str());
 		}
-		ultra = new Ultrasonic(8,9);
-		ultra->SetAutomaticMode(true);
+		//ultra = new Ultrasonic(Config::Instance()->GetDOutput(CommonName::UltraSonicOutput()),
+				//Config::Instance()->GetDInput(CommonName::UltraSonicInput()));
+
+		//ultra->SetAutomaticMode(true);
     }
-	void Start();
+	void Start(SampleRobot*);
 };
 
 #endif /* SRC_AUTON_AUTON_H_ */

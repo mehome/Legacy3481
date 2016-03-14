@@ -39,8 +39,22 @@ void Operator::Initialize()
 
 	for(;;)
 	{
-		config->GetControlItem(ControlName::indexer())->Update();
-		config->GetControlItem(ControlName::intake())->Update();
+		if(config->GetAnalogInputDevice(CommonName::IntakePressurePad())->GetAverageVoltage() < 2 ||
+				config->GetControlItem(ControlName::shooter())->IsRunning())
+		{
+			config->GetControlItem(ControlName::indexer())->SetOnlyForward(false);
+			config->GetControlItem(ControlName::intake())->SetOnlyForward(false);
+			config->GetControlItem(ControlName::indexer())->Update();
+			config->GetControlItem(ControlName::intake())->Update();
+		}
+		else
+		{
+			config->GetControlItem(ControlName::indexer())->SetOnlyForward(true);
+			config->GetControlItem(ControlName::intake())->SetOnlyForward(true);
+			config->GetControlItem(ControlName::indexer())->Update();
+			config->GetControlItem(ControlName::intake())->Update();
+		}
+
 		config->GetControlItem(ControlName::climber())->Update();
 		config->GetControlItem(ControlName::shooter())->Update();
 		config->GetControlItem(ControlName::intakeShift())->Update();

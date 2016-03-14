@@ -48,11 +48,14 @@ namespace Configuration
 		vector<VictorItem> Victors;//!< Collection of all Victors.
 		vector<EncoderItem> Encoders;//!< Collection of all Encoders.
 		vector<SolenoidItem> Solenoids;//!< Collection of all Solenoids.
+		vector<AnalogIItem> AnalogInputDevices;//!< Collection of all analog input devices.
+		vector<AnalogOItem> AnalogOutputDevices;//!< Collection of all analog output devices.
 		vector<ControlItem*> Controls;//!< Collection of all ControlItems.
 
 		DrivePower _DrivePower;//!< Defines the DrivePower.
 		DriverConfig _DriverConfig;//!< Defines the Driver's configuration.
 		OperatorConfig _OperatorConfig;//!< Defines the Operator's configuration.
+		RobotParameters _RobotParameters;//!< Defines extra parameters used by the robot program.
 
 		Relay *GetRelay(CommonName name);//!< Searches for a relay that has been allocated by the config, returns the relay if found.
 		VictorItem *GetVictor(CommonName name);//!< Searches for a victor that has been allocated by the config, returns the victor if found.
@@ -61,10 +64,14 @@ namespace Configuration
 		SolenoidItem *GetSolenoid(CommonName name);//!< Searches for a double solenoid that has been allocated by the config, returns the solenoid if found.
 		Encoder *GetEncoder(CommonName name);//!< Searches for a Encoder that has been allocated by the config, returns the Encoder if found.
 		ControlItem *GetControlItem(ControlName name);//!< Searches for a ControlItem that has been allocated by the config, returns the Control if found.
+		AnalogInput *GetAnalogInputDevice(CommonName name);//!< Searches for a Analog input device that has been allocated by the config, returns the device if found.
+		AnalogOutput *GetAnalogOutputDevice(CommonName name);//!< Searches for a Analog input device that has been allocated by the config, returns the device if found.
 
-		bool QuickLoad(){return quickLoad;}
+		bool IsAutonEnabled(){ return autonEnabled; }
+		bool QuickLoad(){ return quickLoad; }
 	private:
 		 Out out;//!< Gets an instance of the out redirector.
+		 bool autonEnabled = false;
 		 bool quickLoad;//!< Boolean to control quick loading mode (not having to restart robot code to apply config changes).
 		 bool loaded;//!< private boolean to set whether the config has loaded correctly.
 		 static Config *single;//!< This is a static instantiation of config for use as a singleton.

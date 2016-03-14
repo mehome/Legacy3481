@@ -57,8 +57,15 @@ public:
 	static inline CommonName BeaconSignalTwo() { return CommonName("beaconTwo"); }
 	static inline CommonName BeaconSignalThree() { return CommonName("beaconOffState"); }
 
+	static inline CommonName UltraSonicInput() { return CommonName("ultraSonicInput"); }
+	static inline CommonName UltraSonicOutput() { return CommonName("ultraSonicOutput"); }
+
 	static inline CommonName ClimberLimitUp() { return CommonName("climberLimitUp"); }
 	static inline CommonName ClimberLimitDown() { return CommonName("climberLimitDown"); }
+
+	static inline CommonName VideoLEDRelay() { return CommonName("videoLEDRelay"); }
+	static inline CommonName IntakePressurePad() { return CommonName("intakePressurePad"); }
+
 private:
 	string name; //!< Private string that stores the name of the linked device.
 

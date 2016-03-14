@@ -28,14 +28,18 @@ namespace Systems {
 class Sensing final
 {
 private:
+	bool ledRingEnabled = false;//!< Used to determine of the led ring is one or off.
 	Out out; //!< Instance of Out for writing to log and screen.
 	//AHRS *ahrs;
 	void mainLoop(); //!< The main loop for the Sensing system.
+	Ultrasonic *ultra;
 
 public:
 	Sensing(){}//!< Default constructor.
     ~Sensing(){} //!< Destructor.
-	void Initialize() __attribute__((deprecated(UNBOUNDED)));//!< Initialises the mainLoop for the sensing system.
+    void EnableLEDRing(){ ledRingEnabled = true; }//!< Turns the led ring on.
+    void DisableLEDRing(){ ledRingEnabled = false; }//!< Turns the led ring off.
+    void Initialize() __attribute__((deprecated(UNBOUNDED)));//!< Initialises the mainLoop for the sensing system.
 };
 
 };

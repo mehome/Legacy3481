@@ -16,6 +16,7 @@ Email:	cooper.ryan@centaurisoftware.co
 #include "ButtonControl.h"
 #include "ToggleControl.h"
 
+#define ROBOT_CONFIG //!< Defines whether or not to load the parameters configuration from the XML, or to use default settings.
 #define DRIVE_CONFIG //!< Defines whether or not to load the driver configuration from the XML, or to use default settings.
 #define OPERATOR_CONFIG //!< Defines whether or not to load the operator configuration from the XML, or to use default settings.
 
@@ -37,6 +38,7 @@ void Config::Load(const char* file)
 		out << "XML [" << file << "] parsed without errors, config version: " << doc.child("RobotConfig").child("Version").attribute("version").value() << "\n";
 		out << doc.child("RobotConfig").child("Comment").attribute("comment").value() << "\n\n";
 		quickLoad = doc.child("RobotConfig").child("QuickLoad").attribute("value").as_bool();
+		autonEnabled = doc.child("RobotConfig").child("EnableAuton").attribute("value").as_bool();
 		loadValues(doc);
 	}
 	else
@@ -108,7 +110,7 @@ void Config::loadValues(xml_document &doc)
 				item.name = node.name();
 				item.in = new DigitalInput(node.attribute("channel").as_int());
 				DIs.push_back(item);
-				cout << "Loaded DIO: " << node.name() << " : " << node.attribute("channel").as_int() << endl;
+				cout << "Loaded DI: " << node.name() << " : " << node.attribute("channel").as_int() << endl;
 			}
 
 	for (xml_node node = doc.child("RobotConfig").child("Robot").child("DO").first_child(); node; node = node.next_sibling())
@@ -117,8 +119,26 @@ void Config::loadValues(xml_document &doc)
 					item.name = node.name();
 					item.out = new DigitalOutput(node.attribute("channel").as_int());
 					DOs.push_back(item);
-					cout << "Loaded DIO: " << node.name() << " : " << node.attribute("channel").as_int() << endl;
+					cout << "Loaded DO: " << node.name() << " : " << node.attribute("channel").as_int() << endl;
 				}
+
+	for (xml_node node = doc.child("RobotConfig").child("Robot").child("AO").first_child(); node; node = node.next_sibling())
+				{
+					AnalogOItem item;
+					item.name = node.name();
+					item.out = new AnalogOutput(node.attribute("channel").as_int());
+					AnalogOutputDevices.push_back(item);
+					cout << "Loaded AO: " << node.name() << " : " << node.attribute("channel").as_int() << endl;
+				}
+
+	for (xml_node node = doc.child("RobotConfig").child("Robot").child("AI").first_child(); node; node = node.next_sibling())
+					{
+						AnalogIItem item;
+						item.name = node.name();
+						item.in = new AnalogInput(node.attribute("channel").as_int());
+						AnalogInputDevices.push_back(item);
+						cout << "Loaded AI: " << node.name() << " : " << node.attribute("channel").as_int() << endl;
+					}
 
 
 	for (xml_node node = doc.child("RobotConfig").child("Robot").child("Encoders").first_child(); node; node = node.next_sibling())
@@ -224,6 +244,11 @@ _OperatorConfig.intakeShift = doc.child("RobotConfig").child("Controls").child("
 
 #endif
 
+#ifdef ROBOT_CONFIG
+_RobotParameters.minBatterShootRange = doc.child("RobotConfig").child("Robot").child("Parameters").child("BatterShootRange").attribute("min").as_double()*10;
+_RobotParameters.maxBatterShootRange = doc.child("RobotConfig").child("Robot").child("Parameters").child("BatterShootRange").attribute("max").as_double()*10;
+#endif
+
 }
 
 void Config::BuildControlSchema()
@@ -316,6 +341,22 @@ Relay *Config::GetRelay(CommonName name)
 	for(int i=0; i<(int)Relays.size();i++)
 		if(Relays[i].name==(string)name)
 			return Relays[i].relay;
+	return NULL;
+}
+
+AnalogInput *Config::GetAnalogInputDevice(CommonName name)
+{
+	for(int i=0; i<(int)AnalogInputDevices.size();i++)
+		if(AnalogInputDevices[i].name==(string)name)
+			return AnalogInputDevices[i].in;
+	return NULL;
+}
+
+AnalogOutput *Config::GetAnalogOutputDevice(CommonName name)
+{
+	for(int i=0; i<(int)AnalogOutputDevices.size();i++)
+		if(AnalogOutputDevices[i].name==(string)name)
+			return AnalogOutputDevices[i].out;
 	return NULL;
 }
 

@@ -21,12 +21,46 @@ void Sensing::Initialize()
 
 void Sensing::mainLoop()
 {
+	double range;
 	bool toggle = false;
-	PowerDistributionPanel pdp;
 	ExTimer voltageRegTimer(5);
+	PowerDistributionPanel pdp;
+
+	double max = Config::Instance()->_RobotParameters.maxBatterShootRange;
+	double min = Config::Instance()->_RobotParameters.minBatterShootRange;
+
+	//ultra = new Ultrasonic(Config::Instance()->GetDOutput(CommonName::UltraSonicOutput()),
+						//	Config::Instance()->GetDInput(CommonName::UltraSonicInput()));
+
+	//ultra->SetAutomaticMode(true);
 
 	while(true)
 	{
+
+		if(ledRingEnabled)
+			Config::Instance()->GetDOutput(CommonName::VideoLEDRelay())->Set(1);
+		else
+			Config::Instance()->GetDOutput(CommonName::VideoLEDRelay())->Set(0);
+
+		if(Config::Instance()->GetControlItem(ControlName::shooter())->IsRunning())
+			ledRingEnabled = true;
+		else
+			ledRingEnabled = false;
+
+/*		range = ultra->GetRangeMM();
+
+		if(range < max && range > min && !Config::Instance()->)
+		{
+			SystemsCollection::Instance().beacon->Ready();
+		}
+		else if(range < max && range > min)
+		{
+			SystemsCollection::Instance().beacon->BlueMode();
+		}
+		else
+			SystemsCollection::Instance().beacon->RedMode();
+*/
+
 
 		if(!Config::Instance()->GetDInput(CommonName::ClimberLimitUp())->Get())
 		{

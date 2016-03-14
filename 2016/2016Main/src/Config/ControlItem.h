@@ -34,6 +34,8 @@ class ControlItem
 {
 protected:
 	int polarity;//!< Pulls the polarity for the control if used or defined.
+	bool isRunning;//!< Defines if the control is currently in use.
+	bool onlyReverse, onlyForward;
 	Joystick *joy;//!< Pointer to the joystick to use.
 	ControlName name;//!< Defines the name of the control.
 	ControlItemType type;//!< Defines the type of control.
@@ -63,12 +65,18 @@ protected:
 	}
 
 public:
-	ControlItem(){};//!< Default constructor
+	ControlItem(){};//!< Default constructor.
+	bool IsRunning(){ return isRunning; }//!< Returns if the control is currently in use.
 	virtual void Update() = 0;//!< Pure virtual Update method that all Control classes are required to override.
     void SetController(Joystick *joy){ this->joy = joy; };//!< Sets the controller to access for checking control values.
     void AddVictorItem(VictorItem *item){ m_controllers.push_back(item); };//!< Adds a victor to the Control's motor controller vecotor.
     void AddSolenoidItem(SolenoidItem *item){ m_solenoids.push_back(item); };//!< Adds a solenoid to the Control's double solenoid vector.
     void AddDOItem(DOItem *item){ m_digitalOutputs.push_back(item); };//!< Adds a DigitalOutput to the Control's digital output vector.
+    void SetVictors(double value){ setVictors(value); }
+    void SetSolenoids(DoubleSolenoid::Value value){ setSolenoids(value); }
+    void SetDigitalOutputs(int value){ setDigitalOutputs(value); }
+    void SetOnlyForward(bool value){ onlyForward = value; }
+    void SetOnlyReverse(bool value){ onlyReverse = value; }
     string GetName(){ return name; };//!< Returns the name of the control.
     virtual ~ControlItem(){};
 };

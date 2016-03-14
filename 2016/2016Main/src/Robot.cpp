@@ -1,5 +1,6 @@
 /*
 
+
 Copyright (c) 2016, Ryan S. Cooper, Sophie He, Dylan Watson, BroncBotz
 All rights reserved.
 
@@ -45,8 +46,8 @@ using namespace Systems;
 using namespace Configuration;
 
 
-#define VERSION 27 //!< Defines the program version for the entire program.
-#define REVISION "D" //!< Defines the revision of this version of the program.
+#define VERSION 28 //!< Defines the program version for the entire program.
+#define REVISION "C" //!< Defines the revision of this version of the program.
 
 /*! BroncBotz class is the entry point of the program (where WPILib sends it's calls for
  *  robot control, operation, auton, test etc. */
@@ -54,7 +55,7 @@ class BroncBotz: public SampleRobot
 {
 	//Task *mpc; //!< Pointer to where we will allocate the mpc task.
 	Task *drive; //!< Pointer to where we will allocate the drive task.
-	//Task *beacon; //!< Pointer to where we will allocate the beacon task.
+	Task *beacon; //!< Pointer to where we will allocate the beacon task.
 	Task *sensing; //!< Pointer to where we will allocate the sensing task.
 	Task *operation; //!< Pointer to where we will allocate the operation task.
 
@@ -94,18 +95,17 @@ public:
 			config = Config::Instance();
 			config->Load(configFile);
 			config->BuildControlSchema();
+
+			beacon = new Task("Beacon", (FUNCPTR)InitializeBeacon);
 		}
 
 		void Autonomous()
 		{
-			/*if(config->QuickLoad())
+			if(config->IsAutonEnabled())
 			{
-				delete config;
-				config = Config::Instance();
-				config->Load(configFile);
-			}*/
-			Auton auton;
-			auton.Start();
+				Auton auton;
+				auton.Start(this);
+			}
 		}
 
 		/*! \brief Operation.
@@ -123,17 +123,21 @@ public:
 				config->Load(configFile);
 			}*/
 
+
 			//mpc = new Task("MPCService", (FUNCPTR)InitializeMPC);
 			sensing = new Task("Sensing", (FUNCPTR)InitializeSensors);
 			operation = new Task("Operation", (FUNCPTR)InitializeOperation);
 			drive = new Task("Drive", (FUNCPTR)InitializeDrive);
 
+
 			//SystemsCollection::Instance().MPC.RegisterClient(&SystemsCollection::Instance().operator_);
 
 			while (IsOperatorControl() && IsEnabled())
-					{
-						Wait(0.005);
-					}
+				{
+					double en = Config::Instance()->GetEncoder(CommonName::shooterEncoder())->GetRate();
+					SmartDashboard::PutNumber("Rate: ", en);
+					Wait(0.005);
+				}
 
 			//clean-up
 			delete sensing;

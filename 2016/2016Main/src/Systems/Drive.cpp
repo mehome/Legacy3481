@@ -97,7 +97,7 @@ void Drive::rev(double input, DriveOrientation orientaion)
 	int plyer=1;
 	if(input<0)
 		plyer=-1;
-	input = dabs(input);
+	input = fabs(input);
 
 	double accel=driverConfig.accelerationFactor;
 	REV://? forgive me.

@@ -100,11 +100,30 @@ struct DOItem
 		string name;//!< Name of the digital output item.
 	};
 
+/*! Structure to handle analog devices allocated from the config.*/
+struct AnalogIItem
+{
+	AnalogInput *in;//!< Pointer to the analog device.
+	string name;//!< Name of the analog device.
+};
+
+/*! Structure to handle analog devices allocated from the config.*/
+struct AnalogOItem
+{
+	AnalogOutput *out;//!< Pointer to the analog device.
+	string name;//!< Name of the analog device.
+};
+
 /*! Structure to handle Relays allocated from the config.*/
 struct RelayItem
 {
 	Relay *relay;//!< Pointer to the relay.
 	string name;//!< Name of the relay.
+};
+
+struct RobotParameters
+{
+	double minBatterShootRange, maxBatterShootRange;
 };
 
 /*! Structure to store the configuration and control vales for driving the robot.*/

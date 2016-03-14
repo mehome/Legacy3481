@@ -23,6 +23,7 @@ void ToggleControl::Update()
 			runVictors();
 
 		isFirstRun = false;
+		isRunning = true;
 	}
 	else
 	{
@@ -35,6 +36,7 @@ void ToggleControl::Update()
 			else
 				stopVictors();
 		}
+		isRunning = false;
 	}
 }
 
