@@ -5,11 +5,11 @@ Email:	cooper.ryan@centaurisoftware.co
 
 #include <WPILib.h>
 
-#include "out.h"
 #include "Config.h"
 #include "ExTimer.h"
 #include "Sensing.h"
 #include "CommonName.h"
+#include "LoopChecks.h"
 #include "SystemsCollection.h"
 
 namespace Systems {
@@ -34,7 +34,7 @@ void Sensing::mainLoop()
 
 	//ultra->SetAutomaticMode(true);
 
-	while(true)
+	while(_IsTeleoporated())
 	{
 
 		if(ledRingEnabled)
@@ -89,7 +89,7 @@ void Sensing::mainLoop()
 		if(!toggle && !voltageRegTimer.IsRunning())
 		{
 			SystemsCollection::Instance().drive->SetLowPowerMode(true);
-			out << "\n\n***Went into low power mode!***\n\n";
+			cout << "\n\n***Went into low power mode!***\n\n";
 			DriverStation::ReportError("\n\n***Drive went into low power mode!***\n\n");
 			toggle = true;
 			voltageRegTimer.Start();
@@ -100,14 +100,14 @@ void Sensing::mainLoop()
 		if(toggle && voltageRegTimer.HasExpired())
 		{
 			SystemsCollection::Instance().drive->SetLowPowerMode(false);
-			out << "\nPower mode restored.\n";
+			cout << "\nPower mode restored.\n";
 			DriverStation::ReportError("\nPower restored to drive.\n");
 			toggle = false;
 			voltageRegTimer.Renew();
 		}
 	}
 
-	Wait(.005);
+	Wait(.01);
 
 	}
 }

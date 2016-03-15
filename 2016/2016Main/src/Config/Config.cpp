@@ -3,8 +3,6 @@ Author(s):	Ryan Cooper
 Email:	cooper.ryan@centaurisoftware.co
 \*********************************************************************/
 
-#include "Log.h"
-#include "out.h"
 #include "Config.h"
 #include "pugixml.h"
 #include "Preproc.h"
@@ -35,17 +33,17 @@ void Config::Load(const char* file)
 
 	if (result)
 	{
-		out << "XML [" << file << "] parsed without errors, config version: " << doc.child("RobotConfig").child("Version").attribute("version").value() << "\n";
-		out << doc.child("RobotConfig").child("Comment").attribute("comment").value() << "\n\n";
+		cout << "XML [" << file << "] parsed without errors, config version: " << doc.child("RobotConfig").child("Version").attribute("version").value() << "\n";
+		cout << doc.child("RobotConfig").child("Comment").attribute("comment").value() << "\n\n";
 		quickLoad = doc.child("RobotConfig").child("QuickLoad").attribute("value").as_bool();
 		autonEnabled = doc.child("RobotConfig").child("EnableAuton").attribute("value").as_bool();
 		loadValues(doc);
 	}
 	else
 	{
-	    out << "XML [" << file << "] parsed with errors.\n";
-	    out << "Error description: " << result.description() << "\n";
-	    out << "Error offset: " << result.offset << " (error at [..." << (file + result.offset) << "]\n\n";
+	    cout << "XML [" << file << "] parsed with errors.\n";
+	    cout << "Error description: " << result.description() << "\n";
+	    cout << "Error offset: " << result.offset << " (error at [..." << (file + result.offset) << "]\n\n";
 	}
 }
 
@@ -145,7 +143,7 @@ void Config::loadValues(xml_document &doc)
 			{
 				EncoderItem item;
 				item.name = node.name();
-				item.encoder = new Encoder(node.attribute("aChannel").as_int(), node.attribute("bChannel").as_int());
+				item.encoder = new Encoder(node.attribute("aChannel").as_int(), node.attribute("bChannel").as_int(), true);
 				Encoders.push_back(item);
 				cout << "Loaded Encoder: " << node.name() << " : " << node.attribute("aChannel").as_int() << ", " << node.attribute("bChannel").as_int() << endl;
 			}
@@ -262,7 +260,7 @@ void Config::BuildControlSchema()
 		else
 		{
 			DriverStation::ReportError("There was an error creating the indexer control item, check the config.\n");
-			out << "There was an error creating the indexer control item, check the config."<< endl;
+			cout << "There was an error creating the indexer control item, check the config."<< endl;
 		}
 
 		if(_OperatorConfig.intakeInButton != 0 && _OperatorConfig.intakeOutButton != 0)
@@ -274,7 +272,7 @@ void Config::BuildControlSchema()
 		else
 		{
 			DriverStation::ReportError("There was an error creating the intake control item, check the config.\n");
-			out << "There was an error creating the intake control item, check the config." << endl;
+			cout << "There was an error creating the intake control item, check the config." << endl;
 		}
 
 
@@ -287,7 +285,7 @@ void Config::BuildControlSchema()
 		else
 		{
 			DriverStation::ReportError("There was an error creating the climber control item, check the config.\n");
-			out << "There was an error creating the climber control item, check the config."<< endl;
+			cout << "There was an error creating the climber control item, check the config."<< endl;
 		}
 
 		if(_OperatorConfig.shooterInButton != 0 && _OperatorConfig.shooterOutButton != 0)
@@ -299,7 +297,7 @@ void Config::BuildControlSchema()
 		else
 		{
 			DriverStation::ReportError("There was an error creating the shooter control item, check the config.\n");
-			out << "There was an error creating the shooter control item, check the config." << endl;
+			cout << "There was an error creating the shooter control item, check the config." << endl;
 		}
 
 		Controls.push_back(new ToggleControl(ControlName::gearShift(), ControlItemType::buttonControl,

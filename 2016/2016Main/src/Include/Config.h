@@ -16,7 +16,6 @@ Email:	cooper.ryan@centaurisoft.org
 #include <vector>
 #include <WPILib.h>
 
-#include "out.h"
 #include "pugixml.h"
 #include "Preproc.h"
 #include "CommonName.h"
@@ -70,7 +69,6 @@ namespace Configuration
 		bool IsAutonEnabled(){ return autonEnabled; }
 		bool QuickLoad(){ return quickLoad; }
 	private:
-		 Out out;//!< Gets an instance of the out redirector.
 		 bool autonEnabled = false;
 		 bool quickLoad;//!< Boolean to control quick loading mode (not having to restart robot code to apply config changes).
 		 bool loaded;//!< private boolean to set whether the config has loaded correctly.

@@ -1,5 +1,9 @@
 #include <WPILib.h>
+
+#include "LoopChecks.h"
 #include "Auton.h"
+
+//USE _IsAutononomous() to check for auton and IsEnabled()
 
 void Auton::Start(SampleRobot *mainClass)
 {

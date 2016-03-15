@@ -8,6 +8,7 @@ Email:	cooper.ryan@centaurisoft.org, dylantrwatson@gmail.com,
 
 #include "Operator.h"
 #include "MPCClient.h"
+#include "LoopChecks.h"
 #include "DrivingFits.h"
 #include "ButtonControl.h"
 #include "SystemsCollection.h"
@@ -37,7 +38,7 @@ void Operator::Initialize()
 	config->GetControlItem(ControlName::climberShift())->SetController(operator_);
 	config->GetControlItem(ControlName::shooterShift())->SetController(operator_);
 
-	for(;;)
+	while(_IsTeleoporated())
 	{
 		if(config->GetAnalogInputDevice(CommonName::IntakePressurePad())->GetAverageVoltage() < 2 ||
 				config->GetControlItem(ControlName::shooter())->IsRunning())
@@ -60,7 +61,7 @@ void Operator::Initialize()
 		config->GetControlItem(ControlName::intakeShift())->Update();
 		config->GetControlItem(ControlName::climberShift())->Update();
 		config->GetControlItem(ControlName::shooterShift())->Update();
-		Wait(.005);
+		Wait(.01);
 	}
 }
 

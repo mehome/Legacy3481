@@ -15,7 +15,6 @@ Email:	cooper.ryan@centaurisoft.org
 
 #include <WPILib.h>
 
-#include "out.h"
 //#include "AHRS.h"
 #include "Preproc.h"
 
@@ -29,7 +28,6 @@ class Sensing final
 {
 private:
 	bool ledRingEnabled = false;//!< Used to determine of the led ring is one or off.
-	Out out; //!< Instance of Out for writing to log and screen.
 	//AHRS *ahrs;
 	void mainLoop(); //!< The main loop for the Sensing system.
 	Ultrasonic *ultra;

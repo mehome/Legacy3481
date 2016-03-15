@@ -8,6 +8,7 @@ Email:	cooper.ryan@centaurisoft.org, dylantrwatson@gmail.com,
 
 #include "Drive.h"
 #include "Preproc.h"
+#include "LoopChecks.h"
 #include "DrivingFits.h"
 #include "ControlItem.h"
 #include "ConfigEnums.h"
@@ -62,7 +63,7 @@ void Drive::Initialize()
 	else
 		d=&Drive::Arcade;
 
-	for(;;)
+	while(_IsTeleoporated())
 	{
 		p_invert = invert;
 		invert = (driver->GetRawButton(driverConfig.reverse_a) && driver->GetRawButton(driverConfig.reverse_b));
@@ -72,7 +73,7 @@ void Drive::Initialize()
 
 		PTR_TO_MEMBER(*this,d)();
 
-		Wait(.005);
+		Wait(.01);
 	}
 }
 

@@ -33,7 +33,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <WPILib.h>
 #include <fstream>
 
-#include "Log.h"
 #include "Auton.h"
 #include "Config.h"
 #include "Sensing.h"
@@ -46,8 +45,8 @@ using namespace Systems;
 using namespace Configuration;
 
 
-#define VERSION 28 //!< Defines the program version for the entire program.
-#define REVISION "C" //!< Defines the revision of this version of the program.
+#define VERSION 29 //!< Defines the program version for the entire program.
+#define REVISION "A" //!< Defines the revision of this version of the program.
 
 /*! BroncBotz class is the entry point of the program (where WPILib sends it's calls for
  *  robot control, operation, auton, test etc. */
@@ -60,13 +59,14 @@ class BroncBotz: public SampleRobot
 	Task *operation; //!< Pointer to where we will allocate the operation task.
 
 	Config *config; //!< Pointer to where we will allocate the configuration object.
-	const char *configFile = "/robot_roborio.xml";  //!< Location of the XML config file.
+	const char *configFile = "/robot_roborio_practice.xml";  //!< Location of the XML config file.
 
 public:
 	BroncBotz()
 		{
 			Initialize();
 		}
+
 
 		/*! \brief Initialize.
 	 	 *         Prepares all functions and resources.
@@ -76,11 +76,6 @@ public:
 	 	 */
 		void Initialize()
 		{
-
-			Log::Instance().DestroyLog();
-			Log::Instance().SetLog_SetLongLog("/log.txt", "/long_log.txt");
-
-			Log::Instance().Append("Program Version: " + VERSION );
 			cout << "Program Version: " << VERSION << " Revision: " << REVISION << endl;
 
 			ifstream infile(configFile);
@@ -88,9 +83,6 @@ public:
 				cout << "Config file found at " << configFile << endl;
 			else
 				cout << "Could not find the config file at " << configFile << endl;
-
-
-			Log::Instance().Append("Configuration loaded: " + infile.good());
 
 			config = Config::Instance();
 			config->Load(configFile);
@@ -123,29 +115,32 @@ public:
 				config->Load(configFile);
 			}*/
 
-
 			//mpc = new Task("MPCService", (FUNCPTR)InitializeMPC);
 			sensing = new Task("Sensing", (FUNCPTR)InitializeSensors);
 			operation = new Task("Operation", (FUNCPTR)InitializeOperation);
 			drive = new Task("Drive", (FUNCPTR)InitializeDrive);
 
-
+			SystemsCollection::Instance().beacon->Ready();
 			//SystemsCollection::Instance().MPC.RegisterClient(&SystemsCollection::Instance().operator_);
 
 			while (IsOperatorControl() && IsEnabled())
 				{
 					double en = Config::Instance()->GetEncoder(CommonName::shooterEncoder())->GetRate();
 					SmartDashboard::PutNumber("Rate: ", en);
-					Wait(0.005);
+					Wait(0.01);
 				}
 
+
+
 			//clean-up
-			delete sensing;
-			delete operation;
-			delete drive;
+			//delete sensing;
+			//delete operation;
+			//delete drive;
 			//assert(0);//fixes the twitching bug, something is wrong in memory somewhere, so we are restarting the program.
-			SystemsCollection::Instance().Reset();
+			//SystemsCollection::Instance().Reset();
 		}
+
+		void Disabled(){}
 
 };
 
