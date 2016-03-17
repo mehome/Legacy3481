@@ -43,7 +43,7 @@ MainRobot = {
 			id_3 = { name="left_drive_1", channel=7},
 			id_4 = { name="left_drive_2", channel=4},
 			id_5= { name="turret", channel=1},
-			id_6= { name="arm", channel=2}
+			id_6= { name="arm", channel=3}
 			--If we decide we need more power we can assign these
 			--id_3 = { name= "right_drive_3", channel=3}, 
 			--id_6 = { name="left_drive_3", channel=6},
@@ -61,7 +61,7 @@ MainRobot = {
 		},
 		analog_input =
 		{
-			id_1 = { name="arm_potentiometer",  channel=2},
+			id_1 = { name="arm_pot",  channel=2},
 		},
 		digital_input_encoder =
 		{	

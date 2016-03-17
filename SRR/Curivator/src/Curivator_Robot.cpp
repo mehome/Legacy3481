@@ -780,19 +780,19 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 	switch (index)
 	{
 	case Curivator_Robot::eTurret:
-		VoltageScalar=Voltage * m_RobotProps.GetTurretProps().GetRotaryProps().VoltageScalar;
-		SmartDashboard::PutNumber("TurretVoltage",Voltage);
+		VoltageScalar=m_RobotProps.GetTurretProps().GetRotaryProps().VoltageScalar;
+		SmartDashboard::PutNumber("TurretVoltage",Voltage*VoltageScalar);
 		break;
 	case Curivator_Robot::eArm:
-		VoltageScalar=Voltage * m_RobotProps.GetArmProps().GetRotaryProps().VoltageScalar;
-		SmartDashboard::PutNumber("ArmVoltage",Voltage);
+		VoltageScalar=m_RobotProps.GetArmProps().GetRotaryProps().VoltageScalar;
+		SmartDashboard::PutNumber("ArmVoltage",Voltage*VoltageScalar);
 		#ifdef Robot_TesterCode
 		m_Potentiometer.UpdatePotentiometerVoltage(Voltage);
 		m_Potentiometer.TimeChange();  //have this velocity immediately take effect
 		#endif
 		break;
 	}
-	Voltage=Voltage * VoltageScalar;
+	Voltage*=VoltageScalar;
 	Victor_UpdateVoltage(index,Voltage);
 }
 
@@ -942,7 +942,7 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 		{
 			#ifndef Robot_TesterCode
 			//double raw_value = (double)m_Potentiometer.GetAverageValue();
-			double raw_value=(double)Analog_GetAverageValue(Curivator_Robot::eArmPotentiometer);
+			double raw_value=(double)Analog_GetAverageValue(Curivator_Robot::eArmPot);
 			raw_value = m_KalFilter_Arm(raw_value);  //apply the Kalman filter
 			raw_value=m_ArmAverager.GetAverage(raw_value); //and Ricks x element averager
 			//Note: we keep the raw value in its native form... just averaging at most for less noise
@@ -955,7 +955,7 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			const double HiRange=1125;
 			#else
 			const double HiRange=SmartDashboard::GetNumber("Arm_Raw_high");
-			const double LowRange=HiRange-SmartDashboard::GetNumber("Arm_Raw_Range",24.0);
+			const double LowRange=HiRange-SmartDashboard::GetNumber("Arm_Raw_Range");
 			//If this is true, the value is inverted with the negative operator
 			const bool FlipRange=true;
 			#endif
