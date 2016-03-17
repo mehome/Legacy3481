@@ -116,6 +116,7 @@ struct Ship_Props
 		eFRC2013_Robot,
 		eFRC2014_Robot,
 		eFRC2015_Robot,
+		eCurivator_Robot,
 		eHikingViking_Robot,
 	};
 	Ship_Type ShipType;
