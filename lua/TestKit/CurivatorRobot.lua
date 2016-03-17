@@ -10,14 +10,11 @@ Pounds2Kilograms=0.453592
 Deg2Rad=(1/180) * Pi
 
 ArmLength_m=48 * Inches2Meters  --4 feet
---ArmToGearRatio=72.0/28.0
-ArmToGearRatio=1.0
+ArmToGearRatio=72.0/28.0
 GearToArmRatio=1.0/ArmToGearRatio
---PotentiometerToArmRatio=36.0/54.0
-PotentiometerToArmRatio=1.0
+PotentiometerToArmRatio=36.0/54.0
 PotentiometerToGearRatio=PotentiometerToArmRatio * ArmToGearRatio
---PotentiometerMaxRotation_r=270.0 * Deg2Rad
-PotentiometerMaxRotation_r=360.0 * Deg2Rad
+PotentiometerMaxRotation_r=270.0 * Deg2Rad
 GearHeightOffset_m=38.43 * Inches2Meters
 MotorToWheelGearRatio=12.0/36.0
 
@@ -35,7 +32,7 @@ skid=1
 gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) * skid
 
 MainRobot = {
-	version = 1.6;
+	version = 1.0;
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -45,23 +42,15 @@ MainRobot = {
 			id_2 = { name= "right_drive_2", channel=6}, 
 			id_3 = { name="left_drive_1", channel=7},
 			id_4 = { name="left_drive_2", channel=4},
-			id_5= { name="kicker_wheel", channel=1},
+			id_5= { name="turret", channel=1},
 			id_6= { name="arm", channel=3}
 			--If we decide we need more power we can assign these
 			--id_3 = { name= "right_drive_3", channel=3}, 
 			--id_6 = { name="left_drive_3", channel=6},
 		},
-		servo =
-		{
-			id_1 = { name="left_drive_3", channel=2},
-		},
 		relay =
 		{
 			id_1 = { name= "CameraLED", channel=1}
-		},
-		double_solenoid =
-		{
-			id_1 = { name="use_low_gear",    forward_channel=2, reverse_channel=1},
 		},
 		digital_input =
 		{
@@ -72,7 +61,7 @@ MainRobot = {
 		},
 		analog_input =
 		{
-			id_1 = { name="arm_potentiometer",  channel=2},
+			id_1 = { name="arm_pot",  channel=2},
 		},
 		digital_input_encoder =
 		{	
@@ -130,19 +119,18 @@ MainRobot = {
 		encoder_to_wheel_ratio=0.5,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
 		voltage_multiply=1.0,				--May be reversed using -1.0
 		--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
-		--curve_voltage=
-		--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
+		curve_voltage=
+		{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
 		force_voltage=
-		{t4=0, t3=0, t2=0, t1=1, c=0},
+		{t4=0, t3=0, t2=0, t1=0, c=1},
 		reverse_steering='no',
 		 left_encoder_reversed='no',
 		right_encoder_reversed='no',
 		inv_max_accel = 1/15.0,  --solved empiracally
-		linear_gain_assist = 0.03,
-		--forward_deadzone_left  = 0.02,
-		--forward_deadzone_right = 0.02,
-		--reverse_deadzone_left  = 0.02,
-		--reverse_deadzone_right = 0.02,
+		forward_deadzone_left  = 0.02,
+		forward_deadzone_right = 0.02,
+		reverse_deadzone_left  = 0.02,
+		reverse_deadzone_right = 0.02,
 		motor_specs =
 		{
 			wheel_mass=1.5,
@@ -169,22 +157,21 @@ MainRobot = {
 		auton =
 		{
 			first_move_ft=2,
+			side_move_rad=10,
 			arm_height_in=12,
 			support_hotspot='n',
 			show_auton_variables='y'
 		},
 
-		arm =
+		turret =
 		{
 			is_closed=0,
-			show_pid_dump='y',
+			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
-			pid_up=
-			{p=100, i=0, d=25},
-			pid_down=
-			{p=100, i=0, d=25},
-			tolerance=1.0,
+			pid_up={p=100, i=0, d=25},
+			pid_down={p=100, i=0, d=25},
+			tolerance=0.3,
 			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
@@ -198,30 +185,14 @@ MainRobot = {
 			max_accel_reverse=1,
 			using_range=0,	--Warning Only use range if we have a potentiometer!
 
-			--slow_velocity_voltage = 2.0, Problematic
-
-			--These min/max are arm converted to gear ratio (TODO research this more)
 			max_range_deg= 52.36 * ArmToGearRatio,
-			--Note the sketch used -43.33, but tests on actual assembly show -46.12
 			min_range_deg=(-46.12) * ArmToGearRatio,
-			starting_position_deg=-46.12,
 			pot_offset=-46.12 * Deg2Rad,
 			use_aggressive_stop = 'yes',
 			inv_max_accel_up = 0.3,
 			inv_max_decel_up = 0.3,
 			inv_max_accel_down = 0.3,
 			inv_max_decel_down = 0.3,
-			forward_deadzone = 0.1,
-			reverse_deadzone = 0.1,
-			--slow_velocity_voltage = 4.0,
-			--slow_velocity = 2.0,
-			--predict_up=.400,
-			--predict_down=.400,
-			--pulse_burst_time=0.06,
-			--pulse_burst_range=0.5,
-			--reverse_deadzone=0.10,
-			--slow_angle_scalar = GearToArmRatio,
-			--distance_scale = 0.5,
 			motor_specs =
 			{
 				wheel_mass=Pounds2Kilograms * 16.27,
@@ -237,57 +208,62 @@ MainRobot = {
 				free_current_amp=1.8
 			}
 		},
-
-		low_gear = 
+		arm =
 		{
-			--While it is true we have more torque for low gear, we have to be careful that we do not make this too powerful as it could
-			--cause slipping if driver "high sticks" to start or stop quickly.
-			--for this year... there is no high gear... so we'll inherit these from high gear
-			--MaxAccelLeft = 10, MaxAccelRight = 10, MaxAccelForward = 10 * 2, MaxAccelReverse = 10 * 2, 
-			--MaxTorqueYaw = 25 * 2,
-			--MaxTorqueYaw_High = 25 * 2,
-
-			MAX_SPEED = LowGearSpeed,
-			ACCEL = 10*2,    -- Thruster Acceleration m/s2 (1g = 9.8)
-			BRAKE = ACCEL, 
-			-- Turn Rates (deg/sec) This is always correct do not change
-			heading_rad = (2 * LowGearSpeed * Meters2Inches / WheelTurningDiameter_In) * skid,
+			is_closed=0,
+			show_pid_dump='n',
+			ds_display_row=-1,
+			use_pid_up_only='y',
+			pid_up=
+			{p=100, i=0, d=25},
+			pid_down=
+			{p=100, i=0, d=25},
+			tolerance=0.15,
+			tolerance_count=20,
+			voltage_multiply=1.0,			--May be reversed
+			encoder_to_wheel_ratio=1.0,
 			
-			tank_drive =
+			--max_speed=(19300/64/60) * Pi2,	--This is about 5 rps (a little slower than hiking viking drive)
+			max_speed=8.8,	--loaded max speed (see sheet) which is 2.69 rps
+			accel=1.0,						--We may indeed have a two button solution (match with max accel)
+			brake=1.0,
+			max_accel_forward=10,			--These are in radians, just go with what feels right
+			max_accel_reverse=10,
+			using_range=0,					--Warning Only use range if we have a potentiometer!
+			--These min/max are arm converted to gear ratio (TODO reseach this more)
+			max_range_deg= 52.36 * ArmToGearRatio,
+			min_range_deg=(-46.12) * ArmToGearRatio,
+			starting_position_deg=-46.12,
+			use_aggressive_stop = 'yes',
+			motor_specs =
 			{
-				is_closed=0,
-				show_pid_dump='n',
-				ds_display_row=-1,
-				--We must NOT use I or D for low gear, we must keep it very responsive
-				--We are always going to use the encoders in low gear to help assist to fight quickly changing gravity shifts
-				left_pid=
-				{p=25, i=0, d=5},
-				right_pid=
-				{p=25, i=0, d=5},					--These should always match, but able to be made different
-				voltage_multiply=1.0,				--May be reversed using -1.0
+				wheel_mass=Pounds2Kilograms * 16.27,
+				cof_efficiency=0.2,
+				gear_reduction=1.0,
+				torque_on_wheel_radius=Inches2Meters * 1.0,
+				drive_wheel_radius=Inches2Meters * 2.0,
+				number_of_motors=2,
+				
+				free_speed_rpm=84.0,
+				stall_torque=10.6,
+				stall_current_amp=18.6,
+				free_current_amp=1.8
 			}
-		}
+		},
 	},
 
 	controls =
 	{
 		slotlist = {slot_1="airflo"},
-		--slotlist = {slot_1="logitech dual action",slot_2="airflo"},
 		--field_centric_x_axis_threshold=0.40,
 		--tank_steering_tolerance=0.05,
 		Joystick_1 =
 		{
 			control = "airflo",
 			axis_count = 4,
-			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
-			--Joystick_SetRightVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			--Joystick_SetRight_XAxis = {type="joystick_analog", key=5, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			--Joystick_SetCurrentSpeed_2 = {type="joystick_dual_analog", key_1=0, key_2=1, center_point_idle=false , is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--FieldCentric_Enable = {type="joystick_button", key=4, on_off=false},
@@ -295,43 +271,28 @@ MainRobot = {
 			--scaled down to 0.5 to allow fine tuning and a good top acceleration speed (may change with the lua script tweaks)
 			--Turret_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
 			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
-			--Robot_SetLowGearOff = {type="joystick_button", key=8, keyboard=';', on_off=false},
-			--Robot_SetLowGearOn = {type="joystick_button", key=6, keyboard='l', on_off=false},
-			--POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			POV_Turn =  {type="joystick_analog", key=8, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Turn_180 = {type="joystick_button", key=7, on_off=false},
 			--Turn_180_Hold = {type="joystick_button", key=7, on_off=true},
 			--FlipY_Hold = {type="joystick_button", key=7, on_off=true},
 			--SlideHold = {type="joystick_button", key=7, on_off=true},
 			--TestWaypoint={type="joystick_button", key=3, keyboard='q', on_off=true},
 			
-			--Robot_BallTargeting_On={type="keyboard", key='t', on_off=false},
-			--Robot_BallTargeting_Off={type="keyboard", key='y', on_off=false},
-			--TestAuton={type="keyboard", key='g', on_off=false},
+			Robot_BallTargeting_On={type="keyboard", key='t', on_off=false},
+			Robot_BallTargeting_Off={type="keyboard", key='y', on_off=false},
+			TestAuton={type="keyboard", key='g', on_off=false},
 			--Slide={type="keyboard", key='g', on_off=false},
 			
-			Arm_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-
-
-			Arm_SetPosRest     = {type="joystick_button", key='1', on_off=false},
-			Arm_SetTote2Height = {type="joystick_button", key='2', on_off=false},
-			Arm_SetTote3Height = {type="joystick_button", key='3', on_off=false},
-			Arm_SetTote4Height = {type="joystick_button", key='4', on_off=false},
-			--Arm_SetTote5Height = {type="joystick_button", key='5', on_off=false},
-			--Arm_SetTote6Height = {type="joystick_button", key='6', on_off=false},
-			
-			--Arm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
-			--Arm_Rist={type="joystick_button", key=5, keyboard='r', on_off=true},
-			Arm_Advance={type="keyboard", key='k', on_off=true},
-			Arm_Retract={type="keyboard", key='j', on_off=true},
-			
-			--Claw_SetCurrentVelocity  --not used
-			--Claw_Close =	 {type="joystick_button", key=7, keyboard='c', on_off=true},
+			turret_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			arm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			turret_Advance={type="keyboard", key='k', on_off=true},
+			turret_Retract={type="keyboard", key='j', on_off=true},
+	
 		},
 		
 		Joystick_2 =
 		{
 			control = "logitech dual action",
-			axis_count = 5,
 			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetLeft_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=1.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
@@ -355,17 +316,17 @@ MainRobot = {
 		Joystick_3 =
 		{
 			control = "gamepad f310 (controller)",
-			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Turret_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
 			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
 			
-			KickerWheel_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			arm_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
 			--FieldCentric_EnableValue = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 
 			Robot_SetLowGearOff = {type="joystick_button", key=6, on_off=false},
@@ -390,7 +351,24 @@ MainRobot = {
 			Turn_180_Hold = {type="joystick_button", key=6, on_off=true},
 			FlipY_Hold = {type="joystick_button", key=6, on_off=true},
 			SlideHold = {type="joystick_button", key=6, on_off=true}
-		}
+		},
+		Joystick_5 =
+		{	
+			control = "ch throttle quadrant",
+			PitchRamp_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=true, multiplier=1.142000, filter=0.0, curve_intensity=0.0},
+			Robot_SetTargetingValue = {type="joystick_analog", key=0, is_flipped=true, multiplier=1.142000, filter=0.0, curve_intensity=0.0},
+			PowerWheels_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0000, filter=0.0, curve_intensity=0.0},
+			Turret_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=true, multiplier=0.5, filter=0.1, curve_intensity=1.0},
+			Robot_SetDefensiveKeyValue = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+
+			Arm_SetPosRest     = {type="joystick_button", key=2, on_off=false},
+			Arm_SetTote2Height = {type="joystick_button", key=4, on_off=false},
+			Arm_SetTote3Height = {type="joystick_button", key=6, on_off=false},
+			Arm_SetTote4Height = {type="joystick_button", key=8, on_off=false},
+			Arm_SetTote5Height = {type="joystick_button", key=10, on_off=false},
+			Arm_SetTote6Height = {type="joystick_button", key=12, on_off=false}
+		},
+
 	},
 	
 	--This is only used in the AI tester, can be ignored
@@ -401,4 +379,4 @@ MainRobot = {
 	}
 }
 
-Robot2015 = MainRobot
+Curivator = MainRobot
