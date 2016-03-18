@@ -1373,7 +1373,9 @@ private:
 			//RecordPath= D:/media/Robot_Capture/
 			AssignWstring(script,"record_path","D:/media/Robot_Capture/",m_AncillaryProps.RecordPath);
 
-			props.controls_plugin_file=L"Controls.dll"; //TODO may want to allow user to specify none
+			//TODO may want to allow user to specify none
+			AssignWstring(script,"controls_plugin_file","Controls.dll",props.controls_plugin_file);
+			//props.controls_plugin_file=L"Controls.dll";
 
 			IgnoreList ignore_list;
 			memset(&ignore_list,0,sizeof(IgnoreList));
