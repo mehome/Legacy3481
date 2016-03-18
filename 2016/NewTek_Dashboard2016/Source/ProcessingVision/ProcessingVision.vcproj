@@ -257,6 +257,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\VisionCascadeClassifierTracker.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\VisionGoalTracker.cpp"
 				>
 				<FileConfiguration
@@ -336,6 +340,10 @@
 			</File>
 			<File
 				RelativePath=".\VisionBallTracker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VisionCascadeClassifierTracker.h"
 				>
 			</File>
 			<File
