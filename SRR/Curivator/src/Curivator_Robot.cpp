@@ -199,10 +199,8 @@ void Curivator_Robot::Initialize(Entity2D_Kind::EventMap& em, const Entity_Prope
 	const Curivator_Robot_Properties *RobotProps=dynamic_cast<const Curivator_Robot_Properties *>(props);
 	m_RobotProps=*RobotProps;  //Copy all the properties (we'll need them for high and low gearing)
 
-	//set to the default key position
-	//const Curivator_Robot_Props &robot2015props=RobotProps->GetCurivatorRobotProps();
-	m_Arm.Initialize(em,RobotProps?&RobotProps->GetArmProps():NULL);
-	m_Turret.Initialize(em,RobotProps?&RobotProps->GetTurretProps():NULL);
+	m_Arm.Initialize(em,RobotProps?&RobotProps->GetRotaryProps(eArm):NULL);
+	m_Turret.Initialize(em,RobotProps?&RobotProps->GetRotaryProps(eTurret):NULL);
 }
 void Curivator_Robot::ResetPos()
 {
@@ -368,18 +366,7 @@ void Curivator_Robot::GoalComplete()
 const double c_WheelDiameter=Inches2Meters(6);
 const double c_MotorToWheelGearRatio=12.0/36.0;
 
-Curivator_Robot_Properties::Curivator_Robot_Properties()  : m_TurretProps(
-	"Turret",
-	2.0,    //Mass
-	0.0,   //Dimension  (this really does not matter for this, there is currently no functionality for this property, although it could impact limits)
-	10.0,   //Max Speed
-	1.0,1.0, //ACCEL, BRAKE  (These can be ignored)
-	10.0,10.0, //Max Acceleration Forward/Reverse 
-	Ship_1D_Props::eSwivel,
-	true,	//Using the range
-	-Pi,Pi
-	),
-	m_RobotControls(&s_ControlsEvents)
+Curivator_Robot_Properties::Curivator_Robot_Properties()  : m_RobotControls(&s_ControlsEvents)
 {
 	{
 		//const double c_ArmToGearRatio=72.0/28.0;
@@ -430,10 +417,10 @@ Curivator_Robot_Properties::Curivator_Robot_Properties()  : m_TurretProps(
 		m_TankRobotProps=props;
 	}
 	{
-		Rotary_Props props=m_TurretProps.RotaryProps(); //start with super class settings
+		Rotary_Props props=m_RotaryProps[Curivator_Robot::eTurret].RotaryProps(); //start with super class settings
 		props.PID[0]=1.0;
 		props.PrecisionTolerance=0.001; //we need high precision
-		m_TurretProps.RotaryProps()=props;
+		m_RotaryProps[Curivator_Robot::eTurret].RotaryProps()=props;
 	}
 }
 
@@ -558,13 +545,13 @@ void Curivator_Robot_Properties::LoadFromScript(Scripting::Script& script)
 		err = script.GetFieldTable("turret");
 		if (!err)
 		{
-			m_TurretProps.LoadFromScript(script);
+			m_RotaryProps[Curivator_Robot::eTurret].LoadFromScript(script);
 			script.Pop();
 		}
 		err = script.GetFieldTable("arm");
 		if (!err)
 		{
-			m_ArmProps.LoadFromScript(script);
+			m_RotaryProps[Curivator_Robot::eArm].LoadFromScript(script);
 			script.Pop();
 		}
 
@@ -779,20 +766,19 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 
 	switch (index)
 	{
-	case Curivator_Robot::eTurret:
-		VoltageScalar=m_RobotProps.GetTurretProps().GetRotaryProps().VoltageScalar;
-		SmartDashboard::PutNumber("TurretVoltage",Voltage*VoltageScalar);
-		break;
 	case Curivator_Robot::eArm:
-		VoltageScalar=m_RobotProps.GetArmProps().GetRotaryProps().VoltageScalar;
-		SmartDashboard::PutNumber("ArmVoltage",Voltage*VoltageScalar);
 		#ifdef Robot_TesterCode
 		m_Potentiometer.UpdatePotentiometerVoltage(Voltage);
 		m_Potentiometer.TimeChange();  //have this velocity immediately take effect
 		#endif
 		break;
 	}
+	VoltageScalar=m_RobotProps.GetRotaryProps(index).GetRotaryProps().VoltageScalar;
 	Voltage*=VoltageScalar;
+	std::string SmartLabel=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
+	SmartLabel[0]-=32; //Make first letter uppercase
+	SmartLabel+="Voltage";
+	SmartDashboard::PutNumber(SmartLabel.c_str(),Voltage);
 	Victor_UpdateVoltage(index,Voltage);
 }
 
@@ -859,11 +845,12 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 	{
 		m_RobotProps=*robot_props;  //save a copy
 
-		Rotary_Properties turret_props=robot_props->GetTurretProps();
-		turret_props.SetUsingRange(false); //TODO why is this here?	
+		//TODO why is this here?	
+		//Rotary_Properties turret_props=robot_props->GetRotaryProps(Curivator_Robot::eTurret);
+		//turret_props.SetUsingRange(false); 
 
 		#ifdef Robot_TesterCode
-		Rotary_Properties writeable_arm_props=robot_props->GetArmProps();
+		Rotary_Properties writeable_arm_props=robot_props->GetRotaryProps(Curivator_Robot::eArm);
 		//m_ArmMaxSpeed=writeable_arm_props.GetMaxSpeed();
 		//This is not perfect but will work for our simulation purposes
 		writeable_arm_props.RotaryProps().EncoderToRS_Ratio=robot_props->GetCurivatorRobotProps().ArmToGearRatio;

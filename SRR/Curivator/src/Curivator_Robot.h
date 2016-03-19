@@ -43,8 +43,8 @@ class Curivator_Robot_Properties : public Tank_Robot_Properties
 		Curivator_Robot_Properties();
 		virtual void LoadFromScript(Scripting::Script& script);
 
-		const Rotary_Properties &GetTurretProps() const {return m_TurretProps;}
-		const Rotary_Properties &GetArmProps() const {return m_ArmProps;}
+		//where the index matches the enumeration of each rotary system
+		const Rotary_Properties &GetRotaryProps(size_t index) const {return m_RotaryProps[index];}
 
 		const Curivator_Robot_Props &GetCurivatorRobotProps() const {return m_CurivatorRobotProps;}
 		Curivator_Robot_Props &GetCurivatorRobotProps_rw() {return m_CurivatorRobotProps;}
@@ -54,7 +54,7 @@ class Curivator_Robot_Properties : public Tank_Robot_Properties
 		#ifndef Robot_TesterCode
 		typedef Tank_Robot_Properties __super;
 		#endif
-		Rotary_Properties m_TurretProps,m_ArmProps;
+		Rotary_Properties m_RotaryProps[2];
 		Curivator_Robot_Props m_CurivatorRobotProps;
 
 		class ControlEvents : public LUA_Controls_Properties_Interface
