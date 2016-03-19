@@ -62,7 +62,8 @@ struct ParticleList
 	{
 		numParticles = 0;
 		particleData.clear();
-		area_threshold = 0.8f;
+		area_thresholdMin = 0.8f;
+		area_thresholdMax = 1.0f;
 		aspectMin = 0.8f;
 		aspectMax = 1.4f;
 		ideal_vert_asp = 4.0/32;
@@ -72,7 +73,8 @@ struct ParticleList
 
 	void SetParticleParams( float thresh, float aspMin, float aspMax )
 	{
-		area_threshold = thresh;
+		area_thresholdMin = thresh;
+		area_thresholdMax = 0.0f;
 		aspectMin = aspMin;
 		aspectMax = aspMax;
 		ideal_vert_asp = 0.0f;
@@ -82,7 +84,8 @@ struct ParticleList
 
 	void SetParticleParams( float thresh, float aspMin, float aspMax, float circlim )
 	{
-		area_threshold = thresh;
+		area_thresholdMin = thresh;
+		area_thresholdMax = 0.0f;
 		aspectMin = aspMin;
 		aspectMax = aspMax;
 		ideal_vert_asp = 0.0f;
@@ -92,7 +95,8 @@ struct ParticleList
 
 	void SetParticleParams( float thresh, float aspMin, float aspMax, float vert_asp, float horz_asp )
 	{
-		area_threshold = thresh;
+		area_thresholdMin = thresh;
+		area_thresholdMax = 0.0f;
 		aspectMin = aspMin;
 		aspectMax = aspMax;
 		ideal_vert_asp = vert_asp;
@@ -100,9 +104,21 @@ struct ParticleList
 		circularity_limit = 0.0f;
 	}
 
+	void SetParticleParamsThresh( float threshMin, float threshMax, float aspMin, float aspMax )
+	{
+		area_thresholdMin = threshMin;
+		area_thresholdMax = threshMax;
+		aspectMin = aspMin;
+		aspectMax = aspMax;
+		ideal_vert_asp = 0.0f;
+		ideal_horz_asp = 0.0f;
+		circularity_limit = 0.0f;
+	}
+
 	int numParticles;
-	float area_threshold;	// particles must fill this much of their bounding box to qualify.
-	float aspectMin;		// particle bounding box must be in this range of aspect ratios.
+	float area_thresholdMin;	// particles must fill this much of their bounding box to qualify.
+	float area_thresholdMax;	// particles must not fill more of their bounding box than this.
+	float aspectMin;			// particle bounding box must be in this range of aspect ratios.
 	float aspectMax;
 	float ideal_vert_asp;
 	float ideal_horz_asp;
