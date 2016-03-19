@@ -967,11 +967,11 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			//the offset is delegated in script in the final scale units, and the scale is the total range in radians
 			result=PotentiometerRaw_To_Arm;
 			//get scale
-			const Ship_1D_Props &shipprops=m_RobotProps.GetArmProps().GetShip_1D_Props();
+			const Ship_1D_Props &shipprops=m_RobotProps.GetRotaryProps(Curivator_Robot::eArm).GetShip_1D_Props();
 			//SmartDashboard::PutNumber("Arm_ScaleTest",shipprops.MaxRange-shipprops.MinRange);
 			result*=shipprops.MaxRange-shipprops.MinRange;  //compute the total distance in radians
 			//get offset... Note: scale comes first since the offset is of that scale
-			result+=m_RobotProps.GetArmProps().GetRotaryProps().PotentiometerOffset;
+			result+=m_RobotProps.GetRotaryProps(Curivator_Robot::eArm).GetRotaryProps().PotentiometerOffset;
 			#else
 			result=(m_Potentiometer.GetPotentiometerCurrentPosition()) + 0.0;
 			#endif
