@@ -1,7 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
 #include "ProcessingVision.h"
-#include "NI_VisionProcessingBase.h"
+#include "OCV_VisionProcessingBase.h"
 
 VisionTracker* g_pTracker[eNumTrackers];
 

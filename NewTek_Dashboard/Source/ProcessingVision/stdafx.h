@@ -20,11 +20,6 @@
 #include <stdio.h>
 #include <Shlobj.h>
 
-// NI
-#include "nivision.h"
-#include "nimachinevision.h"
-#include <vector>
-
 #if 0
 #define DOUT(...) FrameWork::DebugOutput(__VA_ARGS__);
 #else

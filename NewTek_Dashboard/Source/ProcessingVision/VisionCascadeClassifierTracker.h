@@ -7,7 +7,6 @@ public:
 	virtual ~VisionCascadeClassifierTracker();
 
 	int ProcessImage(double &x, double &y);
-	void SetDefaultThreshold(void);
 
 private:
 #ifdef OCV_READY
@@ -24,6 +23,4 @@ private:
 	int frameCount;
 	bool bCascadeLoaded;
 #endif
-
-	ParticleList particleList;	// our results data structure
 };

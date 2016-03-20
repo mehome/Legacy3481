@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ProcessingVision.h"
 #include "profile.h"
-#include "NI_VisionProcessingBase.h"
+#include "OCV_VisionProcessingBase.h"
 #include "VisionCascadeClassifierTracker.h"
 #include "../SmartDashboard/SmartDashboard_Import.h"
 
@@ -37,22 +37,6 @@ VisionCascadeClassifierTracker::VisionCascadeClassifierTracker()
 
 VisionCascadeClassifierTracker::~VisionCascadeClassifierTracker()
 {
-}
-
-void VisionCascadeClassifierTracker::SetDefaultThreshold( void )
-{
-	// hsv - green
-	HueRange.minValue = 0,			HueRange.maxValue = 255,
-	SaturationRange.minValue = 0,	SaturationRange.maxValue = 255,
-	ValueRange.minValue = 0,		ValueRange.maxValue = 255;
-
-	// rgb - green
-	RedRange.minValue = 0,		RedRange.maxValue = 255,
-	GreenRange.minValue = 0,	GreenRange.maxValue = 255,
-	BlueRange.minValue = 0,		BlueRange.maxValue = 255;	
-
-	// luma - I doubt this would be a good choice - added for completeness.
-	LuminanceRange.minValue = 0, LuminanceRange.maxValue = 255;
 }
 
 // TODO: 

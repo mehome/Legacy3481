@@ -2,12 +2,7 @@
 #include "stdafx.h"
 #include "../FrameWork/FrameWork.h"
 #include "ProcessingVision.h"
-#include "NI_VisionProcessingBase.h"
-//#include "VisionGoalTracker.h"
-//#include "VisionRinTinTinTracker.h"
-//#include "VisionArialAssistTracker.h"
-#include "VisionStrongholdGoalTracker.h"
-#include "VisionBallTracker.h"
+#include "OCV_VisionProcessingBase.h"
 #include "VisionCascadeClassifierTracker.h"
 //#define __Using_UDP__
 
@@ -19,9 +14,9 @@
 UDP_Client_Interface *g_UDP_Output=NULL;
 #endif
 extern VisionTracker* g_pTracker[eNumTrackers];
-TrackerType SelectedTracker = eGoalTracker;
+TrackerType SelectedTracker = eCascadeTracker;
 Dashboard_Framework_Interface *g_Framework=NULL;
-TrackerType PendingTracker = eGoalTracker;
+TrackerType PendingTracker = eCascadeTracker;
 FrameWork::event frameSync;
 bool g_IsTargeting=false;
 std::string g_WindowTitle="";
@@ -60,16 +55,16 @@ class SineWaveMaker
 		double m_rho,m_rho2;
 } g_TestSample;
 
-Bitmap_Frame *NI_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target, bool &have_target)
+Bitmap_Frame *OCV_VisionProcessing(Bitmap_Frame *Frame, double &x_target, double &y_target, bool &have_target)
 {
 	if( g_pTracker[SelectedTracker] == NULL )
 	{
-		if( SelectedTracker == eGoalTracker )
-			g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
+		//if( SelectedTracker == eGoalTracker )
+		//	g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
+		//if( SelectedTracker == eBallTracker )
+		//	g_pTracker[eBallTracker] = new VisionBallTracker();
 		if( SelectedTracker == eCascadeTracker )
 			g_pTracker[eCascadeTracker] = new VisionCascadeClassifierTracker();
-		if( SelectedTracker == eBallTracker )
-			g_pTracker[eBallTracker] = new VisionBallTracker();
 		if( g_pTracker[SelectedTracker] == NULL)
 			return Frame;
 	}
@@ -116,7 +111,7 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Fr
 		bool have_target = false;
 		//Note: out_frame could be UVYV if we wanted it to be... I don't want to assume its the same as &bgra_frame even though it may be
 		Bitmap_Frame *out_frame;
-		out_frame = NI_VisionProcessing(&bgra_frame, x_target, y_target, have_target);
+		out_frame = OCV_VisionProcessing(&bgra_frame, x_target, y_target, have_target);
 		//TODO still under testing... this is experimental to see if it has better improvement
 		#if 0
 		//This is somewhat cheating, but we can assume there is only one instance of the tracking that will be happening
@@ -215,11 +210,14 @@ extern "C" PROCESSINGVISION_API Bitmap_Frame *ProcessFrame_UYVY(Bitmap_Frame *Fr
 
 extern "C" PROCESSINGVISION_API void ResetDefaults( void )
 {
+#if HAS_RESET
 	g_pTracker[SelectedTracker]->SetDefaultThreshold();
+#endif
 }
 
 extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum VisionSetting, double value)
 {
+#if HAS_SETTINGS
 	switch( VisionSetting )
 	{
 		case eTrackerType:
@@ -228,12 +226,12 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 			{	// this is for init - no sync needed if selected tracker not started.
 				if( g_pTracker[SelectedTracker] == NULL )
 					SelectedTracker = PendingTracker;
-				if( PendingTracker == eGoalTracker )
-					g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
+				//if( PendingTracker == eGoalTracker )
+				//	g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
+				//if( PendingTracker == eBallTracker )
+				//	g_pTracker[eBallTracker] = new VisionBallTracker();
 				if( PendingTracker == eCascadeTracker )
 					g_pTracker[eCascadeTracker] = new VisionCascadeClassifierTracker(); 
-				if( PendingTracker == eBallTracker )
-					g_pTracker[eBallTracker] = new VisionBallTracker();
 			}
 			frameSync.wait(500);	// cheezy method to make the control dialog wait so it can get the correct values after switching
 			break;
@@ -303,20 +301,21 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 		default:
 			break;
 	}
-
+#endif
 	return true;
 }
 
 extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum VisionSetting )
 {
+#if HAS_SETTINGS
 	if( g_pTracker[PendingTracker] == NULL )
 	{
-		if( PendingTracker == eGoalTracker )
-			g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
+		//if( PendingTracker == eGoalTracker )
+		//	g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
+		//if( PendingTracker == eBallTracker )
+		//	g_pTracker[eBallTracker] = new VisionBallTracker();
 		if( PendingTracker == eCascadeTracker )
 			g_pTracker[eCascadeTracker] = new VisionCascadeClassifierTracker(); 
-		if( PendingTracker == eBallTracker )
-			g_pTracker[eBallTracker] = new VisionBallTracker();
 	}
 
 	switch( VisionSetting )
@@ -362,6 +361,7 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 		default:
 			break;
 	}
+#endif
 	return 0.0;
 }
 
