@@ -3,13 +3,11 @@
 struct Rotary_Props
 {
 	double VoltageScalar;		//Used to handle reversed voltage wiring
-	//Note: EncoderToRS_Ratio and PotentiometerOffset are place holder properties that are implemented in the robot control
-	//interface as needed for that control... they are not used in the rotary system code
+	//Note: EncoderToRS_Ratio is a place holder property that is implemented in the robot control
+	//interface as needed for that control... it is not used in the rotary system code
 	//The gear reduction used when multiplied by the encoder RPS will equal the *Rotary System's* RPS
 	//This is typically the motor speed since this solves to apply voltage to it
 	double EncoderToRS_Ratio;
-	//This allows adjustment of the potentiometer in software to avoid manual recalibration (used only for position control)
-	double PotentiometerOffset;  
 	double PID[3]; //p,i,d
 	double PrecisionTolerance;  //Used to manage voltage override and avoid oscillation
 	//Currently supporting 4 terms in polynomial equation
@@ -241,14 +239,16 @@ class COMMON_API Rotary_Properties : public Ship_1D_Properties
 		#endif
 };
 
-//These are addition attributes for any generic potentiometer
+//These are addition attributes for any generic potentiometer  (This implies used only for position control)
 struct COMMON_API Rotary_Pot_Props
 {
 	// init to some meaning data
-	Rotary_Pot_Props() : IsFlipped(false),PotMaxValue(1000.0),PotMinValue(0.0) {}
+	Rotary_Pot_Props() : IsFlipped(false),PotMaxValue(1000.0),PotMinValue(0.0),PotentiometerOffset(0.0) {}
 	bool IsFlipped;  // is the range flipped
 	double PotMaxValue;  //highest you want the potentiometer to read (add some padding)
 	double PotMinValue;
+	//This allows adjustment of the potentiometer in software to avoid manual recalibration.
+	double PotentiometerOffset;  
 };
 
 class COMMON_API Rotary_Pot_Properties : public Rotary_Properties
