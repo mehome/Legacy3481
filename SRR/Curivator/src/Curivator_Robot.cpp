@@ -876,7 +876,7 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 		//Encoder_Start(Curivator_Robot::eWinch);
 		ResetPos(); //must be called after compressor is created
 		//Typically disabled, but may wish to enable initially
-		#if 1
+		#if 0
 		for (size_t i=0;i<2;i++)
 		{
 			const char * const Prefix=csz_Curivator_Robot_SpeedControllerDevices_Enum[i];
@@ -992,7 +992,7 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			//SmartDashboard::PutNumber("Arm_ScaleTest",shipprops.MaxRange-shipprops.MinRange);
 			result*=shipprops.MaxRange-shipprops.MinRange;  //compute the total distance in radians
 			//get offset... Note: scale comes first since the offset is of that scale
-			result+=m_RobotProps.GetRotaryProps(index).GetRotaryProps().PotentiometerOffset;
+			result+=m_RobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().PotentiometerOffset;
 			#else
 			result=(m_Potentiometer.GetPotentiometerCurrentPosition()) + 0.0;
 			#endif
