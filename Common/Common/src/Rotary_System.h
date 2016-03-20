@@ -240,3 +240,32 @@ class COMMON_API Rotary_Properties : public Ship_1D_Properties
 		typedef Ship_1D_Properties __super;
 		#endif
 };
+
+//These are addition attributes for any generic potentiometer
+struct COMMON_API Rotary_Pot_Props
+{
+	// init to some meaning data
+	Rotary_Pot_Props() : IsFlipped(false),PotMaxValue(1000.0),PotMinValue(0.0) {}
+	bool IsFlipped;  // is the range flipped
+	double PotMaxValue;  //highest you want the potentiometer to read (add some padding)
+	double PotMinValue;
+};
+
+class COMMON_API Rotary_Pot_Properties : public Rotary_Properties
+{
+	public:
+		Rotary_Pot_Properties(const char EntityName[], double Mass,double Dimension,
+			double MAX_SPEED,double ACCEL,double BRAKE,double MaxAccelForward, double MaxAccelReverse,	
+			Ship_Type ShipType=Ship_1D_Props::eDefault, bool UsingRange=false, double MinRange=0.0, double MaxRange=0.0,
+			bool IsAngular=false) : Rotary_Properties(EntityName,Mass,Dimension,MAX_SPEED,ACCEL,BRAKE,MaxAccelForward,
+			MaxAccelReverse,ShipType,UsingRange,MinRange,MaxRange,IsAngular) {}
+		Rotary_Pot_Properties() {}
+		virtual void LoadFromScript(Scripting::Script& script);
+		const Rotary_Pot_Props &GetRotary_Pot_Properties() const {return m_RotaryPotProps;}
+	protected:
+		Rotary_Pot_Props m_RotaryPotProps;
+	private:
+		#ifndef Robot_TesterCode
+		typedef Rotary_Properties __super;
+		#endif
+};

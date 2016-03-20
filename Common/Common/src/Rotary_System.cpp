@@ -633,7 +633,10 @@ void Rotary_Velocity_Control::Initialize(Base::EventMap& em,const Entity1D_Prope
 	}
 	//It is assumed that this property is constant throughout the whole session
 	if (m_Rotary_Props.PID_Console_Dump)
+	{
+		Ship_1D::InitNetworkProperties(Props->GetShip_1D_Props());
 		InitNetworkProperties(m_Rotary_Props);
+	}
 }
 
 void Rotary_Velocity_Control::UpdateRotaryProps(const Rotary_Props &RotaryProps)
@@ -1076,5 +1079,20 @@ void Rotary_Properties::LoadFromScript(Scripting::Script& script)
 		}
 		#endif
 	}
+	__super::LoadFromScript(script);
+}
+
+
+void Rotary_Pot_Properties::LoadFromScript(Scripting::Script& script)
+{
+	const char* err=NULL;
+	double fValue;
+	err=script.GetField("pot_min_limit", NULL, NULL, &fValue);
+	if (!err) m_RotaryPotProps.PotMinValue=fValue;
+	err=script.GetField("pot_max_limit", NULL, NULL, &fValue);
+	if (!err) m_RotaryPotProps.PotMaxValue=fValue;
+	std::string sTest;
+	SCRIPT_TEST_BOOL_YES(m_RotaryPotProps.IsFlipped,"pot_range_flipped");
+
 	__super::LoadFromScript(script);
 }
