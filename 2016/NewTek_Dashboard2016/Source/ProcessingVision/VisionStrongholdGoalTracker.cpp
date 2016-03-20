@@ -67,9 +67,9 @@ void VisionStrongholdGoalTracker::SetDefaultThreshold( void )
 	ValueRange.minValue = 50,		ValueRange.maxValue = 250;
 
 	// rgb - green
-	RedRange.minValue = 0,		RedRange.maxValue = 188,
-	GreenRange.minValue = 163,	GreenRange.maxValue = 255,
-	BlueRange.minValue = 9,		BlueRange.maxValue = 255;	
+	RedRange.minValue = 100,	RedRange.maxValue = 255,
+	GreenRange.minValue = 219,	GreenRange.maxValue = 255,
+	BlueRange.minValue = 216,	BlueRange.maxValue = 255;	
 
 	// luma - I doubt this would be a good choice - added for completeness.
 	LuminanceRange.minValue = 50, LuminanceRange.maxValue = 250;
@@ -80,7 +80,7 @@ int VisionStrongholdGoalTracker::ProcessImage(double &x_target, double &y_target
 {
 	int success = 1;
 
-	particleList.SetParticleParamsThresh( 0.285f, 0.375f, (12.0f/12), (20.0f/12) );	// area threshold min, max, aspect min, max
+	particleList.SetParticleParamsThresh( 0.285f, 0.375f, (12.0f/12), (20.0f/10.75) );	// area threshold min, max, aspect min, max
 
 	//-----------------------------------------------------------------//
 	//  Threshold                                                      //
