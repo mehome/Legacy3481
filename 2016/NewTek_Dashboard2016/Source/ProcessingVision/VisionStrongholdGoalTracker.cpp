@@ -67,9 +67,9 @@ void VisionStrongholdGoalTracker::SetDefaultThreshold( void )
 	ValueRange.minValue = 50,		ValueRange.maxValue = 250;
 
 	// rgb - green
-	RedRange.minValue = 100,	RedRange.maxValue = 255,
-	GreenRange.minValue = 219,	GreenRange.maxValue = 255,
-	BlueRange.minValue = 216,	BlueRange.maxValue = 255;	
+	RedRange.minValue = 99,	RedRange.maxValue = 255,
+	GreenRange.minValue = 191,	GreenRange.maxValue = 255,
+	BlueRange.minValue = 193,	BlueRange.maxValue = 255;	
 
 	// luma - I doubt this would be a good choice - added for completeness.
 	LuminanceRange.minValue = 50, LuminanceRange.maxValue = 250;
