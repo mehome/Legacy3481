@@ -819,13 +819,16 @@ void Curivator_Robot_Control::Reset_Rotary(size_t index)
 
 	switch (index)
 	{
+	case Curivator_Robot::eTurret:
 	case Curivator_Robot::eArm:
-		m_KalFilter_Arm.Reset();
-		#ifdef Robot_TesterCode
-		m_Potentiometer.ResetPos();
-		#endif
+		m_KalFilter[index].Reset();
 		break;
 	}
+
+	#ifdef Robot_TesterCode
+	if (index==Curivator_Robot::eArm)
+		m_Potentiometer.ResetPos();
+	#endif
 }
 
 #ifdef Robot_TesterCode
@@ -872,8 +875,20 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 		//Encoder_SetDistancePerPulse(Curivator_Robot::eWinch,EncoderPulseRate);
 		//Encoder_Start(Curivator_Robot::eWinch);
 		ResetPos(); //must be called after compressor is created
-		SmartDashboard::PutNumber("Arm_Raw_high",4013.0);
-		SmartDashboard::PutNumber("Arm_Raw_Range",24.0);
+		//Typically disabled, but may wish to enable initially
+		#if 1
+		for (size_t i=0;i<2;i++)
+		{
+			const char * const Prefix=csz_Curivator_Robot_SpeedControllerDevices_Enum[i];
+			string ContructedName;
+			ContructedName=Prefix,ContructedName+="_Raw_high";
+			SmartDashboard::PutNumber(ContructedName.c_str(),m_RobotProps.GetRotaryProps(i).GetRotary_Pot_Properties().PotMaxValue);
+			ContructedName=Prefix,ContructedName+="_Raw_low";
+			SmartDashboard::PutNumber(ContructedName.c_str(),m_RobotProps.GetRotaryProps(i).GetRotary_Pot_Properties().PotMinValue);
+			ContructedName=Prefix,ContructedName+="_Pot_Range_Flipped";
+			SmartDashboard::PutBoolean(ContructedName.c_str(),m_RobotProps.GetRotaryProps(i).GetRotary_Pot_Properties().IsFlipped);
+		}
+		#endif
 	}
 
 }
@@ -918,6 +933,16 @@ void Curivator_Robot_Control::UpdateLeftRightVoltage(double LeftVoltage,double R
 	m_pTankRobotControl->UpdateLeftRightVoltage(LeftVoltage,RightVoltage);
 }
 
+__inline double Curivator_Robot_Control::Pot_GetRawValue(size_t index)
+{
+	//double raw_value = (double)m_Potentiometer.GetAverageValue();
+	double raw_value=(double)Analog_GetAverageValue(index);
+	raw_value = m_KalFilter[index](raw_value);  //apply the Kalman filter
+	raw_value=m_Averager[index].GetAverage(raw_value); //and Ricks x element averager
+	//Note: we keep the raw value in its native form... just averaging at most for less noise
+	return raw_value;
+}
+
 double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 {
 	double result=0.0;
@@ -925,27 +950,19 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 
 	switch (index)
 	{
+		case Curivator_Robot::eTurret:
 		case Curivator_Robot::eArmPot:
 		{
 			#ifndef Robot_TesterCode
 			//double raw_value = (double)m_Potentiometer.GetAverageValue();
-			double raw_value=(double)Analog_GetAverageValue(Curivator_Robot::eArmPot);
-			raw_value = m_KalFilter_Arm(raw_value);  //apply the Kalman filter
-			raw_value=m_ArmAverager.GetAverage(raw_value); //and Ricks x element averager
-			//Note: we keep the raw value in its native form... just averaging at most for less noise
+			double raw_value=Pot_GetRawValue(index);
 
 			double PotentiometerRaw_To_Arm;
 
-			//TODO may wish to script this
-			#if 0
-			const double lowRange=155;
-			const double HiRange=1125;
-			#else
-			const double HiRange=SmartDashboard::GetNumber("Arm_Raw_high");
-			const double LowRange=HiRange-SmartDashboard::GetNumber("Arm_Raw_Range");
+			const double HiRange=m_RobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().PotMaxValue;
+			const double LowRange=m_RobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().PotMinValue;
 			//If this is true, the value is inverted with the negative operator
-			const bool FlipRange=true;
-			#endif
+			const bool FlipRange=m_RobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().IsFlipped;
 
 			PotentiometerRaw_To_Arm = raw_value-LowRange;//zeros the potentiometer
 			PotentiometerRaw_To_Arm = PotentiometerRaw_To_Arm/(HiRange-LowRange);//scales values from 0 to 1 with +- .001
@@ -955,33 +972,36 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			if (PotentiometerRaw_To_Arm < 0) PotentiometerRaw_To_Arm = 0;//corrects .001 or less causing a negative value
 			if (PotentiometerRaw_To_Arm > 1 || PotentiometerRaw_To_Arm > .999) PotentiometerRaw_To_Arm = 1;//corrects .001 or lass causing value greater than 1
 
-			//TODO fix in lua
-			//PotentiometerRaw_To_Arm*=props.PotentiometerToArmRatio;  //convert to arm's gear ratio
+			//TODO see if we need a ratio multiply here... otherwise range is from 0-1 for full motion
+
 			if (FlipRange)
 				PotentiometerRaw_To_Arm=1.0-PotentiometerRaw_To_Arm;
 
-			SmartDashboard::PutNumber("Arm_Raw",raw_value);
-			SmartDashboard::PutNumber("Arm_PotRaw",PotentiometerRaw_To_Arm);
+			const char * const Prefix=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
+			string ContructedName;
+			ContructedName=Prefix,ContructedName+="_Raw";
+			SmartDashboard::PutNumber(ContructedName.c_str(),raw_value);
+			ContructedName=Prefix,ContructedName+="Pot_Raw";
+			SmartDashboard::PutNumber(ContructedName.c_str(),PotentiometerRaw_To_Arm);
 
 			//Now to compute the result... we start with the normalized value and give it the appropriate offset and scale
 			//the offset is delegated in script in the final scale units, and the scale is the total range in radians
 			result=PotentiometerRaw_To_Arm;
 			//get scale
-			const Ship_1D_Props &shipprops=m_RobotProps.GetRotaryProps(Curivator_Robot::eArm).GetShip_1D_Props();
+			const Ship_1D_Props &shipprops=m_RobotProps.GetRotaryProps(index).GetShip_1D_Props();
 			//SmartDashboard::PutNumber("Arm_ScaleTest",shipprops.MaxRange-shipprops.MinRange);
 			result*=shipprops.MaxRange-shipprops.MinRange;  //compute the total distance in radians
 			//get offset... Note: scale comes first since the offset is of that scale
-			result+=m_RobotProps.GetRotaryProps(Curivator_Robot::eArm).GetRotaryProps().PotentiometerOffset;
+			result+=m_RobotProps.GetRotaryProps(index).GetRotaryProps().PotentiometerOffset;
 			#else
 			result=(m_Potentiometer.GetPotentiometerCurrentPosition()) + 0.0;
 			#endif
 
-			SmartDashboard::PutNumber("ArmAngle",RAD_2_DEG(result));
-			const double height= (sin(result)*props.ArmLength)+props.GearHeightOffset;
-			SmartDashboard::PutNumber("Height",height*3.2808399);
+			//TODO see if this is necessary
 			//Now to convert to the motor gear ratio as this is what we work in
-			result*=props.ArmToGearRatio;
+			//result*=props.ArmToGearRatio;
 		}
+		break;
 	}
 	return result;
 }

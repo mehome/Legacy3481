@@ -44,7 +44,7 @@ class Curivator_Robot_Properties : public Tank_Robot_Properties
 		virtual void LoadFromScript(Scripting::Script& script);
 
 		//where the index matches the enumeration of each rotary system
-		const Rotary_Properties &GetRotaryProps(size_t index) const {return m_RotaryProps[index];}
+		const Rotary_Pot_Properties &GetRotaryProps(size_t index) const {return m_RotaryProps[index];}
 
 		const Curivator_Robot_Props &GetCurivatorRobotProps() const {return m_CurivatorRobotProps;}
 		Curivator_Robot_Props &GetCurivatorRobotProps_rw() {return m_CurivatorRobotProps;}
@@ -54,7 +54,7 @@ class Curivator_Robot_Properties : public Tank_Robot_Properties
 		#ifndef Robot_TesterCode
 		typedef Tank_Robot_Properties __super;
 		#endif
-		Rotary_Properties m_RotaryProps[2];
+		Rotary_Pot_Properties m_RotaryProps[2];
 		Curivator_Robot_Props m_CurivatorRobotProps;
 
 		class ControlEvents : public LUA_Controls_Properties_Interface
@@ -277,8 +277,10 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 		bool m_Limit_IntakeMin1,m_Limit_IntakeMin2,m_Limit_IntakeMax1,m_Limit_IntakeMax2;
 		bool m_Limit_DartUpper,m_Limit_DartLower;
 	private:
-		KalmanFilter m_KalFilter_Arm;
-		Averager<double,5> m_ArmAverager;
+		__inline double Pot_GetRawValue(size_t index);
+
+		KalmanFilter m_KalFilter[2];
+		Averager<double,5> m_Averager[2];
 		#ifdef Robot_TesterCode
 		Potentiometer_Tester2 m_Potentiometer; //simulate a real potentiometer for calibration testing
 		#endif
