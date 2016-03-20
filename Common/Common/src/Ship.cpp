@@ -937,7 +937,7 @@ void Ship_Properties::LoadFromScript(Scripting::Script& script)
 
 		err=script.GetField("MaxTorqueYaw_SetPoint_High", NULL, NULL, &props.MaxTorqueYaw_SetPoint_High);
 		if (err)
-			props.MaxTorqueYaw_High=props.MaxTorqueYaw_High;
+			props.MaxTorqueYaw_High=props.MaxTorqueYaw;
 
 		//depreciated
 		#if 0
