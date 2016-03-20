@@ -52,7 +52,7 @@ class FRC_2015_Robot_Properties : public Tank_Robot_Properties
 		const Rotary_Properties &GetTurretProps() const {return m_TurretProps;}
 		const Rotary_Properties &GetPitchRampProps() const {return m_PitchRampProps;}
 		const Rotary_Properties &GetKickerWheelProps() const {return m_KickerWheelProps;}
-		const Rotary_Properties &GetArmProps() const {return m_ArmProps;}
+		const Rotary_Pot_Properties &GetArmProps() const {return m_ArmProps;}
 
 		const Tank_Robot_Properties &GetLowGearProps() const {return m_LowGearProps;}
 		const FRC_2015_Robot_Props &GetFRC2015RobotProps() const {return m_FRC2015RobotProps;}
@@ -63,7 +63,8 @@ class FRC_2015_Robot_Properties : public Tank_Robot_Properties
 		#ifndef Robot_TesterCode
 		typedef Tank_Robot_Properties __super;
 		#endif
-		Rotary_Properties m_TurretProps,m_PitchRampProps,m_KickerWheelProps,m_ArmProps;
+		Rotary_Properties m_TurretProps,m_PitchRampProps,m_KickerWheelProps;
+		Rotary_Pot_Properties m_ArmProps;
 		Tank_Robot_Properties m_LowGearProps;
 		FRC_2015_Robot_Props m_FRC2015RobotProps;
 

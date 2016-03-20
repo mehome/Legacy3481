@@ -168,12 +168,20 @@ void FRC_2015_Robot::Robot_Arm::Retract(bool on)
 
 bool FRC_2015_Robot::Robot_Arm::DidHitMinLimit() const
 {
+	#ifndef Robot_TesterCode
 	return m_pParent->m_RobotControl->GetBoolSensorState(eDartLower);
+	#else
+	return false;  //TODO make better simulated sensors
+	#endif
 }
 
 bool FRC_2015_Robot::Robot_Arm::DidHitMaxLimit() const
 {
+	#ifndef Robot_TesterCode
 	return m_pParent->m_RobotControl->GetBoolSensorState(eDartUpper);
+	#else
+	return false;    //TODO make better simulated sensors
+	#endif
 }
 
 void FRC_2015_Robot::Robot_Arm::TimeChange(double dTime_s)
@@ -1431,7 +1439,7 @@ double FRC_2015_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			//SmartDashboard::PutNumber("Arm_ScaleTest",shipprops.MaxRange-shipprops.MinRange);
 			result*=shipprops.MaxRange-shipprops.MinRange;  //compute the total distance in radians
 			//get offset... Note: scale comes first since the offset is of that scale
-			result+=m_RobotProps.GetArmProps().GetRotaryProps().PotentiometerOffset;
+			result+=m_RobotProps.GetArmProps().GetRotary_Pot_Properties().PotentiometerOffset;
 			#else
 			result=(m_Potentiometer.GetPotentiometerCurrentPosition()) + 0.0;
 			#endif
