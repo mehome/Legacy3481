@@ -5,19 +5,8 @@
 #include "VisionCascadeClassifierTracker.h"
 #include "../SmartDashboard/SmartDashboard_Import.h"
 
-#ifdef OCV_READY
-// cascade classifier
-#include "OpenNI.h"
-#include "opencv2/objdetect/objdetect.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-
-#include <iostream>
-#include <stdio.h>
-
 using namespace std;
 using namespace cv;
-#endif
 
 VisionCascadeClassifierTracker::VisionCascadeClassifierTracker()
 #ifdef OCV_READY

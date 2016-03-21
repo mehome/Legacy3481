@@ -58,8 +58,8 @@ void profile::stop( const DWORD size, const float debug_threshold_in_ms )
 	if ( !m_frames ) 
 			m_min = delta, m_max = delta;
 	// Update the minimum and maximum
-	else	m_min = min( m_min, delta ),
-			m_max = max( m_max, delta );
+	else	m_min = std::min( m_min, delta ),
+			m_max = std::max( m_max, delta );
 
 	m_frames++;	
 }

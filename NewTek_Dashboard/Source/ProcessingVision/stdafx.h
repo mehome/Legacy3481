@@ -20,6 +20,11 @@
 #include <stdio.h>
 #include <Shlobj.h>
 
+// cascade classifier
+#include "opencv2/objdetect/objdetect.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
 #if 0
 #define DOUT(...) FrameWork::DebugOutput(__VA_ARGS__);
 #else
