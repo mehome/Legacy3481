@@ -29,9 +29,7 @@ VisionCascadeClassifierTracker::~VisionCascadeClassifierTracker()
 }
 
 // TODO: 
-// * work out OpenCV lib requirements
 // * convert incomming image to Mat format for OpenCV -- implement in GetFrame().
-// * restructure - nuetral base class for general and interface, new subclasses for NI vs OCV.
 // * Modify detection function... can probably move that code to main processing func.
 int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_target)
 {
