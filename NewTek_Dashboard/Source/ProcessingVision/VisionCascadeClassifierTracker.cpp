@@ -13,8 +13,10 @@ VisionCascadeClassifierTracker::VisionCascadeClassifierTracker()
 	bShowImg(false),
 	bCascadeLoaded(false)
 {	
-	hook_cascade_name = "data\\SRR Samples\\cascades\\hook_cascade_cpu.xml";
-	bCascadeLoaded = hook_cascade.load(hook_cascade_name);
+	hook_cascade_name = "cascade_data\\hook_cascade_cpu.xml";
+	p_hook_cascade = new CascadeClassifier();
+	if(p_hook_cascade)
+		bCascadeLoaded = p_hook_cascade->load(hook_cascade_name);
 }
 
 
@@ -54,7 +56,7 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 		//}
 
 		//-- detect hook sample
-		hook_cascade.detectMultiScale(frame_gray, hooks, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(15, 15));
+		p_hook_cascade->detectMultiScale(frame_gray, hooks, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(15, 15));
 
 		for (size_t i = 0; i < hooks.size(); i++)
 		{

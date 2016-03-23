@@ -217,7 +217,6 @@ extern "C" PROCESSINGVISION_API void ResetDefaults( void )
 
 extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum VisionSetting, double value)
 {
-#if HAS_SETTINGS
 	switch( VisionSetting )
 	{
 		case eTrackerType:
@@ -235,6 +234,7 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 			}
 			frameSync.wait(500);	// cheezy method to make the control dialog wait so it can get the correct values after switching
 			break;
+#if HAS_SETTINGS
 		case eDisplayType:
 			if( g_pTracker[SelectedTracker] == NULL )
 				return false;
@@ -278,15 +278,6 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 			if( SelectedTracker == eBallTracker )
 				g_pTracker[SelectedTracker]->SetBallTrackingColor((bool)(int)value);
 			break;
-		case eIsTargeting:
-			{
-				std::string IsTargeting=g_WindowTitle;
-				IsTargeting+="_Is_Targeting";
-				SmartDashboard::PutBoolean(IsTargeting.c_str(),(value==0.0)?false:true);
-
-				g_IsTargeting=(value==0.0)?false:true;
-			}
-			break;
 		case eThresholdPlane1Min:
 		case eThresholdPlane2Min:
 		case eThresholdPlane3Min:
@@ -297,18 +288,25 @@ extern "C" PROCESSINGVISION_API bool Set_VisionSettings( VisionSetting_enum Visi
 				return false;
 			g_pTracker[SelectedTracker]->SetThresholdValues(VisionSetting, (int)value);
 			break;
+#endif
+		case eIsTargeting:
+			{
+				std::string IsTargeting=g_WindowTitle;
+				IsTargeting+="_Is_Targeting";
+				SmartDashboard::PutBoolean(IsTargeting.c_str(),(value==0.0)?false:true);
 
+				g_IsTargeting=(value==0.0)?false:true;
+			}
+			break;
 		default:
 			break;
 	}
-#endif
 	return true;
 }
 
 extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum VisionSetting )
 {
-#if HAS_SETTINGS
-	if( g_pTracker[PendingTracker] == NULL )
+	if( g_pTracker[PendingTracker] == NULL ) 
 	{
 		//if( PendingTracker == eGoalTracker )
 		//	g_pTracker[eGoalTracker] = new VisionStrongholdGoalTracker();
@@ -320,6 +318,7 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 
 	switch( VisionSetting )
 	{
+#if HAS_SETTINGS
 		case eTrackerType:
 			return (double)SelectedTracker;
 		case eDisplayType:
@@ -355,13 +354,13 @@ extern "C" PROCESSINGVISION_API double Get_VisionSettings( VisionSetting_enum Vi
 			if( g_pTracker[SelectedTracker] != NULL )
 				return g_pTracker[SelectedTracker]->GetThresholdValues(VisionSetting);
 			break;
+#endif
 		case eIsTargeting:
 			return (double)g_IsTargeting;
 			break;
 		default:
 			break;
 	}
-#endif
 	return 0.0;
 }
 

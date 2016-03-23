@@ -418,6 +418,7 @@ void VisionControls::GetVisionSettings()
 
 void VisionControls::UpdateControls()
 {
+#ifdef HAS_SETTINGS
 	//SendDlgItemMessage(m_hDlg, IDC_TargetFrisbe, BM_SETCHECK, ( CurrentSettings.vsTrackerType == eFrisbeTracker ), 0);
 	SendDlgItemMessage(m_hDlg, IDC_TargetBall, BM_SETCHECK, ( CurrentSettings.vsTrackerType == eBallTracker ), 0);
 	SendDlgItemMessage(m_hDlg, IDC_TargetGoal, BM_SETCHECK, ( CurrentSettings.vsTrackerType == eGoalTracker ), 0);
@@ -446,6 +447,7 @@ void VisionControls::UpdateControls()
 		UpdateText((VisionSetting_enum)(eThresholdPlane1Min + i), true);
 		UpdateSlider((VisionSetting_enum)(eThresholdPlane1Min + i), true);
 	}
+#endif
 }
 
 void VisionControls::UpdateText(VisionSetting_enum setting, bool ForceUpdate)
@@ -514,6 +516,7 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 					//Handle our button up
 					switch (buttonid) 
 					{
+#ifdef HAS_SETTINGS
 					case IDC_TargetGoal:
 						g_plugin_SquareTargeting->Set_Vision_Settings(eTrackerType, eGoalTracker);
 						GetVisionSettings();
@@ -526,6 +529,7 @@ long VisionControls::Dispatcher(HWND w_ptr,UINT uMsg,WPARAM wParam,LPARAM lParam
 						GetVisionSettings();
 						UpdateControls();
 						break;
+#endif
 					case IDC_DisplayNormal:
 						g_plugin_SquareTargeting->Set_Vision_Settings(eDisplayType, eNormal);
 						CurrentSettings.vsDisplayType = eNormal;

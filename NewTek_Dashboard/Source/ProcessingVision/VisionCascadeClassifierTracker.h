@@ -12,7 +12,7 @@ public:
 	int ProcessImage(double &x, double &y);
 
 private:
-	CascadeClassifier hook_cascade;
+	CascadeClassifier* p_hook_cascade;
 
 	string hook_cascade_name;
 
