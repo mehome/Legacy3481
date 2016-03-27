@@ -1,71 +1,121 @@
 <xml version="1.0">
 <dashboard>
-	<widget field="AxisCount_logitech dual action" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="759" y="563"/>
+	<widget field="pid error offset" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="768" y="537"/>
 	</widget>
-	<widget field="AxisCount_airflo" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="760" y="535"/>
+	<widget field="actual velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="925" y="505"/>
 	</widget>
-	<widget field="arm_height_in" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="36" y="498"/>
+	<widget field="desired velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="758" y="505"/>
 	</widget>
-	<widget field="LimitDartLower" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="496" y="420"/>
+	<widget field="desired y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="906" y="479"/>
 	</widget>
-	<widget field="LimitDartUpper" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="498" y="395"/>
+	<widget field="actual y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="764" y="478"/>
 	</widget>
-	<widget field="Auton GoalSelection" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="34" y="450"/>
+	<widget field="voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="939" y="451"/>
 	</widget>
-	<widget field="Timer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="43" y="381"/>
-		<property name="Font Size" value="20"/>
+	<widget field="pulse burst range" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="761" y="448"/>
 	</widget>
-	<widget field="Auton Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="39" y="423"/>
+	<widget field="pulse burst time" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="765" y="424"/>
 	</widget>
-	<widget field="ForkLeft" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="59" y="330"/>
+	<widget field="Lag Predict Down" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="762" y="400"/>
 	</widget>
-	<widget field="ForkRight" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="127" y="327"/>
+	<widget field="Lag Predict Up" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="779" y="378"/>
 	</widget>
-	<widget field="support_hotspot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="755" y="405"/>
+	<widget field="Tolerance Count" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="764" y="354"/>
 	</widget>
-	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="756" y="361"/>
+	<widget field="gravity gain velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="747" y="328"/>
 	</widget>
-	<widget field="height_indicator_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="740" y="229"/>
-	</widget>
-	<widget field="first_move_ft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="36" y="473"/>
-	</widget>
-	<widget field="Camera_z" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="748" y="256"/>
-	</widget>
-	<widget field="Camera_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="747" y="280"/>
-	</widget>
-	<widget field="Camera_x" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+	<widget field="gravity gain voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="749" y="303"/>
 	</widget>
-	<widget field="Camera_rot_y" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="751" y="329"/>
+	<widget field="gain decel down" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="933" y="423"/>
+		<height>20</height>
+	</widget>
+	<widget field="gain accel down" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="936" y="399"/>
+	</widget>
+	<widget field="gain decel up" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="940" y="373"/>
+	</widget>
+	<widget field="gain accel up" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="941" y="347"/>
+	</widget>
+	<widget field="Use Up PID Only" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="759" y="269"/>
+	</widget>
+	<widget field="Up D" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="936" y="317"/>
+	</widget>
+	<widget field="Up I" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="936" y="290"/>
+	</widget>
+	<widget field="Up P" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="932" y="266"/>
+	</widget>
+	<widget field="Tolerance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="718" y="237"/>
+	</widget>
+	<widget field="Loop State" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="702" y="210"/>
+	</widget>
+	<widget field="max_accel_reverse" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="861" y="240"/>
+	</widget>
+	<widget field="max_accel_forward" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="860" y="214"/>
 	</widget>
 	<widget field="FieldCentricDrive_Mode" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="500" y="371"/>
+		<location x="655" y="169"/>
 	</widget>
-	<widget field="UseHighGear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="497" y="349"/>
+	<widget field="TurretVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="38" y="324"/>
+		<property name="Foreground" value="0.102.0.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
+	</widget>
+	<widget field="armPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="374" y="369"/>
+	</widget>
+	<widget field="arm_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="218" y="372"/>
+	</widget>
+	<widget field="turretPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="371" y="335"/>
+	</widget>
+	<widget field="turret_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="216" y="333"/>
+	</widget>
+	<widget field="AxisCount_logitech dual action" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="794" y="91"/>
+	</widget>
+	<widget field="AxisCount_airflo" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="795" y="67"/>
+	</widget>
+	<widget field="Timer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="19" y="25"/>
+		<property name="Font Size" value="20"/>
+	</widget>
+	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="791" y="131"/>
 	</widget>
 	<widget field="AutoPilot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="598" y="170"/>
 	</widget>
 	<widget field="Main_Is_Targeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="754" y="384"/>
+		<location x="796" y="47"/>
 	</widget>
 	<widget field="Sequence" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="694" y="112"/>
@@ -84,32 +134,14 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Edit Position" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="800" y="111"/>
-	</widget>
-	<widget field="RollerVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="53" y="259"/>
-		<height>30</height>
-		<property name="Foreground" value="0.102.0.255"/>
-		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="1.0"/>
-		<property name="Minimum" value="-1.0"/>
+		<location x="751" y="138"/>
 	</widget>
 	<widget field="ArmVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="48" y="203"/>
+		<location x="40" y="363"/>
 		<property name="Foreground" value="0.102.0.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
-	</widget>
-	<widget field="Height" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="182" y="185"/>
-		<width>79</width>
-	</widget>
-	<widget field="ArmAngle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
-		<location x="21" y="23"/>
-		<property name="Upper Limit" value="220.0"/>
-		<property name="Lower Limit" value="-50.0"/>
-		<property name="Tick Interval" value="45.0"/>
 	</widget>
 	<widget field="LeftEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="281" y="265"/>
@@ -176,6 +208,10 @@
 		<property name="Tick Interval" value="2.8"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="684" y="143"/>
+		<property name="Text" value="Edit Position"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="803" y="114"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
@@ -183,47 +219,13 @@
 		<location x="803" y="114"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
-	<widget field="axis5" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="304" y="601"/>
-	</widget>
-	<widget field="axis4" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="302" y="574"/>
-	</widget>
-	<widget field="axis3" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="302" y="549"/>
-	</widget>
-	<widget field="axis2" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="302" y="523"/>
-	</widget>
-	<widget field="axis1" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="301" y="497"/>
-	</widget>
-	<widget field="axis0" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="297" y="473"/>
-	</widget>
-	<widget field="armRaw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="759" y="498"/>
-	</widget>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="803" y="114"/>
-		<property name="Text" value="Edit Position"/>
-	</static-widget>
-	<widget field="Arm_Raw_Range" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="549" y="523"/>
-	</widget>
-	<widget field="Arm_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="572" y="497"/>
-	</widget>
-	<widget field="side_move_rad" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="569" y="608"/>
-	</widget>
-	<widget field="Arm_PotRaw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="569" y="551"/>
-	</widget>
-	<widget field="Arm_Raw_high" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="560" y="576"/>
-	</widget>
 </dashboard>
 <live-window>
 </live-window>
+	<hidden field="Camera_y"/>
+	<hidden field="Camera_x"/>
+	<hidden field="Camera_rot_y"/>
+	<hidden field="LimitDartUpper"/>
+	<hidden field="LimitDartLower"/>
+	<hidden field="Camera_z"/>
 </xml>
