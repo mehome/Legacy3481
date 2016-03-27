@@ -1,5 +1,44 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="claspPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="378" y="478"/>
+	</widget>
+	<widget field="clasp_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="218" y="485"/>
+	</widget>
+	<widget field="bucketPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="376" y="444"/>
+	</widget>
+	<widget field="bucket_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="214" y="450"/>
+	</widget>
+	<widget field="boomPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="373" y="410"/>
+	</widget>
+	<widget field="boom_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="216" y="413"/>
+	</widget>
+	<widget field="ClaspVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="35" y="477"/>
+		<property name="Foreground" value="0.102.51.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
+	</widget>
+	<widget field="BucketVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="40" y="439"/>
+		<property name="Foreground" value="0.102.51.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
+	</widget>
+	<widget field="BoomVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="42" y="404"/>
+		<property name="Foreground" value="0.102.51.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="1.0"/>
+		<property name="Minimum" value="-1.0"/>
+	</widget>
 	<widget field="pid error offset" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="768" y="537"/>
 	</widget>
@@ -222,10 +261,4 @@
 </dashboard>
 <live-window>
 </live-window>
-	<hidden field="Camera_y"/>
-	<hidden field="Camera_x"/>
-	<hidden field="Camera_rot_y"/>
-	<hidden field="LimitDartUpper"/>
-	<hidden field="LimitDartLower"/>
-	<hidden field="Camera_z"/>
 </xml>
