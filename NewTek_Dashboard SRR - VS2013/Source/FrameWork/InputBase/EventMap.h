@@ -4,6 +4,7 @@
 //#include <vector>
 //#include <stdio.h>
 //#include "Event.h"
+#include <functional>  
 
 namespace FrameWork
 {

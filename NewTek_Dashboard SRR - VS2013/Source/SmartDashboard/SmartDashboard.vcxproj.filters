@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="NetworkTables">
+      <UniqueIdentifier>{5e534974-d0b8-456d-804c-7c80a521a12b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NetWorkTables2">
+      <UniqueIdentifier>{4e823937-eeb4-4831-801b-6aae79f5aa2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NetWorkTables2\util">
+      <UniqueIdentifier>{5cf246bd-8d4e-4bf4-a91a-c6f9e7377766}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NetWorkTables2\thread">
+      <UniqueIdentifier>{e7e2d267-7c77-4143-b2c2-e094db2d1d36}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NetWorkTables2\type">
+      <UniqueIdentifier>{bc23e751-5d40-4bbc-b6ba-e7f201672cfd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NetWorkTables2\server">
+      <UniqueIdentifier>{ecfda0be-f964-47e3-b0b7-b9fb8441dd12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NetWorkTables2\stream">
+      <UniqueIdentifier>{e3d41fbd-ca78-4f8b-8a68-2c3164328b83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NetWorkTables2\client">
+      <UniqueIdentifier>{2451ebbc-d07c-446f-9f9e-ebf5cd03a70c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NetWorkTables2\connection">
+      <UniqueIdentifier>{81d8dfbf-e155-4307-862b-038a4236a154}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OSAL">
+      <UniqueIdentifier>{91854b86-5f59-4dad-98dd-e1b362399856}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SmartDashboard\SmartDashboard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SmartDashboard\stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OSAL\Synchronized.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tables\TableKeyNotDefinedException.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables\NetworkTable.cpp">
+      <Filter>NetworkTables</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables\NetworkTableConnectionListenerAdapter.cpp">
+      <Filter>NetworkTables</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables\NetworkTableKeyListenerAdapter.cpp">
+      <Filter>NetworkTables</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables\NetworkTableListenerAdapter.cpp">
+      <Filter>NetworkTables</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables\NetworkTableMode.cpp">
+      <Filter>NetworkTables</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables\NetworkTableProvider.cpp">
+      <Filter>NetworkTables</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables\NetworkTableSubListenerAdapter.cpp">
+      <Filter>NetworkTables</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\AbstractNetworkTableEntryStore.cpp">
+      <Filter>NetWorkTables2</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\NetworkTableEntry.cpp">
+      <Filter>NetWorkTables2</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\NetworkTableNode.cpp">
+      <Filter>NetWorkTables2</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\OutgoingEntryReciever.cpp">
+      <Filter>NetWorkTables2</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\TableKeyExistsWithDifferentTypeException.cpp">
+      <Filter>NetWorkTables2</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\TransactionDirtier.cpp">
+      <Filter>NetWorkTables2</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\WriteManager.cpp">
+      <Filter>NetWorkTables2</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\util\EOFException.cpp">
+      <Filter>NetWorkTables2\util</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\util\IllegalStateException.cpp">
+      <Filter>NetWorkTables2\util</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\util\IOException.cpp">
+      <Filter>NetWorkTables2\util</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\util\StringCache.cpp">
+      <Filter>NetWorkTables2\util</Filter>
+    </ClCompile>
+    <ClCompile Include="OSAL\System.cpp">
+      <Filter>NetWorkTables2\util</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\thread\DefaultThreadManager.cpp">
+      <Filter>NetWorkTables2\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\ArrayData.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\ArrayEntryType.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\BooleanArray.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\ComplexData.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\ComplexEntryType.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\DefaultEntryTypes.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\NetworkTableEntryType.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\NetworkTableEntryTypeManager.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\NumberArray.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\type\StringArray.cpp">
+      <Filter>NetWorkTables2\type</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\server\NetworkTableServer.cpp">
+      <Filter>NetWorkTables2\server</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\server\ServerConnectionAdapter.cpp">
+      <Filter>NetWorkTables2\server</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\server\ServerConnectionList.cpp">
+      <Filter>NetWorkTables2\server</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\server\ServerConnectionState.cpp">
+      <Filter>NetWorkTables2\server</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\server\ServerIncomingStreamMonitor.cpp">
+      <Filter>NetWorkTables2\server</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\server\ServerNetworkTableEntryStore.cpp">
+      <Filter>NetWorkTables2\server</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\stream\FDIOStream.cpp">
+      <Filter>NetWorkTables2\stream</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\stream\SocketServerStreamProvider.cpp">
+      <Filter>NetWorkTables2\stream</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\stream\SocketStreamFactory.cpp">
+      <Filter>NetWorkTables2\stream</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\stream\SocketStreams.cpp">
+      <Filter>NetWorkTables2\stream</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\client\ClientConnectionAdapter.cpp">
+      <Filter>NetWorkTables2\client</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\client\ClientConnectionState.cpp">
+      <Filter>NetWorkTables2\client</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\client\ClientNetworkTableEntryStore.cpp">
+      <Filter>NetWorkTables2\client</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\client\NetworkTableClient.cpp">
+      <Filter>NetWorkTables2\client</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\connection\BadMessageException.cpp">
+      <Filter>NetWorkTables2\connection</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\connection\ConnectionMonitorThread.cpp">
+      <Filter>NetWorkTables2\connection</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\connection\DataIOStream.cpp">
+      <Filter>NetWorkTables2\connection</Filter>
+    </ClCompile>
+    <ClCompile Include="networktables2\connection\NetworkTableConnection.cpp">
+      <Filter>NetWorkTables2\connection</Filter>
+    </ClCompile>
+    <ClCompile Include="OSAL\Task.cpp">
+      <Filter>OSAL</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SmartDashboard\SmartDashboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SmartDashboard_Import.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="SmartDashboard\ReadMe.txt" />
+  </ItemGroup>
+</Project>

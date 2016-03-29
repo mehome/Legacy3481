@@ -169,9 +169,11 @@ __inline void SDL_Quit() {}
 
 //Not defined in visual studio so we'll make a simple one here
 //  [11/26/2012 JamesK]
+#if 0
 __inline const int rint(float x){
 	return (int)(x+0.5);
 }
+#endif
 
 static void ShowTimeDelta(char label[]="",bool UsePrintF=true)
 {

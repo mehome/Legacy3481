@@ -1,36 +1,23 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dashboard", "Dashboard.vcproj", "{770EC6B2-8666-4C8D-8092-C4D49B0D6BD5}"
-	ProjectSection(ProjectDependencies) = postProject
-		{15589F0D-F41D-43FA-A32B-EE592E478FA2} = {15589F0D-F41D-43FA-A32B-EE592E478FA2}
-		{455B6FC3-BCD0-4927-B561-55F896A96185} = {455B6FC3-BCD0-4927-B561-55F896A96185}
-	EndProjectSection
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dashboard", "Dashboard.vcxproj", "{770EC6B2-8666-4C8D-8092-C4D49B0D6BD5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameWork", "..\FrameWork\FrameWork.vcproj", "{455B6FC3-BCD0-4927-B561-55F896A96185}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameWork", "..\FrameWork\FrameWork.vcxproj", "{455B6FC3-BCD0-4927-B561-55F896A96185}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcessingVision", "..\ProcessingVision\ProcessingVision.vcproj", "{C97978F2-F958-4EA9-9BAA-55DD5C3E31E2}"
-	ProjectSection(ProjectDependencies) = postProject
-		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02} = {556FC434-D0C3-4B96-BF29-E9CF5CD24F02}
-		{455B6FC3-BCD0-4927-B561-55F896A96185} = {455B6FC3-BCD0-4927-B561-55F896A96185}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcessingVision", "..\ProcessingVision\ProcessingVision.vcxproj", "{C97978F2-F958-4EA9-9BAA-55DD5C3E31E2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameGrabber", "..\FrameGrabber\FrameGrabber.vcproj", "{15589F0D-F41D-43FA-A32B-EE592E478FA2}"
-	ProjectSection(ProjectDependencies) = postProject
-		{40C81C1D-8ABD-4282-8298-3750EEC0B623} = {40C81C1D-8ABD-4282-8298-3750EEC0B623}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FrameGrabber", "..\FrameGrabber\FrameGrabber.vcxproj", "{15589F0D-F41D-43FA-A32B-EE592E478FA2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Controls", "..\Controls\Controls.vcproj", "{EEB46A49-7FE5-4986-9709-27F339A343EE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Controls", "..\Controls\Controls.vcxproj", "{EEB46A49-7FE5-4986-9709-27F339A343EE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcAmp", "..\ProcAmp\ProcAmp.vcproj", "{40C81C1D-8ABD-4282-8298-3750EEC0B623}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProcAmp", "..\ProcAmp\ProcAmp.vcxproj", "{40C81C1D-8ABD-4282-8298-3750EEC0B623}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Compositor", "..\Compositor\Compositor.vcproj", "{EB216891-F431-4F9B-BB49-0EF23C08C075}"
-	ProjectSection(ProjectDependencies) = postProject
-		{556FC434-D0C3-4B96-BF29-E9CF5CD24F02} = {556FC434-D0C3-4B96-BF29-E9CF5CD24F02}
-		{455B6FC3-BCD0-4927-B561-55F896A96185} = {455B6FC3-BCD0-4927-B561-55F896A96185}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Compositor", "..\Compositor\Compositor.vcxproj", "{EB216891-F431-4F9B-BB49-0EF23C08C075}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SmartDashboard", "..\SmartDashboard\SmartDashboard.vcproj", "{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SmartDashboard", "..\SmartDashboard\SmartDashboard.vcxproj", "{556FC434-D0C3-4B96-BF29-E9CF5CD24F02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

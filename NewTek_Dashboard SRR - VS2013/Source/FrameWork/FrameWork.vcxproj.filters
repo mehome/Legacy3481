@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="InputBase">
+      <UniqueIdentifier>{d6a9178a-a1ef-4fa4-80de-ef61c6016767}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="InputBase\Header Files">
+      <UniqueIdentifier>{6dabf259-7351-4cba-9cef-19d198f0e57f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="InputBase\Source Files">
+      <UniqueIdentifier>{34df27f4-f6da-4eee-8a49-adc4ed8f9158}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OSG">
+      <UniqueIdentifier>{ed294321-0407-46d9-87df-ce98e3669108}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="convert_bgr_ycbcr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="convert_ycbcr_bgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="critical_section.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Event.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Misc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Preview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rasterize_line.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="thread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Time_Type.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wait.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wait_item.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputBase\EventMap.cpp">
+      <Filter>InputBase\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputBase\Joystick.cpp">
+      <Filter>InputBase\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputBase\JoystickBinder.cpp">
+      <Filter>InputBase\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputBase\LUA.cpp">
+      <Filter>InputBase\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputBase\LUA_Controls.cpp">
+      <Filter>InputBase\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputBase\Script.cpp">
+      <Filter>InputBase\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OSG\Matrixd.cpp">
+      <Filter>OSG</Filter>
+    </ClCompile>
+    <ClCompile Include="OSG\Matrixf.cpp">
+      <Filter>OSG</Filter>
+    </ClCompile>
+    <ClCompile Include="OSG\osg_Base.cpp">
+      <Filter>OSG</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bitmap-inc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bitmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bitmap_422-inc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bitmap_422.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bitmap_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="color_conversions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="compiler_settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="critical_section.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fcncall_cpp-inc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fcncall_cpp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fcncall_cpp_ex-inc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameWork.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Misc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pixel_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Preview.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rasterize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread-inc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Time_Type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wait.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wait_item.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputBase\Event.h">
+      <Filter>InputBase\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputBase\EventMap.h">
+      <Filter>InputBase\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputBase\Joystick.h">
+      <Filter>InputBase\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputBase\JoystickBinder.h">
+      <Filter>InputBase\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputBase\LUA.h">
+      <Filter>InputBase\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputBase\LUA_Controls.h">
+      <Filter>InputBase\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputBase\Script.h">
+      <Filter>InputBase\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputBase\stdafx.h">
+      <Filter>InputBase\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputBase\Vec2d.h">
+      <Filter>InputBase\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OSG\fvec.h">
+      <Filter>OSG</Filter>
+    </ClInclude>
+    <ClInclude Include="OSG\Matrix_implementation.hpp">
+      <Filter>OSG</Filter>
+    </ClInclude>
+    <ClInclude Include="OSG\osg_Matrix.h">
+      <Filter>OSG</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+</Project>

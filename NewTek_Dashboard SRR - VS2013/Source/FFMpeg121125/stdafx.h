@@ -10,7 +10,7 @@
 #include <climits>
 #include <stdio.h>
 #include <cassert>
-#include <math.h>
+//#include <math.h>
 #include <windows.h>
 #include <winbase.h>
 #include <winhttp.h>
