@@ -3,6 +3,8 @@
 #include "profile.h"
 #include "OCV_VisionProcessingBase.h"
 
+using namespace cv;
+
 VisionTracker::VisionTracker()
 {	
 	Profiler = new profile;
@@ -16,11 +18,8 @@ VisionTracker::~VisionTracker()
 int VisionTracker::GetFrame(Bitmap_Frame *Frame)
 {
 	int success = 1;
-#if 0
-	// Copy our frame to an NI image.
-	success = imaqArrayToImage(InputImageRGB, (void*)Frame->Memory, Frame->XRes, Frame->YRes);
-	imaqGetImageInfo(InputImageRGB, &SourceImageInfo);
-#endif
+	InputImageRGB = new Mat(Frame->YRes, Frame->XRes, CV_8UC3, Frame->Memory);
+	if( InputImageRGB == NULL ) success = false;
 	return success;
 }
 

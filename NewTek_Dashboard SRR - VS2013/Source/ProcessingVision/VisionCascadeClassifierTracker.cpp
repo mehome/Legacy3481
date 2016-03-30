@@ -29,18 +29,17 @@ VisionCascadeClassifierTracker::~VisionCascadeClassifierTracker()
 int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
-	Mat frame;
 	frameCount = 0;
 
-//	capture >> frame;
 	frameCount++;
 
-	if (!frame.empty())
+	if (!InputImageRGB->empty())
 	{
 		std::vector<Rect> hooks;
 		Mat frame_gray;
 
-		cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
+		cvtColor(*InputImageRGB, frame_gray, COLOR_BGR2GRAY);
+		imshow("gray", frame_gray);
 
 		//if (mode == h_equalize)
 		//{
@@ -63,8 +62,9 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 	//		printf("Frame %d x: %d y: %d width: %d height %d\n", frameCount, hooks[i].x, hooks[i].y, hooks[i].width, hooks[i].height);
 			Point p1(hooks[i].x, hooks[i].y);
 			Point p2(hooks[i].x + hooks[i].width, hooks[i].y + hooks[i].height);
-			rectangle(frame, p1, p2, Scalar(255, 0, 255), 2, 8, 0);
+			rectangle(*InputImageRGB, p1, p2, Scalar(255, 0, 255), 2, 8, 0);
 		}
+		imshow("input", *InputImageRGB);
 	}
 
 	int c = waitKey(10);
