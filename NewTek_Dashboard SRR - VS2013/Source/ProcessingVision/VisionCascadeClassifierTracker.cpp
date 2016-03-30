@@ -39,20 +39,21 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 		Mat frame_gray;
 
 		cvtColor(*InputImageRGB, frame_gray, COLOR_BGR2GRAY);
-		imshow("gray", frame_gray);
 
-		//if (mode == h_equalize)
-		//{
-		//	equalizeHist(frame_gray, frame_gray);
-		//}
+		if (mode == h_equalize)
+		{
+			equalizeHist(frame_gray, frame_gray);
+		}
 
-		//if (mode == h_clahe)
-		//{
-		//	Ptr<CLAHE> clahe = createCLAHE();
-		//	clahe->setClipLimit(4);
-		//	//clahe->setTilesGridSize(cv::Size(8, 8));
-		//	clahe->apply(frame_gray, frame_gray);
-		//}
+		if (mode == h_clahe)
+		{
+			Ptr<CLAHE> clahe = createCLAHE();
+			clahe->setClipLimit(4);
+			//clahe->setTilesGridSize(cv::Size(8, 8));
+			clahe->apply(frame_gray, frame_gray);
+		}
+		if (bShowImg)
+			imshow("gray", frame_gray);
 
 		//-- detect hook sample
 		p_hook_cascade->detectMultiScale(frame_gray, hooks, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(15, 15));
@@ -64,7 +65,8 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 			Point p2(hooks[i].x + hooks[i].width, hooks[i].y + hooks[i].height);
 			rectangle(*InputImageRGB, p1, p2, Scalar(255, 0, 255), 2, 8, 0);
 		}
-		imshow("input", *InputImageRGB);
+		if (bShowImg)
+			imshow("input", *InputImageRGB);
 	}
 
 	int c = waitKey(10);
