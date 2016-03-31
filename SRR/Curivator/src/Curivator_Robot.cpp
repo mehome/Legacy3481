@@ -167,6 +167,133 @@ void Curivator_Robot::Robot_Arm::BindAdditionalEventControls(bool Bind)
 	}
 }
 
+  /***********************************************************************************************************************************/
+ /*														Curivator_Robot::BigArm														*/
+/***********************************************************************************************************************************/
+//Note: all of these constants are in inches (as they are in the CAD)
+const double BigArm_BigArmRadius=39.77287247;
+const double BigArm_DartLengthAt90=29.72864858;
+const double BigArm_DartToArmDistance=9.0;
+const double BigArm_DistanceFromTipDartToClevis=2.0915;
+const double BigArm_DistanceDartPivotToTip=17.225;
+const double BigArm_ConnectionOffset=5.39557923;
+const double BigArm_DistanceBigArmPivottoDartPivot=26.01076402;
+//or use this
+const double BigArm_AngleToDartPivotInterface=DEG_2_RAD(11.7190273);
+const double BigArm_AngleToDartPivotInterface_Length=26.56448983;
+const double BigArm_DartPerpendicularAngle= 61.03779676;
+
+
+Curivator_Robot::BigArm::BigArm(size_t index,Curivator_Robot *parent,Rotary_Control_Interface *robot_control) : Robot_Arm(index,parent,robot_control)
+{
+}
+void Curivator_Robot::BigArm::TimeChange(double dTime_s)
+{
+	__super::TimeChange(dTime_s);
+	//Now to compute where we are based from our length of extension
+	//first start with the extension:
+	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
+	const double FullActuatorLength=ShaftExtension_in+BigArm_DistanceDartPivotToTip+BigArm_DistanceFromTipDartToClevis;  //from center point to center point
+	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
+	//http://mathcentral.uregina.ca/QQ/database/QQ.09.07/h/lucy1.html
+	//c2 = a2 + b2 - 2ab cos(C)
+	//c is FullActuatorLength
+	//b is dart distance to arm
+	//a is the AngleToDartPivotInterface_Length
+	//rearranged to solve for cos(C)
+	//x = -1 * ( (c*c - b*b - a*a) / (2*a*b)    )
+	const double cos_FullActuatorLength=-1.0 *
+		(((FullActuatorLength*FullActuatorLength)-
+		(BigArm_DartToArmDistance*BigArm_DartToArmDistance)-
+		(BigArm_AngleToDartPivotInterface_Length*BigArm_AngleToDartPivotInterface_Length))  / 
+		(2 * BigArm_AngleToDartPivotInterface_Length * BigArm_DartToArmDistance));
+	const double BigAngleDartInterface=acos(cos_FullActuatorLength);
+	//SmartDashboard::PutNumber("BigAngleDartInterface",RAD_2_DEG(BigAngleDartInterface));
+	m_BigArmAngle=BigAngleDartInterface-BigArm_AngleToDartPivotInterface;
+	//SmartDashboard::PutNumber("BigAngleAngle",RAD_2_DEG(m_BigArmAngle));
+	//With this angle we can pull sin and cos for height and outward length using the big arm's radius constant
+}
+
+double Curivator_Robot::BigArm::GetBigArmLength() const
+{
+	const double BigArmLength=cos(m_BigArmAngle) * BigArm_BigArmRadius;
+	//SmartDashboard::PutNumber("BigArmLength",BigArmLength);
+	return BigArmLength;
+}
+double Curivator_Robot::BigArm::GetBigArmHeight() const
+{
+	const double BigArmHeight=sin(m_BigArmAngle) * BigArm_BigArmRadius;
+	//SmartDashboard::PutNumber("BigArmHeight",BigArmHeight);
+	return BigArmHeight;
+}
+
+
+  /***********************************************************************************************************************************/
+ /*														Curivator_Robot::Boom														*/
+/***********************************************************************************************************************************/
+//Note: all of these constants are in inches (as they are in the CAD)
+const double Boom_BoomRadius=26.03003069;
+const double Boom_DartToArmDistance=18.51956156;
+const double Boom_DistanceFromTipDartToClevis=2.0915;  //Note: these may be different depending on how many turns it took to orient properly
+const double Boom_DistanceDartPivotToTip=11.5;
+//const double Boom_ConnectionOffset=5.39557923;
+//const double Boom_DistanceBoomPivottoDartPivot=26.01076402;
+//or use this
+const double Boom_AngleToDartPivotInterface=DEG_2_RAD(4.83505068);
+const double Boom_AngleToDartPivotInterface_Length=6.87954395;
+const double Boom_AngleBigArmToDartPivot= DEG_2_RAD(36.18122057);
+
+
+Curivator_Robot::Boom::Boom(size_t index,Curivator_Robot *parent,Rotary_Control_Interface *robot_control, BigArm &bigarm) : Robot_Arm(index,parent,robot_control),
+	m_BigArm(bigarm)
+{
+}
+void Curivator_Robot::Boom::TimeChange(double dTime_s)
+{
+	__super::TimeChange(dTime_s);
+	//Now to compute where we are based from our length of extension
+	//first start with the extension:
+	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
+	const double FullActuatorLength=ShaftExtension_in+Boom_DistanceDartPivotToTip+Boom_DistanceFromTipDartToClevis;  //from center point to center point
+	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
+	//http://mathcentral.uregina.ca/QQ/database/QQ.09.07/h/lucy1.html
+	//c2 = a2 + b2 - 2ab cos(C)
+	//c is FullActuatorLength
+	//b is dart distance to arm
+	//a is the AngleToDartPivotInterface_Length
+	//rearranged to solve for cos(C)
+	//x = -1 * ( (c*c - b*b - a*a) / (2*a*b)    )
+	const double cos_FullActuatorLength=-1.0 *
+		(((FullActuatorLength*FullActuatorLength)-
+		(Boom_DartToArmDistance*Boom_DartToArmDistance)-
+		(Boom_AngleToDartPivotInterface_Length*Boom_AngleToDartPivotInterface_Length))  / 
+		(2 * Boom_AngleToDartPivotInterface_Length * Boom_DartToArmDistance));
+	const double BigAngleDartInterface=acos(cos_FullActuatorLength);
+	//SmartDashboard::PutNumber("BoomDartInterface",RAD_2_DEG(BigAngleDartInterface));
+	const double local_BoomAngle=M_PI-BigAngleDartInterface+Boom_AngleToDartPivotInterface;
+	//To convert to global we subtract the sum of both the boom dart to bigarm constant angle and the angle of the big arm... this angle is global from 
+	//a vertical line that aligns with the big arm's pivot point for the boom
+	m_BoomAngle=local_BoomAngle-((PI_2-m_BigArm.GetBigArmAngle())+Boom_AngleBigArmToDartPivot);
+	SmartDashboard::PutNumber("BoomAngle",RAD_2_DEG(m_BoomAngle));
+	//With this angle we can pull sin and cos for height and outward length using the big arm's radius constant
+	GetBoomLength();
+	GetBoomHeight();
+}
+
+double Curivator_Robot::Boom::GetBoomLength() const
+{
+	const double LocalBoomLength=sin(m_BoomAngle) * Boom_BoomRadius;
+	const double BoomLength=LocalBoomLength+m_BigArm.GetBigArmLength();
+	SmartDashboard::PutNumber("BoomLength",BoomLength);
+	return BoomLength;
+}
+double Curivator_Robot::Boom::GetBoomHeight() const
+{
+	const double LocalBoomHeight=cos(m_BoomAngle) * Boom_BoomRadius;
+	const double BoomHeight=m_BigArm.GetBigArmHeight()-LocalBoomHeight;
+	SmartDashboard::PutNumber("BoomHeight",BoomHeight);
+	return BoomHeight;
+}
 
 
   /***********************************************************************************************************************************/
@@ -181,8 +308,14 @@ const double c_HalfCourtWidth=c_CourtWidth/2.0;
 Curivator_Robot::Curivator_Robot(const char EntityName[],Curivator_Control_Interface *robot_control,bool IsAutonomous) : 
 	Tank_Robot(EntityName,robot_control,IsAutonomous), m_RobotControl(robot_control), 
 		m_Turret(eTurret,this,robot_control),m_Arm(eArm,this,robot_control),m_LatencyCounter(0.0),
+		m_Boom(eBoom,this,robot_control,m_Arm),m_Bucket(eBucket,this,robot_control),m_Clasp(eClasp,this,robot_control),
 		m_YawErrorCorrection(1.0),m_PowerErrorCorrection(1.0),m_AutonPresetIndex(0)
 {
+	mp_Arm[eTurret]=&m_Turret;
+	mp_Arm[eArm]=&m_Arm;
+	mp_Arm[eBoom]=&m_Boom;
+	mp_Arm[eBucket]=&m_Bucket;
+	mp_Arm[eClasp]=&m_Clasp;
 	//ensure the variables are initialized before calling get
 	SmartDashboard::PutNumber("X Position",0.0);
 	SmartDashboard::PutNumber("Y Position",0.0);
@@ -199,14 +332,14 @@ void Curivator_Robot::Initialize(Entity2D_Kind::EventMap& em, const Entity_Prope
 	const Curivator_Robot_Properties *RobotProps=dynamic_cast<const Curivator_Robot_Properties *>(props);
 	m_RobotProps=*RobotProps;  //Copy all the properties (we'll need them for high and low gearing)
 
-	m_Arm.Initialize(em,RobotProps?&RobotProps->GetRotaryProps(eArm):NULL);
-	m_Turret.Initialize(em,RobotProps?&RobotProps->GetRotaryProps(eTurret):NULL);
+	for (size_t i=0;i<5;i++)
+		mp_Arm[i]->Initialize(em,RobotProps?&RobotProps->GetRotaryProps(i):NULL);
 }
 void Curivator_Robot::ResetPos()
 {
 	__super::ResetPos();
-	m_Turret.ResetPos();
-	m_Arm.ResetPos();
+	for (size_t i=0;i<5;i++)
+		mp_Arm[i]->ResetPos();
 }
 
 namespace VisionConversion
@@ -277,8 +410,9 @@ void Curivator_Robot::TimeChange(double dTime_s)
 	//For the simulated code this must be first so the simulators can have the correct times
 	m_RobotControl->Robot_Control_TimeChange(dTime_s);
 	__super::TimeChange(dTime_s);
-	m_Turret.AsEntity1D().TimeChange(dTime_s);
-	m_Arm.AsEntity1D().TimeChange(dTime_s);
+
+	for (size_t i=0;i<5;i++)
+		mp_Arm[i]->AsEntity1D().TimeChange(dTime_s);
 
 	//const double  YOffset=-SmartDashboard::GetNumber("Y Position");
 	//const double XOffset=SmartDashboard::GetNumber("X Position");
@@ -313,8 +447,8 @@ void Curivator_Robot::BindAdditionalEventControls(bool Bind)
 		#endif
 	}
 
-	m_Turret.AsShip1D().BindAdditionalEventControls(Bind);
-	m_Arm.AsShip1D().BindAdditionalEventControls(Bind);
+	for (size_t i=0;i<5;i++)
+		mp_Arm[i]->AsShip1D().BindAdditionalEventControls(Bind);
 
 	#ifdef Robot_TesterCode
 	m_RobotControl->BindAdditionalEventControls(Bind,GetEventMap(),ehl);
@@ -470,6 +604,9 @@ const char * const g_Curivator_Controls_Events[] =
 	"turret_SetCurrentVelocity","turret_SetIntendedPosition","turret_SetPotentiometerSafety","turret_Advance","turret_Retract",
 	"IntakeArm_DeployManager",
 	"arm_SetCurrentVelocity","arm_SetPotentiometerSafety","arm_Advance","arm_Retract",
+	"boom_SetCurrentVelocity","boom_SetPotentiometerSafety","boom_Advance","boom_Retract",
+	"bucket_SetCurrentVelocity","bucket_SetPotentiometerSafety","bucket_Advance","bucket_Retract",
+	"clasp_SetCurrentVelocity","clasp_SetPotentiometerSafety","clasp_Advance","clasp_Retract",
 	"TestAuton"
 };
 
@@ -552,6 +689,24 @@ void Curivator_Robot_Properties::LoadFromScript(Scripting::Script& script)
 		if (!err)
 		{
 			m_RotaryProps[Curivator_Robot::eArm].LoadFromScript(script);
+			script.Pop();
+		}
+		err = script.GetFieldTable("boom");
+		if (!err)
+		{
+			m_RotaryProps[Curivator_Robot::eBoom].LoadFromScript(script);
+			script.Pop();
+		}
+		err = script.GetFieldTable("bucket");
+		if (!err)
+		{
+			m_RotaryProps[Curivator_Robot::eBucket].LoadFromScript(script);
+			script.Pop();
+		}
+		err = script.GetFieldTable("clasp");
+		if (!err)
+		{
+			m_RotaryProps[Curivator_Robot::eClasp].LoadFromScript(script);
 			script.Pop();
 		}
 
@@ -767,9 +922,13 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 	switch (index)
 	{
 	case Curivator_Robot::eArm:
+	case Curivator_Robot::eTurret:
+	case Curivator_Robot::eBoom:
+	case Curivator_Robot::eBucket:
+	case Curivator_Robot::eClasp:
 		#ifdef Robot_TesterCode
-		m_Potentiometer.UpdatePotentiometerVoltage(Voltage);
-		m_Potentiometer.TimeChange();  //have this velocity immediately take effect
+		m_Potentiometer[index].UpdatePotentiometerVoltage(Voltage);
+		m_Potentiometer[index].TimeChange();  //have this velocity immediately take effect
 		#endif
 		break;
 	}
@@ -782,22 +941,20 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 	Victor_UpdateVoltage(index,Voltage);
 }
 
-bool Curivator_Robot_Control::GetBoolSensorState(size_t index) const
-{
-	bool ret;
-	switch (index)
-	{
-	case Curivator_Robot::eDartUpper:
-		ret=m_Limit_DartUpper;
-		break;
-	case Curivator_Robot::eDartLower:
-		ret=m_Limit_DartLower;
-		break;
-	default:
-		assert (false);
-	}
-	return ret;
-}
+//bool Curivator_Robot_Control::GetBoolSensorState(size_t index) const
+//{
+//	bool ret;
+//	switch (index)
+//	{
+//	case Curivator_Robot::eDartUpper:
+//		break;
+//	case Curivator_Robot::eDartLower:
+//		break;
+//	default:
+//		assert (false);
+//	}
+//	return ret;
+//}
 
 Curivator_Robot_Control::Curivator_Robot_Control(bool UseSafety) : m_TankRobotControl(UseSafety),m_pTankRobotControl(&m_TankRobotControl),
 		m_Compressor(NULL),m_RoboRIO_Accelerometer(NULL)
@@ -821,13 +978,23 @@ void Curivator_Robot_Control::Reset_Rotary(size_t index)
 	{
 	case Curivator_Robot::eTurret:
 	case Curivator_Robot::eArm:
+	case Curivator_Robot::eBoom:
+	case Curivator_Robot::eBucket:
+	case Curivator_Robot::eClasp:
 		m_KalFilter[index].Reset();
 		break;
 	}
 
 	#ifdef Robot_TesterCode
-	if (index==Curivator_Robot::eArm)
-		m_Potentiometer.ResetPos();
+	switch (index)
+	{
+	case Curivator_Robot::eTurret:
+	case Curivator_Robot::eArm:
+	case Curivator_Robot::eBoom:
+	case Curivator_Robot::eBucket:
+	case Curivator_Robot::eClasp:
+		m_Potentiometer[index].ResetPos();
+	}
 	#endif
 }
 
@@ -843,21 +1010,16 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 	tank_interface->Initialize(props);
 
 	const Curivator_Robot_Properties *robot_props=dynamic_cast<const Curivator_Robot_Properties *>(props);
-	//TODO this is to be changed to an assert once we handle low gear properly
 	if (robot_props)
 	{
 		m_RobotProps=*robot_props;  //save a copy
 
-		//TODO why is this here?	
-		//Rotary_Properties turret_props=robot_props->GetRotaryProps(Curivator_Robot::eTurret);
-		//turret_props.SetUsingRange(false); 
-
 		#ifdef Robot_TesterCode
-		Rotary_Properties writeable_arm_props=robot_props->GetRotaryProps(Curivator_Robot::eArm);
-		//m_ArmMaxSpeed=writeable_arm_props.GetMaxSpeed();
-		//This is not perfect but will work for our simulation purposes
-		writeable_arm_props.RotaryProps().EncoderToRS_Ratio=robot_props->GetCurivatorRobotProps().ArmToGearRatio;
-		m_Potentiometer.Initialize(&writeable_arm_props);
+		for (size_t index=0;index<5;index++)
+		{
+			Rotary_Properties writeable_arm_props=robot_props->GetRotaryProps(index);
+			m_Potentiometer[index].Initialize(&writeable_arm_props);
+		}
 		#endif
 	}
 	
@@ -895,13 +1057,9 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 
 void Curivator_Robot_Control::Robot_Control_TimeChange(double dTime_s)
 {
-	m_Limit_DartUpper=BoolSensor_GetState(Curivator_Robot::eDartUpper);
-	SmartDashboard::PutBoolean("LimitDartUpper",m_Limit_DartUpper);
-	m_Limit_DartLower=BoolSensor_GetState(Curivator_Robot::eDartLower);
-	SmartDashboard::PutBoolean("LimitDartLower",m_Limit_DartLower);
-
 	#ifdef Robot_TesterCode
-	m_Potentiometer.SetTimeDelta(dTime_s);
+	for (size_t index=0;index<5;index++)
+		m_Potentiometer[index].SetTimeDelta(dTime_s);
 	#endif
 
 	//Testing the accelerometer
@@ -952,6 +1110,9 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 	{
 		case Curivator_Robot::eTurret:
 		case Curivator_Robot::eArmPot:
+		case Curivator_Robot::eBoom:
+		case Curivator_Robot::eBucket:
+		case Curivator_Robot::eClasp:
 		{
 			#ifndef Robot_TesterCode
 			//double raw_value = (double)m_Potentiometer.GetAverageValue();
@@ -994,12 +1155,17 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			//get offset... Note: scale comes first since the offset is of that scale
 			result+=m_RobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().PotentiometerOffset;
 			#else
-			result=(m_Potentiometer.GetPotentiometerCurrentPosition()) + 0.0;
+			result=(m_Potentiometer[index].GetPotentiometerCurrentPosition()) + 0.0;
+			//Now to normalize it
+			const Ship_1D_Props &shipprops=m_RobotProps.GetRotaryProps(index).GetShip_1D_Props();
+			const double NormalizedResult= (result - shipprops.MinRange)  / (shipprops.MaxRange - shipprops.MinRange);
+			const char * const Prefix=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
+			string ContructedName;
+			ContructedName=Prefix,ContructedName+="_Raw";
+			SmartDashboard::PutNumber(ContructedName.c_str(),result);  //this one is a bit different as it is the selected units we use
+			ContructedName=Prefix,ContructedName+="Pot_Raw";
+			SmartDashboard::PutNumber(ContructedName.c_str(),NormalizedResult);
 			#endif
-
-			//TODO see if this is necessary
-			//Now to convert to the motor gear ratio as this is what we work in
-			//result*=props.ArmToGearRatio;
 		}
 		break;
 	}

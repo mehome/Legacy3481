@@ -54,7 +54,7 @@ class Curivator_Robot_Properties : public Tank_Robot_Properties
 		#ifndef Robot_TesterCode
 		typedef Tank_Robot_Properties __super;
 		#endif
-		Rotary_Pot_Properties m_RotaryProps[2];
+		Rotary_Pot_Properties m_RotaryProps[5];
 		Curivator_Robot_Props m_CurivatorRobotProps;
 
 		class ControlEvents : public LUA_Controls_Properties_Interface
@@ -182,6 +182,39 @@ class Curivator_Robot : public Tank_Robot
 				bool m_Advance, m_Retract;
 		};
 
+		class BigArm : public Robot_Arm
+		{
+			public:
+				BigArm(size_t index,Curivator_Robot *parent,Rotary_Control_Interface *robot_control);
+				double GetBigArmLength() const;
+				double GetBigArmHeight() const;
+				double GetBigArmAngle() const {return m_BigArmAngle;}
+			protected:
+				virtual void TimeChange(double dTime_s);
+			private:
+				double m_BigArmAngle;
+				#ifndef Robot_TesterCode
+				typedef Robot_Arm __super;
+				#endif
+		};
+
+		class Boom : public Robot_Arm
+		{
+			public:
+				Boom(size_t index,Curivator_Robot *parent,Rotary_Control_Interface *robot_control, BigArm &bigarm);
+				double GetBoomLength() const;
+				double GetBoomHeight() const;
+				double GetBoomAngle() const {return m_BoomAngle;}
+			protected:
+				virtual void TimeChange(double dTime_s);
+			private:
+				BigArm &m_BigArm;
+				double m_BoomAngle;
+				#ifndef Robot_TesterCode
+				typedef Robot_Arm __super;
+				#endif
+		};
+
 		const Curivator_Robot_Properties &GetRobotProps() const;
 		Curivator_Robot_Props::Autonomous_Properties &GetAutonProps();
 		//Accessors needed for setting goals
@@ -196,8 +229,13 @@ class Curivator_Robot : public Tank_Robot
 		typedef  Tank_Robot __super;
 		#endif
 		Curivator_Control_Interface * const m_RobotControl;
+		//TODO derive kinds here
 		Robot_Arm m_Turret;
-		Robot_Arm m_Arm;
+		BigArm m_Arm;
+		Boom m_Boom;
+		Robot_Arm m_Bucket;
+		Robot_Arm m_Clasp;
+		Robot_Arm *mp_Arm[5];  //A handy work-around to treat these as an array, by pointing to them
 		Curivator_Robot_Properties m_RobotProps;  //saves a copy of all the properties
 		double m_LatencyCounter;
 
@@ -233,7 +271,7 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 		const Curivator_Robot_Properties &GetRobotProps() const {return m_RobotProps;}
 	protected: //from Robot_Control_Interface
 		virtual void UpdateVoltage(size_t index,double Voltage);
-		virtual bool GetBoolSensorState(size_t index) const;
+		//virtual bool GetBoolSensorState(size_t index) const;
 		virtual void CloseSolenoid(size_t index,bool Close) {OpenSolenoid(index,!Close);}
 		virtual void OpenSolenoid(size_t index,bool Open);
 	protected: //from Tank_Drive_Control_Interface
@@ -275,14 +313,13 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 		Accelerometer *m_RoboRIO_Accelerometer;
 		//All digital input reads are done on time change and cached to avoid multiple reads to the FPGA
 		bool m_Limit_IntakeMin1,m_Limit_IntakeMin2,m_Limit_IntakeMax1,m_Limit_IntakeMax2;
-		bool m_Limit_DartUpper,m_Limit_DartLower;
 	private:
 		__inline double Pot_GetRawValue(size_t index);
 
-		KalmanFilter m_KalFilter[2];
-		Averager<double,5> m_Averager[2];
+		KalmanFilter m_KalFilter[10];
+		Averager<double,5> m_Averager[10];
 		#ifdef Robot_TesterCode
-		Potentiometer_Tester2 m_Potentiometer; //simulate a real potentiometer for calibration testing
+		Potentiometer_Tester2 m_Potentiometer[10]; //simulate a real potentiometer for calibration testing
 		#endif
 };
 

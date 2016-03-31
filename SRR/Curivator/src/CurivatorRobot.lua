@@ -61,7 +61,8 @@ MainRobot = {
 		},
 		analog_input =
 		{
-			id_1 = { name="arm_pot",  channel=2},
+			id_1 = { name="turret_pot",  channel=3},
+			id_2 = { name="arm_pot",  channel=2}
 		},
 		digital_input_encoder =
 		{	
@@ -165,7 +166,7 @@ MainRobot = {
 
 		turret =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -176,41 +177,27 @@ MainRobot = {
 			voltage_multiply=1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			Arm_SetPotentiometerSafety=true,	
-			--max_speed=(19300/64/60) * Pi2,	--This is about 5 rps (a little slower than hiking viking drive)
+			--Arm_SetPotentiometerSafety=true,	
 			max_speed=0.7,	--100 rpm... with a 15x reduction in radians
-			accel=1.0,						--We may indeed have a two button solution (match with max accel)
-			brake=1.0,
-			max_accel_forward=1,			--These are in radians, just go with what feels right
-			max_accel_reverse=1,
-			using_range=0,	--Warning Only use range if we have a potentiometer!
+			accel=10.0,						--We may indeed have a two button solution (match with max accel)
+			brake=10.0,
+			max_accel_forward=3,			--These are in radians, just go with what feels right
+			max_accel_reverse=3,
+			using_range=1,	--Warning Only use range if we have a potentiometer!
 
-			max_range_deg= 52.36 * ArmToGearRatio,
-			min_range_deg=(-46.12) * ArmToGearRatio,
-			pot_offset=-46.12 * Deg2Rad,
+			max_range_deg= 180,
+			min_range_deg=-180,
+			starting_position=0,
+			--pot_offset=-46.12 * Deg2Rad, --should not need this
 			use_aggressive_stop = 'yes',
-			inv_max_accel_up = 0.3,
-			inv_max_decel_up = 0.3,
-			inv_max_accel_down = 0.3,
-			inv_max_decel_down = 0.3,
-			motor_specs =
-			{
-				wheel_mass=Pounds2Kilograms * 16.27,
-				cof_efficiency=0.2,
-				gear_reduction=1.0,
-				torque_on_wheel_radius=Inches2Meters * 1.0,
-				drive_wheel_radius=Inches2Meters * 2.0,
-				number_of_motors=2,
-				
-				free_speed_rpm=84.0,
-				stall_torque=10.6,
-				stall_current_amp=18.6,
-				free_current_amp=1.8
-			}
+			--inv_max_accel_up = 0.3,
+			--inv_max_decel_up = 0.3,
+			--inv_max_accel_down = 0.3,
+			--inv_max_decel_down = 0.3,
 		},
 		arm =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -222,33 +209,111 @@ MainRobot = {
 			tolerance_count=20,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
+			pot_min_limit=155,
+			pot_max_limit=1125,
+			pot_range_flipped='y',
 			
-			--max_speed=(19300/64/60) * Pi2,	--This is about 5 rps (a little slower than hiking viking drive)
-			max_speed=8.8,	--loaded max speed (see sheet) which is 2.69 rps
-			accel=1.0,						--We may indeed have a two button solution (match with max accel)
-			brake=1.0,
-			max_accel_forward=10,			--These are in radians, just go with what feels right
-			max_accel_reverse=10,
-			using_range=0,					--Warning Only use range if we have a potentiometer!
-			--These min/max are arm converted to gear ratio (TODO reseach this more)
-			max_range_deg= 52.36 * ArmToGearRatio,
-			min_range_deg=(-46.12) * ArmToGearRatio,
-			starting_position_deg=-46.12,
+			max_speed=13.3,	
+			accel=10.0,						--We may indeed have a two button solution (match with max accel)
+			brake=10.0,
+			max_accel_forward=50,			--just go with what feels right
+			max_accel_reverse=50,
+			using_range=1,					--Warning Only use range if we have a potentiometer!
+			--These min/max are in inch units
+			max_range= 12,
+			min_range=0,
+			starting_position=6,
 			use_aggressive_stop = 'yes',
-			motor_specs =
-			{
-				wheel_mass=Pounds2Kilograms * 16.27,
-				cof_efficiency=0.2,
-				gear_reduction=1.0,
-				torque_on_wheel_radius=Inches2Meters * 1.0,
-				drive_wheel_radius=Inches2Meters * 2.0,
-				number_of_motors=2,
-				
-				free_speed_rpm=84.0,
-				stall_torque=10.6,
-				stall_current_amp=18.6,
-				free_current_amp=1.8
-			}
+		},
+		boom =
+		{
+			is_closed=1,
+			show_pid_dump='n',
+			ds_display_row=-1,
+			use_pid_up_only='y',
+			pid_up=
+			{p=100, i=0, d=25},
+			pid_down=
+			{p=100, i=0, d=25},
+			tolerance=0.15,
+			tolerance_count=20,
+			voltage_multiply=1.0,			--May be reversed
+			encoder_to_wheel_ratio=1.0,
+			pot_min_limit=155,
+			pot_max_limit=1125,
+			pot_range_flipped='y',
+			
+			max_speed=13.3,	
+			accel=10.0,						--We may indeed have a two button solution (match with max accel)
+			brake=10.0,
+			max_accel_forward=50,			--just go with what feels right
+			max_accel_reverse=50,
+			using_range=1,					--Warning Only use range if we have a potentiometer!
+			--These min/max are in inch units
+			max_range= 12,
+			min_range=0,
+			starting_position=6,
+			use_aggressive_stop = 'yes',
+		},
+		bucket =
+		{
+			is_closed=1,
+			show_pid_dump='n',
+			ds_display_row=-1,
+			use_pid_up_only='y',
+			pid_up=
+			{p=100, i=0, d=25},
+			pid_down=
+			{p=100, i=0, d=25},
+			tolerance=0.15,
+			tolerance_count=20,
+			voltage_multiply=1.0,			--May be reversed
+			encoder_to_wheel_ratio=1.0,
+			pot_min_limit=155,
+			pot_max_limit=1125,
+			pot_range_flipped='y',
+			
+			max_speed=13.3,	
+			accel=10.0,						--We may indeed have a two button solution (match with max accel)
+			brake=10.0,
+			max_accel_forward=50,			--just go with what feels right
+			max_accel_reverse=50,
+			using_range=1,					--Warning Only use range if we have a potentiometer!
+			--These min/max are in inch units
+			max_range= 12,
+			min_range=0,
+			starting_position=6,
+			use_aggressive_stop = 'yes',
+		},
+		clasp =
+		{
+			is_closed=1,
+			show_pid_dump='n',
+			ds_display_row=-1,
+			use_pid_up_only='y',
+			pid_up=
+			{p=100, i=0, d=25},
+			pid_down=
+			{p=100, i=0, d=25},
+			tolerance=0.15,
+			tolerance_count=20,
+			voltage_multiply=1.0,			--May be reversed
+			encoder_to_wheel_ratio=1.0,
+			pot_min_limit=155,
+			pot_max_limit=1125,
+			pot_range_flipped='y',
+			
+			max_speed=13.3,	
+			accel=10.0,						--We may indeed have a two button solution (match with max accel)
+			brake=10.0,
+			max_accel_forward=50,			--just go with what feels right
+			max_accel_reverse=50,
+			using_range=1,					--Warning Only use range if we have a potentiometer!
+			--These min/max are in inch units
+			max_range= 7,
+			min_range=0,
+			starting_position=3.5,
+			use_aggressive_stop = 'yes',
 		},
 	},
 
@@ -285,8 +350,12 @@ MainRobot = {
 			
 			turret_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			arm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			turret_Advance={type="keyboard", key='k', on_off=true},
-			turret_Retract={type="keyboard", key='j', on_off=true},
+			arm_Advance={type="keyboard", key='i', on_off=true},
+			arm_Retract={type="keyboard", key='u', on_off=true},
+			boom_Advance={type="keyboard", key='k', on_off=true},
+			boom_Retract={type="keyboard", key='j', on_off=true},
+			bucket_Advance={type="keyboard", key=';', on_off=true},
+			bucket_Retract={type="keyboard", key='l', on_off=true},
 	
 		},
 		
