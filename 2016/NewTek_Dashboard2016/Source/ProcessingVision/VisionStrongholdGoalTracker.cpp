@@ -80,7 +80,7 @@ int VisionStrongholdGoalTracker::ProcessImage(double &x_target, double &y_target
 {
 	int success = 1;
 
-	particleList.SetParticleParamsThresh( 0.285f, 0.375f, (12.0f/12), (20.0f/10.75) );	// area threshold min, max, aspect min, max
+	particleList.SetParticleParamsThresh( 0.255f, 0.385f, (12.0f/12), (20.0f/10.75) );	// area threshold min, max, aspect min, max
 
 	//-----------------------------------------------------------------//
 	//  Threshold                                                      //
