@@ -185,6 +185,10 @@ MainRobot = {
 			voltage_multiply=1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
+			--center around 318
+			pot_min_limit=250,
+			pot_max_limit=377,
+			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=0.7,	--100 rpm... with a 15x reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
@@ -193,8 +197,8 @@ MainRobot = {
 			max_accel_reverse=3,
 			using_range=0,	--Warning Only use range if we have a potentiometer!
 
-			max_range_deg= 180,
-			min_range_deg=-180,
+			max_range_deg= 80,
+			min_range_deg=-50,
 			starting_position=0,
 			--pot_offset=-46.12 * Deg2Rad, --should not need this
 			use_aggressive_stop = 'yes',
@@ -247,8 +251,8 @@ MainRobot = {
 			tolerance_count=20,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=155,
-			pot_max_limit=1125,
+			pot_min_limit=100,
+			pot_max_limit=750,
 			pot_range_flipped='y',
 			
 			max_speed=13.3,	
@@ -356,8 +360,8 @@ MainRobot = {
 			TestAuton={type="keyboard", key='g', on_off=false},
 			--Slide={type="keyboard", key='g', on_off=false},
 			
-			bucket_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			clasp_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			boom_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			arm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			arm_Advance={type="keyboard", key='i', on_off=true},
 			arm_Retract={type="keyboard", key='u', on_off=true},
 			boom_Advance={type="keyboard", key='k', on_off=true},
