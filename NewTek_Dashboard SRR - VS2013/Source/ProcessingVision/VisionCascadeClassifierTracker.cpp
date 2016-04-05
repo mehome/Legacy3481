@@ -11,7 +11,8 @@ using namespace cv;
 VisionCascadeClassifierTracker::VisionCascadeClassifierTracker()
 : 	mode(h_original),
 	bShowImg(false),
-	bCascadeLoaded(false)
+	bCascadeLoaded(false),
+	frameCount(0)
 {	
 	hook_cascade_name = "cascade_data\\hook_cascade_cpu.xml";
 	p_hook_cascade = new CascadeClassifier();
@@ -24,20 +25,22 @@ VisionCascadeClassifierTracker::~VisionCascadeClassifierTracker()
 {
 }
 
-// TODO: 
-// * convert incomming image to Mat format for OpenCV -- implement in GetFrame().
 int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_target)
 {
 	int success = 1;
-	frameCount = 0;
+
+	const float Aspect = InputImageRGB->cols / InputImageRGB->rows;
+
+	std::vector<Rect> hooks;
+	Mat frame_gray;
+	int height;
+	int XRes = InputImageRGB->cols;
+	int YRes = InputImageRGB->rows;
 
 	frameCount++;
 
-	if (!InputImageRGB->empty())
+	if (bCascadeLoaded && !InputImageRGB->empty())
 	{
-		std::vector<Rect> hooks;
-		Mat frame_gray;
-
 		cvtColor(*InputImageRGB, frame_gray, COLOR_BGR2GRAY);
 
 		if (mode == h_equalize)
@@ -58,12 +61,25 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 		//-- detect hook sample
 		p_hook_cascade->detectMultiScale(frame_gray, hooks, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(15, 15));
 
+		x_target = 0.0;
+		y_target = 0.0;
+		height = 0;
+
 		for (size_t i = 0; i < hooks.size(); i++)
 		{
-	//		printf("Frame %d x: %d y: %d width: %d height %d\n", frameCount, hooks[i].x, hooks[i].y, hooks[i].width, hooks[i].height);
 			Point p1(hooks[i].x, hooks[i].y);
 			Point p2(hooks[i].x + hooks[i].width, hooks[i].y + hooks[i].height);
 			rectangle(*InputImageRGB, p1, p2, Scalar(255, 0, 255), 2, 8, 0);
+
+			// TODO: need to work out how to pick when there are multiple objects found.
+			double center_x = (double)(hooks[i].x + hooks[i].width / 2);
+			double center_y = (double)(hooks[i].y + hooks[i].height / 2);
+
+			// convert to aiming system coords
+			x_target = (double)((center_x - (XRes / 2.0)) / (XRes / 2.0)) * Aspect;
+			y_target = (float)((center_y - (YRes / 2.0)) / (YRes / 2.0));
+
+			height = hooks[i].height;
 		}
 		if (bShowImg)
 			imshow("input", *InputImageRGB);
@@ -71,18 +87,23 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 
 	int c = waitKey(10);
 
-	// Get return for x, y target values;
+	// Angle = arctan(vertical hight in feet * image height / (2 * vertical target hight in pixels * distance in feet)) * RADS_TO_DEG
 
-	if( true )
+	//#define VIEW_ANGLE 42.25
+#define VIEW_ANGLE 41.25
+	double Distance = 0.0;
+	if (height != 0)
 	{
-		x_target = 0.0;	// TODO: add values
-		y_target = 0.0;
+		int TargetHeight = 9; // inches - actual sample is about 8 inches tall, but trained cascade images are taller.
+		Distance = YRes * TargetHeight / (height * 12 * 2 * tan(VIEW_ANGLE * M_PI / (180 * 2)));
+		SmartDashboard::PutNumber("TargetDistance", Distance);
 	}
 	else
-	{
-		x_target = 0.0;
-		y_target = 0.0;
-	}
+		SmartDashboard::PutNumber("TargetDistance", 0);
+
+	wchar_t debugstr[1024];
+	swprintf(debugstr, L"x_target %f y_target %f distance %f\n", x_target, y_target, Distance);
+	OutputDebugString(debugstr);
 
 	return success;
 }
