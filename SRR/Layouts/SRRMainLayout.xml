@@ -1,19 +1,91 @@
 <xml version="1.0">
 <dashboard>
-	<widget field="claspPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+	<widget field="armPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="374" y="369"/>
+		<property name="Foreground" value="51.153.255.255"/>
+		<property name="Background" value="0.0.153.255"/>
+		<property name="Maximum" value="1.0"/>
+	</widget>
+	<widget field="boomPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="373" y="410"/>
+		<property name="Foreground" value="51.153.255.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="1.0"/>
+	</widget>
+	<widget field="bucketPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="376" y="444"/>
+		<property name="Foreground" value="0.153.255.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="1.0"/>
+	</widget>
+	<widget field="claspPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="378" y="478"/>
+		<property name="Foreground" value="0.153.255.255"/>
+		<property name="Background" value="0.0.153.255"/>
+		<property name="Maximum" value="1.0"/>
+	</widget>
+	<widget field="BigArm_ShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="549" y="362"/>
+		<property name="Foreground" value="0.153.255.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="12.0"/>
+	</widget>
+	<widget field="Boom_ShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="551" y="404"/>
+		<property name="Foreground" value="0.153.255.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="12.0"/>
+	</widget>
+	<widget field="BucketShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="550" y="441"/>
+		<property name="Foreground" value="0.153.255.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="12.0"/>
+	</widget>
+	<widget field="ClaspShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="553" y="479"/>
+		<property name="Foreground" value="0.153.255.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="7.0"/>
+	</widget>
+	<widget field="clasp_angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="142" y="681"/>
+	</widget>
+	<widget field="bucket_angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="52" y="645"/>
+	</widget>
+	<widget field="arm_ypos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="57" y="581"/>
+	</widget>
+	<widget field="arm_xpos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="51" y="545"/>
+	</widget>
+	<widget field="Clasp_angleVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="162"/>
+	</widget>
+	<widget field="Bucket_angleVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="141"/>
+	</widget>
+	<widget field="Arm_yposVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="120"/>
+	</widget>
+	<widget field="Arm_xposVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="99"/>
+	</widget>
+	<widget field="BucketAngle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="214" y="644"/>
+	</widget>
+	<widget field="BucketHeight" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="215" y="578"/>
+	</widget>
+	<widget field="BucketDistance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="211" y="545"/>
 	</widget>
 	<widget field="clasp_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="218" y="485"/>
 	</widget>
-	<widget field="bucketPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="376" y="444"/>
-	</widget>
 	<widget field="bucket_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="214" y="450"/>
-	</widget>
-	<widget field="boomPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="373" y="410"/>
 	</widget>
 	<widget field="boom_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="216" y="413"/>
@@ -124,9 +196,6 @@
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
-	</widget>
-	<widget field="armPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="374" y="369"/>
 	</widget>
 	<widget field="arm_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="218" y="372"/>
