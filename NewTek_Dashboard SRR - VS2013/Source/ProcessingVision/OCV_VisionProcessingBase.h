@@ -19,6 +19,8 @@ public:
 
 	profile Profiler;
 
+	void rotate_90n(cv::Mat &src, cv::Mat &dst, int angle);
+
 protected:
 	cv::Mat *InputImageRGB;
 };
