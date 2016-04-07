@@ -23,9 +23,12 @@ int VisionTracker::GetFrame(Bitmap_Frame *Frame)
 	InputImageRGB = new Mat(Frame->YRes, Frame->XRes, CV_8UC4, Frame->Memory);
 	if( InputImageRGB == NULL ) success = false;
 #else
-	cv::Mat *rotInputImageRGB = new Mat(Frame->YRes, Frame->XRes, CV_8UC4, Frame->Memory);
+	rotInputImageRGB = new Mat(Frame->YRes, Frame->XRes, CV_8UC4, Frame->Memory);
+	InputImageRGB = new Mat(Frame->YRes, Frame->XRes, CV_8UC4);
 	if (rotInputImageRGB != NULL)
-		rotate_90n(*rotInputImageRGB, *InputImageRGB, 90);
+	{
+		rotate_90n(*rotInputImageRGB, *InputImageRGB, -90);
+	}
 	else
 		success = false;
 #endif
@@ -37,18 +40,16 @@ void VisionTracker::ReturnFrame(Bitmap_Frame *Frame)
 {	// copy image back to our frame.
 	// no need to copy, for return if not flipped.
 #ifdef FLIP90
-	//void *pImageArray = imaqImageToArray(InputImageRGB, IMAQ_NO_RECT, NULL, NULL);
-	//if(pImageArray != NULL)
-	//{
-	//	memcpy((void*)Frame->Memory, pImageArray, Frame->Stride * 4 * Frame->YRes);
-	//	imaqDispose(pImageArray);
-	//}
+	//rotate_90n(*InputImageRGB, *rotInputImageRGB, 90);
+	//memcpy((void*)Frame->Memory, InputImageRGB->data, Frame->Stride * 4 * Frame->YRes);
+	//Frame->XRes = Frame->YRes;
+	//Frame->YRes = Frame->XRes;
+	//Frame->Stride = Frame->YRes;
 #endif
 }
 
 void VisionTracker::rotate_90n(cv::Mat &src, cv::Mat &dst, int angle)
 {
-	dst.create(src.size(), src.type());
 	if (angle == 270 || angle == -90){
 		// Rotate clockwise 270 degrees
 		cv::transpose(src, dst);

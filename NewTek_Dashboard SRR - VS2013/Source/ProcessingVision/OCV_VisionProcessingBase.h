@@ -23,4 +23,5 @@ public:
 
 protected:
 	cv::Mat *InputImageRGB;
+	cv::Mat *rotInputImageRGB;
 };

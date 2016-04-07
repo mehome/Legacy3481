@@ -10,7 +10,7 @@ using namespace cv;
 
 VisionCascadeClassifierTracker::VisionCascadeClassifierTracker()
 : 	mode(h_original),
-	bShowImg(false),
+	bShowImg(true),
 	bCascadeLoaded(false),
 	frameCount(0)
 {	
@@ -90,7 +90,7 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 	// Angle = arctan(vertical hight in feet * image height / (2 * vertical target hight in pixels * distance in feet)) * RADS_TO_DEG
 
 	//#define VIEW_ANGLE 42.25
-#define VIEW_ANGLE 41.25
+#define VIEW_ANGLE 48
 	double Distance = 0.0;
 	if (height != 0)
 	{
