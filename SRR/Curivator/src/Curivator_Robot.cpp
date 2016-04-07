@@ -53,12 +53,29 @@ static double PositionToVelocity_Tweak(double Value)
 }
 #endif
 
+__inline double LawOfCosines(double a,double b,double c)
+{
+	//Given all three lengths to the triangle use law of cosines to solve the angle c
+	//http://mathcentral.uregina.ca/QQ/database/QQ.09.07/h/lucy1.html
+	//c2 = a2 + b2 - 2ab cos(C)
+	//rearranged to solve for cos(C)
+	//x = -1 * ( (c*c - b*b - a*a) / (2*a*b) )
+	//
+	//         C  -------------a-----------   B
+	//            ""--b----+         +==="" 
+	//                      A------c+
+	const double cos_C=-1.0 *( ((c*c)-(b*b)-(a*a)) / (2 * a * b));
+	const double x=acos(cos_C);
+	return x;
+}
+
   /***********************************************************************************************************************************/
  /*													Curivator_Robot::Robot_Arm														*/
 /***********************************************************************************************************************************/
 
 Curivator_Robot::Robot_Arm::Robot_Arm(size_t index,Curivator_Robot *parent,Rotary_Control_Interface *robot_control) : 
-Rotary_Position_Control(csz_Curivator_Robot_SpeedControllerDevices_Enum[index],robot_control,index),m_Index(index),m_pParent(parent),m_Advance(false),m_Retract(false)
+Rotary_Position_Control(csz_Curivator_Robot_SpeedControllerDevices_Enum[index],robot_control,index),m_Index(index),m_pParent(parent),m_LastIntendedPosition(0.0),
+	m_Advance(false),m_Retract(false)
 {
 }
 
@@ -108,33 +125,32 @@ void Curivator_Robot::Robot_Arm::TimeChange(double dTime_s)
 }
 
 
-//double Curivator_Robot::Robot_Arm::AngleToHeight_m(double Angle_r) const
-//{
-//	const Curivator_Robot_Props &props=m_pParent->GetRobotProps().GetCurivatorRobotProps();
-//	const double c_GearToArmRatio=1.0/props.ArmToGearRatio;
-//
-//	return (sin(Angle_r*c_GearToArmRatio)*props.ArmLength)+props.GearHeightOffset;
-//}
-//double Curivator_Robot::Robot_Arm::Arm_AngleToHeight_m(double Angle_r) const
-//{
-//	const Curivator_Robot_Props &props=m_pParent->GetRobotProps().GetCurivatorRobotProps();
-//	return (sin(Angle_r)*props.ArmLength)+props.GearHeightOffset;
-//}
-//
-//double Curivator_Robot::Robot_Arm::HeightToAngle_r(double Height_m) const
-//{
-//	const Curivator_Robot_Props &props=m_pParent->GetRobotProps().GetCurivatorRobotProps();
-//	return asin((Height_m-props.GearHeightOffset)/props.ArmLength) * props.ArmToGearRatio;
-//}
-//
-//double Curivator_Robot::Robot_Arm::PotentiometerRaw_To_Arm_r(double raw) const
-//{
-//	const Curivator_Robot_Props &props=m_pParent->GetRobotProps().GetCurivatorRobotProps();
-//	const int RawRangeHalf=512;
-//	double ret=((raw / RawRangeHalf)-1.0) * DEG_2_RAD(270.0/2.0);  //normalize and use a 270 degree scalar (in radians)
-//	ret*=props.PotentiometerToArmRatio;  //convert to arm's gear ratio
-//	return ret;
-//}
+
+void Curivator_Robot::Robot_Arm::SetIntendedPosition_Plus(double Position)
+{
+	//return;
+	//if (GetPotUsage()!=Rotary_Position_Control::eNoPot)
+	{
+		//if (((fabs(m_LastIntendedPosition-Position)<0.01)) || (!(IsZero(GetRequestedVelocity()))) )
+		//	return;
+		{
+			m_LastIntendedPosition=Position; //grab it before all the conversions
+			Position=-Position; 
+			//By default this goes from -1 to 1.0 
+			//first get the range from 0 - 1
+			double positive_range = (Position * 0.5) + 0.5;
+			//positive_range=positive_range>0.01?positive_range:0.0;
+			const double minRange=GetMinRange();
+			const double maxRange=GetMaxRange();
+			const double Scale=(maxRange-minRange);
+			Position=(positive_range * Scale) + minRange;
+			//DOUT5("Test=%f",RAD_2_DEG(Position));
+			SetIntendedPosition(Position);
+		}
+	}
+	//else
+	//	SetRequestedVelocity_FromNormalized(Position);   //allow manual use of same control
+}
 
 void Curivator_Robot::Robot_Arm::BindAdditionalEventControls(bool Bind)
 {
@@ -143,6 +159,8 @@ void Curivator_Robot::Robot_Arm::BindAdditionalEventControls(bool Bind)
 	string ContructedName;
 	if (Bind)
 	{
+		ContructedName=Prefix,ContructedName+="_SetIntendedPosition";
+		em->EventValue_Map[ContructedName.c_str()].Subscribe(ehl,*this, &Curivator_Robot::Robot_Arm::SetIntendedPosition_Plus);
 		ContructedName=Prefix,ContructedName+="_SetCurrentVelocity";
 		em->EventValue_Map[ContructedName.c_str()].Subscribe(ehl,*this, &Curivator_Robot::Robot_Arm::SetRequestedVelocity_FromNormalized);
 		ContructedName=Prefix,ContructedName+="_SetPotentiometerSafety";
@@ -155,6 +173,8 @@ void Curivator_Robot::Robot_Arm::BindAdditionalEventControls(bool Bind)
 	}
 	else
 	{
+		ContructedName=Prefix,ContructedName+="_SetIntendedPosition";
+		em->EventValue_Map[ContructedName.c_str()].Remove(*this, &Curivator_Robot::Robot_Arm::SetIntendedPosition_Plus);
 		ContructedName=Prefix,ContructedName+="_SetCurrentVelocity";
 		em->EventValue_Map[ContructedName.c_str()].Remove(*this, &Curivator_Robot::Robot_Arm::SetRequestedVelocity_FromNormalized);
 		ContructedName=Prefix,ContructedName+="_SetPotentiometerSafety";
@@ -195,19 +215,10 @@ void Curivator_Robot::BigArm::TimeChange(double dTime_s)
 	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
 	const double FullActuatorLength=ShaftExtension_in+BigArm_DistanceDartPivotToTip+BigArm_DistanceFromTipDartToClevis;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
-	//http://mathcentral.uregina.ca/QQ/database/QQ.09.07/h/lucy1.html
-	//c2 = a2 + b2 - 2ab cos(C)
 	//c is FullActuatorLength
 	//b is dart distance to arm
 	//a is the AngleToDartPivotInterface_Length
-	//rearranged to solve for cos(C)
-	//x = -1 * ( (c*c - b*b - a*a) / (2*a*b)    )
-	const double cos_FullActuatorLength=-1.0 *
-		(((FullActuatorLength*FullActuatorLength)-
-		(BigArm_DartToArmDistance*BigArm_DartToArmDistance)-
-		(BigArm_AngleToDartPivotInterface_Length*BigArm_AngleToDartPivotInterface_Length))  / 
-		(2 * BigArm_AngleToDartPivotInterface_Length * BigArm_DartToArmDistance));
-	const double BigAngleDartInterface=acos(cos_FullActuatorLength);
+	const double BigAngleDartInterface=LawOfCosines(BigArm_AngleToDartPivotInterface_Length,BigArm_DartToArmDistance,FullActuatorLength);
 	//SmartDashboard::PutNumber("BigAngleDartInterface",RAD_2_DEG(BigAngleDartInterface));
 	m_BigArmAngle=BigAngleDartInterface-BigArm_AngleToDartPivotInterface;
 	//SmartDashboard::PutNumber("BigAngleAngle",RAD_2_DEG(m_BigArmAngle));
@@ -232,7 +243,10 @@ double Curivator_Robot::BigArm::GetBigArmHeight() const
  /*														Curivator_Robot::Boom														*/
 /***********************************************************************************************************************************/
 //Note: all of these constants are in inches (as they are in the CAD)
-const double Boom_BoomRadius=26.03003069;
+const double Boom_BoomRadius=23.03394231;  //Note to the boom rocker hole (not the bucket pivot hole as there was some design conflict)
+const double Boom_BoomRadius_BP=26.03003642;  //The length to the bucket pivot point, almost 3 inches more... but a slight angle change to make it less
+const double Boom_BP_To_RBP_RadiusAngle=DEG_2_RAD(0.35809296);  //The slight angle change... where the BP segment is the more acute angle to the big arm
+const double Boom_BP_To_Lever_angle=DEG_2_RAD(175.16494932);
 const double Boom_DartToArmDistance=18.51956156;
 const double Boom_DistanceFromTipDartToClevis=2.0915;  //Note: these may be different depending on how many turns it took to orient properly
 const double Boom_DistanceDartPivotToTip=11.5;
@@ -256,46 +270,217 @@ void Curivator_Robot::Boom::TimeChange(double dTime_s)
 	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
 	const double FullActuatorLength=ShaftExtension_in+Boom_DistanceDartPivotToTip+Boom_DistanceFromTipDartToClevis;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
-	//http://mathcentral.uregina.ca/QQ/database/QQ.09.07/h/lucy1.html
-	//c2 = a2 + b2 - 2ab cos(C)
 	//c is FullActuatorLength
 	//b is dart distance to arm
 	//a is the AngleToDartPivotInterface_Length
-	//rearranged to solve for cos(C)
-	//x = -1 * ( (c*c - b*b - a*a) / (2*a*b)    )
-	const double cos_FullActuatorLength=-1.0 *
-		(((FullActuatorLength*FullActuatorLength)-
-		(Boom_DartToArmDistance*Boom_DartToArmDistance)-
-		(Boom_AngleToDartPivotInterface_Length*Boom_AngleToDartPivotInterface_Length))  / 
-		(2 * Boom_AngleToDartPivotInterface_Length * Boom_DartToArmDistance));
-	const double BigAngleDartInterface=acos(cos_FullActuatorLength);
+	const double BigAngleDartInterface=LawOfCosines(Boom_AngleToDartPivotInterface_Length,Boom_DartToArmDistance,FullActuatorLength);
 	//SmartDashboard::PutNumber("BoomDartInterface",RAD_2_DEG(BigAngleDartInterface));
 	const double local_BoomAngle=M_PI-BigAngleDartInterface+Boom_AngleToDartPivotInterface;
 	//To convert to global we subtract the sum of both the boom dart to bigarm constant angle and the angle of the big arm... this angle is global from 
 	//a vertical line that aligns with the big arm's pivot point for the boom
 	m_BoomAngle=local_BoomAngle-((PI_2-m_BigArm.GetBigArmAngle())+Boom_AngleBigArmToDartPivot);
-	SmartDashboard::PutNumber("BoomAngle",RAD_2_DEG(m_BoomAngle));
+	//SmartDashboard::PutNumber("BoomAngle",RAD_2_DEG(m_BoomAngle));
 	//With this angle we can pull sin and cos for height and outward length using the big arm's radius constant
-	GetBoomLength();
-	GetBoomHeight();
 }
 
 double Curivator_Robot::Boom::GetBoomLength() const
 {
 	const double LocalBoomLength=sin(m_BoomAngle) * Boom_BoomRadius;
 	const double BoomLength=LocalBoomLength+m_BigArm.GetBigArmLength();
-	SmartDashboard::PutNumber("BoomLength",BoomLength);
+	//SmartDashboard::PutNumber("BoomLength",BoomLength);
 	return BoomLength;
 }
 double Curivator_Robot::Boom::GetBoomHeight() const
 {
 	const double LocalBoomHeight=cos(m_BoomAngle) * Boom_BoomRadius;
 	const double BoomHeight=m_BigArm.GetBigArmHeight()-LocalBoomHeight;
-	SmartDashboard::PutNumber("BoomHeight",BoomHeight);
+	//SmartDashboard::PutNumber("BoomHeight",BoomHeight);
 	return BoomHeight;
 }
 
+  /***********************************************************************************************************************************/
+ /*														Curivator_Robot::Bucket														*/
+/***********************************************************************************************************************************/
+// BRP=boom rocker pivot
+// LAB=linear actuator for bucket
+// BP=Bucket Pivot
+// BucketRP=Bucket Rocker Pivot
+const double Bucket_BRP_To_LAB=17.2528303;
+const double Bucket_LAB_houseingLength=12.4;
+const double Bucket_RockerBoomLength=6.49874999;
+const double Bucket_BRP_LABtoBRP_BP_Angle=DEG_2_RAD(175.01);
+const double Bucket_BRP_To_BP=3.0;
+const double Bucket_BP_To_BucketRP=7.79685753;
+const double Bucket_RockerBucketLength=7.3799994;
+const double Bucket_BP_To_BucketCoM=7.70049652;
+const double Bucket_BoomAngleToLAB_Angle=DEG_2_RAD(8.09856217);
+const double Bucket_HorizontaltoBRP_BP_Angle=Bucket_BRP_LABtoBRP_BP_Angle+Bucket_BoomAngleToLAB_Angle-DEG_2_RAD(90);
+const double Bucket_BucketRPtoBucketCoM_Angle=DEG_2_RAD(46.01897815);
+const double Bucket_localConstantBRP_BP_height=sin(Bucket_HorizontaltoBRP_BP_Angle) * Bucket_BRP_To_BP;
+const double Bucket_localConstantBRP_BP_distance=cos(Bucket_HorizontaltoBRP_BP_Angle) * Bucket_BRP_To_BP;
+const double Bucket_CoMtoTip_Angle=DEG_2_RAD(32.1449117);
+const double Bucket_BPBT_ToBucketRP_Angle=Bucket_CoMtoTip_Angle+Bucket_BucketRPtoBucketCoM_Angle;  //save an add
+const double Bucket_BP_to_BucketTip=13.12746417;
+const double Bucket_BPTip_to_BucketInterface_Angle=DEG_2_RAD(12.4082803);
+const double Bucket_CoM_Radius=5.0;
+Curivator_Robot::Bucket::Bucket(size_t index,Curivator_Robot *parent,Rotary_Control_Interface *robot_control, Boom &boom) : 
+	Robot_Arm(index,parent,robot_control),m_Boom(boom)
+{
+}
 
+void Curivator_Robot::Bucket::TimeChange(double dTime_s)
+{
+	__super::TimeChange(dTime_s);
+	//Now to compute where we are based from our length of extension
+	//first start with the extension:
+	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
+	//Note: unlike the dart... we just include the clevis as part of the shaft extension
+	const double FullActuatorLength=ShaftExtension_in+Bucket_LAB_houseingLength;  //from center point to center point
+	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
+	//c is FullActuatorLength
+	//b is rocker boom length
+	//a is boom rocker pivot to linear actuator mount length
+	const double RockerBoomAngle=LawOfCosines(Bucket_BRP_To_LAB,Bucket_RockerBoomLength,FullActuatorLength);
+	const double QuadRockerBoomAngle=Bucket_BRP_LABtoBRP_BP_Angle-RockerBoomAngle;  //start to grab the interior angle of the quadrilateral
+	//Given this angle... compute the x and y coordinates of the rocker's interface of the actuator as this will be the length of the bisected quadrilateral
+	const double RockerInterfaceY=(cos(QuadRockerBoomAngle) * Bucket_RockerBoomLength) - Bucket_BRP_To_BP;  //factor in the difference for the distance formula
+	const double RockerInterfaceX=sin(QuadRockerBoomAngle) * Bucket_RockerBoomLength;
+	// use distance formula to solve the length
+	const double QuadBisectLength=sqrt((RockerInterfaceX*RockerInterfaceX)+(RockerInterfaceY*RockerInterfaceY));
+	//Now we find the Buckets pivot angle in two parts... first the upper triangle (now from the bisecting of the quadrilateral)
+	const double BucketPivotUpperAngle=LawOfCosines(Bucket_BRP_To_BP,QuadBisectLength,Bucket_RockerBoomLength);
+	const double BucketPivotLowerAngle=LawOfCosines(Bucket_BP_To_BucketRP,QuadBisectLength,Bucket_RockerBucketLength);
+	const double BucketPivotAngle=BucketPivotUpperAngle+BucketPivotLowerAngle;
+	const double BucketCoMPivotAngleHorz=BucketPivotAngle+Bucket_BucketRPtoBucketCoM_Angle-DEG_2_RAD(90) - (DEG_2_RAD(90) - Bucket_HorizontaltoBRP_BP_Angle);
+	const double BoomAngle=m_Boom.GetBoomAngle();
+	//Now to compute the local height... distance from boom origin downward 
+	m_Bucket_globalBRP_BP_height=(sin(Bucket_HorizontaltoBRP_BP_Angle-BoomAngle) * Bucket_BRP_To_BP);
+	//Note this first equation omits the boom angle as a reference in a local setting
+	//const double LocalCoMHeight=Bucket_localConstantBRP_BP_height+(sin(BucketCoMPivotAngleHorz)*Bucket_BP_To_BucketCoM);
+	m_GlobalCoMHeight=m_Bucket_globalBRP_BP_height+(sin(BucketCoMPivotAngleHorz-BoomAngle)*Bucket_BP_To_BucketCoM);
+	//Note this first equation omits the boom angle as a reference in a local setting
+	//const double LocalTipHeight=Bucket_localConstantBRP_BP_height+(sin(BucketCoMPivotAngleHorz + Bucket_CoMtoTip_Angle)*Bucket_BP_to_BucketTip);
+	const double LocalTipHeight=m_Bucket_globalBRP_BP_height+(sin(BucketCoMPivotAngleHorz + Bucket_CoMtoTip_Angle-BoomAngle)*Bucket_BP_to_BucketTip);
+	m_GlobalTipHeight=m_Boom.GetBoomHeight()-LocalTipHeight;
+	m_LocalBucketAngle=DEG_2_RAD(180)- (BucketCoMPivotAngleHorz + Bucket_CoMtoTip_Angle) - Bucket_BPTip_to_BucketInterface_Angle;
+	//const double LocalHeight=max(LocalTipHeight,LocalCoMHeight+Bucket_CoM_Radius);
+	//LocalDistance=Bucket_localConstantBRP_BP_distance+(cos(BucketCoMPivotAngleHorz + Bucket_CoMtoTip_Angle)*Bucket_BP_to_BucketTip);
+	m_Bucket_globalBRP_BP_distance=cos(Bucket_HorizontaltoBRP_BP_Angle-BoomAngle) * Bucket_BRP_To_BP;
+	m_GlobalDistance=m_Bucket_globalBRP_BP_distance+(cos(BucketCoMPivotAngleHorz + Bucket_CoMtoTip_Angle-BoomAngle)*Bucket_BP_to_BucketTip);
+	const double globalBucketDistance=GetBucketLength();
+	const double globalTipHeight=GetBucketTipHeight();
+	const double globalRoundEndHeight=GetBucketRoundEndHeight();
+	const double globalBucketAngle_deg=RAD_2_DEG(GetBucketAngle());
+	SmartDashboard::PutNumber("BucketDistance",globalBucketDistance);
+	//SmartDashboard::PutNumber("BucketTipHeight",globalTipHeight);
+	//SmartDashboard::PutNumber("BucketRoundEndHeight",globalRoundEndHeight);
+	SmartDashboard::PutNumber("BucketHeight",min(globalTipHeight,globalRoundEndHeight));
+	SmartDashboard::PutNumber("BucketAngle",globalBucketAngle_deg);
+}
+
+double Curivator_Robot::Bucket::GetBucketLength() const
+{
+ const double globalBucketDistance=m_GlobalDistance + m_Boom.GetBoomLength();
+ return globalBucketDistance;
+}
+double Curivator_Robot::Bucket::GetBucketRoundEndHeight() const
+{
+	const double globalRoundEndHeight=m_Boom.GetBoomHeight()-(m_GlobalCoMHeight+Bucket_CoM_Radius);
+	return globalRoundEndHeight;
+}
+double Curivator_Robot::Bucket::GetBucketAngle() const
+{
+	const double globalBucketAngle=m_LocalBucketAngle+m_Boom.GetBoomAngle();
+	return globalBucketAngle;
+}
+
+  /***********************************************************************************************************************************/
+ /*														Curivator_Robot::Clasp														*/
+/***********************************************************************************************************************************/
+// BRP=boom rocker pivot  (this is our point of origin)
+// LAC=linear actuator for clasp
+// CP=Clasp Pivot  (same hole used for bucket pivot)
+// CPMT= segment from clasp pivot to midline tip
+const double Clasp_BRP_To_LAC=10.97993151;
+const double Clasp_LAC_houseingLength=7.4;
+const double Clasp_CP_To_LAC=3.11799058;
+const double Clasp_BoomAngleToLAC_Angle=DEG_2_RAD(9.58288198);
+const double Clasp_MidlineSegment=10.31720455;
+const double Clasp_LA_Interface_to_Midline_Angle=DEG_2_RAD(125.84975925);
+const double Clasp_MidlineToEdge_Angle=DEG_2_RAD(101.61480361);
+const double Clasp_BottomToSideAngle=DEG_2_RAD(98.23909595);
+const double Clasp_BottomEdgeLength=1.507182;  //used to find lowest point
+const double Clasp_BottomEdgeLength_Half=Clasp_BottomEdgeLength/2.0;  //spare this computation
+const double Clasp_CP_To_MidlineTip=12.40350045; //used in ComputeArmPosition for length
+const double Clasp_CPMT_ToSide_Angle=DEG_2_RAD(8.09713426);
+const double Clasp_MidLineToEdge_Angle=Clasp_MidlineToEdge_Angle+Clasp_BottomToSideAngle-DEG_2_RAD(180);  //about 19.85
+Curivator_Robot::Clasp::Clasp(size_t index,Curivator_Robot *parent,Rotary_Control_Interface *robot_control, Bucket &bucket) : 
+Robot_Arm(index,parent,robot_control),m_Bucket(bucket)
+{
+}
+
+void Curivator_Robot::Clasp::TimeChange(double dTime_s)
+{
+	__super::TimeChange(dTime_s);
+	//Now to compute where we are based from our length of extension
+	//first start with the extension:
+	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
+	//Note: unlike the dart... we just include the clevis as part of the shaft extension
+	const double FullActuatorLength=ShaftExtension_in+Clasp_LAC_houseingLength;  //from center point to center point
+	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
+	//c is FullActuatorLength
+	//b is rocker boom length
+	//a is boom rocker pivot to linear actuator mount length
+	const double ClaspLA_Interface_Angle=LawOfCosines(Clasp_BRP_To_LAC,Clasp_CP_To_LAC,FullActuatorLength);
+	const double ClaspLA_Interface_Angle_Horizontal=(DEG_2_RAD(90)-(ClaspLA_Interface_Angle+Clasp_BoomAngleToLAC_Angle));
+	const double Clasp_MidlineSegment_Angle=Clasp_LA_Interface_to_Midline_Angle+ClaspLA_Interface_Angle_Horizontal; //angle from horizontal
+	//----------------
+	const Boom &boom=m_Bucket.GetBoom();
+	const double BoomAngle=boom.GetBoomAngle();
+	//const double BoomAngle=0.0; local testing
+	//Next to find the height and length... start with Clasp pivot... then add the clasp interface with midline segment
+	//use for local testing
+	//const double ClaspPivotHeight=Bucket_localConstantBRP_BP_height;
+	const double ClaspPivotHeight=m_Bucket.GetBucket_globalBRP_BP_height();
+	const double Clasp_CP_To_LAC_Height=sin(ClaspLA_Interface_Angle_Horizontal-BoomAngle)*Clasp_CP_To_LAC;
+	const double Clasp_MidlineSegment_Height=sin(Clasp_MidlineSegment_Angle-BoomAngle)*Clasp_MidlineSegment;
+	const double localClasp_MidlineHeight=ClaspPivotHeight-Clasp_CP_To_LAC_Height+Clasp_MidlineSegment_Height;
+	m_GlobalMidlineHeight=boom.GetBoomHeight()-localClasp_MidlineHeight;
+	//for length (aka horizontal distance) use the similar technique as with height
+	//use for local testing
+	//const double ClaspPivotDistance=Bucket_localConstantBRP_BP_distance;
+	const double ClaspPivotDistance=m_Bucket.GetBucket_globalBRP_BP_distance();
+	const double Clasp_CP_To_LAC_Distance=cos(ClaspLA_Interface_Angle_Horizontal-BoomAngle)*Clasp_CP_To_LAC;
+	const double Clasp_MidlineSegment_Distance=cos(Clasp_MidlineSegment_Angle-BoomAngle)*Clasp_MidlineSegment;
+	const double localClasp_MidlineDistance=ClaspPivotDistance-Clasp_CP_To_LAC_Distance+Clasp_MidlineSegment_Distance;
+	m_GlobalMidlineDistance=boom.GetBoomLength()+localClasp_MidlineDistance;
+	//Now to solve the angle of the side
+	m_Clasp_MidlineToEdge_Angle_Horizontal=Clasp_MidlineSegment_Angle-(DEG_2_RAD(180)-Clasp_MidlineToEdge_Angle);
+	const double localSideFromHorizontal_Angle=DEG_2_RAD(180)-(m_Clasp_MidlineToEdge_Angle_Horizontal+Clasp_BottomToSideAngle);
+	m_GlobalClaspAngle=localSideFromHorizontal_Angle+boom.GetBoomAngle();
+	GetMinHeight();
+}
+
+double Curivator_Robot::Clasp::GetInnerTipHieght() const
+{
+	const Boom &boom=m_Bucket.GetBoom();
+	const double BoomAngle=boom.GetBoomAngle();
+	const double InnerTipHieght=(m_GlobalMidlineHeight-(sin(m_Clasp_MidlineToEdge_Angle_Horizontal-BoomAngle)*Clasp_BottomEdgeLength_Half));
+	return InnerTipHieght;
+}
+double Curivator_Robot::Clasp::GetOuterTipHieght() const
+{
+	const Boom &boom=m_Bucket.GetBoom();
+	const double BoomAngle=boom.GetBoomAngle();
+	const double OuterTipHieght=sin(m_Clasp_MidlineToEdge_Angle_Horizontal-BoomAngle)*Clasp_BottomEdgeLength_Half+m_GlobalMidlineHeight;
+	return OuterTipHieght;
+}
+
+double Curivator_Robot::Clasp::GetMinHeight() const
+{
+	const double minHeight=std::min(GetInnerTipHieght(),GetOuterTipHieght());
+	return minHeight;
+}
   /***********************************************************************************************************************************/
  /*															Curivator_Robot															*/
 /***********************************************************************************************************************************/
@@ -308,7 +493,9 @@ const double c_HalfCourtWidth=c_CourtWidth/2.0;
 Curivator_Robot::Curivator_Robot(const char EntityName[],Curivator_Control_Interface *robot_control,bool IsAutonomous) : 
 	Tank_Robot(EntityName,robot_control,IsAutonomous), m_RobotControl(robot_control), 
 		m_Turret(eTurret,this,robot_control),m_Arm(eArm,this,robot_control),m_LatencyCounter(0.0),
-		m_Boom(eBoom,this,robot_control,m_Arm),m_Bucket(eBucket,this,robot_control),m_Clasp(eClasp,this,robot_control),
+		m_Boom(eBoom,this,robot_control,m_Arm),m_Bucket(eBucket,this,robot_control,m_Boom),m_Clasp(eClasp,this,robot_control,m_Bucket),
+		m_ArmXpos(eArm_Xpos,this,robot_control),m_ArmYpos(eArm_Ypos,this,robot_control),m_BucketAngle(eBucket_Angle,this,robot_control),
+		m_ClaspAngle(eClasp_Angle,this,robot_control),
 		m_YawErrorCorrection(1.0),m_PowerErrorCorrection(1.0),m_AutonPresetIndex(0)
 {
 	mp_Arm[eTurret]=&m_Turret;
@@ -316,6 +503,10 @@ Curivator_Robot::Curivator_Robot(const char EntityName[],Curivator_Control_Inter
 	mp_Arm[eBoom]=&m_Boom;
 	mp_Arm[eBucket]=&m_Bucket;
 	mp_Arm[eClasp]=&m_Clasp;
+	mp_Arm[eArm_Xpos]=&m_ArmXpos;
+	mp_Arm[eArm_Ypos]=&m_ArmYpos;
+	mp_Arm[eBucket_Angle]=&m_BucketAngle;
+	mp_Arm[eClasp_Angle]=&m_ClaspAngle;
 	//ensure the variables are initialized before calling get
 	SmartDashboard::PutNumber("X Position",0.0);
 	SmartDashboard::PutNumber("Y Position",0.0);
@@ -332,13 +523,13 @@ void Curivator_Robot::Initialize(Entity2D_Kind::EventMap& em, const Entity_Prope
 	const Curivator_Robot_Properties *RobotProps=dynamic_cast<const Curivator_Robot_Properties *>(props);
 	m_RobotProps=*RobotProps;  //Copy all the properties (we'll need them for high and low gearing)
 
-	for (size_t i=0;i<5;i++)
+	for (size_t i=0;i<Curivator_Robot_NoRobotArm;i++)
 		mp_Arm[i]->Initialize(em,RobotProps?&RobotProps->GetRotaryProps(i):NULL);
 }
 void Curivator_Robot::ResetPos()
 {
 	__super::ResetPos();
-	for (size_t i=0;i<5;i++)
+	for (size_t i=0;i<Curivator_Robot_NoRobotArm;i++)
 		mp_Arm[i]->ResetPos();
 }
 
@@ -411,11 +602,35 @@ void Curivator_Robot::TimeChange(double dTime_s)
 	m_RobotControl->Robot_Control_TimeChange(dTime_s);
 	__super::TimeChange(dTime_s);
 
-	for (size_t i=0;i<5;i++)
+	for (size_t i=0;i<Curivator_Robot_NoRobotArm;i++)
 		mp_Arm[i]->AsEntity1D().TimeChange(dTime_s);
 
 	//const double  YOffset=-SmartDashboard::GetNumber("Y Position");
 	//const double XOffset=SmartDashboard::GetNumber("X Position");
+
+	//Apply the position and rotation of bucket to their children
+	if (m_RobotProps.GetCurivatorRobotProps().EnableArmAutoPosition)
+	{
+		const double xpos=m_ArmXpos.GetPos_m();
+		const double ypos=m_ArmYpos.GetPos_m();
+		const double bucket_angle=m_BucketAngle.GetPos_m();
+		const double clasp_angle=m_ClaspAngle.GetPos_m();
+		SmartDashboard::PutNumber("arm_xpos",xpos);
+		SmartDashboard::PutNumber("arm_ypos",ypos);
+		SmartDashboard::PutNumber("bucket_angle",bucket_angle);
+		SmartDashboard::PutNumber("clasp_angle",clasp_angle);
+		double BigArm_ShaftLength,Boom_ShaftLength,BucketShaftLength,ClaspShaftLength;
+		ComputeArmPosition(ypos,xpos,bucket_angle,clasp_angle,BigArm_ShaftLength,Boom_ShaftLength,BucketShaftLength,ClaspShaftLength);
+		SmartDashboard::PutNumber("BigArm_ShaftLength",BigArm_ShaftLength);
+		SmartDashboard::PutNumber("Boom_ShaftLength",Boom_ShaftLength);
+		SmartDashboard::PutNumber("BucketShaftLength",BucketShaftLength);
+		SmartDashboard::PutNumber("ClaspShaftLength",ClaspShaftLength);
+		//apply these values to their children
+		m_Arm.SetIntendedPosition(BigArm_ShaftLength);
+		m_Boom.SetIntendedPosition(Boom_ShaftLength);
+		m_Bucket.SetIntendedPosition(BucketShaftLength);
+		m_Clasp.SetIntendedPosition(ClaspShaftLength);
+	}
 }
 
 const Curivator_Robot_Properties &Curivator_Robot::GetRobotProps() const
@@ -447,7 +662,7 @@ void Curivator_Robot::BindAdditionalEventControls(bool Bind)
 		#endif
 	}
 
-	for (size_t i=0;i<5;i++)
+	for (size_t i=0;i<Curivator_Robot_NoRobotArm;i++)
 		mp_Arm[i]->AsShip1D().BindAdditionalEventControls(Bind);
 
 	#ifdef Robot_TesterCode
@@ -468,9 +683,145 @@ void Curivator_Robot::UpdateController(double &AuxVelocity,Vec2D &LinearAccelera
 	__super::UpdateController(AuxVelocity,LinearAcceleration,AngularAcceleration,LockShipHeadingToOrientation,dTime_s);
 }
 
+__inline double GetDistance(double x1,double y1, double x2, double y2)
+{
+	const double x=fabs(x2-x1);
+	const double y=fabs(y2-y1);
+	const double hypotenuse=sqrt((x*x)+(y*y));
+	return hypotenuse;
+}
+
+__inline double EnforceShaftLimits(double InputValue,double minRange=0.75,double maxRange=11.0)
+{
+	double ret=std::max(std::min(InputValue,maxRange),minRange);
+	//check for nan
+	if (!(InputValue<0.0||InputValue>0.0))
+		ret=((maxRange-minRange)/2.0)+minRange;   //pick center as a fallback
+	return ret;
+}
+
+void Curivator_Robot::ComputeArmPosition(double GlobalHeight,double GlobalDistance,double BucketAngle_deg,double ClaspOpeningAngle_deg,
+										 double &BigArm_ShaftLength,double &Boom_ShaftLength,double &BucketShaftLength,double &ClaspShaftLength)
+{
+	const double BucketAngle=DEG_2_RAD(BucketAngle_deg);
+	//Working in reverse starting with a global environment
+	//First find the bucket pivot point (global coordinates)
+	const double BucketPivotUsingTip_y=sin(BucketAngle+Bucket_BPTip_to_BucketInterface_Angle)*Bucket_BP_to_BucketTip+GlobalHeight;
+
+	const double BucketCOMtoVerticle_Angle=(BucketAngle+Bucket_BPTip_to_BucketInterface_Angle-DEG_2_RAD(90)) + Bucket_CoMtoTip_Angle;
+	const double BucketPivotUsingCOM_y=cos(BucketCOMtoVerticle_Angle)*Bucket_BP_To_BucketCoM+GlobalHeight+Bucket_CoM_Radius;
+	//Which ever is higher will be the one to use to ensure lowest point meets height requirements
+	const double BucketPivotPoint_y=max(BucketPivotUsingTip_y,BucketPivotUsingCOM_y);
+	const double BucketPivotPoint_x=cos(BucketAngle+Bucket_BPTip_to_BucketInterface_Angle)*Bucket_BP_to_BucketTip+GlobalDistance;
+	//with the bucket pivot point we must solve the boom and bigarm where together they are able to provide the pivot point to this location
+	//We can first solve the boom angle... like before this angle is based off of vertical (i.e. 0 is vertical positive outward extended)
+	//since the big arm pivot is the point of origin between this and the bucket pivot point we can compute length of a triangle, where:
+	//point a is origin, point b is bucket pivot point, and c is unknown---
+	//We know the lengths of the bigarm and boom, and with this we can use law of cosines to angle in point c... once this angle is known it is
+	//possible to know the global point of the boom pivot as well as the angle of the big arm. which sets up for solving their linear actuator lengths.
+	//--------------------------------
+	//Compute ab segment
+	const double OriginToBP=sqrt((BucketPivotPoint_x*BucketPivotPoint_x)+(BucketPivotPoint_y*BucketPivotPoint_y));
+	//Now to define where the boom bigarm point exists... by simply first finding the bigarm angle first start with another law of cosines
+	const double BigArmUpper_Angle=LawOfCosines(BigArm_BigArmRadius,OriginToBP,Boom_BoomRadius_BP);
+	const double BigArmLower_Angle=atan2(BucketPivotPoint_y,BucketPivotPoint_x);
+	const double BigArmAngle=BigArmUpper_Angle+BigArmLower_Angle;
+	const double BigArmBoomPivot_height=sin(BigArmAngle)*BigArm_BigArmRadius;
+	const double BigArmBoomPivot_length=cos(BigArmAngle)*BigArm_BigArmRadius;
+	//Now that we know this point... we can find the boom angle from vertical using law of cosines from the big arm angle
+	const double BigArmBoomBP_Angle=LawOfCosines(Boom_BoomRadius_BP,BigArm_BigArmRadius,OriginToBP);
+	const double BoomAngle=BigArmBoomBP_Angle-(DEG_2_RAD(90)-BigArmAngle)+Boom_BP_To_RBP_RadiusAngle;
+	//At this point... I'll work my way from bigarm to bucket
+	//For the bigarm we have an angle... first determine where the linear actuators interface point is located
+	const double BigArmLAInteface_height=sin(BigArmAngle+BigArm_AngleToDartPivotInterface)*BigArm_AngleToDartPivotInterface_Length;
+	const double BigArmLAInteface_length=cos(BigArmAngle+BigArm_AngleToDartPivotInterface)*BigArm_AngleToDartPivotInterface_Length;
+	const double BigArm_LA_Length_xLeg=fabs(BigArmLAInteface_length-BigArm_DartToArmDistance);
+	const double BigArm_LA_Length=sqrt((BigArm_LA_Length_xLeg*BigArm_LA_Length_xLeg)+(BigArmLAInteface_height*BigArmLAInteface_height));
+	//Yay got the big arm actuators length...
+	BigArm_ShaftLength=EnforceShaftLimits(BigArm_LA_Length-BigArm_DistanceDartPivotToTip-Boom_DistanceFromTipDartToClevis);
+	//next time to get the boom actuator length
+	//First find point where boom interface is located
+	const double BoomLeverAngle=BoomAngle+Boom_BP_To_Lever_angle-DEG_2_RAD(180);
+	const double BoomLAInteface_height=cos(BoomLeverAngle)*Boom_AngleToDartPivotInterface_Length;
+	const double BoomLAInteface_length=sin(BoomLeverAngle)*Boom_AngleToDartPivotInterface_Length;
+	//unlike with the big arm... we'll have to find the lower point and use a full-blown distance formula
+	//next find the big arm's mounting point for the end of the boom dart's actuator
+	const double BoomLA_Mount_Angle=(DEG_2_RAD(90)-BigArmAngle)+Boom_AngleBigArmToDartPivot;
+	const double BoomLA_Mount_height=cos(BoomLA_Mount_Angle)*Boom_DartToArmDistance;
+	const double BoomLA_Mount_length=sin(BoomLA_Mount_Angle)*Boom_DartToArmDistance;
+	const double Boom_LA_Length_xLeg=fabs(BoomLAInteface_length-BoomLA_Mount_length);
+	const double Boom_LA_Length_yLeg=fabs(BoomLAInteface_height+BoomLA_Mount_height);  //added because they are going in different directions
+	const double Boom_LA_Length=sqrt((Boom_LA_Length_xLeg*Boom_LA_Length_xLeg)+(Boom_LA_Length_yLeg*Boom_LA_Length_yLeg));
+	//Yay got the boom actuators length...
+	Boom_ShaftLength=EnforceShaftLimits(Boom_LA_Length-Boom_DistanceDartPivotToTip-Boom_DistanceFromTipDartToClevis);
+	//now onto the bucket... first locate rocker boom's point
+	const double BucketRBP_Angle=(DEG_2_RAD(180)-Bucket_BRP_LABtoBRP_BP_Angle)+(BoomAngle-Bucket_BoomAngleToLAB_Angle);
+	const double RockerBoomPivotPoint_y=cos(BucketRBP_Angle)*Bucket_BRP_To_BP+BucketPivotPoint_y;
+	const double RockerBoomPivotPoint_x=BucketPivotPoint_x-sin(BucketRBP_Angle)*Bucket_BRP_To_BP;
+	//Next we pursue the difficult boom rocker pivot end that interfaces with the linear actuator... to find we must bisect the quadrilateral using
+	//a new segment from the boom rocker pivot to the bucket rocker pivot.  Once this is created we can determine that angle and subtract it from
+	//vertical via BucketRBP_Angle.
+	//------------
+	//First find the bucket rocker pivot point.
+	//We'll just keep it all global to keep things easier to read and verify
+	const double Veritcal_ToBucketRP_Angle=Bucket_BPBT_ToBucketRP_Angle - (DEG_2_RAD(90)-(BucketAngle+Bucket_BPTip_to_BucketInterface_Angle));
+	const double RockerBucketPivotPoint_y=BucketPivotPoint_y-cos(Veritcal_ToBucketRP_Angle)*Bucket_BP_To_BucketRP;
+	const double RockerBucketPivotPoint_x=sin(Veritcal_ToBucketRP_Angle)*Bucket_BP_To_BucketRP+BucketPivotPoint_x;
+	const double brp_bucketrp_segment_length=GetDistance(RockerBoomPivotPoint_x,RockerBoomPivotPoint_y,RockerBucketPivotPoint_x,RockerBucketPivotPoint_y);
+	//With this new segment... there are 2 angles to extract from the quadrelateral... the upper and lower:
+	const double RockerBoomUpperAngle=LawOfCosines(Bucket_RockerBoomLength,brp_bucketrp_segment_length,Bucket_RockerBucketLength);
+	double RockerBoomLowerAngle=LawOfCosines(Bucket_BRP_To_BP,brp_bucketrp_segment_length,Bucket_BP_To_BucketRP);
+	//The lower angle is a bit tricky, because we can have a quaterlaterial where the bucket pivot point is inside the bisected line at which case
+	//the rocker boom lower angle is negative... to determine this 
+	//and use atan2 (with origin at RockerBoomPivotPoint) to find the angle and compare against BucketRBP_Angle
+	const double SegmentAngleFromVerticle=DEG_2_RAD(90)+atan2(RockerBucketPivotPoint_y-RockerBoomPivotPoint_y,RockerBucketPivotPoint_x-RockerBoomPivotPoint_x);
+	if (SegmentAngleFromVerticle<BucketRBP_Angle)
+		RockerBoomLowerAngle=RockerBoomLowerAngle*-1.0;  //Note: the proper thing here may be to transform and use atan2 instead
+	//With this we can now find the angle from vertical
+	const double RockerBoomFromVertical_Angle=BucketRBP_Angle+RockerBoomUpperAngle+RockerBoomLowerAngle;
+	//This angle allows use to fine the rocker pivot LA interface as the next point in the triangle
+	const double RockerPivotLAInterface_y=RockerBoomPivotPoint_y-cos(RockerBoomFromVertical_Angle)*Bucket_RockerBoomLength;
+	const double RockerPivotLAInterface_x=sin(RockerBoomFromVertical_Angle)*Bucket_RockerBoomLength+RockerBoomPivotPoint_x;
+	//Now onto the last point the boom LA mount
+	const double VerticleToLAB_Angle=BoomAngle-Bucket_BoomAngleToLAB_Angle;
+	const double BoomLAMount_y=cos(VerticleToLAB_Angle)*Bucket_BRP_To_LAB+RockerBoomPivotPoint_y;
+	const double BoomLAMount_x=RockerBoomPivotPoint_x-(sin(VerticleToLAB_Angle)*Bucket_BRP_To_LAB);
+	//use distance formula between the LA mount and the Rocker pivot
+	const double Bucket_LA_Length=GetDistance(BoomLAMount_x,BoomLAMount_y,RockerPivotLAInterface_x,RockerPivotLAInterface_y);
+	//Yay got the bucket actuators length...
+	BucketShaftLength=EnforceShaftLimits(Bucket_LA_Length-Bucket_LAB_houseingLength);
+	//Now onto the clasp
+	//Find the midline tip point global location by use of the CPMT segment
+	double ClaspOpeningAngle=DEG_2_RAD(ClaspOpeningAngle_deg);
+	const double CPMT_ToHorizontal=BucketAngle-(ClaspOpeningAngle-Clasp_CPMT_ToSide_Angle);
+	const double MidlineTip_y=BucketPivotPoint_y-sin(CPMT_ToHorizontal)*Clasp_CP_To_MidlineTip;
+	const double MidlineTip_x=BucketPivotPoint_x-cos(CPMT_ToHorizontal)*Clasp_CP_To_MidlineTip;
+	//Compute the midline angle to horizontal
+	const double MidlineToHorizontal=Clasp_MidLineToEdge_Angle+BucketAngle-ClaspOpeningAngle;
+	//with the mid line tip offset and the midline angle we can find LA interface point
+	const double ClaspLAInterface_y=sin(MidlineToHorizontal)*Clasp_MidlineSegment+MidlineTip_y;
+	const double ClaspLAInterface_x=cos(MidlineToHorizontal)*Clasp_MidlineSegment+MidlineTip_x;
+	//Now to find the LA clasp mount point
+	const double LAMountVertical_Angle=BoomAngle+Clasp_BoomAngleToLAC_Angle;
+	const double LAClaspMount_y=cos(LAMountVertical_Angle)*Clasp_BRP_To_LAC+BucketPivotPoint_y;
+	const double LAClaspMount_x=BucketPivotPoint_x-sin(LAMountVertical_Angle)*Clasp_BRP_To_LAC;
+	//with out 2 point find the distance
+	const double Clasp_LA_Length=GetDistance(LAClaspMount_x,LAClaspMount_y,ClaspLAInterface_x,ClaspLAInterface_y);
+	//Yay got the clasp actuators length...
+	ClaspShaftLength=EnforceShaftLimits(Clasp_LA_Length-Clasp_LAC_houseingLength,0.75,6.0);
+}
+
 #ifdef Robot_TesterCode
 void Curivator_Robot::TestAutonomous()
 {
+	double BigArm_ShaftLength;
+	double Boom_ShaftLength;
+	double BucketShaftLength;
+	double ClaspShaftLength;
+	//In this test... these constants should return half lengths of each actuator
+	ComputeArmPosition(-0.97606122071131374,32.801521314123598,78.070524788111342,13.19097419,
+		BigArm_ShaftLength,Boom_ShaftLength,BucketShaftLength,ClaspShaftLength);
+	return;
 	Goal *oldgoal=ClearGoal();
 	if (oldgoal)
 		delete oldgoal;
@@ -492,6 +843,7 @@ void Curivator_Robot::GoalComplete()
 	m_controller->GetUIController_RW()->SetAutoPilot(false);
 }
 #endif
+
 
   /***********************************************************************************************************************************/
  /*													Curivator_Robot_Properties														*/
@@ -531,6 +883,7 @@ Curivator_Robot_Properties::Curivator_Robot_Properties()  : m_RobotControls(&s_C
 			props.PotentiometerMaxRotation=c_PotentiometerMaxRotation;
 			props.GearHeightOffset=c_GearHeightOffset;
 			props.MotorToWheelGearRatio=c_MotorToWheelGearRatio;
+			props.EnableArmAutoPosition=false;
 
 			m_CurivatorRobotProps=props;
 		}
@@ -603,10 +956,14 @@ const char * const g_Curivator_Controls_Events[] =
 {
 	"turret_SetCurrentVelocity","turret_SetIntendedPosition","turret_SetPotentiometerSafety","turret_Advance","turret_Retract",
 	"IntakeArm_DeployManager",
-	"arm_SetCurrentVelocity","arm_SetPotentiometerSafety","arm_Advance","arm_Retract",
-	"boom_SetCurrentVelocity","boom_SetPotentiometerSafety","boom_Advance","boom_Retract",
-	"bucket_SetCurrentVelocity","bucket_SetPotentiometerSafety","bucket_Advance","bucket_Retract",
-	"clasp_SetCurrentVelocity","clasp_SetPotentiometerSafety","clasp_Advance","clasp_Retract",
+	"arm_SetCurrentVelocity","arm_SetIntendedPosition","arm_SetPotentiometerSafety","arm_Advance","arm_Retract",
+	"boom_SetCurrentVelocity","boom_SetIntendedPosition","boom_SetPotentiometerSafety","boom_Advance","boom_Retract",
+	"bucket_SetCurrentVelocity","bucket_SetIntendedPosition","bucket_SetPotentiometerSafety","bucket_Advance","bucket_Retract",
+	"clasp_SetCurrentVelocity","clasp_SetIntendedPosition","clasp_SetPotentiometerSafety","clasp_Advance","clasp_Retract",
+	"arm_xpos_SetCurrentVelocity","arm_xpos_SetIntendedPosition","arm_xpos_SetPotentiometerSafety","arm_xpos_Advance","arm_xpos_Retract",
+	"arm_ypos_SetCurrentVelocity","arm_ypos_SetIntendedPosition","arm_ypos_SetPotentiometerSafety","arm_ypos_Advance","arm_ypos_Retract",
+	"bucket_angle_SetCurrentVelocity","bucket_angle_SetIntendedPosition","bucket_angle_SetPotentiometerSafety","bucket_angle_Advance","bucket_angle_Retract",
+	"clasp_angle_SetCurrentVelocity","clasp_angle_SetIntendedPosition","clasp_angle_SetPotentiometerSafety","clasp_angle_Advance","clasp_angle_Retract",
 	"TestAuton"
 };
 
@@ -709,6 +1066,32 @@ void Curivator_Robot_Properties::LoadFromScript(Scripting::Script& script)
 			m_RotaryProps[Curivator_Robot::eClasp].LoadFromScript(script);
 			script.Pop();
 		}
+		err = script.GetFieldTable("arm_xpos");
+		if (!err)
+		{
+			m_RotaryProps[Curivator_Robot::eArm_Xpos].LoadFromScript(script);
+			script.Pop();
+		}
+		err = script.GetFieldTable("arm_ypos");
+		if (!err)
+		{
+			m_RotaryProps[Curivator_Robot::eArm_Ypos].LoadFromScript(script);
+			script.Pop();
+		}
+		err = script.GetFieldTable("bucket_angle");
+		if (!err)
+		{
+			m_RotaryProps[Curivator_Robot::eBucket_Angle].LoadFromScript(script);
+			script.Pop();
+		}
+		err = script.GetFieldTable("clasp_angle");
+		if (!err)
+		{
+			m_RotaryProps[Curivator_Robot::eClasp_Angle].LoadFromScript(script);
+			script.Pop();
+		}
+
+		SCRIPT_TEST_BOOL_YES(props.EnableArmAutoPosition,"enable_arm_auto_position");
 
 		err = script.GetFieldTable("auton");
 		if (!err)
@@ -1015,7 +1398,7 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 		m_RobotProps=*robot_props;  //save a copy
 
 		#ifdef Robot_TesterCode
-		for (size_t index=0;index<5;index++)
+		for (size_t index=0;index<Curivator_Robot_NoRobotArm;index++)
 		{
 			Rotary_Properties writeable_arm_props=robot_props->GetRotaryProps(index);
 			m_Potentiometer[index].Initialize(&writeable_arm_props);
@@ -1211,9 +1594,30 @@ void Curivator_Robot_UI::Text_SizeToUse(double SizeToUse)
 {
 	m_TankUI.Text_SizeToUse(SizeToUse);
 }
+
+#include <osg/Geometry>
+#include <osg/PositionAttitudeTransform>
+
 void Curivator_Robot_UI::UpdateScene (osg::Geode *geode, bool AddOrRemove) 
 {
 	m_TankUI.UpdateScene(geode,AddOrRemove);
+	//if (AddOrRemove)
+	//{
+	//	m_TankUI.UpdateScene(geode,AddOrRemove);
+	//	osg::Geometry* linesGeom = new osg::Geometry();// is my geometry 
+	//	osg::DrawArrays* drawArrayLines = new osg::DrawArrays(osg::PrimitiveSet::LINE_STRIP); 
+	//	linesGeom->addPrimitiveSet(drawArrayLines); 
+	//	osg::Vec3Array* vertexData = new osg::Vec3Array; 
+	//	linesGeom->setVertexArray(vertexData); 
+
+	//	geode->addDrawable(linesGeom);
+
+	//	vertexData->push_back(osg::Vec3(0,0,0)); 
+	//	vertexData->push_back(osg::Vec3(500,200,0)); 
+
+	//	drawArrayLines->setFirst(0); 
+	//	drawArrayLines->setCount(vertexData->size());
+	//}
 }
 
 #endif

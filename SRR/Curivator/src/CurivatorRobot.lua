@@ -151,7 +151,7 @@ MainRobot = {
 	robot_settings =
 	{
 		ds_display_row=-1,					--This will display the coordinates and heading (may want to leave on)
-
+		enable_arm_auto_position='y',
 		height_presets =
 		--Heights are in inches
 		{rest=0.0, tote_3=11.75*2 + 2 },
@@ -269,19 +269,19 @@ MainRobot = {
 			tolerance_count=20,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=155,
-			pot_max_limit=1125,
+			pot_min_limit=290,
+			pot_max_limit=888,
 			pot_range_flipped='y',
-			
-			max_speed=13.3,	
+			--will need to compute proper was 0.64 but seems too slow
+			max_speed=3,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=50,			--just go with what feels right
-			max_accel_reverse=50,
+			max_accel_forward=100,			--just go with what feels right
+			max_accel_reverse=100,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
 			max_range= 12,
-			min_range=0,
+			min_range=0.0,
 			starting_position=6,
 			use_aggressive_stop = 'yes',
 		},
@@ -299,21 +299,143 @@ MainRobot = {
 			tolerance_count=20,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=155,
-			pot_max_limit=1125,
+			pot_min_limit=440,
+			pot_max_limit=760,
 			pot_range_flipped='y',
 			
-			max_speed=13.3,	
+			max_speed=3,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=50,			--just go with what feels right
-			max_accel_reverse=50,
+			max_accel_forward=100,			--just go with what feels right
+			max_accel_reverse=100,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
 			max_range= 7,
 			min_range=0,
 			starting_position=3.5,
 			use_aggressive_stop = 'yes',
+		},
+		arm_xpos =
+		{
+			--is_closed=0,
+			show_pid_dump='n',
+			ds_display_row=-1,
+			use_pid_up_only='y',
+			pid_up=
+			{p=100, i=0, d=25},
+			pid_down=
+			{p=100, i=0, d=25},
+			tolerance=0.15,
+			tolerance_count=20,
+			voltage_multiply=1.0,
+			encoder_to_wheel_ratio=1.0,
+			pot_min_limit=12.79,  --inches from big arm's pivot point on base mount
+			pot_max_limit=55.29,
+			pot_range_flipped='n',
+			
+			max_speed=6.0,	--inches per second
+			accel=10.0,
+			brake=10.0,
+			max_accel_forward=100,			--just go with what feels right
+			max_accel_reverse=100,
+			using_range=0,					--Warning Only use range if we have a potentiometer!
+			--These min/max are in inch units
+			max_range= 55.29,
+			min_range=12.79,
+			starting_position=32.801521314123598,  --mathematically ideal for middle of LA... good to test code, but not necessarily for actual use
+			use_aggressive_stop = 'n',
+		},
+		arm_ypos =
+		{
+			--is_closed=0,
+			show_pid_dump='n',
+			ds_display_row=-1,
+			use_pid_up_only='y',
+			pid_up=
+			{p=100, i=0, d=25},
+			pid_down=
+			{p=100, i=0, d=25},
+			tolerance=0.15,
+			tolerance_count=20,
+			voltage_multiply=1.0,
+			encoder_to_wheel_ratio=1.0,
+			pot_min_limit=-20.0,  --inches from big arm's pivot point on base mount
+			pot_max_limit=40.0,
+			pot_range_flipped='n',
+			
+			max_speed=6.0,	--inches per second
+			accel=10.0,
+			brake=10.0,
+			max_accel_forward=100,			--just go with what feels right
+			max_accel_reverse=100,
+			using_range=0,					--Warning Only use range if we have a potentiometer!
+			--These min/max are in inch units
+			max_range= 40.0,
+			min_range=-20.0,
+			starting_position=-0.97606122071131374,  --mathematically ideal for middle of LA... good to test code, but not necessarily for actual use
+			use_aggressive_stop = 'n',
+		},
+		bucket_angle =
+		{
+			--is_closed=0,
+			show_pid_dump='n',
+			ds_display_row=-1,
+			use_pid_up_only='y',
+			pid_up=
+			{p=100, i=0, d=25},
+			pid_down=
+			{p=100, i=0, d=25},
+			tolerance=0.15,
+			tolerance_count=20,
+			voltage_multiply=1.0,
+			encoder_to_wheel_ratio=1.0,
+			--0 holding, 90 gripping, 180 dropping
+			pot_min_limit=0.0,  --Degrees from horizontal (from outward side)  can go a bit less but not practical
+			pot_max_limit=180.0,  --can actually go to 196
+			pot_range_flipped='n',
+			
+			max_speed=36.66,	--degrees per second  (matches 0.64 in radians)
+			accel=50.0,
+			brake=50.0,
+			max_accel_forward=500,			--just go with what feels right
+			max_accel_reverse=500,
+			using_range=0,					--Warning Only use range if we have a potentiometer!
+			--These min/max are in inch units
+			max_range= 180.0,
+			min_range=0.0,
+			starting_position=78.070524788111342,  --mathematically ideal for middle of LA... good to test code, but not necessarily for actual use
+			use_aggressive_stop = 'n',
+		},
+		clasp_angle =
+		{
+			--is_closed=1,
+			show_pid_dump='n',
+			ds_display_row=-1,
+			use_pid_up_only='y',
+			pid_up=
+			{p=100, i=0, d=25},
+			pid_down=
+			{p=100, i=0, d=25},
+			tolerance=0.15,
+			tolerance_count=20,
+			voltage_multiply=1.0,
+			encoder_to_wheel_ratio=1.0,
+			--0 holding, 90 gripping, 180 dropping
+			pot_min_limit=-7.0,  --Degrees goes inside slightly when negative
+			pot_max_limit=100.0,  --can actually go to 106 or more
+			pot_range_flipped='n',
+			
+			max_speed=36.66,	--degrees per second  (matches 0.64 in radians)
+			accel=5.0,
+			brake=5.0,
+			max_accel_forward=500,			--just go with what feels right
+			max_accel_reverse=500,
+			using_range=1,					--Warning Only use range if we have a potentiometer!
+			--These min/max are in inch units
+			max_range= 100.0,
+			min_range=-7.0,
+			starting_position=13.19097419,  --mathematically ideal for middle of LA... good to test code, but not necessarily for actual use
+			use_aggressive_stop = 'n',
 		},
 	},
 
@@ -350,12 +472,12 @@ MainRobot = {
 			
 			turret_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			arm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			arm_Advance={type="keyboard", key='i', on_off=true},
-			arm_Retract={type="keyboard", key='u', on_off=true},
-			boom_Advance={type="keyboard", key='k', on_off=true},
-			boom_Retract={type="keyboard", key='j', on_off=true},
-			bucket_Advance={type="keyboard", key=';', on_off=true},
-			bucket_Retract={type="keyboard", key='l', on_off=true},
+			bucket_angle_Advance={type="keyboard", key='i', on_off=true},
+			bucket_angle_Retract={type="keyboard", key='u', on_off=true},
+			arm_xpos_Advance={type="keyboard", key='k', on_off=true},
+			arm_xpos_Retract={type="keyboard", key='j', on_off=true},
+			arm_ypos_Advance={type="keyboard", key=';', on_off=true},
+			arm_ypos_Retract={type="keyboard", key='l', on_off=true},
 	
 		},
 		
@@ -424,11 +546,11 @@ MainRobot = {
 		Joystick_5 =
 		{	
 			control = "ch throttle quadrant",
-			PitchRamp_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=true, multiplier=1.142000, filter=0.0, curve_intensity=0.0},
-			Robot_SetTargetingValue = {type="joystick_analog", key=0, is_flipped=true, multiplier=1.142000, filter=0.0, curve_intensity=0.0},
-			PowerWheels_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0000, filter=0.0, curve_intensity=0.0},
-			Turret_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=true, multiplier=0.5, filter=0.1, curve_intensity=1.0},
-			Robot_SetDefensiveKeyValue = {type="joystick_analog", key=5, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			arm_xpos_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			arm_ypos_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			bucket_angle_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--Robot_SetDefensiveKeyValue = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 
 			Arm_SetPosRest     = {type="joystick_button", key=2, on_off=false},
 			Arm_SetTote2Height = {type="joystick_button", key=4, on_off=false},
