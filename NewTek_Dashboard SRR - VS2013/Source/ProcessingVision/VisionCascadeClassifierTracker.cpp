@@ -33,7 +33,7 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 
 	std::vector<Rect> hooks;
 	Mat frame_gray;
-	int height;
+	int height = 0;
 	int XRes = InputImageRGB->cols;
 	int YRes = InputImageRGB->rows;
 
