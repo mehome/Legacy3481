@@ -40,6 +40,7 @@ void VisionTracker::ReturnFrame(Bitmap_Frame *Frame)
 {	// copy image back to our frame.
 	// no need to copy, for return if not flipped.
 #ifdef FLIP90
+	delete InputImageRGB;
 	//rotate_90n(*InputImageRGB, *rotInputImageRGB, 90);
 	//memcpy((void*)Frame->Memory, InputImageRGB->data, Frame->Stride * 4 * Frame->YRes);
 	//Frame->XRes = Frame->YRes;

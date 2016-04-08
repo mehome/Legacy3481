@@ -29,7 +29,7 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 {
 	int success = 1;
 
-	const float Aspect = InputImageRGB->cols / InputImageRGB->rows;
+	const double Aspect = (double)InputImageRGB->cols / (double)InputImageRGB->rows;
 
 	std::vector<Rect> hooks;
 	Mat frame_gray;
@@ -77,7 +77,7 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 
 			// convert to aiming system coords
 			x_target = (double)((center_x - (XRes / 2.0)) / (XRes / 2.0)) * Aspect;
-			y_target = (float)((center_y - (YRes / 2.0)) / (YRes / 2.0));
+			y_target = (double)((center_y - (YRes / 2.0)) / (YRes / 2.0));
 
 			height = hooks[i].height;
 		}
@@ -90,12 +90,12 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 	// Angle = arctan(vertical hight in feet * image height / (2 * vertical target hight in pixels * distance in feet)) * RADS_TO_DEG
 
 	//#define VIEW_ANGLE 42.25
-#define VIEW_ANGLE 48
+#define VIEW_ANGLE 47
 	double Distance = 0.0;
 	if (height != 0)
 	{
 		int TargetHeight = 9; // inches - actual sample is about 8 inches tall, but trained cascade images are taller.
-		Distance = YRes * TargetHeight / (height * 12 * 2 * tan(VIEW_ANGLE * M_PI / (180 * 2)));
+		Distance = (double)(YRes * TargetHeight) / (height * 12 * 2 * tan(VIEW_ANGLE * M_PI / (180 * 2)));
 		SmartDashboard::PutNumber("TargetDistance", Distance);
 	}
 	else
