@@ -1,0 +1,79 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:BroncBotz_Dashboard.Styles">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Schema.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <Style TargetType="{x:Type RichTextBox}">
+
+        <Setter Property="Background" Value="{StaticResource Background}" />
+        <Setter Property="Foreground" Value="{StaticResource GrayBrush1}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushHighlighted}" />
+    </Style>
+
+    <Style TargetType="{x:Type TreeView}">
+
+        <Setter Property="Background" Value="{StaticResource Background}" />
+        <Setter Property="Foreground" Value="{StaticResource GrayBrush1}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushHighlighted}" />
+    </Style>
+
+    <Style x:Key="CustomTreeView" TargetType="{x:Type TreeView}">
+
+        <Setter Property="Background" Value="{StaticResource Background}" />
+        <Setter Property="Foreground" Value="{StaticResource GrayBrush1}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushHighlighted}" />
+    </Style>
+
+    <Style TargetType="{x:Type TextBlock}">
+
+        <Setter Property="Foreground" Value="{StaticResource Foreground}" />
+    </Style>
+
+    <Style TargetType="{x:Type Canvas}">
+        <Setter Property="Background" Value="{StaticResource Background}" />
+    </Style>
+
+    <Style TargetType="{x:Type TreeViewItem}">
+
+        <Setter Property="Foreground" Value="{StaticResource GrayBrush1}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushHighlighted}" />
+    </Style>
+
+    <Style TargetType="{x:Type TextBox}">
+
+        <Setter Property="Background" Value="{StaticResource Background}" />
+        <Setter Property="Foreground" Value="{StaticResource GrayBrush1}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BackgroundSelected}" />
+    </Style>
+
+    <Style TargetType="{x:Type Label}">
+
+        <Setter Property="Background" Value="{StaticResource Background}" />
+        <Setter Property="Foreground" Value="{StaticResource GrayBrush1}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushHighlighted}" />
+    </Style>
+
+    <Style TargetType="{x:Type ListBox}">
+
+        <Setter Property="Background" Value="{StaticResource Background}" />
+        <Setter Property="Foreground" Value="{StaticResource GrayBrush1}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushHighlighted}" />
+    </Style>
+
+    <Style TargetType="{x:Type ListBoxItem}">
+
+        <Setter Property="Background" Value="{StaticResource Background}" />
+        <Setter Property="Foreground" Value="{StaticResource GrayBrush1}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushHighlighted}" />
+    </Style>
+
+    <Style TargetType="{x:Type CheckBox}">
+
+        <Setter Property="Background" Value="{StaticResource Background}" />
+        <Setter Property="Foreground" Value="{StaticResource GrayBrush1}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrushHighlighted}" />
+    </Style>
+</ResourceDictionary>
