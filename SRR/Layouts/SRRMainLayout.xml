@@ -1,5 +1,17 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="testarm_clasp" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="54" y="210"/>
+	</widget>
+	<widget field="testarm_bucket" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="45" y="130"/>
+	</widget>
+	<widget field="testarm_height" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="48" y="181"/>
+	</widget>
+	<widget field="testarm_length" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="47" y="155"/>
+	</widget>
 	<widget field="armPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="374" y="369"/>
 		<property name="Foreground" value="51.153.255.255"/>
@@ -61,16 +73,16 @@
 		<location x="51" y="545"/>
 	</widget>
 	<widget field="Clasp_angleVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="162"/>
+		<location x="399" y="682"/>
 	</widget>
 	<widget field="Bucket_angleVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="141"/>
+		<location x="403" y="647"/>
 	</widget>
 	<widget field="Arm_yposVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="120"/>
+		<location x="401" y="581"/>
 	</widget>
 	<widget field="Arm_xposVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="99"/>
+		<location x="401" y="549"/>
 	</widget>
 	<widget field="BucketAngle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="214" y="644"/>
