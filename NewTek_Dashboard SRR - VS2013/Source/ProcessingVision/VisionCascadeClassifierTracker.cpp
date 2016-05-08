@@ -10,7 +10,7 @@ using namespace cv;
 
 VisionCascadeClassifierTracker::VisionCascadeClassifierTracker()
 : 	mode(h_original),
-	bShowImg(true),
+	bShowImg(false),
 	bCascadeLoaded(false),
 	frameCount(0)
 {	
@@ -102,7 +102,7 @@ int VisionCascadeClassifierTracker::ProcessImage(double &x_target, double &y_tar
 		SmartDashboard::PutNumber("TargetDistance", 0);
 
 	wchar_t debugstr[1024];
-	swprintf(debugstr, L"x_target %f y_target %f distance %f\n", x_target, y_target, Distance);
+	swprintf(debugstr, L"frame %d x_target %f y_target %f distance %f\n", frameCount, x_target, y_target, Distance);
 	OutputDebugString(debugstr);
 
 	return success;
