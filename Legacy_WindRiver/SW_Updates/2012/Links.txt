@@ -1,0 +1,6 @@
+1. Get the current workbench update (FRC Update ####) from the page at:
+http://firstforge.wpi.edu/sf/frs/do/listReleases/projects.wpilib/frs.2012_update_for_c
+
+2. Get the update for the 2012 Utilities from the same page. Should be something like (http://joule.ni.com/nidu/cds/view/p/id/2262 ).
+
+3. Get the update for the 2012 Driver Station from the same page. Should be something like (http://joule.ni.com/nidu/cds/view/p/id/2263 ).

@@ -1,0 +1,71 @@
+Camera transformation
+dx=cos(thy)*( sin(thz)*(ay-cy) + cos (thz)*(ax - cx) ) - sin(thy)*(az-cz)
+dy=sin(thx)*( cos(thy)*(az-cz) + sin (thy)*(sin(thz)*(ay-cy) + cos(thz)*(ax-cx))) + cos(thx)*(cos(thz)*(ay-cy) - sin(thz)*(ax - cx) )
+dz=cos(thx)*( cos(thy)*(az-cz) + sin (thy)*(sin(thz)*(ay-cy) + cos(thz)*(ax-cx))) - sin(thx)*(cos(thz)*(ay-cy) - sin(thz)*(ax - cx) )
+
+Solve for Ax,Ay,Az
+ax=((cy-ay)*cos(thy)*sin(thz)+cx*cos(thy)*cos(thz)+(az-cz)*sin(thy)+dx)/(cos(thy)*cos(thz))
+ay=((cy*sin(thx)*sin(thy)+(ax-cx)*cos(thx))*sin(thz)+((cx-ax)*sin(thx)*sin(thy)+cy*cos(thx))*cos(thz)+(cz-az)*sin(thx)*cos(thy)+dy)/(sin(thx)*sin(thy)*sin(thz)+cos(thx)*cos(thz))
+az=(((cy-ay)*cos(thx)*sin(thy)+(cx-ax)*sin(thx))*sin(thz)+((cx-ax)*cos(thx)*sin(thy)+(ay-cy)*sin(thx))*cos(thz)+cz*cos(thx)*cos(thy)+dz)/(cos(thx)*cos(thy))
+
+---------------------------------------------------------------------
+Simplify using camera orientation of (0,y,0)
+---------------------------------------------------------------------
+
+ax=-((cz-az)*sin(thy)-cx*cos(thy)-dx)/cos(thy)
+
+ay=((cy*sin(thx)*sin(thy)+(ax-cx)*cos(thx))*sin(thz)+((cx-ax)*sin(thx)*sin(thy)+cy*cos(thx))*cos(thz)+(cz-az)*sin(thx)*cos(thy)+dy)/(sin(thx)*sin(thy)*sin(thz)+cos(thx)*cos(thz))
+ay=((cy*   0    *sin(thy)+(ax-cx)*   1    )*   0    +((cx-ax)*   0    *sin(thy)+cy*   1    )*   1    +(cz-az)*   0    *cos(thy)+dy)/(   0    *sin(thy)*   0    +   1    *   1)
+ay=dy+cy
+
+az=(((cy-ay)*cos(thx)*sin(thy)+(cx-ax)*sin(thx))*sin(thz)+((cx-ax)*cos(thx)*sin(thy)+(ay-cy)*sin(thx))*cos(thz)+cz*cos(thx)*cos(thy)+dz)/(cos(thx)*cos(thy))
+az=(((cy-ay)*    1   *sin(thy)+(cx-ax)*   0    )*   0    +((cx-ax)*   1    *sin(thy)+(ay-cy)*   0    )*   1    +cz*   1    *cos(thy)+dz)/(   1    *cos(thy))
+az=((cx-ax)*sin(thy)+cz*cos(thy)+dz)/cos(thy)
+
+---------------------------------------------------------------------
+Simplify using camera offset of (0,0,0)
+---------------------------------------------------------------------
+ax=-((cz-az)*sin(thy)-cx*cos(thy)-dx)/cos(thy)
+ax=-(( 0-az)*sin(thy)- 0*cos(thy)-dx)/cos(thy)
+ax=(az*sin(thy)+dx)/cos(thy)
+
+ay=dy+cy
+ay=dy
+
+az=((cx-ax)*sin(thy)+cz*cos(thy)+dz)/cos(thy)
+az=(( 0-ax)*sin(thy)+ 0*cos(thy)+dz)/cos(thy)
+az=-(ax*sin(thy)-dz)/cos(thy)
+
+---------------------------------------------------------------------
+Simplify using theta y at 33 degrees
+---------------------------------------------------------------------
+sin thetay = 0.54463903501502708222408369208157
+cos thetay = 0.83867056794542402963759094180455
+
+ax=(az*sin(thy)+dx)/cos(thy)
+ax=(az*0.54463903501502708222408369208157+dx)/0.83867056794542402963759094180455
+ax=(23173559*dx+12621225*az)/19434982
+
+az=-(ax*sin(thy)-dz)/cos(thy)
+az=-(ax*0.54463903501502708222408369208157-dz)/ 0.83867056794542402963759094180455
+az=(23173559*dz-12621225*ax)/19434982
+---------------------
+Now solve ax by substitution
+ax=(23173559*dx+12621225* (               az                ))/19434982
+ax=(23173559*dx+12621225*((23173559*dz-12621225*ax)/19434982))/19434982
+ax=(292478702189775*dz+450377702040938*dx-159295320500625*ax)/377718525340324
+ax=(292478702189775*dz+450377702040938*dx)/537013845840949
+ax=0.54463903390007*dz+0.83867055855079*dx
+
+az=(23173559*dz-12621225* (                        ax                            ) )/19434982
+az=(23173559*dz-12621225* ((292478702189775*dz+450377702040938*dx)/537013845840949))/19434982
+az=(450377702040938*dz-292478702189775*dx)/537013845840949
+az=0.83867055855079*dz-0.54463903390007*dx
+-----------------------
+ax=0.54463903390007*dz+0.83867055855079*dx
+ay=dy
+az=0.83867055855079*dz-0.54463903390007*dx
+---------------------------------------------------------------------
+ax=sin(thetay)*dz + cos(thetay)*dx
+ay=dy
+az=cos(thetay)*dz - sin(thetay)*dx

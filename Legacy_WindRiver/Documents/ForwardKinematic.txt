@@ -1,0 +1,22 @@
+Code:
+---------
+FWD = (sFR*cos(aFR)+sFL*cos(aFL)+sRL*cos(aRL)+sRR*cos(aRR))/4;
+
+STR = (sFR*sin(aFR)+sFL*sin(aFL)+sRL*sin(aRL)+sRR*sin(aRR))/4;
+
+omega = ((sFR*cos(atan2(W,L)+pi/2-aFR)+sFL*cos(atan2(-W,L)+pi/2-aFL)
++sRL*cos(atan2(-W,-L)+pi/2-aRL)+sRR*cos(atan2(W,-L)+pi/2-aRR))/4)/
+(sqrt(L^2+W^2)/2);
+---------
+... where:
+L and W are wheelbase and trackwidth in inches
+
+sFR, sFL, sRL, and sRR are wheel tangential speeds in feet/second
+
+aFR, aFL, aRL, and aRR are wheel angles in radians clockwise from straight ahead
+
+FWD and STR are vehicle velocity in feet/sec in the forward and strafe_right directions
+
+and omega is the vehicle clockwise rotational velocity in radians/sec
+
+

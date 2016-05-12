@@ -1,0 +1,32 @@
+From Jared (victor curve):
+ 
+"Hi Matt,
+ 
+Victor linearization is pretty easy to do, and makes a big difference whenever the motor controlled by the Victor will be controlled by a PID controller. The math behind PID control expects a linear "plant", and deviation from this assumption results in degraded performance. Victors are not very linear by default; 50% throttle gives you closer to 80% speed, for example.
+ 
+The procedure I used to linearize the Victors is as follows:
+ 
+1. Write a script that sweeps through all of the values 1 to 255 using the setRaw() method (using C++ or Java, I assume there is a LabView equivalent)
+ 
+2. For each power level, record the speed using an encoder or similar. Or, you could just record the voltage being output using a multimeter or scope.
+ 
+3. Now you have found the transformation from Victor PWM value -> speed. What we need to do now is invert it so you can command a speed and the Victor outputs the correct PWM value. From this data, for each desired whole number output (in the range -127 to +127), determine (by simply looking at the measured data, for example in a spreadsheet) the integer value required to come nearest to the desired output. Put these integers into an array (-127 to +127).
+ 
+4. Write a new "setLinear(double speed)" function that expects an input between -1 and 1. For example, in Java:
+ 
+
+Code:
+ class LinearVictor extends Victor
+ {
+ // Should have 255 values (127 negative, 127 positive, and 1 zero)
+ double[] speeds = {0, 1, 4, 6, ... }; // example
+ 
+public void setLinear(float speed)
+ {
+ // First convert the speed to the range 0 to 255
+ int speedIndex = com.sun.squawk.util.MathUtils.round((speed+1.0)/2.0*255.0);
+ this.setRaw(speeds[speedIndex]);
+ }
+ }Hope this helps. I haven't finished generating my entire speed array yet, but when I am I will post it on Delphi.
+ 
+Jared"
