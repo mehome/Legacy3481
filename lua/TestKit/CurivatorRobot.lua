@@ -41,14 +41,14 @@ MainRobot = {
 		--by default module is 1, so only really need it for 2
 		victor =
 		{
-			id_1 = { name= "right_drive_1", channel=3, module=1}, 
-			id_2 = { name= "right_drive_2", channel=4}, 
-			id_3 = { name="left_drive_1", channel=1},
-			id_4 = { name="left_drive_2", channel=2},
-			id_5= { name="turret", channel=8},
+			id_1 = { name= "right_drive_1", channel=1, module=1}, 
+			id_2 = { name= "right_drive_2", channel=8}, 
+			id_3 = { name="left_drive_1", channel=2},
+			id_4 = { name="left_drive_2", channel=9},
+			id_5= { name="turret", channel=3},
 			id_6= { name="arm", channel=7},
 			id_7= { name="boom", channel=6},
-			id_8= { name="bucket", channel=9},
+			id_8= { name="bucket", channel=4},
 			id_9= { name="clasp", channel=5},
 			--If we decide we need more power we can assign these
 			--id_3 = { name= "right_drive_3", channel=3}, 
@@ -71,7 +71,7 @@ MainRobot = {
 			id_2 = { name="arm_pot",  channel=3},
 			id_3 = { name="boom_pot",  channel=4},
 			id_4 = { name="bucket_pot",  channel=5},
-			id_5 = { name="clasp_pot",  channel=1}
+			id_5 = { name="clasp_pot",  channel=6}
 		},
 		digital_input_encoder =
 		{	
@@ -175,7 +175,7 @@ MainRobot = {
 
 		turret =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -186,9 +186,9 @@ MainRobot = {
 			voltage_multiply=1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--center around 318
-			pot_min_limit=250,
-			pot_max_limit=377,
+			--center around 450
+			pot_min_limit=265,  --180 forward
+			pot_max_limit=647,  -- 180 counter clockwise 
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=0.7,	--100 rpm... with a 15x reduction in radians
@@ -196,12 +196,12 @@ MainRobot = {
 			brake=10.0,
 			max_accel_forward=3,			--These are in radians, just go with what feels right
 			max_accel_reverse=3,
-			using_range=0,	--Warning Only use range if we have a potentiometer!
+			using_range=1,	--Warning Only use range if we have a potentiometer!
 
-			max_range_deg= 80,
-			min_range_deg=-50,
+			max_range_deg= 180,
+			min_range_deg=-180,
 			starting_position=0,
-			--pot_offset=-46.12 * Deg2Rad, --should not need this
+			pot_offset=-180.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
 			--inv_max_accel_up = 0.3,
 			--inv_max_decel_up = 0.3,
@@ -454,7 +454,8 @@ MainRobot = {
 
 	controls =
 	{
-		slotlist = {slot_1="logitech dual action"},
+		--slotlist = {slot_1="airflo"},
+		slotlist = {slot_1="airflo",slot_2="ch throttle quadrant"},
 		--field_centric_x_axis_threshold=0.40,
 		--tank_steering_tolerance=0.05,
 		Joystick_1 =
@@ -572,10 +573,11 @@ MainRobot = {
 			--clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Robot_SetDefensiveKeyValue = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--intermediate closed loop test point of each position control
-			arm_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			boom_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			bucket_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			clasp_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--turret_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--arm_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--boom_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--bucket_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--clasp_SetIntendedPosition = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 		},
 
 	},
