@@ -362,7 +362,10 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 			m_ToleranceCounter=0;
 
 		if (m_ToleranceCounter >= arm.ToleranceConsecutiveCount)
+		{
+			SetRequestedVelocity(0.0);  //ensure the requested velocity is zero once it gets locked to ship position
 			SetCurrentLinearAcceleration(0.0);  //lock ship to position
+		}
 	}
 
 	m_LastPosition=NewPosition;
