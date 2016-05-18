@@ -602,15 +602,16 @@ void FlightDynamics_2D::ResetVectors()
 	m_CurrentAcceleration=m_TargetAcceleration=Vec2d(0.0,0.0);
 }
 
+__inline double shortest_angle(double Distance)
+{
+	return Distance - Pi2*floor(Distance/Pi2+0.5);
+}
+
 double FlightDynamics_2D::ComputeAngularDistance(const Vec2d &lookDir)
 {
 	double lookDir_radians= atan2(lookDir[0],lookDir[1]);
 	double distance=*m_HeadingToUse-lookDir_radians;
-	if (distance>M_PI)
-		distance-=Pi2;
-	else if (distance<-M_PI)
-		distance+=Pi2;
-	return distance;
+	return shortest_angle(distance);
 }
 
 Vec2d FlightDynamics_2D::ComputeAngularDistance_asLookDir(const Vec2d &lookDir)
@@ -630,11 +631,7 @@ Vec2d FlightDynamics_2D::ComputeAngularDistance(double Orientation)
 double FlightDynamics_2D::ComputeAngularDistance(double Orientation)
 {
 	double DistanceDirection= *m_HeadingToUse-Orientation;
-	if (DistanceDirection>M_PI)
-		DistanceDirection-=Pi2;
-	else if (DistanceDirection<-M_PI)
-		DistanceDirection+=Pi2;
-	return DistanceDirection;
+	return shortest_angle(DistanceDirection);
 }
 
 void FlightDynamics_2D::TimeChangeUpdate(double DeltaTime_s,Vec2d &PositionDisplacement,double &RotationDisplacement)
