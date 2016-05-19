@@ -191,12 +191,14 @@ MainRobot = {
 			pot_max_limit=647,  -- 180 counter clockwise 
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
-			max_speed=0.7,	--100 rpm... with a 15x reduction in radians
+			max_speed=0.5,	--100 rpm... with a 15x reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
 			max_accel_forward=3,			--These are in radians, just go with what feels right
 			max_accel_reverse=3,
 			using_range=1,	--Warning Only use range if we have a potentiometer!
+			predict_up=.400,
+			predict_down=.400,
 
 			max_range_deg= 180,
 			min_range_deg=-180,
@@ -573,7 +575,7 @@ MainRobot = {
 			--clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Robot_SetDefensiveKeyValue = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--intermediate closed loop test point of each position control
-			--turret_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			turret_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--arm_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--boom_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--bucket_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
