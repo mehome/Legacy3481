@@ -181,7 +181,7 @@ MainRobot = {
 			use_pid_up_only='y',
 			pid_up={p=100, i=0, d=25},
 			pid_down={p=100, i=0, d=25},
-			tolerance=0.3,
+			tolerance=0.025,
 			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
@@ -242,7 +242,7 @@ MainRobot = {
 		},
 		boom =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -253,9 +253,9 @@ MainRobot = {
 			tolerance=0.15,
 			tolerance_count=20,
 			voltage_multiply=1.0,			--May be reversed
-			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=100,
-			pot_max_limit=750,
+			encoder_to_wheel_ratio=-1.0,
+			pot_min_limit=200,
+			pot_max_limit=834,
 			pot_range_flipped='y',
 			
 			max_speed=13.3,	
@@ -265,8 +265,8 @@ MainRobot = {
 			max_accel_reverse=50,
 			using_range=0,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
-			max_range= 12,
-			min_range=0,
+			max_range= 10,
+			min_range=1,
 			starting_position=6,
 			use_aggressive_stop = 'yes',
 		},
@@ -487,7 +487,7 @@ MainRobot = {
 			--Slide={type="keyboard", key='g', on_off=false},
 			
 			turret_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			arm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			boom_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			bucket_angle_Advance={type="keyboard", key='i', on_off=true},
 			bucket_angle_Retract={type="keyboard", key='u', on_off=true},
 			arm_xpos_Advance={type="keyboard", key='k', on_off=true},
@@ -575,7 +575,7 @@ MainRobot = {
 			--clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Robot_SetDefensiveKeyValue = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--intermediate closed loop test point of each position control
-			turret_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--turret_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--arm_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--boom_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--bucket_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
