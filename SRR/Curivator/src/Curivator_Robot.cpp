@@ -1535,6 +1535,7 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			const Ship_1D_Props &shipprops=m_RobotProps.GetRotaryProps(index).GetShip_1D_Props();
 			//SmartDashboard::PutNumber("Arm_ScaleTest",shipprops.MaxRange-shipprops.MinRange);
 			result*=shipprops.MaxRange-shipprops.MinRange;  //compute the total distance in radians
+			result*=m_RobotProps.GetRotaryProps(index).GetRotaryProps().EncoderToRS_Ratio;
 			//get offset... Note: scale comes first since the offset is of that scale
 			result+=m_RobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().PotentiometerOffset;
 			#else
