@@ -251,23 +251,33 @@ MainRobot = {
 			pid_down=
 			{p=100, i=0, d=25},
 			tolerance=0.15,
-			tolerance_count=20,
+			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
-			encoder_to_wheel_ratio=-1.0,
+			encoder_to_wheel_ratio=1.0,
 			pot_min_limit=200,
 			pot_max_limit=834,
-			pot_range_flipped='y',
+			pot_range_flipped='n',
 			
-			max_speed=13.3,	
+			--max_speed=13.3,	
+			max_speed=6.0,
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
 			max_accel_forward=50,			--just go with what feels right
 			max_accel_reverse=50,
-			using_range=0,					--Warning Only use range if we have a potentiometer!
+			inv_max_accel_up = 0.0,
+			inv_max_decel_up = 0.0,
+			inv_max_accel_down = 0.0,
+			inv_max_decel_down = 0.0,
+
+			using_range=1,					--Warning Only use range if we have a potentiometer!
+			predict_up=.200,
+			predict_down=.200,
 			--These min/max are in inch units
 			max_range= 10,
 			min_range=1,
 			starting_position=6,
+			forward_deadzone=0.37,
+			reverse_deadzone=0.37,
 			use_aggressive_stop = 'yes',
 		},
 		bucket =
