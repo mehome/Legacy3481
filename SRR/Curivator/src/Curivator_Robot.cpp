@@ -77,6 +77,7 @@ Curivator_Robot::Robot_Arm::Robot_Arm(size_t index,Curivator_Robot *parent,Rotar
 Rotary_Position_Control(csz_Curivator_Robot_SpeedControllerDevices_Enum[index],robot_control,index),m_Index(index),m_pParent(parent),m_LastIntendedPosition(0.0),
 	m_Advance(false),m_Retract(false)
 {
+	SmartDashboard::PutBoolean("Disable_Setpoints",false);
 }
 
 
@@ -128,7 +129,9 @@ void Curivator_Robot::Robot_Arm::TimeChange(double dTime_s)
 
 void Curivator_Robot::Robot_Arm::SetIntendedPosition_Plus(double Position)
 {
-	//return;
+	const bool Disable_Setpoints=SmartDashboard::GetBoolean("Disable_Setpoints");
+	if (Disable_Setpoints)
+		return;
 	//if (GetPotUsage()!=Rotary_Position_Control::eNoPot)
 	{
 		//if (((fabs(m_LastIntendedPosition-Position)<0.01)) || (!(IsZero(GetRequestedVelocity()))) )
@@ -1300,6 +1303,7 @@ void Curivator_Robot_Control::ResetPos()
 
 void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 {
+	const bool SafetyLock=SmartDashboard::GetBoolean("SafetyLock");
 	double VoltageScalar=1.0;
 
 	switch (index)
@@ -1310,6 +1314,8 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 	case Curivator_Robot::eBucket:
 	case Curivator_Robot::eClasp:
 		#ifdef Robot_TesterCode
+		if (SafetyLock)
+			Voltage=0.0;
 		m_Potentiometer[index].UpdatePotentiometerVoltage(Voltage);
 		m_Potentiometer[index].TimeChange();  //have this velocity immediately take effect
 		#endif
@@ -1321,6 +1327,8 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 	SmartLabel[0]-=32; //Make first letter uppercase
 	SmartLabel+="Voltage";
 	SmartDashboard::PutNumber(SmartLabel.c_str(),Voltage);
+	if (SafetyLock)
+		Voltage=0.0;
 	Victor_UpdateVoltage(index,Voltage);
 }
 
@@ -1410,6 +1418,7 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 	//For now... we'll use m_Compressor as the variable to determine first run, but perhaps this should be its own boolean here
 	if (!m_Compressor)
 	{
+		SmartDashboard::PutBoolean("SafetyLock",true);
 		//This one one must also be called for the lists that are specific to the robot
 		RobotControlCommon_Initialize(robot_props->Get_ControlAssignmentProps());
 		//This may return NULL for systems that do not support it
