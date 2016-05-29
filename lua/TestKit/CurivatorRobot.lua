@@ -289,7 +289,7 @@ MainRobot = {
 		},
 		bucket =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -298,28 +298,32 @@ MainRobot = {
 			pid_down=
 			{p=100, i=0, d=25},
 			tolerance=0.15,
-			tolerance_count=20,
+			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=290,
+			pot_min_limit=226,  --was 290 for 8
 			pot_max_limit=888,
 			pot_range_flipped='y',
 			
-			max_speed=0.64,	
+			--max_speed=0.64,	
+			max_speed=1,
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
 			max_accel_forward=10,			--just go with what feels right
 			max_accel_reverse=10,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
-			max_range= 8,
+			max_range= 9,
 			min_range=0.8,
+			pot_offset=0.8,
 			starting_position=6,
+			forward_deadzone=0.17,
+			reverse_deadzone=0.17,
 			use_aggressive_stop = 'yes',
 		},
 		clasp =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -327,24 +331,28 @@ MainRobot = {
 			{p=100, i=0, d=25},
 			pid_down=
 			{p=100, i=0, d=25},
-			tolerance=0.15,
-			tolerance_count=20,
+			tolerance=0.09,
+			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=440,
-			pot_max_limit=760,
+			pot_min_limit=415,  --was 440
+			pot_max_limit=800,  --was 760
 			pot_range_flipped='y',
 			
-			max_speed=0.64,	
+			--max_speed=0.64,	--was 0.64 but actual tests show a bit faster
+			max_speed=0.9,
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
 			max_accel_forward=10,			--just go with what feels right
 			max_accel_reverse=10,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
-			max_range= 5.17,
-			min_range=0.8,
+			max_range= 5.25,
+			min_range=0.5,
+			pot_offset=0.5,
 			starting_position=3.5,
+			forward_deadzone=0.17,
+			reverse_deadzone=0.17,
 			use_aggressive_stop = 'yes',
 		},
 		arm_xpos =
@@ -503,8 +511,8 @@ MainRobot = {
 			TestAuton={type="keyboard", key='g', on_off=false},
 			--Slide={type="keyboard", key='g', on_off=false},
 			
-			turret_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			boom_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			clasp_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			bucket_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			bucket_angle_Advance={type="keyboard", key='i', on_off=true},
 			bucket_angle_Retract={type="keyboard", key='u', on_off=true},
 			arm_xpos_Advance={type="keyboard", key='k', on_off=true},
