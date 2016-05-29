@@ -9,27 +9,32 @@ OunceInchToNewton=0.00706155183333
 Pounds2Kilograms=0.453592
 Deg2Rad=(1/180) * Pi
 
-ArmLength_m=48 * Inches2Meters  --4 feet
-ArmToGearRatio=72.0/28.0
-GearToArmRatio=1.0/ArmToGearRatio
-PotentiometerToArmRatio=36.0/54.0
-PotentiometerToGearRatio=PotentiometerToArmRatio * ArmToGearRatio
-PotentiometerMaxRotation_r=270.0 * Deg2Rad
-GearHeightOffset_m=38.43 * Inches2Meters
-MotorToWheelGearRatio=12.0/36.0
+wheel_diameter_Curivator_in=7.95
+wheel_diameter_Rabbit_in=6
+g_wheel_diameter_in=wheel_diameter_Rabbit_in   --This will determine the correct distance try to make accurate too
+WheelBase_Width_Rabbit_In=24.52198975	  --The wheel base will determine the turn rate, must be as accurate as possible!
+WheelBase_Length_Rabbit_In=28.7422  
+WheelBase_Width_Curivator_In=42.26
+WheelBase_Length_Curivator_In=38.46
+WheelBase_Length_In=WheelBase_Length_Rabbit_In
+WheelBase_Width_In=WheelBase_Width_Rabbit_In
 
-
-g_wheel_diameter_in=6   --This will determine the correct distance try to make accurate too
-WheelBase_Width_In=24.52198975	  --The wheel base will determine the turn rate, must be as accurate as possible!
-WheelBase_Length_In=28.7422  
 WheelTurningDiameter_In= ( (WheelBase_Width_In * WheelBase_Width_In) + (WheelBase_Length_In * WheelBase_Length_In) ) ^ 0.5
-HighGearSpeed = (749.3472 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9  --RPMs from BHS2015 Chassis.SLDASM
-LowGearSpeed  = (346.6368 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9
+DriveGearSpeed_Curivator = (255.15 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9
+LowGearSpeed_Rabbit  = (346.6368 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9 
+DriveGearSpeed = LowGearSpeed_Rabbit
 Drive_MaxAccel=5
---Omni wheels means no skid
---skid=math.cos(math.atan2(WheelBase_Length_In,WheelBase_Width_In))
-skid=1
+--Swerve wheels means no skid
+skid_rabbit=math.cos(math.atan2(WheelBase_Length_In,WheelBase_Width_In))
+skid_curivator=1
+skid=skid_rabbit
 gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) * skid
+
+-- Here are some auton tests
+AutonTest_DoNothing=0
+AutonTest_JustMoveForward=1
+AutonTest_TestArm=2
+AutonTest_GrabSequence=3
 
 MainRobot = {
 	version = 1.0;
@@ -87,11 +92,11 @@ MainRobot = {
 	rotation_tolerance=Deg2Rad * 2,
 	rotation_distance_scalar=1.0,
 
-	MAX_SPEED = HighGearSpeed,
+	MAX_SPEED = DriveGearSpeed,
 	ACCEL = 10,    -- Thruster Acceleration m/s2 (1g = 9.8)
 	BRAKE = ACCEL,
 	-- Turn Rates (radians/sec) This is always correct do not change
-	heading_rad = (2 * HighGearSpeed * Meters2Inches / WheelTurningDiameter_In) * skid,
+	heading_rad = (2 * DriveGearSpeed * Meters2Inches / WheelTurningDiameter_In) * skid,
 	
 	Dimensions =
 	{ Length=0.9525, Width=0.6477 }, --These are 37.5 x 25.5 inches (This is not used except for UI ignore)
@@ -148,9 +153,41 @@ MainRobot = {
 		}
 	},
 	
+	swerve_drive =
+	{
+		is_closed=1,
+		--is_closed_swivel=1,
+		
+		--show_pid_dump_wheel={fl=0, fr=0, rl=0, rr=0},
+		--show_pid_dump_swivel={fl=0, fr=0, rl=0, rr=0},
+		
+		--ds_display_row=-1,
+		--where length is in 5 inches in, and width is 3 on each side (can only go 390 degrees a second)
+		wheel_base_dimensions =	{length_in=WheelBase_Length_In, width_in=WheelBase_Width_In},	
+		
+		--This encoders/PID will only be used in autonomous if we decide to go steal balls
+		wheel_diameter_in = g_wheel_diameter_in,
+		wheel_pid={p=200, i=0, d=50},
+		swivel_pid={p=100, i=0, d=50},
+		latency=0.0,
+		heading_latency=0.0,
+		--drive_to_scale=0.50,				--For 4 to 10 50% gives a 5 inch tolerance
+		--strafe_to_scale=4/20,  --In autonomous we need the max to match the max forward and reverse
+		--This is obtainer from encoder RPM's of 1069.2 and Wheel RPM's 427.68 (both high and low have same ratio)
+		encoder_to_wheel_ratio=1.0,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
+		voltage_multiply=1.0,				--May be reversed using -1.0
+		curve_voltage_wheel=
+		{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
+		curve_voltage_swivel=
+		{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
+		reverse_steering='no',
+		inv_max_accel = 1/15.0  --solved empiracally
+	},
+
 	robot_settings =
 	{
 		ds_display_row=-1,					--This will display the coordinates and heading (may want to leave on)
+
 		enable_arm_auto_position='y',
 		height_presets =
 		--Heights are in inches
@@ -161,6 +198,8 @@ MainRobot = {
 			side_move_rad=10,
 			arm_height_in=12,
 			support_hotspot='n',
+			auton_test=AutonTest_GrabSequence,
+			--auton_test=AutonTest_TestArm,
 			show_auton_variables='y'
 		},
 
@@ -205,24 +244,30 @@ MainRobot = {
 			{p=100, i=0, d=25},
 			pid_down=
 			{p=100, i=0, d=25},
-			tolerance=0.15,
-			tolerance_count=20,
+			tolerance=0.3,
+			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=155,
-			pot_max_limit=1125,
-			pot_range_flipped='y',
+			pot_min_limit=232,
+			pot_max_limit=890,
+			pot_range_flipped='n',
 			
-			max_speed=13.3,	
+			--max_speed=13.3,	
+			max_speed=6.0,
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=50,			--just go with what feels right
-			max_accel_reverse=50,
+			max_accel_forward=5,			--just go with what feels right
+			max_accel_reverse=5,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
+			predict_up=.200,
+			predict_down=.200,
 			--These min/max are in inch units
-			max_range= 12,
-			min_range=0,
+			max_range= 10,
+			min_range=1,
+			pot_offset=1,
 			starting_position=6,
+			forward_deadzone=0.23,
+			reverse_deadzone=0.23,
 			use_aggressive_stop = 'yes',
 		},
 		boom =
@@ -236,23 +281,34 @@ MainRobot = {
 			pid_down=
 			{p=100, i=0, d=25},
 			tolerance=0.15,
-			tolerance_count=20,
+			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=155,
-			pot_max_limit=1125,
-			pot_range_flipped='y',
+			pot_min_limit=200,
+			pot_max_limit=834,
+			pot_range_flipped='n',
 			
-			max_speed=13.3,	
+			--max_speed=13.3,	
+			max_speed=6.0,
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=50,			--just go with what feels right
-			max_accel_reverse=50,
+			max_accel_forward=25,			--just go with what feels right
+			max_accel_reverse=25,
+			inv_max_accel_up = 0.0,
+			inv_max_decel_up = 0.0,
+			inv_max_accel_down = 0.0,
+			inv_max_decel_down = 0.0,
+
 			using_range=1,					--Warning Only use range if we have a potentiometer!
+			predict_up=.200,
+			predict_down=.200,
 			--These min/max are in inch units
-			max_range= 12,
-			min_range=0,
+			max_range= 10,
+			min_range=1,
+			pot_offset=1,
 			starting_position=6,
+			forward_deadzone=0.37,
+			reverse_deadzone=0.37,
 			use_aggressive_stop = 'yes',
 		},
 		bucket =
@@ -265,8 +321,8 @@ MainRobot = {
 			{p=100, i=0, d=25},
 			pid_down=
 			{p=100, i=0, d=25},
-			tolerance=0.15,
-			tolerance_count=20,
+			tolerance=0.0125,
+			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
 			pot_min_limit=290,
@@ -276,8 +332,8 @@ MainRobot = {
 			max_speed=3,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=100,			--just go with what feels right
-			max_accel_reverse=100,
+			max_accel_forward=500,			--just go with what feels right
+			max_accel_reverse=500,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
 			max_range= 12,
@@ -295,8 +351,8 @@ MainRobot = {
 			{p=100, i=0, d=25},
 			pid_down=
 			{p=100, i=0, d=25},
-			tolerance=0.15,
-			tolerance_count=20,
+			tolerance=0.0125,
+			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
 			pot_min_limit=440,
@@ -306,8 +362,8 @@ MainRobot = {
 			max_speed=3,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=100,			--just go with what feels right
-			max_accel_reverse=100,
+			max_accel_forward=500,			--just go with what feels right
+			max_accel_reverse=500,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
 			max_range= 7,
@@ -325,7 +381,7 @@ MainRobot = {
 			{p=100, i=0, d=25},
 			pid_down=
 			{p=100, i=0, d=25},
-			tolerance=0.15,
+			tolerance=0.6,
 			tolerance_count=20,
 			voltage_multiply=1.0,
 			encoder_to_wheel_ratio=1.0,
@@ -336,8 +392,8 @@ MainRobot = {
 			max_speed=6.0,	--inches per second
 			accel=10.0,
 			brake=10.0,
-			max_accel_forward=100,			--just go with what feels right
-			max_accel_reverse=100,
+			max_accel_forward=10000,			--just go with what feels right
+			max_accel_reverse=10000,
 			using_range=0,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
 			max_range= 55.29,
@@ -352,10 +408,10 @@ MainRobot = {
 			ds_display_row=-1,
 			use_pid_up_only='y',
 			pid_up=
-			{p=100, i=0, d=25},
+			{p=0, i=0, d=0},
 			pid_down=
-			{p=100, i=0, d=25},
-			tolerance=0.15,
+			{p=0, i=0, d=0},
+			tolerance=0.6,
 			tolerance_count=20,
 			voltage_multiply=1.0,
 			encoder_to_wheel_ratio=1.0,
@@ -366,14 +422,14 @@ MainRobot = {
 			max_speed=6.0,	--inches per second
 			accel=10.0,
 			brake=10.0,
-			max_accel_forward=100,			--just go with what feels right
-			max_accel_reverse=100,
-			using_range=0,					--Warning Only use range if we have a potentiometer!
+			max_accel_forward=10000,			--god mode
+			max_accel_reverse=10000,
+			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
 			max_range= 40.0,
 			min_range=-20.0,
 			starting_position=-0.97606122071131374,  --mathematically ideal for middle of LA... good to test code, but not necessarily for actual use
-			use_aggressive_stop = 'n',
+			use_aggressive_stop = 'y',
 		},
 		bucket_angle =
 		{
@@ -385,7 +441,7 @@ MainRobot = {
 			{p=100, i=0, d=25},
 			pid_down=
 			{p=100, i=0, d=25},
-			tolerance=0.15,
+			tolerance=0.6,
 			tolerance_count=20,
 			voltage_multiply=1.0,
 			encoder_to_wheel_ratio=1.0,
@@ -397,8 +453,8 @@ MainRobot = {
 			max_speed=36.66,	--degrees per second  (matches 0.64 in radians)
 			accel=50.0,
 			brake=50.0,
-			max_accel_forward=500,			--just go with what feels right
-			max_accel_reverse=500,
+			max_accel_forward=10000,			--just go with what feels right
+			max_accel_reverse=10000,
 			using_range=0,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
 			max_range= 180.0,
@@ -416,7 +472,7 @@ MainRobot = {
 			{p=100, i=0, d=25},
 			pid_down=
 			{p=100, i=0, d=25},
-			tolerance=0.15,
+			tolerance=0.6,
 			tolerance_count=20,
 			voltage_multiply=1.0,
 			encoder_to_wheel_ratio=1.0,
@@ -428,8 +484,8 @@ MainRobot = {
 			max_speed=36.66,	--degrees per second  (matches 0.64 in radians)
 			accel=5.0,
 			brake=5.0,
-			max_accel_forward=500,			--just go with what feels right
-			max_accel_reverse=500,
+			max_accel_forward=10000,			--just go with what feels right
+			max_accel_reverse=10000,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
 			max_range= 100.0,
@@ -449,10 +505,10 @@ MainRobot = {
 			control = "airflo",
 			axis_count = 4,
 			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
+			Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--FieldCentric_Enable = {type="joystick_button", key=4, on_off=false},
 			--Robot_SetDriverOverride = {type="joystick_button", key=5, on_off=true},
 			--scaled down to 0.5 to allow fine tuning and a good top acceleration speed (may change with the lua script tweaks)
@@ -470,15 +526,17 @@ MainRobot = {
 			TestAuton={type="keyboard", key='g', on_off=false},
 			--Slide={type="keyboard", key='g', on_off=false},
 			
-			turret_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
-			arm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			--turret_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			--arm_SetCurrentVelocity = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			bucket_angle_Advance={type="keyboard", key='i', on_off=true},
 			bucket_angle_Retract={type="keyboard", key='u', on_off=true},
 			arm_xpos_Advance={type="keyboard", key='k', on_off=true},
 			arm_xpos_Retract={type="keyboard", key='j', on_off=true},
 			arm_ypos_Advance={type="keyboard", key=';', on_off=true},
 			arm_ypos_Retract={type="keyboard", key='l', on_off=true},
-	
+			clasp_angle_Advance={type="keyboard", key='o', on_off=true},
+			clasp_angle_Retract={type="keyboard", key='p', on_off=true},
+			StopAuton={type="keyboard", key='x', on_off=true},
 		},
 		
 		Joystick_2 =
@@ -546,18 +604,19 @@ MainRobot = {
 		Joystick_5 =
 		{	
 			control = "ch throttle quadrant",
-			arm_xpos_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			arm_ypos_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			bucket_angle_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--arm_xpos_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--arm_ypos_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--bucket_angle_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Robot_SetDefensiveKeyValue = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 
-			Arm_SetPosRest     = {type="joystick_button", key=2, on_off=false},
-			Arm_SetTote2Height = {type="joystick_button", key=4, on_off=false},
-			Arm_SetTote3Height = {type="joystick_button", key=6, on_off=false},
-			Arm_SetTote4Height = {type="joystick_button", key=8, on_off=false},
-			Arm_SetTote5Height = {type="joystick_button", key=10, on_off=false},
-			Arm_SetTote6Height = {type="joystick_button", key=12, on_off=false}
+			--intermediate closed loop test point of each position control
+			--turret_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--arm_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--boom_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--bucket_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--clasp_SetIntendedPosition = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+
 		},
 
 	},

@@ -1,11 +1,16 @@
 #include "stdafx.h"
 #include "Robot_Tester.h"
+#define __UsingTankDrive__
 
 #ifdef Robot_TesterCode
 namespace Robot_Tester
 {
-	#include "Tank_Robot_UI.h"
 	#include "CommonUI.h"
+	#ifdef __UsingTankDrive__
+	#include "Tank_Robot_UI.h"
+	#else
+	#include "Swerve_Robot_UI.h"
+	#endif
 	#include "Curivator_Robot.h"
 }
 
@@ -215,7 +220,8 @@ void Curivator_Robot::BigArm::TimeChange(double dTime_s)
 	__super::TimeChange(dTime_s);
 	//Now to compute where we are based from our length of extension
 	//first start with the extension:
-	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
+	//Note: the position is inverted due to the nature of the darts... we subtract the range from position to aquire inverted value
+	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-m_Ship_1D_Props.MinRange-GetPos_m();  //expecting a value from 0-12 in inches
 	const double FullActuatorLength=ShaftExtension_in+BigArm_DistanceDartPivotToTip+BigArm_DistanceFromTipDartToClevis;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
 	//c is FullActuatorLength
@@ -270,7 +276,8 @@ void Curivator_Robot::Boom::TimeChange(double dTime_s)
 	__super::TimeChange(dTime_s);
 	//Now to compute where we are based from our length of extension
 	//first start with the extension:
-	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
+	//Note: the position is inverted due to the nature of the darts... we subtract the range from position to aquire inverted value
+	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-m_Ship_1D_Props.MinRange-GetPos_m();  //expecting a value from 0-12 in inches
 	const double FullActuatorLength=ShaftExtension_in+Boom_DistanceDartPivotToTip+Boom_DistanceFromTipDartToClevis;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
 	//c is FullActuatorLength
@@ -361,6 +368,8 @@ void Curivator_Robot::Bucket::TimeChange(double dTime_s)
 	//Note this first equation omits the boom angle as a reference in a local setting
 	//const double LocalCoMHeight=Bucket_localConstantBRP_BP_height+(sin(BucketCoMPivotAngleHorz)*Bucket_BP_To_BucketCoM);
 	m_GlobalCoMHeight=m_Bucket_globalBRP_BP_height+(sin(BucketCoMPivotAngleHorz-BoomAngle)*Bucket_BP_To_BucketCoM);
+	//This equation is optional... used for simulation geometry
+	m_GlobalCoMDistance=m_Bucket_globalBRP_BP_distance+(cos(BucketCoMPivotAngleHorz-BoomAngle)*Bucket_BP_To_BucketCoM);
 	//Note this first equation omits the boom angle as a reference in a local setting
 	//const double LocalTipHeight=Bucket_localConstantBRP_BP_height+(sin(BucketCoMPivotAngleHorz + Bucket_CoMtoTip_Angle)*Bucket_BP_to_BucketTip);
 	const double LocalTipHeight=m_Bucket_globalBRP_BP_height+(sin(BucketCoMPivotAngleHorz + Bucket_CoMtoTip_Angle-BoomAngle)*Bucket_BP_to_BucketTip);
@@ -391,6 +400,17 @@ double Curivator_Robot::Bucket::GetBucketRoundEndHeight() const
 	const double globalRoundEndHeight=m_Boom.GetBoomHeight()-(m_GlobalCoMHeight+Bucket_CoM_Radius);
 	return globalRoundEndHeight;
 }
+double Curivator_Robot::Bucket::GetCoMHeight() const 
+{
+	const double globalCoMHeight=m_Boom.GetBoomHeight()-m_GlobalCoMHeight;
+	return globalCoMHeight;
+}
+double Curivator_Robot::Bucket::GetCoMDistance() const 
+{
+	const double globalCoMDistance=m_GlobalCoMDistance + m_Boom.GetBoomLength();
+	return globalCoMDistance;
+}
+
 double Curivator_Robot::Bucket::GetBucketAngle() const
 {
 	const double globalBucketAngle=m_LocalBucketAngle+m_Boom.GetBoomAngle();
@@ -494,12 +514,16 @@ const double c_HalfCourtLength=c_CourtLength/2.0;
 const double c_HalfCourtWidth=c_CourtWidth/2.0;
 
 Curivator_Robot::Curivator_Robot(const char EntityName[],Curivator_Control_Interface *robot_control,bool IsAutonomous) : 
+#ifdef __UsingTankDrive__
 	Tank_Robot(EntityName,robot_control,IsAutonomous), m_RobotControl(robot_control), 
+#else
+	Swerve_Robot(EntityName,robot_control,eDriveOffset,IsAutonomous), m_RobotControl(robot_control), 
+#endif
 		m_Turret(eTurret,this,robot_control),m_Arm(eArm,this,robot_control),m_LatencyCounter(0.0),
 		m_Boom(eBoom,this,robot_control,m_Arm),m_Bucket(eBucket,this,robot_control,m_Boom),m_Clasp(eClasp,this,robot_control,m_Bucket),
 		m_ArmXpos(eArm_Xpos,this,robot_control),m_ArmYpos(eArm_Ypos,this,robot_control),m_BucketAngle(eBucket_Angle,this,robot_control),
 		m_ClaspAngle(eClasp_Angle,this,robot_control),
-		m_YawErrorCorrection(1.0),m_PowerErrorCorrection(1.0),m_AutonPresetIndex(0)
+		m_YawErrorCorrection(1.0),m_PowerErrorCorrection(1.0),m_AutonPresetIndex(0),m_FreezeArm(false),m_LockPosition(false)
 {
 	mp_Arm[eTurret]=&m_Turret;
 	mp_Arm[eArm]=&m_Arm;
@@ -614,25 +638,48 @@ void Curivator_Robot::TimeChange(double dTime_s)
 	//Apply the position and rotation of bucket to their children
 	if (m_RobotProps.GetCurivatorRobotProps().EnableArmAutoPosition)
 	{
-		const double xpos=m_ArmXpos.GetPos_m();
-		const double ypos=m_ArmYpos.GetPos_m();
-		const double bucket_angle=m_BucketAngle.GetPos_m();
-		const double clasp_angle=m_ClaspAngle.GetPos_m();
+		const double xpos=!m_LockPosition?m_ArmXpos.GetPos_m():m_Last_xpos;
+		const double ypos=!m_LockPosition?m_ArmYpos.GetPos_m():m_Last_ypos;
+		const double bucket_angle=!m_LockPosition?m_BucketAngle.GetPos_m():m_Last_bucket_angle;
+		const double clasp_angle=!m_LockPosition?m_ClaspAngle.GetPos_m():m_Last_clasp_angle;
+		//no harm in always assigning these... for sake of avoiding a branch
+		m_Last_xpos=xpos;
+		m_Last_ypos=ypos;
+		m_Last_bucket_angle=bucket_angle;
+		m_Last_clasp_angle=clasp_angle;
+
 		SmartDashboard::PutNumber("arm_xpos",xpos);
 		SmartDashboard::PutNumber("arm_ypos",ypos);
 		SmartDashboard::PutNumber("bucket_angle",bucket_angle);
 		SmartDashboard::PutNumber("clasp_angle",clasp_angle);
 		double BigArm_ShaftLength,Boom_ShaftLength,BucketShaftLength,ClaspShaftLength;
 		ComputeArmPosition(ypos,xpos,bucket_angle,clasp_angle,BigArm_ShaftLength,Boom_ShaftLength,BucketShaftLength,ClaspShaftLength);
+		//invert the boom and big arm lengths due to how the darts are wired
+		Boom_ShaftLength=m_Boom.GetMaxRange()-m_Boom.GetMinRange()-Boom_ShaftLength;
+		BigArm_ShaftLength=m_Arm.GetMaxRange()-m_Arm.GetMinRange()-BigArm_ShaftLength;
 		SmartDashboard::PutNumber("BigArm_ShaftLength",BigArm_ShaftLength);
 		SmartDashboard::PutNumber("Boom_ShaftLength",Boom_ShaftLength);
 		SmartDashboard::PutNumber("BucketShaftLength",BucketShaftLength);
 		SmartDashboard::PutNumber("ClaspShaftLength",ClaspShaftLength);
 		//apply these values to their children
-		m_Arm.SetIntendedPosition(BigArm_ShaftLength);
-		m_Boom.SetIntendedPosition(Boom_ShaftLength);
-		m_Bucket.SetIntendedPosition(BucketShaftLength);
-		m_Clasp.SetIntendedPosition(ClaspShaftLength);
+		if (!m_FreezeArm)
+		{
+			m_Arm.SetIntendedPosition(BigArm_ShaftLength);
+			m_Boom.SetIntendedPosition(Boom_ShaftLength);
+			m_Bucket.SetIntendedPosition(BucketShaftLength);
+			m_Clasp.SetIntendedPosition(ClaspShaftLength);
+		}
+		else
+		{
+			m_Arm.SetRequestedVelocity(0.0);
+			m_Boom.SetRequestedVelocity(0.0);
+			m_Bucket.SetRequestedVelocity(0.0);
+			m_Clasp.SetRequestedVelocity(0.0);
+			m_ArmXpos.SetRequestedVelocity(0.0);
+			m_ArmYpos.SetRequestedVelocity(0.0);
+			m_BucketAngle.SetRequestedVelocity(0.0);
+			m_ClaspAngle.SetRequestedVelocity(0.0);
+		}
 	}
 }
 
@@ -656,6 +703,9 @@ void Curivator_Robot::BindAdditionalEventControls(bool Bind)
 		em->Event_Map["TestAuton"].Subscribe(ehl, *this, &Curivator_Robot::TestAutonomous);
 		em->Event_Map["Complete"].Subscribe(ehl,*this,&Curivator_Robot::GoalComplete);
 		#endif
+		em->EventOnOff_Map["StopAuton"].Subscribe(ehl,*this, &Curivator_Robot::StopAuton);
+		em->EventOnOff_Map["Robot_FreezeArm"].Subscribe(ehl,*this, &Curivator_Robot::FreezeArm);
+		em->EventOnOff_Map["Robot_LockPosition"].Subscribe(ehl,*this, &Curivator_Robot::LockPosition);
 	}
 	else
 	{
@@ -663,6 +713,9 @@ void Curivator_Robot::BindAdditionalEventControls(bool Bind)
 		em->Event_Map["TestAuton"]  .Remove(*this, &Curivator_Robot::TestAutonomous);
 		em->Event_Map["Complete"]  .Remove(*this, &Curivator_Robot::GoalComplete);
 		#endif
+		em->EventOnOff_Map["StopAuton"].Remove(*this, &Curivator_Robot::StopAuton);
+		em->EventOnOff_Map["Robot_FreezeArm"].Remove(*this, &Curivator_Robot::FreezeArm);
+		em->EventOnOff_Map["Robot_LockPosition"].Remove(*this, &Curivator_Robot::LockPosition);
 	}
 
 	for (size_t i=0;i<Curivator_Robot_NoRobotArm;i++)
@@ -817,6 +870,8 @@ void Curivator_Robot::ComputeArmPosition(double GlobalHeight,double GlobalDistan
 #ifdef Robot_TesterCode
 void Curivator_Robot::TestAutonomous()
 {
+	//keep around to test geometry
+	#if 0
 	double BigArm_ShaftLength;
 	double Boom_ShaftLength;
 	double BucketShaftLength;
@@ -825,6 +880,8 @@ void Curivator_Robot::TestAutonomous()
 	ComputeArmPosition(-0.97606122071131374,32.801521314123598,78.070524788111342,13.19097419,
 		BigArm_ShaftLength,Boom_ShaftLength,BucketShaftLength,ClaspShaftLength);
 	return;
+	#endif
+
 	Goal *oldgoal=ClearGoal();
 	if (oldgoal)
 		delete oldgoal;
@@ -847,6 +904,18 @@ void Curivator_Robot::GoalComplete()
 }
 #endif
 
+double Curivator_Robot::GetBucketAngleContinuity()
+{
+	double testLimits_deg=fabs(m_BucketAngle.AsEntity1D().GetPos_m()-RAD_2_DEG( m_Bucket.GetBucketAngle()));
+	return testLimits_deg;
+}
+
+void Curivator_Robot::StopAuton(bool isOn)
+{
+	FreezeArm(isOn);
+	m_controller->GetUIController_RW()->SetAutoPilot(false);
+	LockPosition(false);
+}
 
   /***********************************************************************************************************************************/
  /*													Curivator_Robot_Properties														*/
@@ -895,6 +964,7 @@ Curivator_Robot_Properties::Curivator_Robot_Properties()  : m_RobotControls(&s_C
 		m_CurivatorRobotProps=props;
 	}
 	{
+		#ifdef __UsingTankDrive__
 		Tank_Robot_Props props=m_TankRobotProps; //start with super class settings
 
 		//Late assign this to override the initial default
@@ -905,6 +975,7 @@ Curivator_Robot_Properties::Curivator_Robot_Properties()  : m_RobotControls(&s_C
 		props.LeftPID[1]=props.RightPID[1]=1.0; //set the I's to one... so it should be 1,1,0
 		props.MotorToWheelGearRatio=c_MotorToWheelGearRatio;
 		m_TankRobotProps=props;
+		#endif 
 	}
 	{
 		Rotary_Props props=m_RotaryProps[Curivator_Robot::eTurret].RotaryProps(); //start with super class settings
@@ -967,7 +1038,7 @@ const char * const g_Curivator_Controls_Events[] =
 	"arm_ypos_SetCurrentVelocity","arm_ypos_SetIntendedPosition","arm_ypos_SetPotentiometerSafety","arm_ypos_Advance","arm_ypos_Retract",
 	"bucket_angle_SetCurrentVelocity","bucket_angle_SetIntendedPosition","bucket_angle_SetPotentiometerSafety","bucket_angle_Advance","bucket_angle_Retract",
 	"clasp_angle_SetCurrentVelocity","clasp_angle_SetIntendedPosition","clasp_angle_SetPotentiometerSafety","clasp_angle_Advance","clasp_angle_Retract",
-	"TestAuton"
+	"TestAuton","Robot_FreezeArm","Robot_LockPosition","StopAuton"
 };
 
 const char *Curivator_Robot_Properties::ControlEvents::LUA_Controls_GetEvents(size_t index) const
@@ -1101,9 +1172,10 @@ void Curivator_Robot_Properties::LoadFromScript(Scripting::Script& script)
 		{
 			struct Curivator_Robot_Props::Autonomous_Properties &auton=m_CurivatorRobotProps.Autonomous_Props;
 			{
-				//err = script.GetField("first_move_ft", NULL, NULL,&fTest);
-				//if (!err)
-				//	auton.FirstMove_ft=fTest;
+				double fTest;
+				err = script.GetField("auton_test", NULL, NULL,&fTest);
+				if (!err)
+					auton.AutonTest=(Curivator_Robot_Props::Autonomous_Properties::AutonType)((int)fTest);
 
 				//err = script.GetField("side_move_rad", NULL, NULL,&fTest);
 				//if (!err)
@@ -1134,7 +1206,9 @@ void Curivator_Robot_Properties::LoadFromScript(Scripting::Script& script)
   /***********************************************************************************************************************************/
  /*															Curivator_Goals															*/
 /***********************************************************************************************************************************/
-
+const double CurivatorGoal_StartingPosition[4]={13.0,4.0,60.0,5.0};
+const double CurivatorGoal_HoverPosition[4]={39.0,0.0,90.0,45.0};
+const double CurivatorGoal_PickupPosition[4]={39.0,-20.0,90.0,45.0};
 
 class Curivator_Goals_Impl : public AtomicGoal
 {
@@ -1164,7 +1238,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			void Activate()  {	m_Status=eActive;	}
 			Goal_Status Process(double dTime_s)
 			{
-				const double AutonomousTimeLimit=15.0;
+				const double AutonomousTimeLimit=30.0*60.0; //level 1 30 minutes
 				double &Timer=m_Parent->m_Timer;
 				if (m_Status==eActive)
 				{
@@ -1191,23 +1265,120 @@ class Curivator_Goals_Impl : public AtomicGoal
 			wp.Power=1.0;
 			//Now to setup the goal
 			const bool LockOrientation=true;
+			#ifdef __UsingTankDrive__
 			const double PrecisionTolerance=Robot->GetRobotProps().GetTankRobotProps().PrecisionTolerance;
+			#else
+			const double PrecisionTolerance=Robot->GetRobotProps().GetSwerveRobotProps().PrecisionTolerance;
+			#endif
 			Goal_Ship_MoveToPosition *goal_drive=NULL;
 			goal_drive=new Goal_Ship_MoveToRelativePosition(Robot->GetController(),wp,true,LockOrientation,PrecisionTolerance);
 			return goal_drive;
 		}
 
-		static Goal * Move_ArmPosition(Curivator_Goals_Impl *Parent,double height_in)
+		static Goal * Move_ArmXPosition(Curivator_Goals_Impl *Parent,double length_in)
 		{
 			Curivator_Robot *Robot=&Parent->m_Robot;
-			Curivator_Robot::Robot_Arm &Arm=Robot->GetArm();
-			//const double PrecisionTolerance=Robot->GetRobotProps().GetTankRobotProps().PrecisionTolerance;
+			Curivator_Robot::Robot_Arm &Arm=Robot->GetArmXpos();
+			const double PrecisionTolerance=Robot->GetRobotProps().GetRotaryProps(Curivator_Robot::eArm_Ypos).GetRotaryProps().PrecisionTolerance;
 			Goal_Ship1D_MoveToPosition *goal_arm=NULL;
-			//const double position=Curivator_Robot::Robot_Arm::HeightToAngle_r(&Arm,Inches2Meters(height_in));
-			const double position=0;
-			goal_arm=new Goal_Ship1D_MoveToPosition(Arm,position);
+			const double position=length_in;
+			goal_arm=new Goal_Ship1D_MoveToPosition(Arm,position,PrecisionTolerance);
 			return goal_arm;
 		}
+		static Goal * Move_ArmYPosition(Curivator_Goals_Impl *Parent,double height_in)
+		{
+			Curivator_Robot *Robot=&Parent->m_Robot;
+			Curivator_Robot::Robot_Arm &Arm=Robot->GetArmYpos();
+			const double PrecisionTolerance=Robot->GetRobotProps().GetRotaryProps(Curivator_Robot::eArm_Xpos).GetRotaryProps().PrecisionTolerance;
+			Goal_Ship1D_MoveToPosition *goal_arm=NULL;
+			const double position=height_in;
+			goal_arm=new Goal_Ship1D_MoveToPosition(Arm,position,PrecisionTolerance);
+			return goal_arm;
+		}
+
+		static Goal * Move_BucketAngle(Curivator_Goals_Impl *Parent,double Angle_Deg)
+		{
+			Curivator_Robot *Robot=&Parent->m_Robot;
+			Curivator_Robot::Robot_Arm &Arm=Robot->GetBucketAngle();
+			const double PrecisionTolerance=Robot->GetRobotProps().GetRotaryProps(Curivator_Robot::eBucket_Angle).GetRotaryProps().PrecisionTolerance;
+			Goal_Ship1D_MoveToPosition *goal_arm=NULL;
+			const double position=Angle_Deg;
+			goal_arm=new Goal_Ship1D_MoveToPosition(Arm,position,PrecisionTolerance);
+			return goal_arm;
+		}
+
+		static Goal * Move_ClaspAngle(Curivator_Goals_Impl *Parent,double Angle_Deg)
+		{
+			Curivator_Robot *Robot=&Parent->m_Robot;
+			Curivator_Robot::Robot_Arm &Arm=Robot->GetClaspAngle();
+			const double PrecisionTolerance=Robot->GetRobotProps().GetRotaryProps(Curivator_Robot::eClasp_Angle).GetRotaryProps().PrecisionTolerance;
+			Goal_Ship1D_MoveToPosition *goal_arm=NULL;
+			const double position=Angle_Deg;
+			goal_arm=new Goal_Ship1D_MoveToPosition(Arm,position,PrecisionTolerance);
+			return goal_arm;
+		}
+
+		static Goal * Move_ArmXYPosition(Curivator_Goals_Impl *Parent,double length_in,double height_in)
+		{
+			MultitaskGoal *goal=new MultitaskGoal(true);
+			goal->AddGoal(Move_ArmXPosition(Parent,length_in));
+			goal->AddGoal(Move_ArmYPosition(Parent,height_in));
+			return goal;
+		}
+
+		static Goal * Move_BucketClaspAngle(Curivator_Goals_Impl *Parent,double Bucket_Angle_Deg,double Clasp_Angle_Deg)
+		{
+			MultitaskGoal *goal=new MultitaskGoal(true);
+			goal->AddGoal(Move_BucketAngle(Parent,Bucket_Angle_Deg));
+			goal->AddGoal(Move_ClaspAngle(Parent,Clasp_Angle_Deg));
+			return goal;
+		}
+
+		static Goal * Move_ArmAndBucket(Curivator_Goals_Impl *Parent,double length_in,double height_in,double Bucket_Angle_Deg,double Clasp_Angle_Deg)
+		{
+			MultitaskGoal *goal=new MultitaskGoal(true);
+			//I could have added both multi task goals here, but its easier to debug keeping it more flat lined
+			goal->AddGoal(Move_ArmXPosition(Parent,length_in));
+			goal->AddGoal(Move_ArmYPosition(Parent,height_in));
+			goal->AddGoal(Move_BucketAngle(Parent,Bucket_Angle_Deg));
+			goal->AddGoal(Move_ClaspAngle(Parent,Clasp_Angle_Deg));
+			return goal;
+		}
+
+		class RobotQuickNotify : public AtomicGoal, public SetUpProps
+		{
+		private:
+			std::string m_EventName;
+			bool m_IsOn;
+		public:
+			RobotQuickNotify(Curivator_Goals_Impl *Parent,char *EventName, bool On)	: SetUpProps(Parent),m_EventName(EventName),m_IsOn(On) 
+				{	m_Status=eInactive;	
+				}
+			virtual void Activate() {m_Status=eActive;}
+			virtual Goal_Status Process(double dTime_s)
+			{
+				ActivateIfInactive();
+				m_EventMap.EventOnOff_Map[m_EventName.c_str()].Fire(m_IsOn);
+				m_Status=eCompleted;
+				return m_Status;
+			}
+		};
+
+		class RobotArmHoldStill : public Generic_CompositeGoal, public SetUpProps
+		{
+		public:
+			RobotArmHoldStill(Curivator_Goals_Impl *Parent)	: Generic_CompositeGoal(true),SetUpProps(Parent) {	m_Status=eInactive;	}
+			virtual void Activate()
+			{
+				AddSubgoal(new RobotQuickNotify(m_Parent,"Robot_LockPosition",false));
+				AddSubgoal(new RobotQuickNotify(m_Parent,"Robot_FreezeArm",false));
+				AddSubgoal(new Goal_Wait(0.2));
+				AddSubgoal(new RobotQuickNotify(m_Parent,"Robot_FreezeArm",true));
+				AddSubgoal(new Goal_Wait(0.4));
+				AddSubgoal(new RobotQuickNotify(m_Parent,"Robot_LockPosition",true));
+				m_Status=eActive;
+			}
+		};
 
 		class MoveForward : public Generic_CompositeGoal, public SetUpProps
 		{
@@ -1221,12 +1392,122 @@ class Curivator_Goals_Impl : public AtomicGoal
 			}
 		};
 
-		enum AutonType
+		class SetArmWaypoint : public Generic_CompositeGoal, public SetUpProps
 		{
-			eDoNothing,
-			eJustMoveForward,
-			eNoAutonTypes
-		} m_AutonType;
+		public:
+			SetArmWaypoint(Curivator_Goals_Impl *Parent,double length_in,double height_in,double bucket_Angle_deg,double clasp_Angle_deg) : 
+			  SetUpProps(Parent),m_length_in(length_in),m_height_in(height_in),m_bucket_Angle_deg(bucket_Angle_deg),m_clasp_Angle_deg(clasp_Angle_deg)
+			  {		Activate();  //we can set it up ahead of time
+			  }
+			virtual void Activate()
+			{
+				if (m_Status==eActive) return;  //allow for multiple calls
+				#if 0
+				//Note: order is reversed
+				AddSubgoal(new RobotArmHoldStill(m_Parent));
+				AddSubgoal(Move_ArmXYPosition(m_Parent,length_in,height_in));
+				AddSubgoal(Move_BucketClaspAngle(m_Parent,bucket_Angle_deg,clasp_Angle_deg));
+				#else
+				AddSubgoal(new RobotArmHoldStill(m_Parent));
+				AddSubgoal(Move_ArmAndBucket(m_Parent,m_length_in,m_height_in,m_bucket_Angle_deg,m_clasp_Angle_deg));
+				#endif
+				m_Status=eActive;
+			}
+		private:
+			const double m_length_in;
+			const double m_height_in;
+			const double m_bucket_Angle_deg;
+			const double m_clasp_Angle_deg;
+		};
+
+		static Goal * TestArmMove(Curivator_Goals_Impl *Parent)
+		{
+			double length_in=30.0;
+			double height_in=0.0;
+			double bucket_Angle_deg=78.0;
+			double clasp_Angle_deg=13.0;
+			const char * const SmartNames[]={"testarm_length","testarm_height","testarm_bucket","testarm_clasp"};
+			double * const SmartVariables[]={&length_in,&height_in,&bucket_Angle_deg,&clasp_Angle_deg};
+
+			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
+			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			for (size_t i=0;i<4;i++)
+			{
+				try
+				{
+					*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
+				}
+				catch (...)
+				{
+					//I may need to prime the pump here
+					SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+				}
+			}
+			#else
+			for (size_t i=0;i<_countof(SmartNames);i++)
+			{
+				//I may need to prime the pump here
+				SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+			}
+			#endif
+			return new SetArmWaypoint(Parent,length_in,height_in,bucket_Angle_deg,clasp_Angle_deg);
+		}
+
+		class ArmGrabSequence : public Generic_CompositeGoal, public SetUpProps
+		{
+		public:
+			ArmGrabSequence(Curivator_Goals_Impl *Parent,double length_in,double height_in) : 
+			  SetUpProps(Parent),m_length_in(length_in),m_height_in(height_in)
+			  {		Activate();  //we can set it up ahead of time
+			  }
+			virtual void Activate()
+			{
+				if (m_Status==eActive) return;  //allow for multiple calls
+				AddSubgoal(new SetArmWaypoint(m_Parent,CurivatorGoal_StartingPosition[0],CurivatorGoal_StartingPosition[1],50.0,-7.0));
+				for (double angle=40;angle<=90;angle+=10)
+					AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,angle,-7.0)); //rotate bucket (slowly)
+				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,CurivatorGoal_PickupPosition[2],-7.0)); //close clasp
+				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,CurivatorGoal_PickupPosition[2],CurivatorGoal_PickupPosition[3]));  //pickup position
+				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,CurivatorGoal_HoverPosition[1],CurivatorGoal_HoverPosition[2],CurivatorGoal_HoverPosition[3]));
+				//TODO move this to another goal once we start working with the turret
+				AddSubgoal(new SetArmWaypoint(m_Parent,CurivatorGoal_StartingPosition[0],CurivatorGoal_StartingPosition[1],CurivatorGoal_StartingPosition[2],CurivatorGoal_StartingPosition[3]));
+				m_Status=eActive;
+			}
+		private:
+			const double m_length_in;
+			const double m_height_in;
+		};
+
+		static Goal * TestArmMove2(Curivator_Goals_Impl *Parent)
+		{
+			double length_in=38.0;
+			double height_in=-20.0;
+			const char * const SmartNames[]={"testarm_length","testarm_height"};
+			double * const SmartVariables[]={&length_in,&height_in};
+
+			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
+			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			for (size_t i=0;i<2;i++)
+			{
+				try
+				{
+					*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
+				}
+				catch (...)
+				{
+					//I may need to prime the pump here
+					SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+				}
+			}
+			#else
+			for (size_t i=0;i<_countof(SmartNames);i++)
+			{
+				//I may need to prime the pump here
+				SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+			}
+			#endif
+			return new ArmGrabSequence(Parent,length_in,height_in);
+		}
 	public:
 		Curivator_Goals_Impl(Curivator_Robot &robot) : m_Robot(robot), m_Timer(0.0), 
 			m_Primer(false)  //who ever is done first on this will complete the goals (i.e. if time runs out)
@@ -1235,21 +1516,29 @@ class Curivator_Goals_Impl : public AtomicGoal
 		}
 		void Activate() 
 		{
+			//ensure arm is unfrozen... as we are about to move it
+			m_Robot.GetEventMap()->EventOnOff_Map["Robot_FreezeArm"].Fire(false);
 			m_Primer.AsGoal().Terminate();  //sanity check clear previous session
-
+			typedef Curivator_Robot_Props::Autonomous_Properties Autonomous_Properties;
 			//pull parameters from SmartDashboard
-			Curivator_Robot_Props::Autonomous_Properties &auton=m_Robot.GetAutonProps();
+			Autonomous_Properties &auton=m_Robot.GetAutonProps();
 			//auton.ShowAutonParameters();  //Grab again now in case user has tweaked values
 
-			m_AutonType = eDoNothing;  //TODO ... do something.  :)
-			printf("ball count=%d \n",m_AutonType);
-			switch(m_AutonType)
+			Autonomous_Properties::AutonType AutonTest = auton.AutonTest;
+			printf("Testing=%d \n",AutonTest);
+			switch(AutonTest)
 			{
-			case eJustMoveForward:
+			case Autonomous_Properties::eJustMoveForward:
 				m_Primer.AddGoal(new MoveForward(this));
 				break;
-			case eDoNothing:
-			case eNoAutonTypes: //grrr windriver and warning 1250
+			case Autonomous_Properties::eTestArm:
+				m_Primer.AddGoal(TestArmMove(this));
+				break;
+			case Autonomous_Properties::eArmGrabSequence:
+				m_Primer.AddGoal(TestArmMove2(this));
+				break;
+			case Autonomous_Properties::eDoNothing:
+			case Autonomous_Properties::eNoAutonTypes: //grrr windriver and warning 1250
 				break;
 			}
 			m_Primer.AddGoal(new goal_clock(this));
@@ -1273,7 +1562,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 Goal *Curivator_Goals::Get_Curivator_Autonomous(Curivator_Robot *Robot)
 {
 	Goal_NotifyWhenComplete *MainGoal=new Goal_NotifyWhenComplete(*Robot->GetEventMap(),(char *)"Complete");
-	SmartDashboard::PutNumber("Sequence",1.0);  //ensure we are on the right sequence
+	//SmartDashboard::PutNumber("Sequence",1.0);  //ensure we are on the right sequence
 	//Inserted in reverse since this is LIFO stack list
 	MainGoal->AddSubgoal(new Curivator_Goals_Impl(*Robot));
 	//MainGoal->AddSubgoal(goal_waitforturret);
@@ -1321,15 +1610,25 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 		#endif
 		break;
 	}
-	VoltageScalar=m_RobotProps.GetRotaryProps(index).GetRotaryProps().VoltageScalar;
-	Voltage*=VoltageScalar;
-	std::string SmartLabel=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
-	SmartLabel[0]-=32; //Make first letter uppercase
-	SmartLabel+="Voltage";
-	SmartDashboard::PutNumber(SmartLabel.c_str(),Voltage);
-	if (SafetyLock)
-		Voltage=0.0;
-	Victor_UpdateVoltage(index,Voltage);
+	if (index<Curivator_Robot::eDriveOffset)
+	{
+		VoltageScalar=m_RobotProps.GetRotaryProps(index).GetRotaryProps().VoltageScalar;
+		Voltage*=VoltageScalar;
+		std::string SmartLabel=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
+		SmartLabel[0]-=32; //Make first letter uppercase
+		SmartLabel+="Voltage";
+		SmartDashboard::PutNumber(SmartLabel.c_str(),Voltage);
+		if (SafetyLock)
+			Voltage=0.0;
+		Victor_UpdateVoltage(index,Voltage);
+	}
+	#ifndef __UsingTankDrive__
+	else
+	{
+		assert(index>=Curivator_Robot::eDriveOffset);
+		m_pDriveRobotControl->UpdateRotaryVoltage(index-Curivator_Robot::eDriveOffset,Voltage);
+	}
+	#endif
 }
 
 //bool Curivator_Robot_Control::GetBoolSensorState(size_t index) const
@@ -1347,7 +1646,7 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 //	return ret;
 //}
 
-Curivator_Robot_Control::Curivator_Robot_Control(bool UseSafety) : m_TankRobotControl(UseSafety),m_pTankRobotControl(&m_TankRobotControl),
+Curivator_Robot_Control::Curivator_Robot_Control(bool UseSafety) : m_DriveRobotControl(UseSafety),m_pDriveRobotControl(&m_DriveRobotControl),
 		m_Compressor(NULL),m_RoboRIO_Accelerometer(NULL)
 {
 }
@@ -1397,8 +1696,13 @@ void Curivator_Robot_Control::BindAdditionalEventControls(bool Bind,Base::EventM
 
 void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 {
-	Tank_Drive_Control_Interface *tank_interface=m_pTankRobotControl;
+	#ifdef __UsingTankDrive__
+	Tank_Drive_Control_Interface *tank_interface=m_pDriveRobotControl;
 	tank_interface->Initialize(props);
+	#else
+	Swerve_Drive_Control_Interface *drive_interface=m_pDriveRobotControl;
+	drive_interface->Initialize(props);
+	#endif
 
 	const Curivator_Robot_Properties *robot_props=dynamic_cast<const Curivator_Robot_Properties *>(props);
 	if (robot_props)
@@ -1418,7 +1722,11 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 	//For now... we'll use m_Compressor as the variable to determine first run, but perhaps this should be its own boolean here
 	if (!m_Compressor)
 	{
+		#ifdef Robot_TesterCode
+		SmartDashboard::PutBoolean("SafetyLock",false);
+		#else
 		SmartDashboard::PutBoolean("SafetyLock",true);
+		#endif
 		//This one one must also be called for the lists that are specific to the robot
 		RobotControlCommon_Initialize(robot_props->Get_ControlAssignmentProps());
 		//This may return NULL for systems that do not support it
@@ -1465,6 +1773,8 @@ void Curivator_Robot_Control::Robot_Control_TimeChange(double dTime_s)
 	#endif
 }
 
+//Note: Swerve drive voltage does not need to update victors through this
+#ifdef __UsingTankDrive__
 void Curivator_Robot_Control::UpdateLeftRightVoltage(double LeftVoltage,double RightVoltage) 
 {
 	#ifdef __USING_6CIMS__
@@ -1480,8 +1790,9 @@ void Curivator_Robot_Control::UpdateLeftRightVoltage(double LeftVoltage,double R
 		Victor_UpdateVoltage(Curivator_Robot::eRightDrive3,-(float)LeftVoltage * TankRobotProps.VoltageScalar_Left);
 	}
 	#endif
-	m_pTankRobotControl->UpdateLeftRightVoltage(LeftVoltage,RightVoltage);
+	m_pDriveRobotControl->UpdateLeftRightVoltage(LeftVoltage,RightVoltage);
 }
+#endif
 
 __inline double Curivator_Robot_Control::Pot_GetRawValue(size_t index)
 {
@@ -1561,6 +1872,13 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			#endif
 		}
 		break;
+		default:
+			assert (index > Curivator_Robot::eClasp);
+			//Note: the arm position indexes remain open so no work to be done here for them
+			#ifndef __UsingTankDrive__
+			if (index>=Curivator_Robot::eDriveOffset)
+				result=m_pDriveRobotControl->GetRotaryCurrentPorV(index-Curivator_Robot::eDriveOffset);
+			#endif
 	}
 	return result;
 }
@@ -1576,58 +1894,284 @@ void Curivator_Robot_Control::OpenSolenoid(size_t index,bool Open)
  /*												Curivator_Robot_UI												*/
 /***************************************************************************************************************/
 
+//#define __ShowUIGoal__
+const double Curivator_Robot_UI_LinesVerticalOffset=200.0;
+const double Curivator_Robot_UI_LinesHorizontalOffset=148.0;
 Curivator_Robot_UI::Curivator_Robot_UI(const char EntityName[]) : Curivator_Robot(EntityName,this),Curivator_Robot_Control(),
-		m_TankUI(this)
+		m_DriveUI(this)
 {
+	m_VertexData = new osg::Vec3Array;  //this will auto terminate
+	m_VertexData->push_back(osg::Vec3(0,0,0)); 
+	m_VertexData->push_back(osg::Vec3(0,0,0)); 
+	m_VertexData->push_back(osg::Vec3(0,0,0)); 
+	m_VertexData->push_back(osg::Vec3(0,0,0));
+	m_VertexData->push_back(osg::Vec3(0,0,0));
+	m_VertexData->push_back(osg::Vec3(0,0,0));
+	m_VertexData->push_back(osg::Vec3(0,0,0));
+	//m_VertexData->push_back(osg::Vec3(0,0,0));
+	m_VertexData->push_back(osg::Vec3(0,0,0));
+	m_VertexData->push_back(osg::Vec3(0,0,0));
+
+	m_ColorData = new osg::Vec4Array;
+	//Note... colors blend from point to point
+	m_ColorData->push_back(osg::Vec4(0.49f, 0.62f, 0.75f, 1.0f) );
+	m_ColorData->push_back(osg::Vec4(0.49f, 0.62f, 0.75f, 1.0f) );  //big arm end... boom start
+	m_ColorData->push_back(osg::Vec4(0.49f, 0.62f, 0.75f, 1.0f) );  //rocker boom pivot
+	m_ColorData->push_back(osg::Vec4(0.98f, 0.78f, 0.64f, 1.0f) ); //clasp start (bucket pivot)
+	m_ColorData->push_back(osg::Vec4(0.98f, 0.78f, 0.64f, 1.0f) ); //clasp end
+	m_ColorData->push_back(osg::Vec4(0.98f, 0.78f, 0.64f, 1.0f) ); //back to bucket pivot
+	m_ColorData->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f) ); // CoM
+	//m_ColorData->push_back(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f) ); // CoM to Bottom
+	m_ColorData->push_back(osg::Vec4(0.49f, 0.62f, 0.75f, 1.0f) ); // bucket tip
+	m_ColorData->push_back(osg::Vec4(0.98f, 0.78f, 0.64f, 1.0f) ); //bucket angle
 }
 
 void Curivator_Robot_UI::TimeChange(double dTime_s) 
 {
 	__super::TimeChange(dTime_s);
-	m_TankUI.TimeChange(dTime_s);
+	m_DriveUI.TimeChange(dTime_s);
 }
+
 void Curivator_Robot_UI::Initialize(Entity2D::EventMap& em, const Entity_Properties *props)
 {
 	__super::Initialize(em,props);
-	m_TankUI.Initialize(em,props);
+	m_DriveUI.Initialize(em,props);
 }
 
 void Curivator_Robot_UI::UI_Init(Actor_Text *parent) 
 {
-	m_TankUI.UI_Init(parent);
+	m_UI_Parent=parent;
+	m_DriveUI.UI_Init(parent);
 }
 void Curivator_Robot_UI::custom_update(osg::NodeVisitor *nv, osg::Drawable *draw,const osg::Vec3 &parent_pos) 
 {
-	m_TankUI.custom_update(nv,draw,parent_pos);
+	m_DriveUI.custom_update(nv,draw,parent_pos);
 }
 void Curivator_Robot_UI::Text_SizeToUse(double SizeToUse) 
 {
-	m_TankUI.Text_SizeToUse(SizeToUse);
+	m_DriveUI.Text_SizeToUse(SizeToUse);
 }
 
 #include <osg/Geometry>
 #include <osg/PositionAttitudeTransform>
 
+//defined in RobotTester for quick variable manipulation
+//double SineInfluence(double &rho,double freq_hz=0.1,double SampleRate=30.0,double amplitude=1.0);
+
+void Curivator_Robot_UI::LinesUpdate::update(osg::NodeVisitor *nv, osg::Drawable *draw)
+{
+
+	//static double rho=0.0;
+	//double testSample=((SineInfluence(rho)/2.0)+0.5) * 500.0;
+	//(*m_pParent->m_VertexData)[1].set(testSample, testSample, 0.0);
+	Curivator_Robot::BigArm &bigArm=m_pParent->m_Arm;
+	Curivator_Robot::Boom &boom=m_pParent->m_Boom;
+	Curivator_Robot::Bucket &bucket=m_pParent->m_Bucket;
+	Curivator_Robot::Clasp &clasp=m_pParent->m_Clasp;
+	(*m_pParent->m_VertexData)[1].set(bigArm.GetBigArmLength() * 10.0,bigArm.GetBigArmHeight() * 10.0,  0.0);
+	(*m_pParent->m_VertexData)[2].set( boom.GetBoomLength() * 10.0,boom.GetBoomHeight() * 10.0, 0.0);
+	//note: the boom length is really the rocker pivot point... cache the actual bucket pivot point here
+	const double BucketPivotPoint_y=boom.GetBoomHeight()-bucket.GetBucket_globalBRP_BP_height();
+	const double BucketPivotPoint_x=boom.GetBoomLength()+bucket.GetBucket_globalBRP_BP_distance();
+	(*m_pParent->m_VertexData)[3].set( BucketPivotPoint_x * 10.0,BucketPivotPoint_y * 10.0, 0.0);
+	(*m_pParent->m_VertexData)[4].set( clasp.GetClaspLength() * 10.0,clasp.GetClaspMidlineHeight() * 10.0, 0.0);
+	//retrace to boom point for clasp
+	(*m_pParent->m_VertexData)[5].set( BucketPivotPoint_x * 10.0,BucketPivotPoint_y * 10.0, 0.0);
+	(*m_pParent->m_VertexData)[6].set( bucket.GetCoMDistance() * 10.0,bucket.GetCoMHeight() * 10.0, 0.0);
+	//(*m_pParent->m_VertexData)[7].set( bucket.GetCoMDistance() * 10.0,bucket.GetBucketRoundEndHeight() * 10.0, 0.0);
+	(*m_pParent->m_VertexData)[7].set( bucket.GetBucketLength() * 10.0,bucket.GetBucketTipHeight() * 10.0, 0.0);
+	//finally we'll just compute the bucket angle here
+	const double GlobalBucketAngle=bucket.GetBucketAngle();
+	const double OpeningLength=10.0;  //it really is 10 inches in the original sketch of the bucket
+	const double OpeningUpperPoint_y=bucket.GetBucketTipHeight()+(sin(GlobalBucketAngle)*OpeningLength);
+	const double OpeningUpperPoint_x=bucket.GetBucketLength()+(cos(GlobalBucketAngle)*OpeningLength);
+	(*m_pParent->m_VertexData)[8].set( OpeningUpperPoint_x * 10.0,OpeningUpperPoint_y * 10.0, 0.0);
+
+	//perform blend as this will give us an intuitive idea of how far off the angle is
+	{
+		const double toleranceScale=3.0;  //we'll have to guage this on the actual bot
+		const double errorRatio=std::min(m_pParent->GetBucketAngleContinuity()/toleranceScale,1.0);  //set to clip at 1.0 so its normalized
+		const Vec3 errorColor(1,0,0);
+		const Vec3 bucketTipColor(0.49,0.62,0.75);
+		const Vec3 bucketAngleColor(0.98,0.78,0.64);
+		const Vec3 BlendTipColor=errorColor*errorRatio + bucketTipColor*(1.0-errorRatio);
+		const Vec3 BlendAngleColor=errorColor*errorRatio + bucketAngleColor*(1.0-errorRatio);
+		(*m_pParent->m_ColorData)[7].set(BlendTipColor[0],BlendTipColor[1],BlendTipColor[2], 1.0f ); // bucket tip
+		(*m_pParent->m_ColorData)[8].set(BlendAngleColor[0],BlendAngleColor[1],BlendAngleColor[2], 1.0f ); //bucket angle
+	}
+
+	
+	
+
+	draw->dirtyDisplayList();
+	draw->dirtyBound();
+
+	m_pParent->m_ArmTransform->setPosition( osg::Vec3(Curivator_Robot_UI_LinesHorizontalOffset,Curivator_Robot_UI_LinesVerticalOffset, 0.0) ); 
+
+	//update circle too (we'll just borrow this callback)
+	m_pParent->m_CircleTransform->setPosition( osg::Vec3( ((bucket.GetCoMDistance() * 10.0)+Curivator_Robot_UI_LinesHorizontalOffset),
+		(bucket.GetCoMHeight() * 10.0)+Curivator_Robot_UI_LinesVerticalOffset, 0.0) ); 
+	m_pParent->m_CircleTransform->setAttitude(osg::Quat(
+		0.0	, osg::Vec3d(1,0,0),
+		0.0	, osg::Vec3d(0,1,0),
+		GlobalBucketAngle + DEG_2_RAD(30.58112256) - PI_2, osg::Vec3d(0,0,1)));
+
+	#ifdef __ShowUIGoal__
+	//and goal
+	//Note: I kept the  + 0.0... for testing purposes to easily add an additional offset
+	m_pParent->m_GoalTransform->setPosition( osg::Vec3( (((m_pParent->m_ArmXpos.GetPos_m() + 0.0) * 10.0)+Curivator_Robot_UI_LinesHorizontalOffset),
+		(m_pParent->m_ArmYpos.GetPos_m() * 10.0)+Curivator_Robot_UI_LinesVerticalOffset, 0.0) ); 
+	m_pParent->m_GoalTransform->setAttitude(osg::Quat(
+		0.0	, osg::Vec3d(1,0,0),
+		0.0	, osg::Vec3d(0,1,0),
+		DEG_2_RAD(m_pParent->m_BucketAngle.GetPos_m()) , osg::Vec3d(0,0,1)));
+	#endif
+}
+
+/* Create circle in XY plane. */
+#define POLYGON_SIZE 256
+//Keep for future reference
+osg::ref_ptr<osg::Geometry> create_circle(float centerx, float centery, float rad)
+{
+	osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+	osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array;
+	double theta, px, py;
+
+	for(int i = 1; i <= POLYGON_SIZE; i++) {
+
+		theta = 2.0 * M_PI/POLYGON_SIZE * i;
+		px = centerx + rad * cos(theta);
+		py = centery + rad * sin(theta);
+		v->push_back(osg::Vec3(px, py, 0));
+	}
+
+	geom->setVertexArray( v.get() );
+	geom->addPrimitiveSet(new osg::DrawArrays( osg::PrimitiveSet::LINE_LOOP, 0, POLYGON_SIZE) );
+
+	return geom.get();
+}
+
+osg::ref_ptr<osg::Geometry> bucket_round_end()
+{
+	const float centerx=0;
+	const float centery=0;
+	const float rad=5*10.0;
+	osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+	osg::ref_ptr<osg::Vec3Array> v = new osg::Vec3Array;
+	double theta, px, py;
+	const double TopOfCircle_deg=30.18846043;  //to vertical
+	//convert to ratio
+	const double TopOfCircle_ratio=TopOfCircle_deg/360.0;
+	const int TopOfCircleVertexCount= (int)(TopOfCircle_ratio*POLYGON_SIZE);
+	for(int i = 1; i <= TopOfCircleVertexCount; i++) {
+
+		theta = 2.0 * M_PI/POLYGON_SIZE * i;
+		px = centerx + rad * cos(theta);
+		py = centery + rad * sin(theta);
+		v->push_back(osg::Vec3(px, py, 0));
+	}
+	//Make a straight line up as the next point
+	const double InterfaceTipfromHorizontal=DEG_2_RAD(14.18776649+90.0);
+	const double InterfaceTipLength=3.72263603 * 10.0;
+	v->push_back(osg::Vec3(cos(InterfaceTipfromHorizontal)*InterfaceTipLength,sin(InterfaceTipfromHorizontal)*InterfaceTipLength, 0));
+	const double BucketTipfromHorizontal=DEG_2_RAD(219.80557109);
+	const double BucketTipLength=7.81024968 * 10.0;
+	v->push_back(osg::Vec3(cos(BucketTipfromHorizontal)*BucketTipLength,sin(BucketTipfromHorizontal)*BucketTipLength, 0));
+
+	const int StartCount=((270.0/360.0)*POLYGON_SIZE);  //e.g. 192
+	for(int i = StartCount; i <= POLYGON_SIZE; i++) {
+
+		theta = 2.0 * M_PI/POLYGON_SIZE * i;
+		px = centerx + rad * cos(theta);
+		py = centery + rad * sin(theta);
+		v->push_back(osg::Vec3(px, py, 0));
+	}
+
+	geom->setVertexArray( v.get() );
+	geom->addPrimitiveSet(new osg::DrawArrays( osg::PrimitiveSet::LINE_STRIP, 0, v->size()) );
+
+	return geom.get();
+}
+
+
 void Curivator_Robot_UI::UpdateScene (osg::Geode *geode, bool AddOrRemove) 
 {
-	m_TankUI.UpdateScene(geode,AddOrRemove);
-	//if (AddOrRemove)
-	//{
-	//	m_TankUI.UpdateScene(geode,AddOrRemove);
-	//	osg::Geometry* linesGeom = new osg::Geometry();// is my geometry 
-	//	osg::DrawArrays* drawArrayLines = new osg::DrawArrays(osg::PrimitiveSet::LINE_STRIP); 
-	//	linesGeom->addPrimitiveSet(drawArrayLines); 
-	//	osg::Vec3Array* vertexData = new osg::Vec3Array; 
-	//	linesGeom->setVertexArray(vertexData); 
+	m_DriveUI.UpdateScene(geode,AddOrRemove);
+	if (AddOrRemove)
+	{
+		m_DriveUI.UpdateScene(geode,AddOrRemove);
+		osg::Geometry* linesGeom = new osg::Geometry();// is my geometry 
+		osg::DrawArrays* drawArrayLines = new osg::DrawArrays(osg::PrimitiveSet::LINE_STRIP); 
+		linesGeom->addPrimitiveSet(drawArrayLines); 
+		//osg::Vec3Array* vertexData = new osg::Vec3Array; 
+		linesGeom->setVertexArray(m_VertexData); 
+		linesGeom->setColorArray(m_ColorData);
+		linesGeom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
 
-	//	geode->addDrawable(linesGeom);
+		osg::Geode* ArmGeode = new osg::Geode;
+		ArmGeode->addDrawable(linesGeom);
+		//geode->addDrawable(linesGeom);
 
-	//	vertexData->push_back(osg::Vec3(0,0,0)); 
-	//	vertexData->push_back(osg::Vec3(500,200,0)); 
+		//vertexData->push_back(osg::Vec3(0,0,0)); 
+		//vertexData->push_back(osg::Vec3(500,200,0)); 
+		m_LinesUpdate=new LinesUpdate(this);
+		linesGeom->setUpdateCallback(m_LinesUpdate);
+		drawArrayLines->setFirst(0); 
+		drawArrayLines->setCount(m_VertexData->size());
+		//now for the transform
+		osg::ref_ptr<osg::Group> rootnode=m_UI_Parent->GetParent()->GetRootNode();
+		m_ArmTransform=new osg::PositionAttitudeTransform();
+		rootnode->addChild(m_ArmTransform);
+		m_ArmTransform->addChild(ArmGeode);
 
-	//	drawArrayLines->setFirst(0); 
-	//	drawArrayLines->setCount(vertexData->size());
-	//}
+		//add a circle
+		//m_Circle=create_circle(0,0,5*10.0);
+		m_Circle=bucket_round_end();
+		osg::Vec4Array* colors = new osg::Vec4Array;
+		colors->push_back(osg::Vec4(0.0f, 0.0f, 1.0f, 1.0f) );
+		m_Circle->setColorArray(colors);
+		m_Circle->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE);
+
+		osg::Geode* CircleGeode = new osg::Geode;
+		CircleGeode->addDrawable(m_Circle);
+		// Declare and initialize a transform node.
+		m_CircleTransform = new osg::PositionAttitudeTransform();
+
+		//Node *Test=CircleTransform;
+		// Use the 'addChild' method of the osg::Group class to
+		// add the transform as a child of the root node and the
+		// pyramid node as a child of the transform.
+		rootnode->addChild(m_CircleTransform);
+		m_CircleTransform->addChild(CircleGeode);
+
+		// Declare and initialize a Vec3 instance to change the
+		// position of the tank model in the scene
+		m_CircleTransform->setPosition( osg::Vec3(50,50,0) ); 
+
+		#ifdef __ShowUIGoal__
+		//setup the goal
+		osg::Geode *GoalGeode = new osg::Geode;
+		osg::Geometry *goalGeom = new osg::Geometry();
+		osg::DrawArrays *goal_line = new osg::DrawArrays(osg::PrimitiveSet::LINE_STRIP); 
+		goalGeom->addPrimitiveSet(goal_line);
+		osg::Vec3Array *goalVertexData = new osg::Vec3Array; 
+		goalVertexData->push_back(osg::Vec3(0,0,0)); 
+		const double goalLineLength=9.95569848;
+		goalVertexData->push_back(osg::Vec3(goalLineLength * 10.0,0,0)); 
+		goalGeom->setVertexArray(goalVertexData);
+		goal_line->setFirst(0); 
+		goal_line->setCount(goalVertexData->size());
+		osg::Vec4Array* Goalcolor = new osg::Vec4Array;
+		Goalcolor->push_back(osg::Vec4(0.0f, 1.0f, 0.0f, 1.0f) );
+		goalGeom->setColorArray(Goalcolor);
+		goalGeom->setColorBinding(osg::Geometry::BIND_OVERALL);
+		GoalGeode->addDrawable(goalGeom);
+		m_GoalTransform=new osg::PositionAttitudeTransform();
+		rootnode->addChild(m_GoalTransform);
+		m_GoalTransform->addChild(GoalGeode);
+		m_GoalTransform->setPosition( osg::Vec3(50,50,0) );
+		#endif
+	}
 }
 
 #endif

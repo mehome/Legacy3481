@@ -1,9 +1,16 @@
 #pragma once
+#ifndef __UsingTankDrive__
+#define __UsingTankDrive__
+#endif
 
-
-class Curivator_Control_Interface :	public Tank_Drive_Control_Interface,
+class Curivator_Control_Interface :	
+									#ifdef __UsingTankDrive__
+									public Tank_Drive_Control_Interface,
 									public Robot_Control_Interface,
 									public Rotary_Control_Interface
+									#else
+									public Swerve_Drive_Control_Interface
+									#endif
 {
 public:
 	//This is primarily used for updates to dashboard and driver station during a test build
@@ -32,12 +39,25 @@ public:
 	bool EnableArmAutoPosition;
 	struct Autonomous_Properties
 	{
+		enum AutonType
+		{
+			eDoNothing,
+			eJustMoveForward,
+			eTestArm,
+			eArmGrabSequence,
+			eNoAutonTypes
+		} AutonTest;
+
 		//void ShowAutonParameters(); //This will show SmartDashboard variables if ShowParameters is true
 		bool ShowParameters;   //If true ShowAutonParameters will populate SmartDashboard with autonomous parameters
 	} Autonomous_Props;
 };
 
+#ifdef __UsingTankDrive__
 class Curivator_Robot_Properties : public Tank_Robot_Properties
+#else
+class Curivator_Robot_Properties : public Swerve_Robot_Properties
+#endif
 {
 	public:
 		Curivator_Robot_Properties();
@@ -52,7 +72,11 @@ class Curivator_Robot_Properties : public Tank_Robot_Properties
 		const Control_Assignment_Properties &Get_ControlAssignmentProps() const {return m_ControlAssignmentProps;}
 	private:
 		#ifndef Robot_TesterCode
+		#ifdef __UsingTankDrive__
 		typedef Tank_Robot_Properties __super;
+		#else
+		typedef Swerve_Robot_Properties __super;
+		#endif
 		#endif
 		Rotary_Pot_Properties m_RotaryProps[9];
 		Curivator_Robot_Props m_CurivatorRobotProps;
@@ -66,9 +90,12 @@ class Curivator_Robot_Properties : public Tank_Robot_Properties
 		LUA_Controls_Properties m_RobotControls;
 };
 
+//Note: names and assignments after clasp are in the order as they are in Swerve_Robot.h Swerve_Robot_SpeedControllerDevices
+//They shouldn't be used in Curivator_Robot, but are added for completeness and error checking
 const char * const csz_Curivator_Robot_SpeedControllerDevices_Enum[] =
 {
-	"turret","arm","boom","bucket","clasp","arm_xpos","arm_ypos","bucket_angle","clasp_angle","rocker_left","rocker_right","bogie_left","bogie_right","left_drive_3","right_drive_3"
+	"turret","arm","boom","bucket","clasp","arm_xpos","arm_ypos","bucket_angle","clasp_angle",
+	"wheel_fl","wheel_fr","wheel_rl","wheel_rr","rocker_left","rocker_right","bogie_left","bogie_right",
 };
 
 //const char * const csz_Curivator_Robot_BoolSensorDevices_Enum[] =
@@ -77,20 +104,26 @@ const char * const csz_Curivator_Robot_SpeedControllerDevices_Enum[] =
 //};
 
 //Note: rotary systems share the same index as their speed controller counterpart
+//Note: names and assignments after clasp are in the order as they are in Swerve_Robot.h Swerve_Robot_SpeedControllerDevices
+//They shouldn't be used in Curivator_Robot, but are added for completeness and error checking
 const char * const csz_Curivator_Robot_AnalogInputs_Enum[] =
 {
-	"turret_pot","arm_pot","boom_pot","bucket_pot","clasp_pot","arm_xpos_pot","arm_ypos_pot","bucket_angle_pot","clasp_angle_pot","rocker_left_pot","rocker_right_pot","bogie_left_pot","bogie_right_pot"
+	"turret_pot","arm_pot","boom_pot","bucket_pot","clasp_pot","arm_xpos_pot","arm_ypos_pot","bucket_angle_pot","clasp_angle_pot",
+	"rocker_left_enc","rocker_right_enc","bogie_left_enc","bogie_right_enc","rocker_left_pot","rocker_right_pot","bogie_left_pot","bogie_right_pot"
 };
 
 const size_t Curivator_Robot_NoRobotArm=9;  //This reflects Robot_Arm count, which does not include the drive speed controller devices
 
+#ifdef __UsingTankDrive__
 class Curivator_Robot : public Tank_Robot
+#else
+class Curivator_Robot : public Swerve_Robot
+#endif
 {
 	public:
 		enum SpeedControllerDevices
 		{
-			eTurret,eArm,eBoom,eBucket,eClasp,eArm_Xpos,eArm_Ypos,eBucket_Angle,eClasp_Angle,eRockerLeft,eRockerRight,eBogieLeft,eBogieRight,
-			//eLeftDrive3,eRightDrive3,
+			eTurret,eArm,eBoom,eBucket,eClasp,eArm_Xpos,eArm_Ypos,eBucket_Angle,eClasp_Angle,eDriveOffset
 		};
 
 		static SpeedControllerDevices GetSpeedControllerDevices_Enum (const char *value)
@@ -125,6 +158,11 @@ class Curivator_Robot : public Tank_Robot
 		virtual void Initialize(Entity2D_Kind::EventMap& em, const Entity_Properties *props=NULL);
 		virtual void ResetPos();
 		virtual void TimeChange(double dTime_s);
+		void FreezeArm(bool isOn) {m_FreezeArm=isOn;}
+		void LockPosition(bool isOn) {m_LockPosition=isOn;}
+		void StopAuton(bool isOn);  //just like freeze arm but puts things back in teleop
+		//simple computation between the target angle against the actual angle measured
+		double GetBucketAngleContinuity();
 
 	protected:
 		class Turret
@@ -214,6 +252,8 @@ class Curivator_Robot : public Tank_Robot
 				Bucket(size_t index,Curivator_Robot *parent,Rotary_Control_Interface *robot_control, Boom &boom);
 				double GetBucketLength() const;
 				double GetBucketTipHeight() const {return m_GlobalTipHeight;}
+				double GetCoMHeight() const;
+				double GetCoMDistance() const;
 				double GetBucketRoundEndHeight() const;
 				double GetBucketAngle() const;
 				//Get the global height of the bucket rocker to bucket pivot point (3 inch separate holes rotated globally)
@@ -224,7 +264,7 @@ class Curivator_Robot : public Tank_Robot
 				virtual void TimeChange(double dTime_s);
 			private:
 				Boom &m_Boom;
-				double m_GlobalCoMHeight;
+				double m_GlobalCoMHeight,m_GlobalCoMDistance;
 				double m_GlobalTipHeight;
 				double m_LocalBucketAngle;
 				double m_GlobalDistance;
@@ -263,7 +303,10 @@ class Curivator_Robot : public Tank_Robot
 		const Curivator_Robot_Properties &GetRobotProps() const;
 		Curivator_Robot_Props::Autonomous_Properties &GetAutonProps();
 		//Accessors needed for setting goals
-		Robot_Arm &GetArm() {return m_Arm;}
+		Robot_Arm &GetArmXpos() {return m_ArmXpos;}
+		Robot_Arm &GetArmYpos() {return m_ArmYpos;}
+		Robot_Arm &GetBucketAngle() {return m_BucketAngle;}
+		Robot_Arm &GetClaspAngle() {return m_ClaspAngle;}
 		///Probably one of the most important computations... given a desired position and angle of the bucket, will provide the computations
 		///for each linear actuator.  Note the following is based from the point of origin which is where the big arm pivots.
 		/// \param GlobalHeight height positive number is above origin... negative is below (down)
@@ -285,6 +328,7 @@ class Curivator_Robot : public Tank_Robot
 		#endif
 		Curivator_Control_Interface * const m_RobotControl;
 		Robot_Arm m_Turret;
+	protected:
 		BigArm m_Arm;
 		Boom m_Boom;
 		Bucket m_Bucket;
@@ -292,14 +336,22 @@ class Curivator_Robot : public Tank_Robot
 		Robot_Arm m_ArmXpos;
 		Robot_Arm m_ArmYpos;
 		Robot_Arm m_BucketAngle;
+	private:
 		Robot_Arm m_ClaspAngle;
 		Robot_Arm *mp_Arm[Curivator_Robot_NoRobotArm];  //A handy work-around to treat these as an array, by pointing to them
 		Curivator_Robot_Properties m_RobotProps;  //saves a copy of all the properties
 		double m_LatencyCounter;
 
+		double m_Last_xpos;
+		double m_Last_ypos;
+		double m_Last_bucket_angle;
+		double m_Last_clasp_angle;
+
 		double m_YawErrorCorrection,m_PowerErrorCorrection;
 		size_t m_DefaultPresetIndex;
 		size_t m_AutonPresetIndex;  //used only because encoder tracking is disabled
+		bool m_FreezeArm;  //used mostly during calibration to have ability to stop movement, also to freeze to a way point in auton
+		bool m_LockPosition; //used to allow a position to remain locked to allow arm to catch up and stabilize
 
 		#ifdef Robot_TesterCode
 		void TestAutonomous();
@@ -321,7 +373,7 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 		//This is called per enabled session to enable (on not) things dynamically (e.g. compressor)
 		void ResetPos();
 		#ifndef Robot_TesterCode
-		void SetSafety(bool UseSafety) {m_TankRobotControl.SetSafety(UseSafety);}
+		void SetSafety(bool UseSafety) {m_DriveRobotControl.SetSafety(UseSafety);}
 		#endif
 
 		Curivator_Control_Interface &AsControlInterface() {return *this;}
@@ -332,11 +384,17 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 		//virtual bool GetBoolSensorState(size_t index) const;
 		virtual void CloseSolenoid(size_t index,bool Close) {OpenSolenoid(index,!Close);}
 		virtual void OpenSolenoid(size_t index,bool Open);
+	#ifdef __UsingTankDrive__
 	protected: //from Tank_Drive_Control_Interface
-		virtual void Reset_Encoders() {m_pTankRobotControl->Reset_Encoders();}
-		virtual void GetLeftRightVelocity(double &LeftVelocity,double &RightVelocity) {m_pTankRobotControl->GetLeftRightVelocity(LeftVelocity,RightVelocity);}
+		virtual void Reset_Encoders() {m_pDriveRobotControl->Reset_Encoders();}
+		virtual void GetLeftRightVelocity(double &LeftVelocity,double &RightVelocity) {m_pDriveRobotControl->GetLeftRightVelocity(LeftVelocity,RightVelocity);}
 		virtual void UpdateLeftRightVoltage(double LeftVoltage,double RightVoltage);
-		virtual void Tank_Drive_Control_TimeChange(double dTime_s) {m_pTankRobotControl->Tank_Drive_Control_TimeChange(dTime_s);}
+		virtual void Tank_Drive_Control_TimeChange(double dTime_s) {m_pDriveRobotControl->Tank_Drive_Control_TimeChange(dTime_s);}
+	#else
+	protected: //from Swerve_Drive_Control_Interface
+		virtual void Swerve_Drive_Control_TimeChange(double dTime_s) {m_pDriveRobotControl->Swerve_Drive_Control_TimeChange(dTime_s);}
+		virtual void Reset_Encoders() {m_pDriveRobotControl->Reset_Encoders();}
+	#endif
 	protected: //from Rotary Interface
 		virtual void Reset_Rotary(size_t index=0); 
 		virtual double GetRotaryCurrentPorV(size_t index=0);
@@ -365,8 +423,13 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 
 	protected:
 		Curivator_Robot_Properties m_RobotProps;  //saves a copy of all the properties
-		Tank_Robot_Control m_TankRobotControl;
-		Tank_Drive_Control_Interface * const m_pTankRobotControl;  //This allows access to protected members
+		#ifdef __UsingTankDrive__
+		Tank_Robot_Control m_DriveRobotControl;
+		Tank_Drive_Control_Interface * const m_pDriveRobotControl;  //This allows access to protected members
+		#else
+		Swerve_Robot_Control m_DriveRobotControl;
+		Swerve_Drive_Control_Interface * const m_pDriveRobotControl;  //This allows access to protected members
+		#endif
 		Compressor *m_Compressor;
 		Accelerometer *m_RoboRIO_Accelerometer;
 		//All digital input reads are done on time change and cached to avoid multiple reads to the FPGA
@@ -398,6 +461,24 @@ class Curivator_Robot_UI : public Curivator_Robot, public Curivator_Robot_Contro
 		virtual void UpdateScene (osg::Geode *geode, bool AddOrRemove);
 
 	private:
-		Tank_Robot_UI m_TankUI;
+		class LinesUpdate : public osg::Drawable::UpdateCallback
+		{
+		public:
+			LinesUpdate(Curivator_Robot_UI *parent) : m_pParent(parent) {}
+		protected:
+			virtual void update(osg::NodeVisitor *nv, osg::Drawable *draw);
+		private:
+			Curivator_Robot_UI *m_pParent;
+		} *m_LinesUpdate;
+		Actor_Text *m_UI_Parent;
+		#ifdef __UsingTankDrive__
+		Tank_Robot_UI m_DriveUI;
+		#else
+		Swerve_Robot_UI m_DriveUI;
+		#endif
+		osg::ref_ptr<osg::Vec3Array> m_VertexData;
+		osg::ref_ptr<osg::Vec4Array> m_ColorData;
+		osg::ref_ptr<osg::Geometry> m_Circle,m_Goal;
+		osg::ref_ptr<osg::PositionAttitudeTransform> m_CircleTransform,m_ArmTransform,m_GoalTransform;
 };
 #endif //Robot_TesterCode
