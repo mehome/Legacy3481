@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Robot_Tester.h"
 #define __UsingTankDrive__
-
+#define __EnableRobotArmDisable__
 #ifdef Robot_TesterCode
 namespace Robot_Tester
 {
@@ -30,33 +30,7 @@ using namespace Framework::Base;
 using namespace std;
 #endif
 
-#define __DisableEncoderTracking__
-#if 0
-#define UnitMeasure2UI Meters2Feet
-#define UI2UnitMeasure Feet2Meters
-#else
-#define UnitMeasure2UI Meters2Inches
-#define UI2UnitMeasure Inches2Meters
-#endif
 
-#if 0
-//This will make the scale to half with a 0.1 dead zone
-static double PositionToVelocity_Tweak(double Value)
-{
-	const double FilterRange=0.1;
-	const double Multiplier=0.5;
-	const bool isSquared=true;
-	double Temp=fabs(Value); //take out the sign... put it back in the end
-	Temp=(Temp>=FilterRange) ? Temp-FilterRange:0.0; 
-
-	Temp=Multiplier*(Temp/(1.0-FilterRange)); //apply scale first then 
-	if (isSquared) Temp*=Temp;  //square it if it is squared
-
-	//Now to restore the sign
-	Value=(Value<0.0)?-Temp:Temp;
-	return Value;
-}
-#endif
 
 __inline double LawOfCosines(double a,double b,double c)
 {
@@ -1592,7 +1566,7 @@ void Curivator_Robot_Control::ResetPos()
 
 void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 {
-	const bool SafetyLock=SmartDashboard::GetBoolean("SafetyLock");
+	bool SafetyLock=SmartDashboard::GetBoolean("SafetyLock");
 	double VoltageScalar=1.0;
 
 	switch (index)
@@ -1602,8 +1576,17 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 	case Curivator_Robot::eBoom:
 	case Curivator_Robot::eBucket:
 	case Curivator_Robot::eClasp:
+		#ifdef __EnableRobotArmDisable__
+		std::string SmartLabel=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
+		SmartLabel[0]-=32; //Make first letter uppercase
+		//This section is extra control of each system while 3D positioning is operational... enable for diagnostics
+		std::string VoltageArmSafety=SmartLabel+"Disable";
+		const bool bVoltageArmDisable=SmartDashboard::GetBoolean(VoltageArmSafety.c_str());
+		if (bVoltageArmDisable)
+			SafetyLock=true;
+		#endif
 		#ifdef Robot_TesterCode
-		if (SafetyLock)
+		if (SafetyLock)   //seems redundant but needs to occur before I update the potentiometer
 			Voltage=0.0;
 		m_Potentiometer[index].UpdatePotentiometerVoltage(Voltage);
 		m_Potentiometer[index].TimeChange();  //have this velocity immediately take effect
@@ -1739,7 +1722,7 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 		ResetPos(); //must be called after compressor is created
 		//Typically disabled, but may wish to enable initially
 		#if 0
-		for (size_t i=0;i<2;i++)
+		for (size_t i=0;i<Curivator_Robot_NoArmRotarySystems;i++)
 		{
 			const char * const Prefix=csz_Curivator_Robot_SpeedControllerDevices_Enum[i];
 			string ContructedName;
@@ -1749,6 +1732,22 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 			SmartDashboard::PutNumber(ContructedName.c_str(),m_RobotProps.GetRotaryProps(i).GetRotary_Pot_Properties().PotMinValue);
 			ContructedName=Prefix,ContructedName+="_Pot_Range_Flipped";
 			SmartDashboard::PutBoolean(ContructedName.c_str(),m_RobotProps.GetRotaryProps(i).GetRotary_Pot_Properties().IsFlipped);
+		}
+		#endif
+		#ifdef __EnableRobotArmDisable__
+		for (size_t i=0;i<Curivator_Robot_NoArmRotarySystems;i++)
+		{
+			const char * const Prefix=csz_Curivator_Robot_SpeedControllerDevices_Enum[i];
+			string ContructedName;
+			ContructedName=Prefix;
+			ContructedName[0]-=32; //Make first letter uppercase
+			ContructedName+="Disable";
+			#ifdef Robot_TesterCode
+			const bool DisableDefault=false;
+			#else
+			const bool DisableDefault=true;
+			#endif
+			SmartDashboard::PutBoolean(ContructedName.c_str(),DisableDefault);
 		}
 		#endif
 	}

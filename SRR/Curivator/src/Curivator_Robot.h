@@ -112,6 +112,7 @@ const char * const csz_Curivator_Robot_AnalogInputs_Enum[] =
 	"rocker_left_enc","rocker_right_enc","bogie_left_enc","bogie_right_enc","rocker_left_pot","rocker_right_pot","bogie_left_pot","bogie_right_pot"
 };
 
+const size_t Curivator_Robot_NoArmRotarySystems=5;  //This reflects Robot_Arm count, excluding the 3D position enumerations
 const size_t Curivator_Robot_NoRobotArm=9;  //This reflects Robot_Arm count, which does not include the drive speed controller devices
 
 #ifdef __UsingTankDrive__
