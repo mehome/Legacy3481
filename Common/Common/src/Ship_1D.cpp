@@ -178,8 +178,9 @@ void Ship_1D::TimeChange(double dTime_s)
 		UpdateIntendedPosition(dTime_s);
 		//Determine the angular distance from the intended orientation
 		posDisplacement_m=m_IntendedPosition-GetPos_m();
+		//TODO determine why this fails in the goals, and if we really want it here
 		//apply shortest angle equation to handle end cases properly
-		posDisplacement_m -= Pi2*floor(posDisplacement_m/Pi2+0.5);
+		//posDisplacement_m -= Pi2*floor(posDisplacement_m/Pi2+0.5);
 		PosDisplacementCallback(posDisplacement_m);  //call the callback with this value
 	}
 
