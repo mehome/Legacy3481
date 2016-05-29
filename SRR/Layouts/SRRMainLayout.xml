@@ -14,19 +14,19 @@
 		<location x="33" y="300"/>
 		<property name="Text" value="Main Arm Safety"/>
 	</static-widget>
-	<widget field="turretDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+	<widget field="TurretDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="7" y="336"/>
 	</widget>
-	<widget field="armDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+	<widget field="ArmDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="10" y="377"/>
 	</widget>
-	<widget field="boomDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+	<widget field="BoomDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="9" y="415"/>
 	</widget>
-	<widget field="bucketDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+	<widget field="BucketDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="10" y="451"/>
 	</widget>
-	<widget field="claspDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+	<widget field="ClaspDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="11" y="488"/>
 	</widget>
 	<widget field="AxisCount_ch throttle quadrant" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
