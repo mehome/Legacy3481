@@ -1,21 +1,51 @@
 <xml version="1.0">
 <dashboard>
-	<widget field="testarm_clasp" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="54" y="210"/>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="151" y="301"/>
+		<property name="Text" value="DisableSetpoints"/>
+	</static-widget>
+	<widget field="Disable_Setpoints" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="127" y="297"/>
 	</widget>
-	<widget field="testarm_bucket" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="45" y="130"/>
+	<widget field="SafetyLock" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="11" y="296"/>
 	</widget>
-	<widget field="testarm_height" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="48" y="181"/>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="33" y="300"/>
+		<property name="Text" value="Main Arm Safety"/>
+	</static-widget>
+	<widget field="turretDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="7" y="336"/>
 	</widget>
-	<widget field="testarm_length" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="47" y="155"/>
+	<widget field="armDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="10" y="377"/>
+	</widget>
+	<widget field="boomDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="9" y="415"/>
+	</widget>
+	<widget field="bucketDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="10" y="451"/>
+	</widget>
+	<widget field="claspDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="11" y="488"/>
+	</widget>
+	<widget field="AxisCount_ch throttle quadrant" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="827" y="624"/>
+		<width>191</width>
+	</widget>
+	<widget field="BoomHeight" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="655" y="653"/>
+	</widget>
+	<widget field="BoomLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="643" y="625"/>
+	</widget>
+	<widget field="BoomAngle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="644" y="601"/>
 	</widget>
 	<widget field="armPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="374" y="369"/>
 		<property name="Foreground" value="51.153.255.255"/>
-		<property name="Background" value="0.0.153.255"/>
+		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="boomPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
@@ -33,7 +63,7 @@
 	<widget field="claspPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="378" y="478"/>
 		<property name="Foreground" value="0.153.255.255"/>
-		<property name="Background" value="0.0.153.255"/>
+		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="BigArm_ShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
@@ -219,10 +249,12 @@
 		<location x="216" y="333"/>
 	</widget>
 	<widget field="AxisCount_logitech dual action" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="794" y="91"/>
+		<location x="830" y="599"/>
+		<width>188</width>
 	</widget>
 	<widget field="AxisCount_airflo" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="795" y="67"/>
+		<location x="894" y="575"/>
+		<width>124</width>
 	</widget>
 	<widget field="Timer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="19" y="25"/>
@@ -235,7 +267,7 @@
 		<location x="598" y="170"/>
 	</widget>
 	<widget field="Main_Is_Targeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="796" y="47"/>
+		<location x="865" y="47"/>
 	</widget>
 	<widget field="Sequence" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="694" y="112"/>
