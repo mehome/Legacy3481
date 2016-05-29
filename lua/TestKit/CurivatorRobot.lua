@@ -302,7 +302,7 @@ MainRobot = {
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
 			pot_min_limit=226,  --was 290 for 8
-			pot_max_limit=888,
+			pot_max_limit=940,
 			pot_range_flipped='y',
 			
 			--max_speed=0.64,	
@@ -313,9 +313,9 @@ MainRobot = {
 			max_accel_reverse=10,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
-			max_range= 9,
-			min_range=0.8,
-			pot_offset=0.8,
+			max_range= 10,
+			min_range=0.7,
+			pot_offset=0.7,
 			starting_position=6,
 			forward_deadzone=0.17,
 			reverse_deadzone=0.17,
@@ -341,15 +341,17 @@ MainRobot = {
 			
 			--max_speed=0.64,	--was 0.64 but actual tests show a bit faster
 			max_speed=0.9,
+			max_speed_forward=0.45,
+			max_speed_reverse=-0.45,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
 			max_accel_forward=10,			--just go with what feels right
 			max_accel_reverse=10,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
-			max_range= 5.25,
-			min_range=0.5,
-			pot_offset=0.5,
+			max_range= 5.75,
+			min_range=0.7,
+			pot_offset=0.7,
 			starting_position=3.5,
 			forward_deadzone=0.17,
 			reverse_deadzone=0.17,
