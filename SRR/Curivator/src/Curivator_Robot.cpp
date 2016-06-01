@@ -194,8 +194,8 @@ void Curivator_Robot::BigArm::TimeChange(double dTime_s)
 	__super::TimeChange(dTime_s);
 	//Now to compute where we are based from our length of extension
 	//first start with the extension:
-	//Note: the position is inverted due to the nature of the darts... we subtract the range from position to aquire inverted value
-	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-m_Ship_1D_Props.MinRange-GetPos_m();  //expecting a value from 0-12 in inches
+	//Note: the position is inverted due to the nature of the darts... we subtract the range from position to acquire inverted value
+	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-GetPos_m()+m_Ship_1D_Props.MinRange;  //expecting a value from 0-12 in inches
 	const double FullActuatorLength=ShaftExtension_in+BigArm_DistanceDartPivotToTip+BigArm_DistanceFromTipDartToClevis;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
 	//c is FullActuatorLength
@@ -250,8 +250,8 @@ void Curivator_Robot::Boom::TimeChange(double dTime_s)
 	__super::TimeChange(dTime_s);
 	//Now to compute where we are based from our length of extension
 	//first start with the extension:
-	//Note: the position is inverted due to the nature of the darts... we subtract the range from position to aquire inverted value
-	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-m_Ship_1D_Props.MinRange-GetPos_m();  //expecting a value from 0-12 in inches
+	//Note: the position is inverted due to the nature of the darts... we subtract the range from position to acquire inverted value
+	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-GetPos_m()+m_Ship_1D_Props.MinRange;  //expecting a value from 0-12 in inches
 	const double FullActuatorLength=ShaftExtension_in+Boom_DistanceDartPivotToTip+Boom_DistanceFromTipDartToClevis;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
 	//c is FullActuatorLength
@@ -629,8 +629,8 @@ void Curivator_Robot::TimeChange(double dTime_s)
 		double BigArm_ShaftLength,Boom_ShaftLength,BucketShaftLength,ClaspShaftLength;
 		ComputeArmPosition(ypos,xpos,bucket_angle,clasp_angle,BigArm_ShaftLength,Boom_ShaftLength,BucketShaftLength,ClaspShaftLength);
 		//invert the boom and big arm lengths due to how the darts are wired
-		Boom_ShaftLength=m_Boom.GetMaxRange()-m_Boom.GetMinRange()-Boom_ShaftLength;
-		BigArm_ShaftLength=m_Arm.GetMaxRange()-m_Arm.GetMinRange()-BigArm_ShaftLength;
+		Boom_ShaftLength=m_Boom.GetMaxRange()-Boom_ShaftLength+m_Boom.GetMinRange();
+		BigArm_ShaftLength=m_Arm.GetMaxRange()-BigArm_ShaftLength+m_Arm.GetMinRange();
 		SmartDashboard::PutNumber("BigArm_ShaftLength",BigArm_ShaftLength);
 		SmartDashboard::PutNumber("Boom_ShaftLength",Boom_ShaftLength);
 		SmartDashboard::PutNumber("BucketShaftLength",BucketShaftLength);
@@ -1586,9 +1586,7 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 			SafetyLock=true;
 		#endif
 		#ifdef Robot_TesterCode
-		if (SafetyLock)   //seems redundant but needs to occur before I update the potentiometer
-			Voltage=0.0;
-		m_Potentiometer[index].UpdatePotentiometerVoltage(Voltage);
+		m_Potentiometer[index].UpdatePotentiometerVoltage(SafetyLock?0.0:Voltage);
 		m_Potentiometer[index].TimeChange();  //have this velocity immediately take effect
 		#endif
 		break;
