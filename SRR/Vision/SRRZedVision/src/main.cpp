@@ -172,9 +172,6 @@ void detectRockSample(cv::Mat frame, sl::zed::Mat depth)
 
 	cv::Mat hsv, binary, masked;
 
-    cv::Size DisplaySize(720, 404);
-    cv::Mat maskDisplay(DisplaySize, CV_8UC4);
-
     //convert the img from color to hsv
     cv::cvtColor(frame, hsv, CV_BGR2HSV);
     
@@ -236,8 +233,7 @@ void detectRockSample(cv::Mat frame, sl::zed::Mat depth)
 		}	
 	}
 
-	cv::resize(masked, maskDisplay, DisplaySize);
-	cv::imshow("Maksed", maskDisplay);    
+	cv::imshow("Maksed", masked);    
 }
 
 int count = 0;
@@ -319,7 +315,7 @@ int main(int argc, char **argv) {
     int height = zed->getImageSize().height;
 
     //init WITH self-calibration (- last parameter to false -)
-    sl::zed::ERRCODE err = zed->init(sl::zed::MODE::PERFORMANCE, 0, true, false, false);
+    sl::zed::ERRCODE err = zed->init(sl::zed::MODE::PERFORMANCE, -1, true, false, false);
 
     // ERRCODE display
     std::cout << "Error code : " << sl::zed::errcode2str(err) << std::endl;
@@ -344,21 +340,13 @@ int main(int argc, char **argv) {
     cv::Mat anaplyph(height, width, CV_8UC4);
     cv::Mat confidencemap(height, width, CV_8UC4);
 
-    cv::Size DisplaySize(720, 404);
-    cv::Mat dispDisplay(DisplaySize, CV_8UC4);
-    cv::Mat anaplyphDisplay(DisplaySize, CV_8UC4);
-    cv::Mat confidencemapDisplay(DisplaySize, CV_8UC4);
-    
-    cv::Mat hsvDisplay(DisplaySize, CV_8UC4);
-    cv::Mat binaryDisplay(DisplaySize, CV_8UC4);
-
     /* Init mouse callback */
     sl::zed::Mat depth;
+#if 1    
     zed->grab(dm_type);
     depth = zed->retrieveMeasure(sl::zed::MEASURE::DEPTH); // Get the pointer
     // Set the structure
     mouseStruct._image = cv::Size(width, height);
-    mouseStruct._resize = DisplaySize;
     mouseStruct.data = (float*) depth.data;
     mouseStruct.step = depth.step;
     mouseStruct.name = "DEPTH";
@@ -368,11 +356,13 @@ int main(int argc, char **argv) {
     cv::namedWindow(mouseStruct.name, cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback(mouseStruct.name, onMouseCallback, (void*) &mouseStruct);
     cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
-
+#endif
     std::cout << "Press 'q' to exit, hoser!" << std::endl;
 
     //Jetson only. Execute the calling thread on core 2
+#ifdef __arm__ //only for Jetson K1/X1    
     sl::zed::Camera::sticktoCPUCore(2);
+#endif
 
     sl::zed::ZED_SELF_CALIBRATION_STATUS old_self_calibration_status = sl::zed::SELF_CALIBRATION_NOT_CALLED;
 #undef usecam
@@ -397,8 +387,11 @@ int main(int argc, char **argv) {
 #endif
         zed->setConfidenceThreshold(100);
 
+		long long start_ts = zed->getCurrentTimestamp();
         // Get frames and launch the computation
         bool res = zed->grab(dm_type);
+        long long end_ts = zed->getCurrentTimestamp();
+        std::cout << "** grab time : " << (end_ts - start_ts)/1000000 << std::endl;
 
         if (!res) {
             // Estimated rotation :
@@ -414,7 +407,7 @@ int main(int argc, char **argv) {
             // !! Disparity, Depth, confidence are in 8U,C4 if normalized format !! //
             // !! Disparity, Depth, confidence are in 32F,C1 if only retrieve !! //
 
-
+#if 1
             /***************  DISPLAY:  ***************/
             // Normalize the DISPARITY / DEPTH map in order to use the full color range of grey level image
             if (DisplayDisp)
@@ -424,13 +417,11 @@ int main(int argc, char **argv) {
 
 
             // To get the depth at a given position, click on the DISPARITY / DEPTH map image
-            cv::resize(disp, dispDisplay, DisplaySize);
-            imshow(mouseStruct.name, dispDisplay);
+            imshow(mouseStruct.name, disp);
 
             if (displayConfidenceMap) {
                 slMat2cvMat(zed->normalizeMeasure(sl::zed::MEASURE::CONFIDENCE)).copyTo(confidencemap);
-                cv::resize(confidencemap, confidencemapDisplay, DisplaySize);
-                imshow("confidence", confidencemapDisplay);
+                imshow("confidence", confidencemap);
             }
 
             //Even if Left and Right images are still available through getView() function, it's better since v0.8.1 to use retrieveImage for cpu readback because GPU->CPU is done async during depth estimation.
@@ -441,14 +432,15 @@ int main(int argc, char **argv) {
                 slMat2cvMat(zed->retrieveImage(static_cast<sl::zed::SIDE> (ViewID))).copyTo(anaplyph);
             else
                 slMat2cvMat(zed->getView(static_cast<sl::zed::VIEW_MODE> (ViewID))).copyTo(anaplyph);
+#endif
 
-			long long current_cts = zed->getCameraTimestamp();
-			std::cout << "* Camera TimeStamp : " << (current_cts - last_current_cts)/1000000 << std::endl;
+//			long long current_cts = zed->getCameraTimestamp();
+//			std::cout << "* Camera TimeStamp : " << (current_cts - last_current_cts)/1000000 << std::endl;
 			long long current_ts = zed->getCurrentTimestamp();
 			std::cout << "* Current TimeStamp : " << (current_ts - last_current_ts)/1000000 << std::endl;
-			last_current_cts = current_cts;
+//			last_current_cts = current_cts;
 			last_current_ts = current_ts;
-
+#if 1
 			frameCount++;
 			if (op_mode == FindHook)
 				detectHookSample(anaplyph, depth);
@@ -456,13 +448,16 @@ int main(int argc, char **argv) {
 				detectRockSample(anaplyph, depth);
 			else if (op_mode == FindBeacon)
 				detectBeacon(anaplyph, depth);
+#endif
         }
+        else
+        	std::cout << "* no frame!" << std::endl;
 
-        cv::resize(anaplyph, anaplyphDisplay, DisplaySize);
-        imshow("VIEW", anaplyphDisplay);
+
+        imshow("VIEW", anaplyph);
 
         key = cv::waitKey(5);
-
+#if 1
         // Keyboard shortcuts
         switch (key) {
                 //re-compute stereo alignment
@@ -636,6 +631,7 @@ int main(int argc, char **argv) {
             	printf("V high: %d\n", V_high);
             	break;
         }
+#endif
     }
 
     delete zed;
