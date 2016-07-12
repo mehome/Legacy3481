@@ -38,8 +38,8 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
     if (event == CV_EVENT_LBUTTONDOWN) {
         mouseOCVStruct* data = (mouseOCVStruct*) param;
 
-        int y_int = (y * data->_image.height / data->_resize.height);
-        int x_int = (x * data->_image.width / data->_resize.width);
+        int y_int = (y /* * data->_image.height / data->_resize.height*/);
+        int x_int = (x /* * data->_image.width / data->_resize.width*/);
 
         float* ptr_image_num = (float*) ((int8_t*) data->data + y_int * data->step);
         float dist = ptr_image_num[x_int] / 1000.f;
@@ -105,12 +105,13 @@ void detectBeacon(cv::Mat frame, sl::zed::Mat depth);
 std::string hook_cascade_name = "data/SRR Samples/cascades/hook_cascade_gpu.xml";
 cv::CascadeClassifier hook_cascade;
 
+cv::vector<cv::Rect> hooks;
+
 /**
 * @function detectHookSample
 */
 void detectHookSample(cv::Mat frame, sl::zed::Mat depth)
 {
-	std::vector<cv::Rect> hooks;
 	cv::Mat frame_gray;
 
 	cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
@@ -237,6 +238,7 @@ void detectRockSample(cv::Mat frame, sl::zed::Mat depth)
 }
 
 int count = 0;
+cv::vector<cv::Point2f> pointBuf;
 
 // use calibration target for a beacon.
 void detectBeacon(cv::Mat view, sl::zed::Mat depth)
@@ -247,7 +249,6 @@ void detectBeacon(cv::Mat view, sl::zed::Mat depth)
 
     imageSize = view.size();  // Format input image.
 
-    cv::vector<cv::Point2f> pointBuf;
 	std::cout << count++ << " calling findchessboardcorners." << std::endl;
     bool found = cv::findChessboardCorners( view, boardSize, pointBuf,
         			CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
@@ -262,23 +263,23 @@ void detectBeacon(cv::Mat view, sl::zed::Mat depth)
             cv::Size(-1,-1), cv::TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
             
         /// min point
-        cv::Point2f min( imageSize.width, imageSize.height );
+        cv::Point2f minp( imageSize.width, imageSize.height );
 
 		/// max point
-		cv::Point2f max( 0, 0 );
+		cv::Point2f maxp( 0, 0 );
             
 		/// center
 		cv::Point2f center;
 
 		for( int i = 0; i < pointBuf.size(); i++)
 		{
-			if (pointBuf[i].x < min.x) min.x = pointBuf[i].x;
-			if (pointBuf[i].y < min.y) min.y = pointBuf[i].y;
-			if (pointBuf[i].x > max.x) max.x = pointBuf[i].x; 
-			if (pointBuf[i].y > max.y) max.y = pointBuf[i].y;
+			if (pointBuf[i].x < minp.x) minp.x = pointBuf[i].x;
+			if (pointBuf[i].y < minp.y) minp.y = pointBuf[i].y;
+			if (pointBuf[i].x > maxp.x) maxp.x = pointBuf[i].x; 
+			if (pointBuf[i].y > maxp.y) maxp.y = pointBuf[i].y;
 		}
-		center.x = min.x + (max.x - min.x) / 2;
-		center.y = min.y + (max.y - min.y) / 2;
+		center.x = minp.x + (maxp.x - minp.x) / 2;
+		center.y = minp.y + (maxp.y - minp.y) / 2;
 
         // Draw the corners.
         cv::drawChessboardCorners( view, boardSize, cv::Mat(pointBuf), found );
@@ -342,7 +343,6 @@ int main(int argc, char **argv) {
 
     /* Init mouse callback */
     sl::zed::Mat depth;
-#if 1    
     zed->grab(dm_type);
     depth = zed->retrieveMeasure(sl::zed::MEASURE::DEPTH); // Get the pointer
     // Set the structure
@@ -356,7 +356,6 @@ int main(int argc, char **argv) {
     cv::namedWindow(mouseStruct.name, cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback(mouseStruct.name, onMouseCallback, (void*) &mouseStruct);
     cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
-#endif
     std::cout << "Press 'q' to exit, hoser!" << std::endl;
 
     //Jetson only. Execute the calling thread on core 2
@@ -387,11 +386,8 @@ int main(int argc, char **argv) {
 #endif
         zed->setConfidenceThreshold(100);
 
-		long long start_ts = zed->getCurrentTimestamp();
         // Get frames and launch the computation
         bool res = zed->grab(dm_type);
-        long long end_ts = zed->getCurrentTimestamp();
-        std::cout << "** grab time : " << (end_ts - start_ts)/1000000 << std::endl;
 
         if (!res) {
             // Estimated rotation :
@@ -407,7 +403,6 @@ int main(int argc, char **argv) {
             // !! Disparity, Depth, confidence are in 8U,C4 if normalized format !! //
             // !! Disparity, Depth, confidence are in 32F,C1 if only retrieve !! //
 
-#if 1
             /***************  DISPLAY:  ***************/
             // Normalize the DISPARITY / DEPTH map in order to use the full color range of grey level image
             if (DisplayDisp)
@@ -432,15 +427,7 @@ int main(int argc, char **argv) {
                 slMat2cvMat(zed->retrieveImage(static_cast<sl::zed::SIDE> (ViewID))).copyTo(anaplyph);
             else
                 slMat2cvMat(zed->getView(static_cast<sl::zed::VIEW_MODE> (ViewID))).copyTo(anaplyph);
-#endif
 
-//			long long current_cts = zed->getCameraTimestamp();
-//			std::cout << "* Camera TimeStamp : " << (current_cts - last_current_cts)/1000000 << std::endl;
-			long long current_ts = zed->getCurrentTimestamp();
-			std::cout << "* Current TimeStamp : " << (current_ts - last_current_ts)/1000000 << std::endl;
-//			last_current_cts = current_cts;
-			last_current_ts = current_ts;
-#if 1
 			frameCount++;
 			if (op_mode == FindHook)
 				detectHookSample(anaplyph, depth);
@@ -448,16 +435,12 @@ int main(int argc, char **argv) {
 				detectRockSample(anaplyph, depth);
 			else if (op_mode == FindBeacon)
 				detectBeacon(anaplyph, depth);
-#endif
         }
-        else
-        	std::cout << "* no frame!" << std::endl;
 
 
         imshow("VIEW", anaplyph);
 
         key = cv::waitKey(5);
-#if 1
         // Keyboard shortcuts
         switch (key) {
                 //re-compute stereo alignment
@@ -631,7 +614,6 @@ int main(int argc, char **argv) {
             	printf("V high: %d\n", V_high);
             	break;
         }
-#endif
     }
 
     delete zed;
