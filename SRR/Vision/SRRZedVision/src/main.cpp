@@ -20,7 +20,7 @@
 
 //ZED Includes
 #include <zed/Camera.hpp>
-
+#include <zed/utils/GlobalDefine.hpp>
 
 //Define the structure and callback for mouse event
 
@@ -304,28 +304,29 @@ int main(int argc, char **argv) {
 		return -1; 
     };
 
-    sl::zed::SENSING_MODE dm_type = sl::zed::FULL;
+    sl::zed::SENSING_MODE dm_type = sl::zed::STANDARD;
     sl::zed::Camera* zed;
 
     if (argc == 1) // Use in Live Mode
-        zed = new sl::zed::Camera(sl::zed::HD720, 15);
+        zed = new sl::zed::Camera(sl::zed::HD720, 30;
     else // Use in SVO playback mode
         zed = new sl::zed::Camera(argv[1]);
 
-    int width = zed->getImageSize().width;
-    int height = zed->getImageSize().height;
+    sl::zed::InitParams parameters;
+    parameters.mode = sl::zed::PERFORMANCE;
+    parameters.unit = sl::zed::MILLIMETER;
+    parameters.verbose = 1;
+    parameters.disableSelfCalib = false;
 
-    //init WITH self-calibration (- last parameter to false -)
-    sl::zed::ERRCODE err = zed->init(sl::zed::MODE::PERFORMANCE, -1, true, false, false);
-
-    // ERRCODE display
-    std::cout << "Error code : " << sl::zed::errcode2str(err) << std::endl;
-
-    // Quit if an error occurred
+    sl::zed::ERRCODE err = zed->init(parameters);
+    std::cout << errcode2str(err) << std::endl;
     if (err != sl::zed::SUCCESS) {
         delete zed;
         return 1;
     }
+
+    int width = zed->getImageSize().width;
+    int height = zed->getImageSize().height;
 
     char key = ' ';
     int ViewID = 0;
@@ -523,13 +524,13 @@ int main(int argc, char **argv) {
             }
 
             case 'r':
-                dm_type = sl::zed::SENSING_MODE::RAW;
-                std::cout << "SENSING_MODE: Raw" << std::endl;
+                dm_type = sl::zed::SENSING_MODE::STANDARD;
+                std::cout << "SENSING_MODE: Standard" << std::endl;
                 break;
                 
             case 'f':
-                dm_type = sl::zed::SENSING_MODE::FULL;
-                std::cout << "SENSING_MODE: FULL" << std::endl;
+                dm_type = sl::zed::SENSING_MODE::FILL;
+                std::cout << "SENSING_MODE: FILL" << std::endl;
                 break;
 
 			case '+':
