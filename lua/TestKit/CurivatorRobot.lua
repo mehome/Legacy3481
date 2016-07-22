@@ -335,8 +335,8 @@ MainRobot = {
 			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=415,  --was 440
-			pot_max_limit=800,  --was 760
+			pot_min_limit=522,  --was 415,440
+			pot_max_limit=907,  --was 800,760
 			pot_range_flipped='y',
 			
 			--max_speed=0.64,	--was 0.64 but actual tests show a bit faster
@@ -350,8 +350,8 @@ MainRobot = {
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			--These min/max are in inch units
 			max_range= 5.75,
-			min_range=0.7,
-			pot_offset=0.7,
+			min_range=0.75,
+			pot_offset=0.75,
 			starting_position=3.5,
 			forward_deadzone=0.17,
 			reverse_deadzone=0.17,
