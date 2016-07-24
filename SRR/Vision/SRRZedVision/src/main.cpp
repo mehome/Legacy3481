@@ -105,7 +105,7 @@ void detectBeacon(cv::Mat frame, sl::zed::Mat depth);
 std::string hook_cascade_name = "data/SRR Samples/cascades/hook_cascade_gpu.xml";
 cv::CascadeClassifier hook_cascade;
 
-cv::vector<cv::Rect> hooks;
+std::vector<cv::Rect> hooks;
 
 /**
 * @function detectHookSample
@@ -191,8 +191,8 @@ void detectRockSample(cv::Mat frame, sl::zed::Mat depth)
 	cv::dilate( binary, binary, element );                                       
 
 	// countours
-	cv::vector<cv::vector<cv::Point> > contours;
-	cv::vector<cv::Vec4i> hierarchy;
+	std::vector<std::vector<cv::Point> > contours;
+	std::vector<cv::Vec4i> hierarchy;
 	
 	/// Find contours
 	cv::findContours( binary, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
@@ -201,22 +201,22 @@ void detectRockSample(cv::Mat frame, sl::zed::Mat depth)
 	frame.copyTo(masked, binary);   
 
 	/// moments
-	cv::vector<cv::Moments> mu(contours.size() );
+	std::vector<cv::Moments> mu(contours.size() );
 	/// mass centers
-	cv::vector<cv::Point2f> mc(contours.size() );
+	std::vector<cv::Point2f> mc(contours.size() );
 	/// rotated rectangles 
-	cv::vector<cv::RotatedRect> minRect(contours.size() );
+	std::vector<cv::RotatedRect> minRect(contours.size() );
 
 	for( int i = 0; i< contours.size(); i++ )
 	{
 		/// Get the moments
 		mu[i] = moments( contours[i], false );
 		///  Get the mass centers:
-		mc[i] = cv::Point2f( mu[i].m10/mu[i].m00 , mu[i].m01/mu[i].m00 );
+		mc[i] = cv::Point2f( (float)(mu[i].m10/mu[i].m00) , (float)(mu[i].m01/mu[i].m00) );
 		/// Find the rotated rectangles for each contour
 		minRect[i] = cv::minAreaRect( cv::Mat(contours[i]) );
 
-		float Distance = GetDistanceAtPoint(depth, mc[i].x, mc[i].y);	
+		float Distance = GetDistanceAtPoint(depth, (int)mc[i].x, (int)mc[i].y);	
      
 		if ((contourArea(contours[i]) > 150) && 
 			(minRect[i].size.width > 10) && 
@@ -238,7 +238,7 @@ void detectRockSample(cv::Mat frame, sl::zed::Mat depth)
 }
 
 int count = 0;
-cv::vector<cv::Point2f> pointBuf;
+std::vector<cv::Point2f> pointBuf;
 
 // use calibration target for a beacon.
 void detectBeacon(cv::Mat view, sl::zed::Mat depth)
@@ -263,7 +263,7 @@ void detectBeacon(cv::Mat view, sl::zed::Mat depth)
             cv::Size(-1,-1), cv::TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
             
         /// min point
-        cv::Point2f minp( imageSize.width, imageSize.height );
+        cv::Point2f minp( (float)imageSize.width, (float)imageSize.height );
 
 		/// max point
 		cv::Point2f maxp( 0, 0 );
@@ -284,7 +284,7 @@ void detectBeacon(cv::Mat view, sl::zed::Mat depth)
         // Draw the corners.
         cv::drawChessboardCorners( view, boardSize, cv::Mat(pointBuf), found );
         
-   		float Distance = GetDistanceAtPoint(depth, center.x, center.y);	
+   		float Distance = GetDistanceAtPoint(depth, (int)center.x, (int)center.y);	
 		std::cout << "beacon found at " << center.x << ", " << center.y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
     }
 }
@@ -438,11 +438,10 @@ int main(int argc, char **argv) {
 				detectBeacon(anaplyph, depth);
         }
 
-
         imshow("VIEW", anaplyph);
 
         key = cv::waitKey(5);
-        // Keyboard shortcuts
+		// Keyboard shortcuts
         switch (key) {
                 //re-compute stereo alignment
             case 'a':
