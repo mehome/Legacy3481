@@ -290,7 +290,7 @@ void detectBeacon(cv::Mat view, sl::zed::Mat depth)
 }
 
 //main  function
-
+#undef usecam
 int main(int argc, char **argv) {
 
     if (argc > 2) {
@@ -303,12 +303,12 @@ int main(int argc, char **argv) {
 		std::cout << "--(!)Error loading" << std::endl; 
 		return -1; 
     };
-
+#ifndef usecam
     sl::zed::SENSING_MODE dm_type = sl::zed::STANDARD;
     sl::zed::Camera* zed;
 
     if (argc == 1) // Use in Live Mode
-        zed = new sl::zed::Camera(sl::zed::HD720, 30;
+        zed = new sl::zed::Camera(sl::zed::HD720, 30);
     else // Use in SVO playback mode
         zed = new sl::zed::Camera(argv[1]);
 
@@ -327,11 +327,12 @@ int main(int argc, char **argv) {
 
     int width = zed->getImageSize().width;
     int height = zed->getImageSize().height;
-
+#endif
     char key = ' ';
     int ViewID = 0;
     int count = 0;
 
+#ifndef usecam
     bool DisplayDisp = true;
     bool displayConfidenceMap = false;
 
@@ -365,7 +366,7 @@ int main(int argc, char **argv) {
 #endif
 
     sl::zed::ZED_SELF_CALIBRATION_STATUS old_self_calibration_status = sl::zed::SELF_CALIBRATION_NOT_CALLED;
-#undef usecam
+#endif
 #ifdef usecam
 	cv::VideoCapture capture;
 	cv::Mat frame;
@@ -384,7 +385,7 @@ int main(int argc, char **argv) {
 		    cv::flip(frame, frame, 0); //transpose+flip(1)=CW			
 			cv::imshow("camera", frame);
 		}
-#endif
+#else
         zed->setConfidenceThreshold(100);
 
         // Get frames and launch the computation
@@ -439,9 +440,12 @@ int main(int argc, char **argv) {
         }
 
         imshow("VIEW", anaplyph);
+#endif
 
         key = cv::waitKey(5);
-		// Keyboard shortcuts
+        
+#ifndef usecam        
+        // Keyboard shortcuts
         switch (key) {
                 //re-compute stereo alignment
             case 'a':
@@ -614,8 +618,10 @@ int main(int argc, char **argv) {
             	printf("V high: %d\n", V_high);
             	break;
         }
+#endif
     }
-
+#ifndef usecam
     delete zed;
+#endif
     return 0;
 }
