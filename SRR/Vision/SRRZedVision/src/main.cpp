@@ -444,10 +444,10 @@ int main(int argc, char **argv) {
 
         key = cv::waitKey(5);
         
-#ifndef usecam        
         // Keyboard shortcuts
         switch (key) {
-                //re-compute stereo alignment
+#ifndef usecam        // ZED
+			//re-compute stereo alignment
             case 'a':
                 zed->resetSelfCalibration();
                 break;
@@ -469,7 +469,6 @@ int main(int argc, char **argv) {
             }
                 break;
 
-
                 // ______________  VIEW __________________
             case '0': // left
                 ViewID = 0;
@@ -490,6 +489,39 @@ int main(int argc, char **argv) {
                 ViewID = 5;
                 break;
 
+				// ______________  Display Confidence Map __________________
+			case 's':
+				displayConfidenceMap = !displayConfidenceMap;
+				break;
+
+				//______________ SAVE ______________
+			case 'w': // image
+				saveSbSimage(zed, std::string("ZEDImage") + std::to_string(count) + std::string(".png"));
+				count++;
+				break;
+
+			case 'v': // disparity
+			{
+				std::string filename = std::string(("ZEDDisparity") + std::to_string(count) + std::string(".png"));
+				cv::Mat dispSnapshot;
+				disp.copyTo(dispSnapshot);
+				cv::imshow("Saving Disparity", dispSnapshot);
+				cv::imwrite(filename, dispSnapshot);
+				count++;
+				break;
+			}
+
+			case 'r':
+				dm_type = sl::zed::SENSING_MODE::STANDARD;
+				std::cout << "SENSING_MODE: Standard" << std::endl;
+				break;
+
+			case 'f':
+				dm_type = sl::zed::SENSING_MODE::FILL;
+				std::cout << "SENSING_MODE: FILL" << std::endl;
+				break;
+
+#endif
 				// ______________  Search mode _____________________________
 			case 'm':
 				op_mode++;
@@ -503,38 +535,6 @@ int main(int argc, char **argv) {
 					case 4: printf("mode Find Obsticals\n");break;
 				}
 				break;
-
-                // ______________  Display Confidence Map __________________
-            case 's':
-                displayConfidenceMap = !displayConfidenceMap;
-                break;
-
-                //______________ SAVE ______________
-            case 'w': // image
-                saveSbSimage(zed, std::string("ZEDImage") + std::to_string(count) + std::string(".png"));
-                count++;
-                break;
-
-            case 'v': // disparity
-            {
-                std::string filename = std::string(("ZEDDisparity") + std::to_string(count) + std::string(".png"));
-                cv::Mat dispSnapshot;
-                disp.copyTo(dispSnapshot);
-                cv::imshow("Saving Disparity", dispSnapshot);
-                cv::imwrite(filename, dispSnapshot);
-                count++;
-                break;
-            }
-
-            case 'r':
-                dm_type = sl::zed::SENSING_MODE::STANDARD;
-                std::cout << "SENSING_MODE: Standard" << std::endl;
-                break;
-                
-            case 'f':
-                dm_type = sl::zed::SENSING_MODE::FILL;
-                std::cout << "SENSING_MODE: FILL" << std::endl;
-                break;
 
 			case '+':
 				if (ThreshInc == 1)
@@ -618,7 +618,6 @@ int main(int argc, char **argv) {
             	printf("V high: %d\n", V_high);
             	break;
         }
-#endif
     }
 #ifndef usecam
     delete zed;
