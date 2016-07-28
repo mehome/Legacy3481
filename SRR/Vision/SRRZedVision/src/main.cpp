@@ -22,6 +22,10 @@
 #include <zed/Camera.hpp>
 #include <zed/utils/GlobalDefine.hpp>
 
+//My stuff
+#include "OCVCamera.h"
+#include "ZEDCamera.h"
+
 //Define the structure and callback for mouse event
 
 typedef struct mouseOCVStruct {
@@ -290,7 +294,8 @@ void detectBeacon(cv::Mat view, sl::zed::Mat depth)
 }
 
 //main  function
-#undef usecam
+//#define frontcam
+#define stereocam
 int main(int argc, char **argv) {
 
     if (argc > 2) {
@@ -303,51 +308,35 @@ int main(int argc, char **argv) {
 		std::cout << "--(!)Error loading" << std::endl; 
 		return -1; 
     };
-#ifndef usecam
-    sl::zed::SENSING_MODE dm_type = sl::zed::STANDARD;
-    sl::zed::Camera* zed;
 
-    if (argc == 1) // Use in Live Mode
-        zed = new sl::zed::Camera(sl::zed::HD720, 30);
-    else // Use in SVO playback mode
-        zed = new sl::zed::Camera(argv[1]);
+	char key = ' ';
+	int count = 0;
 
-    sl::zed::InitParams parameters;
-    parameters.mode = sl::zed::PERFORMANCE;
-    parameters.unit = sl::zed::MILLIMETER;
-    parameters.verbose = 1;
-    parameters.disableSelfCalib = false;
+#ifdef stereocam
+	char * filearg;
+	if (argc == 2)
+		filearg = argv[1];
+	else
+		filearg = NULL;
 
-    sl::zed::ERRCODE err = zed->init(parameters);
-    std::cout << errcode2str(err) << std::endl;
-    if (err != sl::zed::SUCCESS) {
-        delete zed;
-        return 1;
-    }
+	ZEDCamera StereoCam = ZEDCamera(filearg);
+    StereoCam.dm_type = sl::zed::STANDARD;
+	
+    int width = StereoCam.width;
+    int height = StereoCam.height;
 
-    int width = zed->getImageSize().width;
-    int height = zed->getImageSize().height;
-#endif
-    char key = ' ';
-    int ViewID = 0;
-    int count = 0;
+	bool DisplayDisp = true;
+	bool displayConfidenceMap = false;
 
-#ifndef usecam
-    bool DisplayDisp = true;
-    bool displayConfidenceMap = false;
-
-	long long last_current_ts=0;
-	long long last_current_cts=0;
-
-    cv::Mat disp(height, width, CV_8UC4);
-    cv::Mat anaplyph(height, width, CV_8UC4);
-    cv::Mat confidencemap(height, width, CV_8UC4);
+	cv::Mat disp(height, width, CV_8UC4);
+	cv::Mat anaplyph(height, width, CV_8UC4);
+	cv::Mat confidencemap(height, width, CV_8UC4);
 
     /* Init mouse callback */
     sl::zed::Mat depth;
-    zed->grab(dm_type);
-    depth = zed->retrieveMeasure(sl::zed::MEASURE::DEPTH); // Get the pointer
-    // Set the structure
+	depth = StereoCam.GrabDepth();
+
+	// Set the structure
     mouseStruct._image = cv::Size(width, height);
     mouseStruct.data = (float*) depth.data;
     mouseStruct.step = depth.step;
@@ -358,36 +347,27 @@ int main(int argc, char **argv) {
     cv::namedWindow(mouseStruct.name, cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback(mouseStruct.name, onMouseCallback, (void*) &mouseStruct);
     cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
-    std::cout << "Press 'q' to exit, hoser!" << std::endl;
-
-    //Jetson only. Execute the calling thread on core 2
-#ifdef __arm__ //only for Jetson K1/X1    
-    sl::zed::Camera::sticktoCPUCore(2);
 #endif
 
-    sl::zed::ZED_SELF_CALIBRATION_STATUS old_self_calibration_status = sl::zed::SELF_CALIBRATION_NOT_CALLED;
+// TODO: add camera selection.
+#ifdef frontcam
+	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.asf?user=guest&pwd=watchme&resolution=32");
 #endif
-#ifdef usecam
-	cv::VideoCapture capture;
-	cv::Mat frame;
-	capture.open("http://ctetrick.no-ip.org/videostream.asf?user=guest&pwd=watchme&resolution=32");
-   	if (!capture.isOpened())
-		printf("Camera NOT opened.\n");
-#endif
+
+	std::cout << "Press 'q' to exit, hoser!" << std::endl;
 
     //loop until 'q' is pressed
     while (key != 'q') {
-#ifdef usecam
-    	if (capture.isOpened())
-		{
-			capture >> frame;
-    		cv::transpose(frame, frame);  
-		    cv::flip(frame, frame, 0); //transpose+flip(1)=CW			
-			cv::imshow("camera", frame);
-		}
-#else
-        zed->setConfidenceThreshold(100);
-
+		// TODO: camera selection
+#ifdef frontcam
+		cv::Mat frame = FrontCam.GrabFrame();
+		cv::imshow("camera", frame);
+#endif
+#ifdef stereocam
+		anaplyph = StereoCam.GrabFrameAndDapth();
+		depth = StereoCam.depth;
+		// TODO: optional depth and disparity display below.
+#if 0
         // Get frames and launch the computation
         bool res = zed->grab(dm_type);
 
@@ -430,6 +410,11 @@ int main(int argc, char **argv) {
             else
                 slMat2cvMat(zed->getView(static_cast<sl::zed::VIEW_MODE> (ViewID))).copyTo(anaplyph);
 
+        }
+#endif
+
+		if (!StereoCam.bNoFrame)
+		{
 			frameCount++;
 			if (op_mode == FindHook)
 				detectHookSample(anaplyph, depth);
@@ -437,18 +422,18 @@ int main(int argc, char **argv) {
 				detectRockSample(anaplyph, depth);
 			else if (op_mode == FindBeacon)
 				detectBeacon(anaplyph, depth);
-        }
 
-        imshow("VIEW", anaplyph);
+			imshow("VIEW", anaplyph);
+		}
 #endif
 
         key = cv::waitKey(5);
         
         // Keyboard shortcuts
         switch (key) {
-#ifndef usecam        // ZED
+#if 0        // ZED  // TODO: support
 			//re-compute stereo alignment
-            case 'a':
+            case 'a':	
                 zed->resetSelfCalibration();
                 break;
 
@@ -471,22 +456,22 @@ int main(int argc, char **argv) {
 
                 // ______________  VIEW __________________
             case '0': // left
-                ViewID = 0;
+                StereoCam.ViewID = 0;
                 break;
             case '1': // right
-                ViewID = 1;
+				StereoCam.ViewID = 1;
                 break;
             case '2': // anaglyph
-                ViewID = 2;
+				StereoCam.ViewID = 2;
                 break;
             case '3': // gray scale diff
-                ViewID = 3;
+				StereoCam.ViewID = 3;
                 break;
             case '4': // Side by side
-                ViewID = 4;
+				StereoCam.ViewID = 4;
                 break;
             case '5': // overlay
-                ViewID = 5;
+				StereoCam.ViewID = 5;
                 break;
 
 				// ______________  Display Confidence Map __________________
@@ -512,12 +497,12 @@ int main(int argc, char **argv) {
 			}
 
 			case 'r':
-				dm_type = sl::zed::SENSING_MODE::STANDARD;
+				StereoCam.dm_type = sl::zed::SENSING_MODE::STANDARD;
 				std::cout << "SENSING_MODE: Standard" << std::endl;
 				break;
 
 			case 'f':
-				dm_type = sl::zed::SENSING_MODE::FILL;
+				StereoCam.dm_type = sl::zed::SENSING_MODE::FILL;
 				std::cout << "SENSING_MODE: FILL" << std::endl;
 				break;
 
@@ -619,8 +604,6 @@ int main(int argc, char **argv) {
             	break;
         }
     }
-#ifndef usecam
-    delete zed;
-#endif
-    return 0;
+
+	return 0;
 }
