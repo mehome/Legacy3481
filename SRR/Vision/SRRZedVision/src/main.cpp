@@ -26,6 +26,8 @@
 #include "OCVCamera.h"
 #include "ZEDCamera.h"
 
+#include "hr_time.h"
+
 //Define the structure and callback for mouse event
 
 typedef struct mouseOCVStruct {
@@ -356,12 +358,24 @@ int main(int argc, char **argv) {
 
 	std::cout << "Press 'q' to exit, hoser!" << std::endl;
 
+	stopWatch S;
+	startTimer(&S);
+
     //loop until 'q' is pressed
     while (key != 'q') {
 		// TODO: camera selection
 #ifdef frontcam
+		std::cout << "start grab - ";
+		startTimer(&S);
 		cv::Mat frame = FrontCam.GrabFrame();
+		stopTimer(&S);
+		std::cout << getElapsedTime(&S) << std::endl;
+		std::cout << "show frame " << frameCount++ << " ";
+		startTimer(&S);
 		cv::imshow("camera", frame);
+		stopTimer(&S);
+		std::cout << getElapsedTime(&S) << std::endl;
+		std::cout << "frame rendered." << std::endl;
 #endif
 #ifdef stereocam
 		anaplyph = StereoCam.GrabFrameAndDapth();
@@ -423,7 +437,11 @@ int main(int argc, char **argv) {
 			else if (op_mode == FindBeacon)
 				detectBeacon(anaplyph, depth);
 
+			stopTimer(&S);
+			std::cout << getElapsedTime(&S) << std::endl;
+
 			imshow("VIEW", anaplyph);
+			startTimer(&S);
 		}
 #endif
 
@@ -506,7 +524,11 @@ int main(int argc, char **argv) {
 				std::cout << "SENSING_MODE: FILL" << std::endl;
 				break;
 
+			case 'd':
+				DisplayDisp = !DisplayDisp;
+				break;
 #endif
+
 				// ______________  Search mode _____________________________
 			case 'm':
 				op_mode++;
@@ -539,10 +561,6 @@ int main(int argc, char **argv) {
 				printf("ThreshInc: %d\n", ThreshInc);
 				break;
 				
-            case 'd':
-                DisplayDisp = !DisplayDisp;
-                break;
-                
             case '[':
             	if ((H_low -= ThreshInc) < 0) H_low = 0;
             	printf("H low: %d\n", H_low);
