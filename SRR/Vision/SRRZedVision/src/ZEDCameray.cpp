@@ -76,3 +76,67 @@ sl::zed::Mat ZEDCamera::GrabDepth(void)
 
 	return depth;
 }
+
+// The following is the best way to save a disparity map/ Image / confidence map in Opencv Mat.
+// Be Careful, if you don't save the buffer/data on your own, it will be replace by a next retrieve (retrieveImage, NormalizeMeasure, getView....)
+// !! Disparity, Depth, confidence are in 8U,C4 if normalized format !! //
+// !! Disparity, Depth, confidence are in 32F,C1 if only retrieve !! //
+
+cv::Mat ZEDCamera::GetNormDisparity(void)
+{
+	if (!bNoFrame)
+		slMat2cvMat(zed->normalizeMeasure(sl::zed::MEASURE::DISPARITY)).copyTo(cvDisparity);
+
+	return cvDisparity;
+}
+
+cv::Mat ZEDCamera::GetNormDepth(void)
+{
+	if (!bNoFrame)
+		slMat2cvMat(zed->normalizeMeasure(sl::zed::MEASURE::DEPTH)).copyTo(cvDepth);
+
+	return cvDepth;
+}
+
+cv::Mat ZEDCamera::GetNormConfidence(void)
+{
+	if (!bNoFrame)
+		slMat2cvMat(zed->normalizeMeasure(sl::zed::MEASURE::CONFIDENCE)).copyTo(cvConfidence);
+
+	return cvConfidence;
+}
+
+void ZEDCamera::ResetCalibration(void)
+{
+	zed->resetSelfCalibration();
+}
+
+int ZEDCamera::GetGain(void)
+{
+	return zed->getCameraSettingsValue(sl::zed::ZED_GAIN);
+}
+
+void ZEDCamera::SetGain(int gain)
+{
+	zed->setCameraSettingsValue(sl::zed::ZED_EXPOSURE, 0);	// disable, but don't change the value.
+	zed->setCameraSettingsValue(sl::zed::ZED_GAIN, gain);
+}
+
+// save function using opencv
+void ZEDCamera::saveSbSimage(std::string filename) 
+{
+	sl::zed::resolution imSize = zed->getImageSize();
+
+	cv::Mat SbS(imSize.height, imSize.width * 2, CV_8UC4);
+	cv::Mat leftIm(SbS, cv::Rect(0, 0, imSize.width, imSize.height));
+	cv::Mat rightIm(SbS, cv::Rect(imSize.width, 0, imSize.width, imSize.height));
+
+	slMat2cvMat(zed->retrieveImage(sl::zed::SIDE::LEFT)).copyTo(leftIm);
+	slMat2cvMat(zed->retrieveImage(sl::zed::SIDE::RIGHT)).copyTo(rightIm);
+
+	cv::imshow("Saving Image", SbS);
+	cv::cvtColor(SbS, SbS, CV_RGBA2RGB);
+
+	cv::imwrite(filename, SbS);
+}
+

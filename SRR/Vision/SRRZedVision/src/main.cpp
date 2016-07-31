@@ -65,23 +65,6 @@ float GetDistanceAtPoint(sl::zed::Mat depth, int x, int y)
 	return dist;
 }
 
-// save function using opencv
-void saveSbSimage(sl::zed::Camera* zed, std::string filename) {
-    sl::zed::resolution imSize = zed->getImageSize();
-
-    cv::Mat SbS(imSize.height, imSize.width * 2, CV_8UC4);
-    cv::Mat leftIm(SbS, cv::Rect(0, 0, imSize.width, imSize.height));
-    cv::Mat rightIm(SbS, cv::Rect(imSize.width, 0, imSize.width, imSize.height));
-
-    slMat2cvMat(zed->retrieveImage(sl::zed::SIDE::LEFT)).copyTo(leftIm);
-    slMat2cvMat(zed->retrieveImage(sl::zed::SIDE::RIGHT)).copyTo(rightIm);
-
-    cv::imshow("Saving Image", SbS);
-    cv::cvtColor(SbS, SbS, CV_RGBA2RGB);
-
-    cv::imwrite(filename, SbS);
-}
-
 
 enum histo_mode
 {
@@ -97,7 +80,10 @@ enum histo_mode
 
 std::string filename;
 enum histo_mode mode = h_original;
-int op_mode = 0;
+bool FrontCamEnabled = false;
+bool StereoCamEnabled = true;
+int cam1_op_mode = 0;
+int cam2_op_mode = 0;
 bool bShowImg = false;
 int frameCount = 0;
 
@@ -296,8 +282,6 @@ void detectBeacon(cv::Mat view, sl::zed::Mat depth)
 }
 
 //main  function
-//#define frontcam
-#define stereocam
 int main(int argc, char **argv) {
 
     if (argc > 2) {
@@ -314,12 +298,13 @@ int main(int argc, char **argv) {
 	char key = ' ';
 	int count = 0;
 
-#ifdef stereocam
 	char * filearg;
 	if (argc == 2)
 		filearg = argv[1];
 	else
 		filearg = NULL;
+
+	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0");
 
 	ZEDCamera StereoCam = ZEDCamera(filearg);
     StereoCam.dm_type = sl::zed::STANDARD;
@@ -333,6 +318,7 @@ int main(int argc, char **argv) {
 	cv::Mat disp(height, width, CV_8UC4);
 	cv::Mat anaplyph(height, width, CV_8UC4);
 	cv::Mat confidencemap(height, width, CV_8UC4);
+	cv::Mat frame;
 
     /* Init mouse callback */
     sl::zed::Mat depth;
@@ -343,132 +329,91 @@ int main(int argc, char **argv) {
     mouseStruct.data = (float*) depth.data;
     mouseStruct.step = depth.step;
     mouseStruct.name = "DEPTH";
-    /***/
 
     //create Opencv Windows
     cv::namedWindow(mouseStruct.name, cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback(mouseStruct.name, onMouseCallback, (void*) &mouseStruct);
     cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
-#endif
-
-// TODO: add camera selection.
-#ifdef frontcam
-	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.asf?user=guest&pwd=watchme&resolution=32");
-#endif
 
 	std::cout << "Press 'q' to exit, hoser!" << std::endl;
 
-	stopWatch S;
-	startTimer(&S);
-
     //loop until 'q' is pressed
-    while (key != 'q') {
-		// TODO: camera selection
-#ifdef frontcam
-		std::cout << "start grab - ";
-		startTimer(&S);
-		cv::Mat frame = FrontCam.GrabFrame();
-		stopTimer(&S);
-		std::cout << getElapsedTime(&S) << std::endl;
-		std::cout << "show frame " << frameCount++ << " ";
-		startTimer(&S);
-		cv::imshow("camera", frame);
-		stopTimer(&S);
-		std::cout << getElapsedTime(&S) << std::endl;
-		std::cout << "frame rendered." << std::endl;
-#endif
-#ifdef stereocam
-		anaplyph = StereoCam.GrabFrameAndDapth();
-		depth = StereoCam.depth;
-		// TODO: optional depth and disparity display below.
-#if 0
-        // Get frames and launch the computation
-        bool res = zed->grab(dm_type);
-
-        if (!res) {
-            // Estimated rotation :
-            if (old_self_calibration_status != zed->getSelfCalibrationStatus()) {
-                std::cout << "Self Calibration Status : " << sl::zed::statuscode2str(zed->getSelfCalibrationStatus()) << std::endl;
-                old_self_calibration_status = zed->getSelfCalibrationStatus();
-            }
-
-            depth = zed->retrieveMeasure(sl::zed::MEASURE::DEPTH); // Get the pointer
-
-            // The following is the best way to save a disparity map/ Image / confidence map in Opencv Mat.
-            // Be Careful, if you don't save the buffer/data on your own, it will be replace by a next retrieve (retrieveImage, NormalizeMeasure, getView....)
-            // !! Disparity, Depth, confidence are in 8U,C4 if normalized format !! //
-            // !! Disparity, Depth, confidence are in 32F,C1 if only retrieve !! //
-
-            /***************  DISPLAY:  ***************/
-            // Normalize the DISPARITY / DEPTH map in order to use the full color range of grey level image
-            if (DisplayDisp)
-                slMat2cvMat(zed->normalizeMeasure(sl::zed::MEASURE::DISPARITY)).copyTo(disp);
-            else
-                slMat2cvMat(zed->normalizeMeasure(sl::zed::MEASURE::DEPTH)).copyTo(disp);
-
-
-            // To get the depth at a given position, click on the DISPARITY / DEPTH map image
-            imshow(mouseStruct.name, disp);
-
-            if (displayConfidenceMap) {
-                slMat2cvMat(zed->normalizeMeasure(sl::zed::MEASURE::CONFIDENCE)).copyTo(confidencemap);
-                imshow("confidence", confidencemap);
-            }
-
-            //Even if Left and Right images are still available through getView() function, it's better since v0.8.1 to use retrieveImage for cpu readback because GPU->CPU is done async during depth estimation.
-            // Therefore :
-            // -- if disparity estimation is enabled in grab function, retrieveImage will take no time because GPU->CPU copy has already been done during disp estimation
-            // -- if disparity estimation is not enabled, GPU->CPU copy is done in retrieveImage fct, and this function will take the time of copy.
-            if (ViewID == sl::zed::STEREO_LEFT || ViewID == sl::zed::STEREO_RIGHT)
-                slMat2cvMat(zed->retrieveImage(static_cast<sl::zed::SIDE> (ViewID))).copyTo(anaplyph);
-            else
-                slMat2cvMat(zed->getView(static_cast<sl::zed::VIEW_MODE> (ViewID))).copyTo(anaplyph);
-
-        }
-#endif
-
-		if (!StereoCam.bNoFrame)
+    while (key != 'q') 
+	{
+		if (FrontCamEnabled)
 		{
-			frameCount++;
-			if (op_mode == FindHook)
-				detectHookSample(anaplyph, depth);
-			else if (op_mode == FindRock)
-				detectRockSample(anaplyph, depth);
-			else if (op_mode == FindBeacon)
-				detectBeacon(anaplyph, depth);
+			frame = FrontCam.GrabFrame();
 
-			stopTimer(&S);
-			std::cout << getElapsedTime(&S) << std::endl;
+			if (cam2_op_mode == FindHook)
+				detectHookSample(frame, depth);
+			else if (cam2_op_mode == FindRock)
+				detectRockSample(frame, depth);
+			else if (cam2_op_mode == FindBeacon)
+				detectBeacon(frame, depth);
 
-			imshow("VIEW", anaplyph);
-			startTimer(&S);
+			cv::imshow("camera", frame);
 		}
-#endif
+		if (StereoCamEnabled)
+		{
+			anaplyph = StereoCam.GrabFrameAndDapth();
+			depth = StereoCam.depth;
+			// TODO: optional depth and disparity display below.
+			// Get frames and launch the computation
+			if (!StereoCam.bNoFrame)
+			{
+
+				/***************  DISPLAY:  ***************/
+				// Normalize the DISPARITY / DEPTH map in order to use the full color range of grey level image
+				if (DisplayDisp)
+					disp = StereoCam.GetNormDisparity();
+				else
+					disp = StereoCam.GetNormDepth();
+
+				// To get the depth at a given position, click on the DISPARITY / DEPTH map image
+				imshow(mouseStruct.name, disp);
+
+				if (displayConfidenceMap) {
+					confidencemap = StereoCam.GetNormConfidence();
+					imshow("confidence", confidencemap);
+				}
+
+				if (cam1_op_mode == FindHook)
+					detectHookSample(anaplyph, depth);
+				else if (cam1_op_mode == FindRock)
+					detectRockSample(anaplyph, depth);
+				else if (cam1_op_mode == FindBeacon)
+					detectBeacon(anaplyph, depth);
+
+				imshow("VIEW", anaplyph);
+			}
+
+			frameCount++;
+		}
 
         key = cv::waitKey(5);
         
         // Keyboard shortcuts
         switch (key) {
-#if 0        // ZED  // TODO: support
+			// ZED
 			//re-compute stereo alignment
             case 'a':	
-                zed->resetSelfCalibration();
+				StereoCam.ResetCalibration();
                 break;
 
-                //Change camera settings (here --> gain)
+            //Change camera settings (here --> gain)
             case 'g': //increase gain of 1
             {
-                int current_gain = zed->getCameraSettingsValue(sl::zed::ZED_GAIN) + 1;
-                zed->setCameraSettingsValue(sl::zed::ZED_GAIN, current_gain);
+				int current_gain = StereoCam.GetGain() + 1;
+				StereoCam.SetGain(current_gain);
                 std::cout << "set Gain to " << current_gain << std::endl;
             }
                 break;
 
             case 'h': //decrease gain of 1
             {
-                int current_gain = zed->getCameraSettingsValue(sl::zed::ZED_GAIN) - 1;
-                zed->setCameraSettingsValue(sl::zed::ZED_GAIN, current_gain);
-                std::cout << "set Gain to " << current_gain << std::endl;
+				int current_gain = StereoCam.GetGain() + 1;
+				StereoCam.SetGain(current_gain);
+				std::cout << "set Gain to " << current_gain << std::endl;
             }
                 break;
 
@@ -499,7 +444,7 @@ int main(int argc, char **argv) {
 
 				//______________ SAVE ______________
 			case 'w': // image
-				saveSbSimage(zed, std::string("ZEDImage") + std::to_string(count) + std::string(".png"));
+				StereoCam.saveSbSimage(std::string("ZEDImage") + std::to_string(count) + std::string(".png"));
 				count++;
 				break;
 
@@ -527,19 +472,44 @@ int main(int argc, char **argv) {
 			case 'd':
 				DisplayDisp = !DisplayDisp;
 				break;
-#endif
+
+			case 'c':
+				FrontCamEnabled = !FrontCamEnabled;
+				std::cout << "Front Camera " << (FrontCamEnabled ? "enabled" : "disabled") << std::endl;
+				if (!FrontCamEnabled)
+					cv::destroyWindow("camera");
+				break;
+
+			case 'C':
+				StereoCamEnabled = !StereoCamEnabled;
+				std::cout << "Stereo Camera " << (StereoCamEnabled ? "enabled" : "disabled") << std::endl;
+				if (!FrontCamEnabled)
+					cv::destroyWindow("VIEW");
+				break;
 
 				// ______________  Search mode _____________________________
 			case 'm':
-				op_mode++;
-				if (op_mode > FindObsticals )
-					op_mode = 0;
-				switch (op_mode) {
+				cam1_op_mode++;
+				if (cam1_op_mode > FindObsticals )
+					cam1_op_mode = 0;
+				switch (cam1_op_mode) {
 					case 0: printf("mode NONE\n");break;
 					case 1: printf("mode Find Hook\n");break;
 					case 2: printf("mode Find Rock\n");break;
 					case 3: printf("mode Find Beacon\n");break;
 					case 4: printf("mode Find Obsticals\n");break;
+				}
+				break;
+
+			case 'M':
+				cam2_op_mode++;
+				if (cam2_op_mode > FindBeacon)
+					cam2_op_mode = 0;
+				switch (cam2_op_mode) {
+				case 0: printf("mode NONE\n"); break;
+				case 1: printf("mode Find Hook\n"); break;
+				case 2: printf("mode Find Rock\n"); break;
+				case 3: printf("mode Find Beacon\n"); break;
 				}
 				break;
 

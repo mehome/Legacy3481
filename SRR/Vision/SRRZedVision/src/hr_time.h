@@ -1,4 +1,5 @@
 #include <windows.h>
+#pragma once
 
 typedef struct {
 	LARGE_INTEGER start;

@@ -11,10 +11,15 @@ public:
 	~ZEDCamera();
 
 	cv::Mat GrabFrame(void);
-
 	cv::Mat GrabFrameAndDapth(void);
-
 	sl::zed::Mat GrabDepth(void);
+	cv::Mat GetNormDisparity(void);
+	cv::Mat GetNormDepth(void);
+	cv::Mat GetNormConfidence(void);
+	void ResetCalibration(void);
+	int GetGain(void);
+	void SetGain(int);
+	void saveSbSimage(std::string);
 
 	int width;
 	int height;
@@ -32,6 +37,9 @@ public:
 private:
 
 	cv::Mat frame;
+	cv::Mat cvDepth;
+	cv::Mat cvDisparity;
+	cv::Mat cvConfidence;
 
 	sl::zed::ZED_SELF_CALIBRATION_STATUS old_self_calibration_status;
 };
