@@ -118,8 +118,18 @@ int ZEDCamera::GetGain(void)
 
 void ZEDCamera::SetGain(int gain)
 {
-	zed->setCameraSettingsValue(sl::zed::ZED_EXPOSURE, 0);	// disable, but don't change the value.
+	//zed->setCameraSettingsValue(sl::zed::ZED_EXPOSURE, 0);	// disable, but don't change the value.
 	zed->setCameraSettingsValue(sl::zed::ZED_GAIN, gain);
+}
+
+int ZEDCamera::GetExposure(void)
+{
+	return zed->getCameraSettingsValue(sl::zed::ZED_EXPOSURE);
+}
+
+void ZEDCamera::SetExposure(int exp)
+{
+	zed->setCameraSettingsValue(sl::zed::ZED_EXPOSURE, exp);
 }
 
 // save function using opencv

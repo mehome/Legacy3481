@@ -19,6 +19,8 @@ public:
 	void ResetCalibration(void);
 	int GetGain(void);
 	void SetGain(int);
+	int GetExposure(void);
+	void SetExposure(int);
 	void saveSbSimage(std::string);
 
 	int width;

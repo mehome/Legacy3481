@@ -417,6 +417,22 @@ int main(int argc, char **argv) {
             }
                 break;
 
+			case 'e': //increase exposure of 1
+			{
+				int current_exp = StereoCam.GetExposure() + 1;
+				StereoCam.SetExposure(current_exp);
+				std::cout << "set Exposure to " << current_exp << std::endl;
+			}
+			break;
+
+			case 'E': //decrease exposure of 1
+			{
+				int current_exp = StereoCam.GetExposure() + 1;
+				StereoCam.SetExposure(current_exp);
+				std::cout << "set Exposure to " << current_exp << std::endl;
+			}
+			break;
+
                 // ______________  VIEW __________________
             case '0': // left
                 StereoCam.ViewID = 0;
