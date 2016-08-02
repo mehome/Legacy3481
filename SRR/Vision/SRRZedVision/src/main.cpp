@@ -26,8 +26,6 @@
 #include "OCVCamera.h"
 #include "ZEDCamera.h"
 
-#include "hr_time.h"
-
 //Define the structure and callback for mouse event
 
 typedef struct mouseOCVStruct {
