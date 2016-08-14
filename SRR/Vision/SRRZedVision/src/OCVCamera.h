@@ -11,6 +11,8 @@ public:
 
 	cv::Mat GrabFrame(void);
 
+	bool IsOpen;
+
 private:
 	int width;
 	int height;

@@ -23,6 +23,8 @@ public:
 	void SetExposure(int);
 	void saveSbSimage(std::string);
 
+	bool IsOpen;
+
 	int width;
 	int height;
 	bool bNoFrame;

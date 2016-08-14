@@ -5,7 +5,10 @@ ZEDCamera::ZEDCamera(const char *file)
 	  old_self_calibration_status (sl::zed::SELF_CALIBRATION_NOT_CALLED),
 	  confidenceLevel(100),
 	  ViewID(0),
-	  bNoFrame(false)
+	  width(0),
+	  height(0),
+	  bNoFrame(false),
+	  IsOpen(false)
 {
 	if (file == NULL) // Use in Live Mode
 		zed = new sl::zed::Camera(sl::zed::HD720, 30);
@@ -22,8 +25,11 @@ ZEDCamera::ZEDCamera(const char *file)
 	std::cout << errcode2str(err) << std::endl;
 	if (err != sl::zed::SUCCESS) {
 		delete zed;
+		zed = NULL;
 		return;
 	}
+
+	IsOpen = true;
 
 	width = zed->getImageSize().width;
 	height = zed->getImageSize().height;
@@ -36,7 +42,8 @@ ZEDCamera::ZEDCamera(const char *file)
 
 ZEDCamera::~ZEDCamera() 
 {
-	delete zed;
+	if (zed)
+		delete zed;
 }
 
 cv::Mat ZEDCamera::GrabFrameAndDapth(void)

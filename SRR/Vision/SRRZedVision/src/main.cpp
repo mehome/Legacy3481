@@ -26,6 +26,8 @@
 #include "OCVCamera.h"
 #include "ZEDCamera.h"
 
+//#include "../SmartDashboard/SmartDashboard_import.h"
+
 //Define the structure and callback for mouse event
 
 typedef struct mouseOCVStruct {
@@ -304,11 +306,13 @@ int main(int argc, char **argv) {
 
 	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0");
 
+	cv::Mat frame;
+
 	ZEDCamera StereoCam = ZEDCamera(filearg);
     StereoCam.dm_type = sl::zed::STANDARD;
-	
-    int width = StereoCam.width;
-    int height = StereoCam.height;
+
+	int width = StereoCam.width;
+	int height = StereoCam.height;
 
 	bool DisplayDisp = true;
 	bool displayConfidenceMap = false;
@@ -316,22 +320,38 @@ int main(int argc, char **argv) {
 	cv::Mat disp(height, width, CV_8UC4);
 	cv::Mat anaplyph(height, width, CV_8UC4);
 	cv::Mat confidencemap(height, width, CV_8UC4);
-	cv::Mat frame;
 
-    /* Init mouse callback */
-    sl::zed::Mat depth;
-	depth = StereoCam.GrabDepth();
+	sl::zed::Mat depth;
 
-	// Set the structure
-    mouseStruct._image = cv::Size(width, height);
-    mouseStruct.data = (float*) depth.data;
-    mouseStruct.step = depth.step;
-    mouseStruct.name = "DEPTH";
+	if (StereoCam.IsOpen)
+	{
+		/* Init mouse callback */
+		depth = StereoCam.GrabDepth();
 
-    //create Opencv Windows
-    cv::namedWindow(mouseStruct.name, cv::WINDOW_AUTOSIZE);
-    cv::setMouseCallback(mouseStruct.name, onMouseCallback, (void*) &mouseStruct);
-    cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
+		// Set the structure
+		mouseStruct._image = cv::Size(width, height);
+		mouseStruct.data = (float*)depth.data;
+		mouseStruct.step = depth.step;
+		mouseStruct.name = "DEPTH";
+
+		//create Opencv Windows
+		cv::namedWindow(mouseStruct.name, cv::WINDOW_AUTOSIZE);
+		cv::setMouseCallback(mouseStruct.name, onMouseCallback, (void*)&mouseStruct);
+		cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
+	}
+	else
+	{
+		StereoCamEnabled = false;
+		if (FrontCam.IsOpen)
+			FrontCamEnabled = true;
+		else
+		{
+			std::cout << "No Cameras!" << std::endl;
+			return -1;
+		}
+	}
+
+//	SmartDashboard::init();
 
 	std::cout << "Press 'q' to exit, hoser!" << std::endl;
 
@@ -488,14 +508,16 @@ int main(int argc, char **argv) {
 				break;
 
 			case 'c':
-				FrontCamEnabled = !FrontCamEnabled;
+				if (FrontCam.IsOpen)
+					FrontCamEnabled = !FrontCamEnabled;
 				std::cout << "Front Camera " << (FrontCamEnabled ? "enabled" : "disabled") << std::endl;
 				if (!FrontCamEnabled)
 					cv::destroyWindow("camera");
 				break;
 
 			case 'C':
-				StereoCamEnabled = !StereoCamEnabled;
+				if (StereoCam.IsOpen)
+					StereoCamEnabled = !StereoCamEnabled;
 				std::cout << "Stereo Camera " << (StereoCamEnabled ? "enabled" : "disabled") << std::endl;
 				if (!FrontCamEnabled)
 					cv::destroyWindow("VIEW");
@@ -606,6 +628,8 @@ int main(int argc, char **argv) {
             	break;
         }
     }
+
+//	SmartDashboard::shutdown();
 
 	return 0;
 }

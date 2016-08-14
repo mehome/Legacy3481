@@ -4,7 +4,9 @@
 OCVCamera::OCVCamera(const char *file)
 {
 	capture.open(file);
-	if (!capture.isOpened())
+
+	IsOpen = capture.isOpened();
+	if (!IsOpen)
 		printf("Camera NOT opened.\n");
 }
 
