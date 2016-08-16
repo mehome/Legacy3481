@@ -42,13 +42,13 @@ SocketStreamFactory::~SocketStreamFactory()
 
 IOStream *SocketStreamFactory::createStream(){
 	IOStream *ret=NULL;
-	int sockfd = INVALID_SOCKET;
+	int sockfd = (int)INVALID_SOCKET;
 	try
 	{
 		struct sockaddr_in serv_addr;
 		struct hostent *server;
 
-		sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		sockfd =(int) socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (sockfd < 0) throw 0;
 
 		server = gethostbyname(host);

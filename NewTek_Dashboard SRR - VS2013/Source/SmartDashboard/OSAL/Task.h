@@ -7,7 +7,7 @@
 #ifndef __NTTASK_H__
 #define __NTTASK_H__
 
-#if (defined __vxworks || defined WIN32)
+#if (defined __vxworks || defined _WINDOWS)
 
 #include "ErrorBase.h"
 #ifdef __vxworks
@@ -45,14 +45,14 @@ public:
 	const char* GetName();
 	INT32 GetID();
 
-	#ifdef WIN32
+	#ifdef _WINDOWS
 	FUNCPTR m_function;
 	UINT32 m_Arg[10];
 	#endif
 private:
 	char* m_taskName;
 
-	#ifdef WIN32
+	#ifdef _WINDOWS
 	bool StartInternal();
 	bool CloseThread();  //This will wait until thread procedure has finished
 	HANDLE m_Handle;

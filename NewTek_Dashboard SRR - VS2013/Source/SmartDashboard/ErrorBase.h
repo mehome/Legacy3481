@@ -7,7 +7,7 @@
 #ifndef _ERROR_BASE_H
 #define _ERROR_BASE_H
 
-#if (defined __vxworks || defined WIN32)
+#if (defined __vxworks || defined _WINDOWS)
 #include <semLib.h>
 #ifdef __vxworks
 #include <vxWorks.h>

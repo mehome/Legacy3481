@@ -154,7 +154,7 @@ void CommandLineInterface()
 					{
 						if (stricmp(TestName[i],str_1)==0)
 						{
-							Test=i;
+							Test=(int)i;
 							break;
 						}
 					}

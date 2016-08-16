@@ -10,7 +10,7 @@
 #define NT_CRITICAL_REGION(s) { NTSynchronized _sync(s);
 #define NT_END_REGION }
 
-#if (defined __vxworks || defined WIN32)
+#if (defined __vxworks || defined _WINDOWS)
 
 #ifdef __vxworks
 #include <vxWorks.h>
@@ -79,12 +79,12 @@ class NTSynchronized
 public:
 	explicit NTSynchronized(NTReentrantSemaphore&);
 	//TODO remove vxworks SEM_ID support
-#if (defined __vxworks || defined WIN32)
+#if (defined __vxworks || defined _WINDOWS)
 	explicit NTSynchronized(SEM_ID);
 #endif
 	virtual ~NTSynchronized();
 private:
-#if (defined __vxworks || defined WIN32)
+#if (defined __vxworks || defined _WINDOWS)
 	bool usingSem;
 	NTReentrantSemaphore* m_sem;
 	SEM_ID m_semaphore;

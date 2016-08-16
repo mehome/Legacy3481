@@ -14,34 +14,34 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
     <Filter Include="NetworkTables">
-      <UniqueIdentifier>{5e534974-d0b8-456d-804c-7c80a521a12b}</UniqueIdentifier>
+      <UniqueIdentifier>{12d36ec7-dfb8-4f47-b3e2-044ef587ece8}</UniqueIdentifier>
     </Filter>
     <Filter Include="NetWorkTables2">
-      <UniqueIdentifier>{4e823937-eeb4-4831-801b-6aae79f5aa2a}</UniqueIdentifier>
+      <UniqueIdentifier>{2f9e19d8-8b97-4df6-9340-317a783e49e3}</UniqueIdentifier>
     </Filter>
     <Filter Include="NetWorkTables2\util">
-      <UniqueIdentifier>{5cf246bd-8d4e-4bf4-a91a-c6f9e7377766}</UniqueIdentifier>
+      <UniqueIdentifier>{87c6731d-1f6b-4c51-b063-fea9e039f2d5}</UniqueIdentifier>
     </Filter>
     <Filter Include="NetWorkTables2\thread">
-      <UniqueIdentifier>{e7e2d267-7c77-4143-b2c2-e094db2d1d36}</UniqueIdentifier>
+      <UniqueIdentifier>{3034e04e-3f13-4fe7-8188-6fac14b711f3}</UniqueIdentifier>
     </Filter>
     <Filter Include="NetWorkTables2\type">
-      <UniqueIdentifier>{bc23e751-5d40-4bbc-b6ba-e7f201672cfd}</UniqueIdentifier>
+      <UniqueIdentifier>{4a4d45e4-edc2-42ed-9857-e158b0f61d60}</UniqueIdentifier>
     </Filter>
     <Filter Include="NetWorkTables2\server">
-      <UniqueIdentifier>{ecfda0be-f964-47e3-b0b7-b9fb8441dd12}</UniqueIdentifier>
+      <UniqueIdentifier>{58879215-4282-44ca-b0a8-3f221d9a2c50}</UniqueIdentifier>
     </Filter>
     <Filter Include="NetWorkTables2\stream">
-      <UniqueIdentifier>{e3d41fbd-ca78-4f8b-8a68-2c3164328b83}</UniqueIdentifier>
+      <UniqueIdentifier>{2ab2eab9-20b1-49ae-b7d2-7656dc76cfae}</UniqueIdentifier>
     </Filter>
     <Filter Include="NetWorkTables2\client">
-      <UniqueIdentifier>{2451ebbc-d07c-446f-9f9e-ebf5cd03a70c}</UniqueIdentifier>
+      <UniqueIdentifier>{7b7983a7-eab7-409e-802e-60e2dfc6652b}</UniqueIdentifier>
     </Filter>
     <Filter Include="NetWorkTables2\connection">
-      <UniqueIdentifier>{81d8dfbf-e155-4307-862b-038a4236a154}</UniqueIdentifier>
+      <UniqueIdentifier>{d91ce3ae-833f-4178-9d8c-0d28227e433e}</UniqueIdentifier>
     </Filter>
     <Filter Include="OSAL">
-      <UniqueIdentifier>{91854b86-5f59-4dad-98dd-e1b362399856}</UniqueIdentifier>
+      <UniqueIdentifier>{e4cedac3-de0b-4c53-be59-38cf40f5c212}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
