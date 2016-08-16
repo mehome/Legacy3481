@@ -53,7 +53,7 @@ SocketServerStreamProvider::SocketServerStreamProvider(int port)
 	serverAddr.sin_port = htons(port);
 	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	if ((serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET)
+	if ((serverSocket =(int)socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET)
 	{
 		throw IOException("Error creating server socket", errno);
 	}
@@ -99,7 +99,7 @@ IOStream* SocketServerStreamProvider::accept(){
 			if (FD_ISSET(serverSocket, &fdSet))
 			{
 				//For windows these must be NULL to work properly
-				int connectedSocket = ::accept(serverSocket, NULL, NULL);
+				int connectedSocket = (int)::accept(serverSocket, NULL, NULL);
 				if (connectedSocket == INVALID_SOCKET)
 					return NULL;
 				
