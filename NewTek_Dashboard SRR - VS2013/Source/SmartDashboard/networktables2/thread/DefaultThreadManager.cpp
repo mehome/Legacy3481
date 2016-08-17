@@ -14,7 +14,7 @@ PeriodicNTThread::PeriodicNTThread(PeriodicRunnable* _r, const char* _name) :
 {
 	fprintf(stdout, "Starting task: %s\n", name);
 	fflush(stdout);
-	thread->Start((UINT32)this);
+	thread->Start((size_t)this);
 }
 
 PeriodicNTThread::~PeriodicNTThread()

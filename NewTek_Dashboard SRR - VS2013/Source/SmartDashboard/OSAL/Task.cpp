@@ -104,8 +104,8 @@ bool NTTask::StartInternal()
  * Starts this task.
  * If it is already running or unable to start, it fails and returns false.
  */
-bool NTTask::Start(UINT32 arg0, UINT32 arg1, UINT32 arg2, UINT32 arg3, UINT32 arg4, 
-		UINT32 arg5, UINT32 arg6, UINT32 arg7, UINT32 arg8, UINT32 arg9)
+bool NTTask::Start(size_t arg0, size_t arg1, size_t arg2, size_t arg3, size_t arg4, 
+		size_t arg5, size_t arg6, size_t arg7, size_t arg8, size_t arg9)
 {
 	//m_taskID = taskSpawn(m_taskName,
 	//					m_priority,

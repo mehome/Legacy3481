@@ -27,8 +27,8 @@ public:
 	NTTask(const char* name, FUNCPTR function, INT32 priority = kDefaultPriority, UINT32 stackSize = 20000);
 	virtual ~NTTask();
 
-	bool Start(UINT32 arg0 = 0, UINT32 arg1 = 0, UINT32 arg2 = 0, UINT32 arg3 = 0, UINT32 arg4 = 0, 
-			UINT32 arg5 = 0, UINT32 arg6 = 0, UINT32 arg7 = 0, UINT32 arg8 = 0, UINT32 arg9 = 0);
+	bool Start(size_t arg0 = 0, size_t arg1 = 0, size_t arg2 = 0, size_t arg3 = 0, size_t arg4 = 0, 
+			size_t arg5 = 0, size_t arg6 = 0, size_t arg7 = 0, size_t arg8 = 0, size_t arg9 = 0);
 	bool Restart();
 	bool Stop();
 
@@ -47,7 +47,7 @@ public:
 
 	#ifdef _WINDOWS
 	FUNCPTR m_function;
-	UINT32 m_Arg[10];
+	size_t m_Arg[10];
 	#endif
 private:
 	char* m_taskName;
