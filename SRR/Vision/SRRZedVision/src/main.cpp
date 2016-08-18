@@ -16,7 +16,6 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <opencv2/calib3d/calib3d.hpp>
-//#include "SmartDashboard/SmartDashboard_Import.h"
 
 //ZED Includes
 #include <zed/Camera.hpp>
@@ -26,10 +25,9 @@
 #include "OCVCamera.h"
 #include "ZEDCamera.h"
 
-//#include "../SmartDashboard/SmartDashboard_import.h"
+#include "../SmartDashboard/SmartDashboard_import.h"
 
 //Define the structure and callback for mouse event
-
 typedef struct mouseOCVStruct {
     float* data;
     uint32_t step;
@@ -351,7 +349,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-//	SmartDashboard::init();
+	SmartDashboard::init();
 
 	std::cout << "Press 'q' to exit, hoser!" << std::endl;
 
@@ -629,7 +627,7 @@ int main(int argc, char **argv) {
         }
     }
 
-//	SmartDashboard::shutdown();
+	SmartDashboard::shutdown();
 
 	return 0;
 }
