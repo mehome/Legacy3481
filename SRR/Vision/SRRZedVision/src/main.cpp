@@ -4,22 +4,7 @@
  ** Most of the functions of the ZED SDK are linked with a key press event (using opencv)         **
  ***************************************************************************************************/
 
-//standard includes
-#include <stdio.h>
-#include <string.h>
-#include <ctime>
-#include <chrono>
-
-//opencv includes
-#include <opencv2/opencv.hpp>
-#include "opencv2/objdetect/objdetect.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include <opencv2/calib3d/calib3d.hpp>
-
-//ZED Includes
-#include <zed/Camera.hpp>
-#include <zed/utils/GlobalDefine.hpp>
+#include "stdafx.h"
 
 //My stuff
 #include "OCVCamera.h"
@@ -63,221 +48,37 @@ float GetDistanceAtPoint(sl::zed::Mat depth, int x, int y)
 	return dist;
 }
 
-
-enum histo_mode
-{
-	h_original,
-	h_equalize,
-	h_clahe
-};
-
 #define FindHook 1
 #define FindRock 2
 #define FindBeacon 3
 #define FindObsticals 4
 
 std::string filename;
-enum histo_mode mode = h_original;
 bool FrontCamEnabled = false;
 bool StereoCamEnabled = true;
 int cam1_op_mode = 0;
 int cam2_op_mode = 0;
-bool bShowImg = false;
 int frameCount = 0;
 
-/** Function Headers */
+/** Functions **/
 void detectHookSample(cv::Mat frame, sl::zed::Mat depth);
 void detectRockSample(cv::Mat frame, sl::zed::Mat depth);
 void detectBeacon(cv::Mat frame, sl::zed::Mat depth);
 
-/** Global variables */
+/** Cascade classifire data */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
 std::string hook_cascade_name = "data/SRR Samples/cascades/hook_cascade_gpu.xml";
-cv::CascadeClassifier hook_cascade;
 
-std::vector<cv::Rect> hooks;
+extern cv::CascadeClassifier hook_cascade;
 
-/**
-* @function detectHookSample
-*/
-void detectHookSample(cv::Mat frame, sl::zed::Mat depth)
-{
-	cv::Mat frame_gray;
-
-	cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
-	if (mode == h_original && bShowImg)
-		cv::imshow("original gray", frame_gray);
-
-	if (mode == h_equalize)
-	{
-		cv::equalizeHist(frame_gray, frame_gray);
-		if (bShowImg)
-			cv::imshow("equalized", frame_gray);
-	}
-
-	if (mode == h_clahe)
-	{
-		cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
-		clahe->setClipLimit(4);
-		//clahe->setTilesGridSize(cv::Size(8, 8));
-		clahe->apply(frame_gray, frame_gray);
-		if (bShowImg)
-			cv::imshow("clahe", frame_gray);
-	}
-
-	//-- detect hook sample
-	hook_cascade.detectMultiScale(frame_gray, hooks, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(15, 15));
-
-	int height = 0;
-	int XRes = frame_gray.cols;
-	int YRes = frame_gray.rows;
-
-	for (size_t i = 0; i < hooks.size(); i++)
-	{
-		float Distance = GetDistanceAtPoint(depth, hooks[i].x, hooks[i].y);	
-		std::cout << "hook found at: " << hooks[i].x << ", " << hooks[i].y << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-
-		cv::Point p1(hooks[i].x, hooks[i].y);
-		cv::Point p2(hooks[i].x + hooks[i].width, hooks[i].y + hooks[i].height);
-		rectangle(frame, p1, p2, cv::Scalar(255, 0, 255), 2, 8, 0);
-		
-		double x_target = hooks[i].x + hooks[i].width / 2;
-		double y_target = hooks[i].y + hooks[i].height / 2;
-		//SmartDashboard::PutNumber("X Position", x_target);
-		//SmartDashboard::PutNumber("Y Position", y_target);
-	}
-}
-
-int H_low = 122;
-int H_high = 155;
-int S_low = 50;
-int S_high = 255;
-int V_low = 90;
-int V_high = 255;
-
-int ThreshInc = 10;
-
-void detectRockSample(cv::Mat frame, sl::zed::Mat depth)
-{
-	cv::Scalar color = cv::Scalar( 255, 0, 255 );
-
-	cv::Mat hsv, binary, masked;
-
-    //convert the img from color to hsv
-    cv::cvtColor(frame, hsv, CV_BGR2HSV);
-    
-    //cv::blur(hsv, hsv, cv::Size(3,3));
-	cv::GaussianBlur( hsv, hsv, cv::Size( 5, 5 ), 0, 0 );
-
-    //process the image - threshold
-    cv::inRange(hsv, cv::Scalar(H_low, S_low, V_low), cv::Scalar(H_high, S_high, V_high), binary);
-
-	int erosion_size = 3;
-	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
-                                       cv::Size( 2*erosion_size + 1, 2*erosion_size + 1 ),
-                                       cv::Point( erosion_size, erosion_size ) );	
-	// this eliminates small artifacts.
-	cv::erode( binary, binary, element );
-	cv::dilate( binary, binary, element );                                       
-
-	// countours
-	std::vector<std::vector<cv::Point> > contours;
-	std::vector<cv::Vec4i> hierarchy;
-	
-	/// Find contours
-	cv::findContours( binary, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
-
-	// mask and display   
-	frame.copyTo(masked, binary);   
-
-	/// moments
-	std::vector<cv::Moments> mu(contours.size() );
-	/// mass centers
-	std::vector<cv::Point2f> mc(contours.size() );
-	/// rotated rectangles 
-	std::vector<cv::RotatedRect> minRect(contours.size() );
-
-	for( int i = 0; i< contours.size(); i++ )
-	{
-		/// Get the moments
-		mu[i] = moments( contours[i], false );
-		///  Get the mass centers:
-		mc[i] = cv::Point2f( (float)(mu[i].m10/mu[i].m00) , (float)(mu[i].m01/mu[i].m00) );
-		/// Find the rotated rectangles for each contour
-		minRect[i] = cv::minAreaRect( cv::Mat(contours[i]) );
-
-		float Distance = GetDistanceAtPoint(depth, (int)mc[i].x, (int)mc[i].y);	
-     
-		if ((contourArea(contours[i]) > 150) && 
-			(minRect[i].size.width > 10) && 
-			(minRect[i].size.height > 10))
-		{
-			std::cout << "rock found at " << mc[i].x << ", " << mc[i].y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-
-			/// Draw contours
-			cv::drawContours( frame, contours, i, color, 2, 8, hierarchy, 0, cv::Point() );
-			cv::circle( frame, mc[i], 4, color, -1, 8, 0 );
-			// rotated rectangle
-			cv::Point2f rect_points[4]; minRect[i].points( rect_points );
-			for( int j = 0; j < 4; j++ )
-				cv::line( frame, rect_points[j], rect_points[(j+1)%4], color, 1, 8 );
-		}	
-	}
-
-	cv::imshow("Maksed", masked);    
-}
-
-int count = 0;
-std::vector<cv::Point2f> pointBuf;
-
-// use calibration target for a beacon.
-void detectBeacon(cv::Mat view, sl::zed::Mat depth)
-{
-    cv::Size boardSize( 9, 6 );            // The size of the board -> Number of items by width and height
-    cv::Mat cameraMatrix, distCoeffs;
-    cv::Size imageSize;
-
-    imageSize = view.size();  // Format input image.
-
-	std::cout << count++ << " calling findchessboardcorners." << std::endl;
-    bool found = cv::findChessboardCorners( view, boardSize, pointBuf,
-        			CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
-        			
-	std::cout << "findcorners returned " << found << std::endl;
-    if (found)                // If done with success,
-    {
-        // improve the found corners' coordinate accuracy for chessboard
-		cv::Mat viewGray;
-		cv::cvtColor(view, viewGray, cv::COLOR_BGR2GRAY);
-        cv::cornerSubPix( viewGray, pointBuf, cv::Size(11,11),
-            cv::Size(-1,-1), cv::TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
-            
-        /// min point
-        cv::Point2f minp( (float)imageSize.width, (float)imageSize.height );
-
-		/// max point
-		cv::Point2f maxp( 0, 0 );
-            
-		/// center
-		cv::Point2f center;
-
-		for( int i = 0; i < pointBuf.size(); i++)
-		{
-			if (pointBuf[i].x < minp.x) minp.x = pointBuf[i].x;
-			if (pointBuf[i].y < minp.y) minp.y = pointBuf[i].y;
-			if (pointBuf[i].x > maxp.x) maxp.x = pointBuf[i].x; 
-			if (pointBuf[i].y > maxp.y) maxp.y = pointBuf[i].y;
-		}
-		center.x = minp.x + (maxp.x - minp.x) / 2;
-		center.y = minp.y + (maxp.y - minp.y) / 2;
-
-        // Draw the corners.
-        cv::drawChessboardCorners( view, boardSize, cv::Mat(pointBuf), found );
-        
-   		float Distance = GetDistanceAtPoint(depth, (int)center.x, (int)center.y);	
-		std::cout << "beacon found at " << center.x << ", " << center.y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-    }
-}
+/** threishold values **/
+extern int H_low;
+extern int H_high;
+extern int S_low;
+extern int S_high;
+extern int V_low;
+extern int V_high;
+extern int ThreshInc;
 
 //main  function
 int main(int argc, char **argv) {
@@ -302,7 +103,8 @@ int main(int argc, char **argv) {
 	else
 		filearg = NULL;
 
-	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0");
+//	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0");
+	OCVCamera FrontCam = OCVCamera("rtsp://root:root@192.168.0.90/axis-media/media.amp");
 
 	cv::Mat frame;
 
@@ -356,6 +158,7 @@ int main(int argc, char **argv) {
     //loop until 'q' is pressed
     while (key != 'q') 
 	{
+		/***** main video loop *****/
 		if (FrontCamEnabled)
 		{
 			frame = FrontCam.GrabFrame();
@@ -405,6 +208,7 @@ int main(int argc, char **argv) {
 
 			frameCount++;
 		}
+		/** end of main video loop **/
 
         key = cv::waitKey(5);
         

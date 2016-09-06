@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "ZEDCamera.h"
 
 ZEDCamera::ZEDCamera(const char *file)

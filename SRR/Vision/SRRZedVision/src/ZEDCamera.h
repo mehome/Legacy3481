@@ -1,8 +1,7 @@
 #pragma once
 
 //ZED Includes
-#include <zed/Camera.hpp>
-#include <zed/utils/GlobalDefine.hpp>
+#include "stdafx.h"
 
 class ZEDCamera 
 {

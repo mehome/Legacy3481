@@ -1,5 +1,5 @@
+#include "stdafx.h"
 #include "OCVCamera.h"
-
 
 OCVCamera::OCVCamera(const char *file)
 {
