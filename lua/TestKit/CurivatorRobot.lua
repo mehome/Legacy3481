@@ -19,12 +19,12 @@ GearHeightOffset_m=38.43 * Inches2Meters
 MotorToWheelGearRatio=12.0/36.0
 
 
-g_wheel_diameter_in=6   --This will determine the correct distance try to make accurate too
-WheelBase_Width_In=24.52198975	  --The wheel base will determine the turn rate, must be as accurate as possible!
-WheelBase_Length_In=28.7422  
+g_wheel_diameter_in=8   --This will determine the correct distance try to make accurate too
+WheelBase_Width_In=42.3	  --The wheel base will determine the turn rate, must be as accurate as possible!
+WheelBase_Length_In=39.0  
 WheelTurningDiameter_In= ( (WheelBase_Width_In * WheelBase_Width_In) + (WheelBase_Length_In * WheelBase_Length_In) ) ^ 0.5
-HighGearSpeed = (749.3472 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9  --RPMs from BHS2015 Chassis.SLDASM
-LowGearSpeed  = (346.6368 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9
+HighGearSpeed = (255.15 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9  --RPMs from NeveRest20 Chassis.SLDASM
+LowGearSpeed  = (255.15 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9
 Drive_MaxAccel=5
 --Omni wheels means no skid
 --skid=math.cos(math.atan2(WheelBase_Length_In,WheelBase_Width_In))
@@ -32,22 +32,24 @@ skid=1
 gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) * skid
 
 MainRobot = {
-	version = 1.2;
+	version = 1.3;
 	--Version 1.0 only turret and big-arm
 	--Version 1.1 all 5 arm controls
 	--Version 1.2 added auto arm controls
+	--Version 1.3 added preliminary drive settings
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
 		victor =
 		{
-			id_1 = { name= "right_drive_1", channel=1, module=1}, 
+			--For now on test kit swap 1 and 6 to toggle between the boom and the drive
+			id_1 = { name= "right_drive_1", channel=6, module=1}, 
 			id_2 = { name= "right_drive_2", channel=8}, 
 			id_3 = { name="left_drive_1", channel=2},
 			id_4 = { name="left_drive_2", channel=9},
 			id_5= { name="turret", channel=3},
 			id_6= { name="arm", channel=7},
-			id_7= { name="boom", channel=6},
+			id_7= { name="boom", channel=1},
 			id_8= { name="bucket", channel=4},
 			id_9= { name="clasp", channel=5},
 			--If we decide we need more power we can assign these
@@ -86,9 +88,9 @@ MainRobot = {
 	--version = 1;
 	
 	Mass = 25, -- Weight kg
-	MaxAccelLeft = 20, MaxAccelRight = 20, 
+	MaxAccelLeft = 5, MaxAccelRight = 5, 
 	MaxAccelForward = Drive_MaxAccel, MaxAccelReverse = Drive_MaxAccel, 
-	MaxAccelForward_High = Drive_MaxAccel * 2, MaxAccelReverse_High = Drive_MaxAccel * 2, 
+	MaxAccelForward_High = Drive_MaxAccel * 1, MaxAccelReverse_High = Drive_MaxAccel * 1, 
 	MaxTorqueYaw =  gMaxTorqueYaw,  --Note Bradley had 0.78 reduction to get the feel
 	MaxTorqueYaw_High = gMaxTorqueYaw * 5,
 	MaxTorqueYaw_SetPoint = gMaxTorqueYaw * 2,
@@ -110,7 +112,7 @@ MainRobot = {
 		is_closed=0,
 		show_pid_dump='no',
 		--we should turn this off in bench mark testing
-		use_aggressive_stop=1,  --we are in small area want to have responsive stop
+		use_aggressive_stop=0,  
 		ds_display_row=-1,
 		wheel_base_dimensions =
 		{length_in=WheelBase_Length_In, width_in=WheelBase_Width_In},
@@ -126,16 +128,16 @@ MainRobot = {
 		drive_to_scale=0.50,				--For 4 to 10 50% gives a 5 inch tolerance
 		left_max_offset=0.0 , right_max_offset=0.0,   --Ensure both tread top speeds are aligned
 		--This is obtainer from encoder RPM's of 1069.2 and Wheel RPM's 427.68 (both high and low have same ratio)
-		encoder_to_wheel_ratio=0.5,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
+		encoder_to_wheel_ratio=2.0,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
 		voltage_multiply=-1.0,				--May be reversed using -1.0
 		--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
-		curve_voltage=
-		{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
+		--curve_voltage=
+		--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
 		force_voltage=
 		{t4=0, t3=0, t2=0, t1=1, c=0},
-		reverse_steering='y',
-		 left_encoder_reversed='no',
-		right_encoder_reversed='no',
+		reverse_steering='n',
+		 left_encoder_reversed='yes',
+		right_encoder_reversed='yes',
 		inv_max_accel = 1/15.0,  --solved empirically
 		forward_deadzone_left  = 0.02,
 		forward_deadzone_right = 0.02,
@@ -491,9 +493,11 @@ MainRobot = {
 		{
 			control = "airflo",
 			axis_count = 4,
+			--Joystick_SetLeftVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			--Joystick_SetRightVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Analog_Turn = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Analog_Turn = {type="joystick_culver", key_x=5, key_y=2, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
-			--Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
 			--FieldCentric_Enable = {type="joystick_button", key=4, on_off=false},
