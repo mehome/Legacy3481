@@ -300,15 +300,15 @@
 		<width>107</width>
 		<height>30</height>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="3.844"/>
-		<property name="Minimum" value="-3.844"/>
+		<property name="Maximum" value="2.715768"/>
+		<property name="Minimum" value="-2.715768"/>
 	</widget>
 	<widget field="RightEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="512" y="260"/>
 		<width>115</width>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="3.844"/>
-		<property name="Minimum" value="-3.844"/>
+		<property name="Maximum" value="2.715768"/>
+		<property name="Minimum" value="-2.715768"/>
 	</widget>
 	<widget field="Y_ft " type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="556" y="121"/>
@@ -355,9 +355,9 @@
 	</widget>
 	<widget field="Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
 		<location x="296" y="23"/>
-		<property name="Upper Limit" value="14.0"/>
-		<property name="Lower Limit" value="-14.0"/>
-		<property name="Tick Interval" value="2.8"/>
+		<property name="Upper Limit" value="8.0"/>
+		<property name="Lower Limit" value="-8.0"/>
+		<property name="Tick Interval" value="2.0"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="684" y="143"/>
