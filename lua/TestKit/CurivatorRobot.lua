@@ -44,11 +44,11 @@ MainRobot = {
 		{
 			--For now on test kit swap 1 and 6 to toggle between the boom and the drive
 			id_1 = { name= "right_drive_1", channel=6, module=1}, 
-			id_2 = { name= "right_drive_2", channel=8}, 
+			id_2 = { name= "right_drive_2", channel=7}, 
 			id_3 = { name="left_drive_1", channel=2},
 			id_4 = { name="left_drive_2", channel=9},
 			id_5= { name="turret", channel=3},
-			id_6= { name="arm", channel=7},
+			id_6= { name="arm", channel=8},
 			id_7= { name="boom", channel=1},
 			id_8= { name="bucket", channel=4},
 			id_9= { name="clasp", channel=5},
