@@ -1,5 +1,5 @@
-
 #include "stdafx.h"
+#include "../SmartDashboard/SmartDashboard_import.h"
 
 enum histo_mode
 {
@@ -63,7 +63,7 @@ void detectHookSample(cv::Mat frame, sl::zed::Mat depth)
 
 		double x_target = hooks[i].x + hooks[i].width / 2;
 		double y_target = hooks[i].y + hooks[i].height / 2;
-		//SmartDashboard::PutNumber("X Position", x_target);
-		//SmartDashboard::PutNumber("Y Position", y_target);
+		SmartDashboard::PutNumber("X Position", x_target);
+		SmartDashboard::PutNumber("Y Position", y_target);
 	}
 }

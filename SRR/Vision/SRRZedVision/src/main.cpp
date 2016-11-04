@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
 
 	SmartDashboard::init();
 
-	std::cout << "Press 'q' to exit, hoser!" << std::endl;
+	std::cout << "Press 'q' to exit." << std::endl;
 
     //loop until 'q' is pressed
     while (key != 'q') 
