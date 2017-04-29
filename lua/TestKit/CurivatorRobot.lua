@@ -336,8 +336,8 @@ MainRobot = {
 			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=522,  --was 415,440
-			pot_max_limit=907,  --was 800,760
+			pot_min_limit=584,  --was 522,415,440
+			pot_max_limit=969,  --was 907,800,760
 			pot_range_flipped='y',
 			
 			--max_speed=0.64,	--was 0.64 but actual tests show a bit faster
