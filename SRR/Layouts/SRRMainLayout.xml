@@ -1,5 +1,24 @@
 <xml version="1.0">
 <dashboard>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="603" y="117"/>
+		<property name="Text" value="Drive Pot Safety"/>
+	</static-widget>
+	<widget field="SafetyLock_Drive" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="570" y="115"/>
+	</widget>
+	<widget field="Swivel_rrDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="570" y="255"/>
+	</widget>
+	<widget field="Swivel_rlDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="570" y="220"/>
+	</widget>
+	<widget field="Swivel_frDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="570" y="185"/>
+	</widget>
+	<widget field="Swivel_flDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="570" y="150"/>
+	</widget>
 	<widget field="swivel_rr_Pot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="863" y="245"/>
 		<width>115</width>
@@ -45,19 +64,19 @@
 		<width>126</width>
 	</widget>
 	<widget field="ClaspShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="512" y="485"/>
+		<location x="460" y="485"/>
 		<width>140</width>
 	</widget>
 	<widget field="BucketShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="510" y="450"/>
+		<location x="460" y="450"/>
 		<width>143</width>
 	</widget>
 	<widget field="Boom_ShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="512" y="413"/>
+		<location x="460" y="413"/>
 		<width>142</width>
 	</widget>
 	<widget field="BigArm_ShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="508" y="372"/>
+		<location x="460" y="373"/>
 		<width>142</width>
 	</widget>
 	<widget field="Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
@@ -75,57 +94,57 @@
 		<location x="127" y="297"/>
 	</widget>
 	<widget field="SafetyLock" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="11" y="296"/>
+		<location x="10" y="296"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="33" y="300"/>
 		<property name="Text" value="Main Arm Safety"/>
 	</static-widget>
 	<widget field="TurretDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="7" y="336"/>
+		<location x="10" y="336"/>
 	</widget>
 	<widget field="ArmDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="10" y="377"/>
 	</widget>
 	<widget field="BoomDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="9" y="415"/>
+		<location x="10" y="415"/>
 	</widget>
 	<widget field="BucketDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="10" y="451"/>
 	</widget>
 	<widget field="ClaspDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="11" y="488"/>
+		<location x="10" y="488"/>
 	</widget>
 	<widget field="turretPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="365" y="324"/>
+		<location x="320" y="324"/>
 		<width>115</width>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="armPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="365" y="365"/>
+		<location x="320" y="365"/>
 		<width>115</width>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="boomPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="365" y="404"/>
+		<location x="320" y="404"/>
 		<width>115</width>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="bucketPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="365" y="440"/>
+		<location x="320" y="440"/>
 		<width>115</width>
 		<property name="Foreground" value="0.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="claspPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="365" y="478"/>
+		<location x="320" y="478"/>
 		<width>115</width>
 		<property name="Foreground" value="0.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
@@ -196,19 +215,20 @@
 		<width>130</width>
 	</widget>
 	<widget field="clasp_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="218" y="485"/>
+		<location x="180" y="485"/>
 		<width>116</width>
 	</widget>
 	<widget field="bucket_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="214" y="450"/>
+		<location x="180" y="450"/>
 		<width>120</width>
 	</widget>
 	<widget field="boom_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="216" y="413"/>
+		<location x="180" y="413"/>
 		<width>116</width>
 	</widget>
 	<widget field="ClaspVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="35" y="478"/>
+		<location x="40" y="478"/>
+		<width>114</width>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
@@ -216,6 +236,7 @@
 	</widget>
 	<widget field="BucketVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="40" y="440"/>
+		<width>114</width>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
@@ -223,6 +244,7 @@
 	</widget>
 	<widget field="BoomVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="42" y="404"/>
+		<width>114</width>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
@@ -230,6 +252,7 @@
 	</widget>
 	<widget field="ArmVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="40" y="365"/>
+		<width>114</width>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
@@ -239,18 +262,19 @@
 		<location x="312" y="50"/>
 	</widget>
 	<widget field="TurretVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="38" y="324"/>
+		<location x="40" y="324"/>
+		<width>114</width>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="arm_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="218" y="372"/>
+		<location x="180" y="372"/>
 		<width>116</width>
 	</widget>
 	<widget field="turret_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="216" y="333"/>
+		<location x="180" y="333"/>
 		<width>117</width>
 	</widget>
 	<widget field="Timer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
@@ -285,7 +309,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Edit Position" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="678" y="101"/>
+		<location x="484" y="32"/>
 	</widget>
 	<widget field="wheel_fl_Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="153" y="140"/>
@@ -364,7 +388,7 @@
 	<widget field="IsSlide" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="307" y="22"/>
 	</widget>
-	<widget field="wheel_fr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Wheel_fr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="305" y="140"/>
 		<width>114</width>
 		<property name="Foreground" value="255.51.51.255"/>
@@ -372,7 +396,7 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="wheel_cr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Wheel_cr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="305" y="175"/>
 		<width>114</width>
 		<property name="Foreground" value="255.51.51.255"/>
@@ -380,7 +404,7 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="wheel_fl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Wheel_fl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="28" y="140"/>
 		<width>104</width>
 		<height>30</height>
@@ -389,7 +413,7 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="wheel_cl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Wheel_cl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="28" y="175"/>
 		<width>104</width>
 		<height>30</height>
@@ -398,7 +422,7 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="wheel_rr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Wheel_rr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="305" y="210"/>
 		<width>114</width>
 		<property name="Foreground" value="255.51.51.255"/>
@@ -406,7 +430,7 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="wheel_rl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Wheel_rl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="28" y="210"/>
 		<width>104</width>
 		<height>30</height>
@@ -415,7 +439,7 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="swivel_rr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Swivel_rr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="600" y="245"/>
 		<width>104</width>
 		<height>30</height>
@@ -424,7 +448,7 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="swivel_rl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Swivel_rl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="600" y="210"/>
 		<width>104</width>
 		<height>30</height>
@@ -433,7 +457,7 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="swivel_fr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Swivel_fr_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="600" y="175"/>
 		<width>104</width>
 		<height>30</height>
@@ -442,7 +466,7 @@
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
-	<widget field="swivel_fl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+	<widget field="Swivel_fl_Voltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="600" y="140"/>
 		<width>104</width>
 		<height>30</height>
@@ -452,7 +476,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="608" y="102"/>
+		<location x="509" y="35"/>
 		<property name="Text" value="Edit Position"/>
 	</static-widget>
 </dashboard>
