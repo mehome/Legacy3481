@@ -225,8 +225,8 @@ MainRobot = {
 			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=232,
-			pot_max_limit=890,
+			pot_min_limit=291,  --was 232
+			pot_max_limit=949,  --was 890
 			pot_range_flipped='n',
 			
 			--max_speed=13.3,	
