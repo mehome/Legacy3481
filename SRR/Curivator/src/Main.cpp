@@ -5,8 +5,7 @@
 
 #include "Curivator_Robot.h"
 #include "Common/src/InOut_Interface.h"
-#include "TankDrive/src/Tank_Robot_Control.h"
-#include "TankDrive/src/Servo_Robot_Control.h"
+#include "SwerveDrive/src/Swerve_Robot.h"
 
 const bool c_UseDefaultControls=false;
 
@@ -101,7 +100,7 @@ class SetUp_Manager
 
 		void SetAutoPilot(bool autoPilot) {m_pUI->SetAutoPilot(autoPilot);}
 		Curivator_Robot *GetRobot() const {return m_pRobot;}
-		void SetSafety(bool UseSafety) {m_Control.SetSafety(UseSafety);}
+		//void SetSafety(bool UseSafety) {m_Control.SetSafety(UseSafety);}
 		void ResetPos()
 		{
 			//TODO scope this within __DebugLUA__
@@ -142,7 +141,7 @@ public:
 	{
 		m_Manager.ResetPos();  //We must reset the position to ensure the distance is measured properly
 		//autonomous mode cannot have safety on
-		m_Manager.SetSafety(false);
+		//m_Manager.SetSafety(false);
 		m_Manager.SetAutoPilot(true);  //we are not driving the robot
 		//Now to set up our goal
 		Curivator_Robot *Robot=m_Manager.GetRobot();  //we can always cast down
@@ -224,7 +223,7 @@ public:
 			//m_Manager.GetRobot()->SetUseEncoders(false);
 			m_Manager.SetAutoPilot(false);  //we are driving the robot
 			double LastTime = GetTime();
-			m_Manager.SetSafety(true);
+			//m_Manager.SetSafety(true);
 			while (IsOperatorControl() && !IsDisabled())
 			{
 				const double CurrentTime=GetTime();

@@ -1,7 +1,7 @@
 #pragma once
-#ifndef __UsingTankDrive__
-#define __UsingTankDrive__
-#endif
+//#ifndef __UsingTankDrive__
+//#define __UsingTankDrive__
+//#endif
 
 class Curivator_Control_Interface :	
 									#ifdef __UsingTankDrive__
@@ -78,7 +78,7 @@ class Curivator_Robot_Properties : public Swerve_Robot_Properties
 		typedef Swerve_Robot_Properties __super;
 		#endif
 		#endif
-		Rotary_Pot_Properties m_RotaryProps[9];
+		Rotary_Pot_Properties m_RotaryProps[11];
 		Curivator_Robot_Props m_CurivatorRobotProps;
 
 		class ControlEvents : public LUA_Controls_Properties_Interface
@@ -95,7 +95,7 @@ class Curivator_Robot_Properties : public Swerve_Robot_Properties
 const char * const csz_Curivator_Robot_SpeedControllerDevices_Enum[] =
 {
 	"turret","arm","boom","bucket","clasp","arm_xpos","arm_ypos","bucket_angle","clasp_angle",
-	"wheel_fl","wheel_fr","wheel_rl","wheel_rr","rocker_left","rocker_right","bogie_left","bogie_right",
+	"wheel_cl","wheel_cr"
 };
 
 //const char * const csz_Curivator_Robot_BoolSensorDevices_Enum[] =
@@ -124,7 +124,7 @@ class Curivator_Robot : public Swerve_Robot
 	public:
 		enum SpeedControllerDevices
 		{
-			eTurret,eArm,eBoom,eBucket,eClasp,eArm_Xpos,eArm_Ypos,eBucket_Angle,eClasp_Angle,eDriveOffset
+			eTurret,eArm,eBoom,eBucket,eClasp,eArm_Xpos,eArm_Ypos,eBucket_Angle,eClasp_Angle,eWheel_CL,eWheel_CR,eDriveOffset
 		};
 
 		static SpeedControllerDevices GetSpeedControllerDevices_Enum (const char *value)
@@ -147,7 +147,7 @@ class Curivator_Robot : public Swerve_Robot
 
 		enum AnalogInputs
 		{
-			eTurretPot,eArmPot,eBoomPot,eBucketPot,eClaspPot,eArmXposPot,eArmYposPot,eBucketAngle,eClaspAngle,eRockerLeftPot,eRockerRightPot,eBogieLeftPot,eBogieRightPot,
+			eTurretPot,eArmPot,eBoomPot,eBucketPot,eClaspPot,eArmXposPot,eArmYposPot,eBucketAngle,eClaspAngle
 		};
 
 		static AnalogInputs GetAnalogInputs_Enum (const char *value)
@@ -325,7 +325,7 @@ class Curivator_Robot : public Swerve_Robot
 		virtual void UpdateController(double &AuxVelocity,Vec2D &LinearAcceleration,double &AngularAcceleration,bool &LockShipHeadingToOrientation,double dTime_s);
 	private:
 		#ifndef Robot_TesterCode
-		typedef  Tank_Robot __super;
+		typedef  Swerve_Robot __super;
 		#endif
 		Curivator_Control_Interface * const m_RobotControl;
 		Robot_Arm m_Turret;
@@ -340,6 +340,8 @@ class Curivator_Robot : public Swerve_Robot
 	private:
 		Robot_Arm m_ClaspAngle;
 		Robot_Arm *mp_Arm[Curivator_Robot_NoRobotArm];  //A handy work-around to treat these as an array, by pointing to them
+
+		Rotary_Velocity_Control m_CenterLeftWheel,m_CenterRightWheel;
 		Curivator_Robot_Properties m_RobotProps;  //saves a copy of all the properties
 		double m_LatencyCounter;
 
@@ -374,7 +376,8 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 		//This is called per enabled session to enable (on not) things dynamically (e.g. compressor)
 		void ResetPos();
 		#ifndef Robot_TesterCode
-		void SetSafety(bool UseSafety) {m_DriveRobotControl.SetSafety(UseSafety);}
+		//Note: Swerve drive is not using drive
+		//void SetSafety(bool UseSafety) {m_DriveRobotControl.SetSafety(UseSafety);}
 		#endif
 
 		Curivator_Control_Interface &AsControlInterface() {return *this;}
@@ -438,10 +441,11 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 	private:
 		__inline double Pot_GetRawValue(size_t index);
 
-		KalmanFilter m_KalFilter[10];
-		Averager<double,5> m_Averager[10];
+		KalmanFilter m_KalFilter[12];
+		Averager<double,5> m_Averager[12];
 		#ifdef Robot_TesterCode
 		Potentiometer_Tester2 m_Potentiometer[10]; //simulate a real potentiometer for calibration testing
+		Encoder_Simulator2 m_Encoders[2];  //for the center wheels
 		#endif
 };
 

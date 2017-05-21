@@ -29,6 +29,4 @@
 #include "Common/src/InOut_Interface.h"
 #include "Common/src/Debug.h"
 #include "Common/src/Robot_Control_Common.h"
-#include "TankDrive/src/Tank_Robot.h"
-#include "TankDrive/src/Tank_Robot_Control.h"
-#include "TankDrive/src/Servo_Robot_Control.h"
+#include "SwerveDrive/src/Swerve_Robot.h"
