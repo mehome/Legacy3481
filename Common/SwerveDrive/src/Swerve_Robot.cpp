@@ -842,7 +842,7 @@ double Swerve_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				string ContructedName;
 				ContructedName=Prefix,ContructedName+="_Raw";
 				SmartDashboard::PutNumber(ContructedName.c_str(),raw_value);
-				ContructedName=Prefix,ContructedName+="Pot_Raw";
+				ContructedName=Prefix,ContructedName+="_Pot_Raw";
 				SmartDashboard::PutNumber(ContructedName.c_str(),PotentiometerRaw_To_Arm);
 
 				//Now to compute the result... we start with the normalized value and give it the appropriate offset and scale
