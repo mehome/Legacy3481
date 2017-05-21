@@ -245,7 +245,9 @@ __inline void Initialize_1C_LUT(const Control_Assignment_Properties::Controls_1C
 		constrols.push_back(NewElement);  //add it to our list of victors
 		//Now to work out the new LUT
 		//our LUT is the EnumIndex position set to the value of i... make sure we have the slots created
-		assert(enumIndex<10);  //sanity check we have a limit to how many victors we have
+		//Note: with the more board we can have more victors, so I've increased this to 20... also this index does not represent pin count, but is a separate index
+		//that is mapped to the pin count index
+		assert(enumIndex<20);  //sanity check we have a limit to how many victors we have
 		while(control_LUT.size()<=enumIndex)
 			control_LUT.push_back(-1);  //fill with -1 as a way to indicate nothing is located for that slot
 		control_LUT[enumIndex]=LUT_index;
