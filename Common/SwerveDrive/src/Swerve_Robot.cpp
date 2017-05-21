@@ -844,6 +844,14 @@ double Swerve_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				SmartDashboard::PutNumber(ContructedName.c_str(),raw_value);
 				ContructedName=Prefix,ContructedName+="_Pot_Raw";
 				SmartDashboard::PutNumber(ContructedName.c_str(),PotentiometerRaw_To_Arm);
+				//Potentiometer safety, if we lose wire connection it will be out of range in which case we turn on the safety (we'll see it turned on)
+				if (raw_value>HiRange || raw_value<LowRange)
+				{
+					std::string SmartLabel=csz_Swerve_Robot_SpeedControllerDevices_Enum[index];
+					SmartLabel[0]-=32; //Make first letter uppercase
+					ContructedName=SmartLabel+"Disable";
+					SmartDashboard::PutBoolean(ContructedName.c_str(),true);
+				}
 
 				//Now to compute the result... we start with the normalized value and give it the appropriate offset and scale
 				//the offset is delegated in script in the final scale units, and the scale is the total range in radians
