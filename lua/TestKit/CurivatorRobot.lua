@@ -503,23 +503,23 @@ MainRobot = {
 			ds_display_row=-1,
 			use_pid_up_only='y',
 			pid_up=
-			{p=100, i=0, d=25},
+			{p=75, i=0, d=25},
 			pid_down=
-			{p=100, i=0, d=25},
+			{p=75, i=0, d=25},
 			tolerance=0.3,
 			tolerance_count=1,
 			voltage_multiply=1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=232,  --was 232
-			pot_max_limit=890,  --was 890
+			pot_min_limit=232,
+			pot_max_limit=890,
 			pot_range_flipped='n',
 			
 			--max_speed=13.3,	
 			max_speed=6.0,
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=5,			--just go with what feels right
-			max_accel_reverse=5,
+			max_accel_forward=2.5,			--just go with what feels right
+			max_accel_reverse=2.5,
 			using_range=1,					--Warning Only use range if we have a potentiometer!
 			predict_up=.200,
 			predict_down=.200,
