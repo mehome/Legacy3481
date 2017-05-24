@@ -54,6 +54,7 @@ void Rotary_System::InitNetworkProperties(const Rotary_Props &props,bool AddArmA
 	}
 
 	SmartDashboard::PutNumber("Tolerance",props.PrecisionTolerance);
+	SmartDashboard::PutBoolean("ManualPositionTesting",false);
 
 	if (!AddArmAssist)
 	{
@@ -350,6 +351,15 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 		//ensure the positions are calibrated when we are not moving
 		if (IsZero(NewPosition-m_LastPosition) || NeedGainAssistForUp)
 				SetPos_m(NewPosition);  //this will help min and max limits work properly even though we do not have PID
+	}
+
+	if (m_Rotary_Props.PID_Console_Dump)
+	{
+		const bool ManualPositionTesting=SmartDashboard::GetBoolean("ManualPositionTesting");
+		if (ManualPositionTesting)
+			SetIntendedPosition(SmartDashboard::GetNumber("IntendedPosition"));
+		else
+			SmartDashboard::PutNumber("IntendedPosition",m_IntendedPosition);
 	}
 
 	//if we are heading for an intended position and we graze on it... turn off the corrections
