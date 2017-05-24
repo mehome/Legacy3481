@@ -86,6 +86,13 @@ const char * const csz_Swerve_Robot_SpeedControllerDevices_Enum[] =
 	"swivel_fl","swivel_fr","swivel_rl","swivel_rr"
 };
 
+//Note: rotary systems share the same index as their speed controller counterpart
+const char * const csz_Swerve_Robot_AnalogInputs_Enum[] =
+{
+	"wheel_fl_enc","wheel_fr_enc","wheel_rl_enc","wheel_rr_enc",
+	"swivel_fl_pot","swivel_fr_pot","swivel_rl_pot","swivel_rr_pot"
+};
+
 class Swerve_Robot_UI;
 
 ///This is a specific robot that is a robot tank and is composed of an arm, it provides addition methods to control the arm, and applies updates to
@@ -110,6 +117,16 @@ class DRIVE_API Swerve_Robot : public Ship_Tester,
 
 		static Swerve_Robot_SpeedControllerDevices GetSpeedControllerDevices_Enum (const char *value)
 		{	return Enum_GetValue<Swerve_Robot_SpeedControllerDevices> (value,csz_Swerve_Robot_SpeedControllerDevices_Enum,_countof(csz_Swerve_Robot_SpeedControllerDevices_Enum));
+		}
+
+		enum AnalogInputs
+		{
+			eWheel_FLEnc,eWheel_FREnc,eWheel_RLEnc,eWheel_RREnc,
+			eSwivel_FLPot,eSwivel_FRPot,eSwivel_RLPot,eSwivel_RRPot
+		};
+
+		static AnalogInputs GetAnalogInputs_Enum (const char *value)
+		{	return Enum_GetValue<AnalogInputs> (value,csz_Swerve_Robot_AnalogInputs_Enum,_countof(csz_Swerve_Robot_AnalogInputs_Enum));
 		}
 
 		Swerve_Robot(const char EntityName[],Swerve_Drive_Control_Interface *robot_control,size_t EnumOffset=0,bool IsAutonomous=false);
@@ -242,7 +259,10 @@ class DRIVE_API Swerve_Robot_Control : public RobotControlCommon, public Swerve_
 		{	return Swerve_Robot::GetSpeedControllerDevices_Enum(name);
 		}
 		virtual size_t RobotControlCommon_Get_DigitalInput_EnumValue(const char *name) const  	{	return (size_t)-1;	}
-		virtual size_t RobotControlCommon_Get_AnalogInput_EnumValue(const char *name) const  	{	return (size_t)-1;	}
+
+		virtual size_t RobotControlCommon_Get_AnalogInput_EnumValue(const char *name) const  
+		{	return Swerve_Robot::GetAnalogInputs_Enum(name);
+		}
 		virtual size_t RobotControlCommon_Get_DoubleSolenoid_EnumValue(const char *name) const 	{	return (size_t)-1;	}
 
 		//This is only needed for simulation
