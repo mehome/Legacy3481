@@ -544,13 +544,20 @@ Vec2d PhysicsEntity_2D::GetCentripetalAcceleration_2D(double DeltaTime_s) const
 	return GetCentripetalForce(DeltaTime_s) / m_EntityMass;
 }
 
+//TODO determine why this isn't building
+inline Vec2D GlobalToLocal2(double Heading,const Vec2D &GlobalVector)
+{
+	return Vec2D(sin(-Heading)*GlobalVector[1]+cos(Heading)*GlobalVector[0],
+		cos(-Heading)*GlobalVector[1]+sin(Heading)*GlobalVector[0]);
+}
+
 Vec2d PhysicsEntity_2D::GetCentripetalForce(double DeltaTime_s) const
 {
 	//F_centripetal = m v^2 / r
 	//return GetCentripetalAcceleration(DeltaTime_s) * m_EntityMass;
 
 	//This way is more efficient
-	Vec2d AlteredVelocity=GlobalToLocal(m_AngularVelocity*DeltaTime_s,m_LinearVelocity);
+	Vec2d AlteredVelocity=GlobalToLocal2(m_AngularVelocity*DeltaTime_s,m_LinearVelocity);
 	return GetForceFromVelocity(AlteredVelocity,DeltaTime_s) * DeltaTime_s;
 }
 
