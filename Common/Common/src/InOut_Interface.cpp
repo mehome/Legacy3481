@@ -213,7 +213,7 @@ bool Driver_Station_Joystick::read_joystick (size_t nr, JoyState &Info)
 
 Driver_Station_Joystick::Driver_Station_Joystick(int NoJoysticks,int StartingPort) : m_NoJoysticks(NoJoysticks), m_StartingPort(StartingPort)
 {
-	#ifdef USE_LEGACY_WPI_LIBRARIES
+	#ifdef __USE_LEGACY_WPI_LIBRARIES__
 	m_ds = DriverStation::GetInstance();
 	#else
 	m_ds = &DriverStation::GetInstance();
