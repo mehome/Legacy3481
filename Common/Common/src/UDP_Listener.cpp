@@ -1,3 +1,5 @@
+//This code is depreciated as we now use the SmartDashboard via TCPIP
+#if 0
 #include "WPILib.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,7 +106,7 @@ class UDP_Listener
 	     struct sockaddr_in fromAddr; 
 	     int fromSize = sizeof(fromAddr);
 	     //By default this will wait for an event signal of receiving a packet, so in the case of success a sleep occurred within this call
-		#if 1
+		#if 0
 		//roboRIO version
 		int n=recvfrom(m_sockfd, buffer, 255, 0, (struct sockaddr *) &fromAddr,(socklen_t *) &fromSize);
 		#else
@@ -234,3 +236,4 @@ void coodinate_manager_Interface::DestroyInstance(coodinate_manager_Interface *i
 {
 	delete instance;
 }
+#endif

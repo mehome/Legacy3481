@@ -1,3 +1,5 @@
+//This code is depreciated as we now use the SmartDashboard via TCPIP
+#if 0
 #pragma once
 
 class COMMON_API UDP_Listener_Interface
@@ -41,3 +43,4 @@ protected:  //from coodinate_manager_Interface
 	virtual double GetYpos() const {return m_Ypos;}
 	virtual bool IsUpdated() const {return m_Updated;}
 };
+#endif
