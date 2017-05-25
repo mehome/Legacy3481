@@ -55,6 +55,7 @@ void Rotary_System::InitNetworkProperties(const Rotary_Props &props,bool AddArmA
 
 	SmartDashboard::PutNumber("Tolerance",props.PrecisionTolerance);
 	SmartDashboard::PutBoolean("ManualPositionTesting",false);
+	SmartDashboard::PutBoolean("ManualInDegrees",true);
 
 	if (!AddArmAssist)
 	{
@@ -356,10 +357,21 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 	if (m_Rotary_Props.PID_Console_Dump)
 	{
 		const bool ManualPositionTesting=SmartDashboard::GetBoolean("ManualPositionTesting");
-		if (ManualPositionTesting)
-			SetIntendedPosition(SmartDashboard::GetNumber("IntendedPosition"));
+		const bool InDegrees=SmartDashboard::GetBoolean("ManualInDegrees");
+		if (InDegrees)
+		{
+			if (ManualPositionTesting)
+				SetIntendedPosition(DEG_2_RAD(SmartDashboard::GetNumber("IntendedPosition")));
+			else
+				SmartDashboard::PutNumber("IntendedPosition",RAD_2_DEG(m_IntendedPosition));
+		}
 		else
-			SmartDashboard::PutNumber("IntendedPosition",m_IntendedPosition);
+		{
+			if (ManualPositionTesting)
+				SetIntendedPosition(SmartDashboard::GetNumber("IntendedPosition"));
+			else
+				SmartDashboard::PutNumber("IntendedPosition",m_IntendedPosition);
+		}
 	}
 
 	//if we are heading for an intended position and we graze on it... turn off the corrections
