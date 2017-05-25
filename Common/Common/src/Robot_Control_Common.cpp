@@ -234,6 +234,8 @@ __inline void Initialize_1C_LUT(const Control_Assignment_Properties::Controls_1C
 		#ifdef Robot_TesterCode
 		T *NewElement=new T(element.Module,element.Channel,element.name.c_str());  //adding name for UI
 		#else
+		//quick debug when things are not working
+		printf("new %s as %d\n",element.name.c_str(),element.Channel);
 		#ifdef __USE_LEGACY_WPI_LIBRARIES__
 		T *NewElement=new T(element.Module,element.Channel);
 		#else
@@ -272,6 +274,8 @@ __inline void Initialize_2C_LUT(const Control_Assignment_Properties::Controls_2C
 		#ifdef Robot_TesterCode
 		T *NewElement=new T(element.Module,element.ForwardChannel,element.ReverseChannel,element.name.c_str());
 		#else
+		//quick debug when things are not working
+		printf("new %s as %d, %d\n",element.name.c_str(),element.ForwardChannel,element.ReverseChannel);
 		T *NewElement=new T(element.Module,element.ForwardChannel,element.ReverseChannel);
 		#endif
 		const size_t LUT_index=constrols.size(); //get size before we add it in
