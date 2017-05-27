@@ -898,7 +898,7 @@ void Swerve_Robot_Control::UpdateRotaryVoltage(size_t index,double Voltage)
 {
 	bool SafetyLock=SmartDashboard::GetBoolean("SafetyLock_Drive");
 	double VoltageScalar=1.0;
-	const bool PID_Console_Dump=(m_SwerveRobotProps.GetRotaryProps(index).GetRotaryProps().PID_Console_Dump);
+
 	switch (index)
 	{
 	case Swerve_Robot::eWheel_FL:
@@ -933,8 +933,7 @@ void Swerve_Robot_Control::UpdateRotaryVoltage(size_t index,double Voltage)
 	SmartLabel[0]-=32; //Make first letter uppercase
 	SmartLabel+="_Voltage";
 	SmartDashboard::PutNumber(SmartLabel.c_str(),Voltage);
-	//apply safety to all motors... exception, allow pid console dump flag through (open loop only) so we can easily isolate a wheel that we are calibrating
-	if ((SafetyLock)||(PID_Console_Dump&&m_SwerveRobotProps.GetRotaryProps(index).GetRotaryProps().LoopState==Rotary_Props::eOpen))
+	if (SafetyLock)
 		Voltage=0.0;
 	Victor_UpdateVoltage(index,Voltage);
 }
