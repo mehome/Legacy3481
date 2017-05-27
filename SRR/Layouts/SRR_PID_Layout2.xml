@@ -1,5 +1,29 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="ManualInDegrees" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="735" y="308"/>
+	</widget>
+	<widget field="gain accel" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="561" y="594"/>
+		<width>98</width>
+	</widget>
+	<widget field="gain decel" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="559" y="566"/>
+		<width>99</width>
+	</widget>
+	<widget field="velocity D" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="685" y="567"/>
+		<width>88</width>
+		<height>20</height>
+	</widget>
+	<widget field="velocity I" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="682" y="543"/>
+		<width>91</width>
+	</widget>
+	<widget field="velocity P" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="683" y="520"/>
+		<width>92</width>
+	</widget>
 	<widget field="ManualPositionTesting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="713" y="330"/>
 	</widget>
