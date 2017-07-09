@@ -5,7 +5,7 @@ int count = 0;
 std::vector<cv::Point2f> pointBuf;
 
 // use calibration target for a beacon.
-void detectBeacon(cv::Mat view, sl::zed::Mat depth)
+void detectBeacon(cv::Mat view, sl::Mat depth)
 {
 	cv::Size boardSize(9, 6);            // The size of the board -> Number of items by width and height
 	cv::Mat cameraMatrix, distCoeffs;

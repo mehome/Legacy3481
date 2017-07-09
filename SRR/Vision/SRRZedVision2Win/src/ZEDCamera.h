@@ -1,6 +1,5 @@
 #pragma once
 
-//ZED Includes
 #include "stdafx.h"
 
 class ZEDCamera 
@@ -11,7 +10,7 @@ public:
 
 	cv::Mat GrabFrame(void);
 	cv::Mat GrabFrameAndDapth(void);
-	sl::zed::Mat GrabDepth(void);
+	sl::Mat GrabDepth(void);
 	cv::Mat GetNormDisparity(void);
 	cv::Mat GetNormDepth(void);
 	cv::Mat GetNormConfidence(void);
@@ -28,14 +27,14 @@ public:
 	int height;
 	bool bNoFrame;
 
-	sl::zed::SENSING_MODE dm_type;
+	sl::SENSING_MODE dm_type;
 	int ViewID;
 
 	int confidenceLevel;
 
-	sl::zed::Mat depth;
+	sl::Mat depth;
 
-	sl::zed::Camera* zed;
+	sl::Camera* zed;
 
 private:
 
@@ -44,5 +43,5 @@ private:
 	cv::Mat cvDisparity;
 	cv::Mat cvConfidence;
 
-	sl::zed::ZED_SELF_CALIBRATION_STATUS old_self_calibration_status;
+	sl::SELF_CALIBRATION_STATE old_self_calibration_state;
 };

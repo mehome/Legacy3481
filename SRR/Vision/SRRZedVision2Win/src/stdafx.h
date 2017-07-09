@@ -14,5 +14,5 @@
 #include <opencv2/calib3d/calib3d.hpp>
 
 //ZED Includes
-#include <zed/Camera.hpp>
-#include <zed/utils/GlobalDefine.hpp>
+#include <sl/Camera.hpp>
+#include <sl/defines.hpp>

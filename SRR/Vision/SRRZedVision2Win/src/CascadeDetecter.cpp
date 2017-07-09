@@ -19,7 +19,7 @@ std::vector<cv::Rect> hooks;
 /**
 * @function detectHookSample
 */
-void detectHookSample(cv::Mat frame, sl::zed::Mat depth)
+void detectHookSample(cv::Mat frame, sl::Mat depth)
 {
 	cv::Mat frame_gray;
 

@@ -1,6 +1,5 @@
 #pragma once
 
-//opencv includes
 #include "stdafx.h"
 
 class OCVCamera 

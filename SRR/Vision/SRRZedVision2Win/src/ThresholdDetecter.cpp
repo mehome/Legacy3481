@@ -10,7 +10,7 @@ int V_high = 255;
 
 int ThreshInc = 10;
 
-void detectRockSample(cv::Mat frame, sl::zed::Mat depth)
+void detectRockSample(cv::Mat frame, sl::Mat depth)
 {
 	cv::Scalar color = cv::Scalar(255, 0, 255);
 

@@ -40,9 +40,9 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
     }
 }
 
-float GetDistanceAtPoint(sl::zed::Mat depth, int x, int y)
+float GetDistanceAtPoint(sl::Mat depth, int x, int y)
 {
-    float* ptr_image_num = (float*) (depth.data + y * depth.step);
+	float* ptr_image_num = (float*)(depth.getPtr<sl::float1>(sl::MEM_CPU)) + y * depth.getStep(sl::MEM_CPU);
     float dist = ptr_image_num[x] / 1000.f;
 
 	return dist;
@@ -61,9 +61,9 @@ int cam2_op_mode = 0;
 int frameCount = 0;
 
 /** Functions **/
-void detectHookSample(cv::Mat frame, sl::zed::Mat depth);
-void detectRockSample(cv::Mat frame, sl::zed::Mat depth);
-void detectBeacon(cv::Mat frame, sl::zed::Mat depth);
+void detectHookSample(cv::Mat frame, sl::Mat depth);
+void detectRockSample(cv::Mat frame, sl::Mat depth);
+void detectBeacon(cv::Mat frame, sl::Mat depth);
 
 /** Cascade classifire data */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 	cv::Mat frame;
 
 	ZEDCamera StereoCam = ZEDCamera(filearg);
-    StereoCam.dm_type = sl::zed::STANDARD;
+    StereoCam.dm_type = sl::SENSING_MODE_STANDARD;
 
 	int width = StereoCam.width;
 	int height = StereoCam.height;
@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 	cv::Mat anaplyph(height, width, CV_8UC4);
 	cv::Mat confidencemap(height, width, CV_8UC4);
 
-	sl::zed::Mat depth;
+	sl::Mat depth;
 
 	if (StereoCam.IsOpen)
 	{
@@ -130,8 +130,8 @@ int main(int argc, char **argv) {
 
 		// Set the structure
 		mouseStruct._image = cv::Size(width, height);
-		mouseStruct.data = (float*)depth.data;
-		mouseStruct.step = depth.step;
+		mouseStruct.data = (float*)depth.getPtr<sl::float1>(sl::MEM_CPU);
+		mouseStruct.step = depth.getStep(sl::MEM_CPU);
 		mouseStruct.name = "DEPTH";
 
 		//create Opencv Windows
@@ -296,12 +296,12 @@ int main(int argc, char **argv) {
 			}
 
 			case 'r':
-				StereoCam.dm_type = sl::zed::SENSING_MODE::STANDARD;
+				StereoCam.dm_type = sl::SENSING_MODE_STANDARD;
 				std::cout << "SENSING_MODE: Standard" << std::endl;
 				break;
 
 			case 'f':
-				StereoCam.dm_type = sl::zed::SENSING_MODE::FILL;
+				StereoCam.dm_type = sl::SENSING_MODE_FILL;
 				std::cout << "SENSING_MODE: FILL" << std::endl;
 				break;
 
