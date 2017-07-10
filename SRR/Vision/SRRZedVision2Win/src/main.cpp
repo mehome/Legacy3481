@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
 			depth = StereoCam.depth;
 			// TODO: optional depth and disparity display below.
 			// Get frames and launch the computation
-			if (!StereoCam.bNoFrame)
+			if (StereoCam.bHaveFrame)
 			{
 
 				/***************  DISPLAY:  ***************/

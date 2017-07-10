@@ -20,12 +20,13 @@ public:
 	int GetExposure(void);
 	void SetExposure(int);
 	void saveSbSimage(std::string);
+	cv::Mat slMat2cvMat(sl::Mat& input);
 
 	bool IsOpen;
 
 	int width;
 	int height;
-	bool bNoFrame;
+	bool bHaveFrame;
 
 	sl::SENSING_MODE dm_type;
 	int ViewID;

@@ -8,7 +8,7 @@ ZEDCamera::ZEDCamera(const char *file)
 	  ViewID(0),
 	  width(0),
 	  height(0),
-	  bNoFrame(false),
+	  bHaveFrame(true),
 	  IsOpen(false)
 {
 	zed = new sl::Camera();
@@ -57,11 +57,12 @@ cv::Mat ZEDCamera::GrabFrameAndDapth(void)
 {
 	zed->setConfidenceThreshold(confidenceLevel);
 
-	bNoFrame = zed->grab(dm_type);
+	bHaveFrame = (zed->grab(dm_type) == sl::SUCCESS);
 
 	sl::ERROR_CODE res;
+	sl::Mat zedFrame;
 
-	if (!bNoFrame) {
+	if (bHaveFrame) {
 		// Estimated rotation :
 		if (old_self_calibration_state != zed->getSelfCalibrationState()) {
 			std::cout << "Self Calibration Status : " << sl::statusCode2str(zed->getSelfCalibrationState()) << std::endl;
@@ -69,15 +70,8 @@ cv::Mat ZEDCamera::GrabFrameAndDapth(void)
 		}
 
 		res = zed->retrieveMeasure(depth ,sl::MEASURE_DEPTH, sl::MEM_CPU); // Get the pointer
-
-		//Even if Left and Right images are still available through getView() function, it's better since v0.8.1 to use retrieveImage for cpu readback because GPU->CPU is done async during depth estimation.
-		// Therefore :
-		// -- if disparity estimation is enabled in grab function, retrieveImage will take no time because GPU->CPU copy has already been done during disp estimation
-		// -- if disparity estimation is not enabled, GPU->CPU copy is done in retrieveImage fct, and this function will take the time of copy.
-		if (ViewID == sl::VIEW_LEFT || ViewID == sl::VIEW_RIGHT)
-			slMat2cvMat(zed->retrieveImage(static_cast<sl::SIDE> (ViewID))).copyTo(frame);
-		else
-			slMat2cvMat(zed->getView(static_cast<sl::VIEW_MODE> (ViewID))).copyTo(frame);
+		res = zed->retrieveImage(zedFrame, static_cast<sl::VIEW> (ViewID));
+		frame = slMat2cvMat(zedFrame);
 	}
 
 	return frame;
@@ -87,8 +81,8 @@ sl::Mat ZEDCamera::GrabDepth(void)
 {
 	zed->setConfidenceThreshold(confidenceLevel);
 
-	if (!zed->grab(dm_type))
-		depth = zed->retrieveMeasure(sl::MEASURE_DEPTH); // Get the pointer
+	if (zed->grab(dm_type) == sl::SUCCESS)
+		zed->retrieveMeasure(depth, sl::MEASURE_DEPTH); // Get the pointer
 
 	return depth;
 }
@@ -100,25 +94,34 @@ sl::Mat ZEDCamera::GrabDepth(void)
 
 cv::Mat ZEDCamera::GetNormDisparity(void)
 {
-	if (!bNoFrame)
-		slMat2cvMat(zed->normalizeMeasure(sl::MEASURE_DISPARITY)).copyTo(cvDisparity);
-
+	sl::Mat frm;
+	if (bHaveFrame)
+	{
+		zed->retrieveMeasure(frm, sl::MEASURE_DISPARITY);
+		cvDisparity = slMat2cvMat(frm);
+	}
 	return cvDisparity;
 }
 
 cv::Mat ZEDCamera::GetNormDepth(void)
 {
-	if (!bNoFrame)
-		slMat2cvMat(zed->normalizeMeasure(sl::MEASURE_DEPTH)).copyTo(cvDepth);
-
+	sl::Mat frm;
+	if (bHaveFrame)
+	{
+		zed->retrieveMeasure(frm, sl::MEASURE_DEPTH);
+		cvDepth = slMat2cvMat(frm);
+	}
 	return cvDepth;
 }
 
 cv::Mat ZEDCamera::GetNormConfidence(void)
 {
-	if (!bNoFrame)
-		slMat2cvMat(zed->normalizeMeasure(sl::MEASURE_CONFIDENCE)).copyTo(cvConfidence);
-
+	sl::Mat frm;
+	if (bHaveFrame)
+	{
+		zed->retrieveMeasure(frm, sl::MEASURE_CONFIDENCE);
+		cvConfidence = slMat2cvMat(frm);
+	}
 	return cvConfidence;
 }
 
@@ -129,36 +132,39 @@ void ZEDCamera::ResetCalibration(void)
 
 int ZEDCamera::GetGain(void)
 {
-	return zed->getCameraSettingsValue(sl::ZED_GAIN);
+	return zed->getCameraSettings(sl::CAMERA_SETTINGS_GAIN);
 }
 
 void ZEDCamera::SetGain(int gain)
 {
-	//zed->setCameraSettingsValue(sl::zed::ZED_EXPOSURE, 0);	// disable, but don't change the value.
-	zed->setCameraSettingsValue(sl::ZED_GAIN, gain);
+	zed->setCameraSettings(sl::CAMERA_SETTINGS_GAIN, gain);
 }
 
 int ZEDCamera::GetExposure(void)
 {
-	return zed->getCameraSettingsValue(sl::ZED_EXPOSURE);
+	return zed->getCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE);
 }
 
 void ZEDCamera::SetExposure(int exp)
 {
-	zed->setCameraSettingsValue(sl::ZED_EXPOSURE, exp);
+	zed->setCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE, exp);
 }
 
 // save function using opencv
 void ZEDCamera::saveSbSimage(std::string filename) 
 {
-	sl::resolution imSize = zed->getImageSize();
+	sl::Resolution imSize = zed->getResolution();
 
 	cv::Mat SbS(imSize.height, imSize.width * 2, CV_8UC4);
 	cv::Mat leftIm(SbS, cv::Rect(0, 0, imSize.width, imSize.height));
 	cv::Mat rightIm(SbS, cv::Rect(imSize.width, 0, imSize.width, imSize.height));
 
-	slMat2cvMat(zed->retrieveImage(sl::SIDE::LEFT)).copyTo(leftIm);
-	slMat2cvMat(zed->retrieveImage(sl::SIDE::RIGHT)).copyTo(rightIm);
+	sl::Mat left;
+	sl::Mat right;
+	zed->retrieveImage(left, sl::VIEW::VIEW_LEFT);
+	leftIm = slMat2cvMat(left);
+	zed->retrieveImage(right, sl::VIEW::VIEW_RIGHT);
+	rightIm = slMat2cvMat(right);
 
 	cv::imshow("Saving Image", SbS);
 	cv::cvtColor(SbS, SbS, CV_RGBA2RGB);
@@ -166,7 +172,7 @@ void ZEDCamera::saveSbSimage(std::string filename)
 	cv::imwrite(filename, SbS);
 }
 
-cv::Mat slMat2cvMat(sl::Mat& input)
+cv::Mat ZEDCamera::slMat2cvMat(sl::Mat& input)
 {
 
 	//convert MAT_TYPE to CV_TYPE
@@ -186,5 +192,5 @@ cv::Mat slMat2cvMat(sl::Mat& input)
 
 	// cv::Mat data requires a uchar* pointer. Therefore, we get the uchar1 pointer from sl::Mat (getPtr<T>())
 	//cv::Mat and sl::Mat will share the same memory pointer
-	return cv::Mat(input.getHeight(), input.getWidth(), cv_type, input.getPtr<sl::uchar1>(MEM_CPU));
+	return cv::Mat(input.getHeight(), input.getWidth(), cv_type, input.getPtr<sl::uchar1>(sl::MEM_CPU));
 }
