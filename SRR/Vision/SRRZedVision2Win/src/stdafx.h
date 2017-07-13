@@ -13,6 +13,6 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include <opencv2/calib3d/calib3d.hpp>
 
+#pragma warning (disable: 4251)		// TODO: see if there is a fix that doesn't require modifying zed includes.
 //ZED Includes
 #include <sl/Camera.hpp>
-#include <sl/defines.hpp>
