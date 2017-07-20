@@ -248,18 +248,20 @@ struct COMMON_API Rotary_Pot_Props
 	double PotMaxValue;  //highest you want the potentiometer to read (add some padding)
 	double PotMinValue;
 	//This allows adjustment of the potentiometer in software to avoid manual recalibration.
-	double PotentiometerOffset;  
+	double PotentiometerOffset;
+	PolynomialEquation_forth_Props PotPolyTerms; //in some environments the potentiometer is not linear
 };
 
 class COMMON_API Rotary_Pot_Properties : public Rotary_Properties
 {
 	public:
+		void Pot_Init() {m_RotaryPotProps.PotPolyTerms.Init();}
 		Rotary_Pot_Properties(const char EntityName[], double Mass,double Dimension,
 			double MAX_SPEED,double ACCEL,double BRAKE,double MaxAccelForward, double MaxAccelReverse,	
 			Ship_Type ShipType=Ship_1D_Props::eDefault, bool UsingRange=false, double MinRange=0.0, double MaxRange=0.0,
 			bool IsAngular=false) : Rotary_Properties(EntityName,Mass,Dimension,MAX_SPEED,ACCEL,BRAKE,MaxAccelForward,
-			MaxAccelReverse,ShipType,UsingRange,MinRange,MaxRange,IsAngular) {}
-		Rotary_Pot_Properties() {}
+			MaxAccelReverse,ShipType,UsingRange,MinRange,MaxRange,IsAngular) {Pot_Init();}
+		Rotary_Pot_Properties() {Pot_Init();}
 		virtual void LoadFromScript(Scripting::Script& script);
 		const Rotary_Pot_Props &GetRotary_Pot_Properties() const {return m_RotaryPotProps;}
 	protected:

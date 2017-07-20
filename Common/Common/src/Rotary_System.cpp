@@ -1118,6 +1118,6 @@ void Rotary_Pot_Properties::LoadFromScript(Scripting::Script& script)
 	script.GetField("pot_offset", NULL, NULL, &m_RotaryPotProps.PotentiometerOffset);
 	std::string sTest;
 	SCRIPT_TEST_BOOL_YES(m_RotaryPotProps.IsFlipped,"pot_range_flipped");
-
+	m_RotaryPotProps.PotPolyTerms.LoadFromScript(script,"curve_pot");
 	__super::LoadFromScript(script);
 }
