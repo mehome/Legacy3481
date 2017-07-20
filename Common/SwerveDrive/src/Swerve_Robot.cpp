@@ -710,6 +710,12 @@ void Swerve_Robot_Control::Initialize(const Entity_Properties *props)
 			//potentiometers have this solved within their class
 			#endif
 		}
+		for (size_t i=Swerve_Robot::eSwivel_FL;i<Swerve_Robot::eNoSwerveRobotSpeedControllerDevices;i++)
+		{
+			const Rotary_Pot_Properties &swerve=robot_props->GetRotaryProps(i);
+			const Rotary_Pot_Props &props=swerve.GetRotary_Pot_Properties();
+			m_PotPoly[i].Initialize(&props.PotPolyTerms);
+		}
 	}
 }
 
@@ -777,6 +783,7 @@ __inline double Swerve_Robot_Control::Pot_GetRawValue(size_t index)
 {
 	//double raw_value = (double)m_Potentiometer.GetAverageValue();
 	double raw_value=(double)Analog_GetAverageValue(index);
+	raw_value = m_PotPoly[index](raw_value); //apply custom curve to make linear
 	raw_value = m_KalFilter[index](raw_value);  //apply the Kalman filter
 	raw_value=m_Averager[index].GetAverage(raw_value); //and Ricks x element averager
 	//Note: we keep the raw value in its native form... just averaging at most for less noise
@@ -844,8 +851,9 @@ double Swerve_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				SmartDashboard::PutNumber(ContructedName.c_str(),raw_value);
 				ContructedName=Prefix,ContructedName+="_Pot_Raw";
 				SmartDashboard::PutNumber(ContructedName.c_str(),PotentiometerRaw_To_Arm);
+				const double Tolerance=m_SwerveRobotProps.GetRotaryProps(index).GetRotaryProps().PrecisionTolerance;
 				//Potentiometer safety, if we lose wire connection it will be out of range in which case we turn on the safety (we'll see it turned on)
-				if (raw_value>HiRange || raw_value<LowRange)
+				if (raw_value>(HiRange+Tolerance) || raw_value<(LowRange-Tolerance))
 				{
 					std::string SmartLabel=csz_Swerve_Robot_SpeedControllerDevices_Enum[index];
 					SmartLabel[0]-=32; //Make first letter uppercase

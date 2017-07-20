@@ -292,6 +292,7 @@ class DRIVE_API Swerve_Robot_Control : public RobotControlCommon, public Swerve_
 	private:
 		__inline double Pot_GetRawValue(size_t index);
 
+		PolynomialEquation_forth m_PotPoly[8];
 		KalmanFilter m_KalFilter[8];
 		Averager<double,4> m_Averager[8];
 
