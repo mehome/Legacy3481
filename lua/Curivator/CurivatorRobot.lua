@@ -37,7 +37,7 @@ AutonTest_TestArm=2
 AutonTest_GrabSequence=3
 
 MainRobot = {
-	version = 1.2;
+	version = 1.0;
 	--Version 1.0
 	control_assignments =
 	{
@@ -431,10 +431,11 @@ MainRobot = {
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--TODO 50 - 200 center 82... determine quad expression
-			--center around 82
-			pot_min_limit=40,  --45 forward   0
-			pot_max_limit=160,  -- 45 counter clockwise  962
+			pot_min_limit=50,  
+			pot_max_limit=200, 
+			--Note 50 - 200 center 82... fixed using quad expression
+			curve_pot=
+			{t4=0.0, t3=0.00004, t2=0.0215, t1=4.1186, c=-92.987},
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
