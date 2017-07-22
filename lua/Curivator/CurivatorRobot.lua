@@ -327,14 +327,16 @@ MainRobot = {
 			use_pid_up_only='y',
 			pid_up={p=100, i=0, d=25},
 			pid_down={p=100, i=0, d=25},
-			tolerance=0.03,
+			tolerance=0.3,
 			tolerance_count=1,
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--center around 166
 			pot_min_limit=50,  --45 forward   0
-			pot_max_limit=160,  -- 45 counter clockwise  962
+			pot_max_limit=200,  -- 45 counter clockwise  962
+			curve_pot=
+			{t4=0.0, t3=0.00004, t2=-0.0215, t1=4.1186, c=-92.987},
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
@@ -360,14 +362,16 @@ MainRobot = {
 			use_pid_up_only='y',
 			pid_up={p=100, i=0, d=25},
 			pid_down={p=100, i=0, d=25},
-			tolerance=0.03,
+			tolerance=0.3,
 			tolerance_count=1,
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--center around 115
-			pot_min_limit=70,  --45 forward   0
-			pot_max_limit=180,  -- 45 counter clockwise  962
+			pot_min_limit=50,  --45 forward   0
+			pot_max_limit=200,  -- 45 counter clockwise  962
+			curve_pot=
+			{t4=0.0, t3=0.00004, t2=-0.0215, t1=4.1186, c=-92.987},
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
@@ -393,13 +397,13 @@ MainRobot = {
 			use_pid_up_only='y',
 			pid_up={p=100, i=0, d=25},
 			pid_down={p=100, i=0, d=25},
-			tolerance=0.07,
+			tolerance=0.3,
 			tolerance_count=1,
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--center around 80
-			pot_min_limit=68,  --45 forward   0
+			pot_min_limit=60,  --45 forward   0
 			pot_max_limit=138,  -- 45 counter clockwise  962
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
@@ -435,7 +439,7 @@ MainRobot = {
 			pot_max_limit=200, 
 			--Note 50 - 200 center 82... fixed using quad expression
 			curve_pot=
-			{t4=0.0, t3=0.00004, t2=0.0215, t1=4.1186, c=-92.987},
+			{t4=0.0, t3=0.00004, t2=-0.0215, t1=4.1186, c=-92.987},
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
