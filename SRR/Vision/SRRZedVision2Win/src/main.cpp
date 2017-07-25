@@ -14,15 +14,13 @@
 
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
-    float* data;
-    uint32_t step;
-    cv::Size _image;
-    cv::Size _resize;
-    std::string name;
+	sl::Mat depth;
+	cv::Size _resize;
 } mouseOCV;
 
 mouseOCV mouseStruct;
 
+#if 0
 static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, void * param) {
     if (event == CV_EVENT_LBUTTONDOWN) {
         mouseOCVStruct* data = (mouseOCVStruct*) param;
@@ -39,6 +37,31 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
             printf("\n : NAN\n");
     }
 }
+#endif
+
+static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, void * param) {
+	if (event == CV_EVENT_LBUTTONDOWN) {
+		mouseOCVStruct* data = (mouseOCVStruct*)param;
+		size_t y_int = (y * data->depth.getHeight() / data->_resize.height);
+		size_t x_int = (x * data->depth.getWidth() / data->_resize.width);
+
+		sl::float1 dist;
+		data->depth.getValue(x_int, y_int, &dist);
+
+		std::cout << std::endl;
+		if (isValidMeasure(dist))
+			std::cout << "Depth at (" << x_int << "," << y_int << ") : " << dist << "m";
+		else {
+			std::string depth_status;
+			if (dist == TOO_FAR) depth_status = ("Depth is too far.");
+			else if (dist == TOO_CLOSE) depth_status = ("Depth is too close.");
+			else depth_status = ("Depth not available");
+			std::cout << depth_status;
+		}
+		std::cout << std::endl;
+	}
+}
+
 
 float GetDistanceAtPoint(sl::Mat depth, int x, int y)
 {
@@ -103,23 +126,23 @@ int main(int argc, char **argv) {
 	else
 		filearg = NULL;
 
-//	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0");
-	OCVCamera FrontCam = OCVCamera("rtsp://root:root@192.168.0.90/axis-media/media.amp");
+	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0");
+//	OCVCamera FrontCam = OCVCamera("rtsp://root:root@192.168.0.90/axis-media/media.amp");
 
 	cv::Mat frame;
 
 	ZEDCamera StereoCam = ZEDCamera(filearg);
-    StereoCam.dm_type = sl::SENSING_MODE_STANDARD;
+    StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 
-	int width = StereoCam.width;
-	int height = StereoCam.height;
+	size_t width = StereoCam.image_size.width;
+	size_t height = StereoCam.image_size.height;
 
 	bool DisplayDisp = true;
 	bool displayConfidenceMap = false;
 
-	cv::Mat disp(height, width, CV_8UC4);
-	cv::Mat anaplyph(height, width, CV_8UC4);
-	cv::Mat confidencemap(height, width, CV_8UC4);
+	cv::Mat disp((int)height, (int)width, CV_8UC4);
+	cv::Mat anaplyph((int)height, (int)width, CV_8UC4);
+	cv::Mat confidencemap((int)height, (int)width, CV_8UC4);
 
 	sl::Mat depth;
 
@@ -128,15 +151,14 @@ int main(int argc, char **argv) {
 		/* Init mouse callback */
 		depth = StereoCam.GrabDepth();
 
-		// Set the structure
-		mouseStruct._image = cv::Size(width, height);
-		mouseStruct.data = (float*)depth.getPtr<sl::float1>(sl::MEM_CPU);
-		mouseStruct.step = depth.getStep(sl::MEM_CPU);
-		mouseStruct.name = "DEPTH";
+		// Mouse callback initialization
+		cv::Size displaySize(720, 404);
+		mouseStruct.depth.alloc(StereoCam.image_size, sl::MAT_TYPE_32F_C1);
+		mouseStruct._resize = displaySize;
 
 		//create Opencv Windows
-		cv::namedWindow(mouseStruct.name, cv::WINDOW_AUTOSIZE);
-		cv::setMouseCallback(mouseStruct.name, onMouseCallback, (void*)&mouseStruct);
+		cv::namedWindow("Depth", cv::WINDOW_AUTOSIZE);
+		cv::setMouseCallback("Depth", onMouseCallback, (void*)&mouseStruct);
 		cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
 	}
 	else
@@ -176,6 +198,7 @@ int main(int argc, char **argv) {
 		{
 			anaplyph = StereoCam.GrabFrameAndDapth();
 			depth = StereoCam.depth;
+			mouseStruct.depth = depth;
 			// TODO: optional depth and disparity display below.
 			// Get frames and launch the computation
 			if (StereoCam.bHaveFrame)
@@ -189,7 +212,7 @@ int main(int argc, char **argv) {
 					disp = StereoCam.GetNormDepth();
 
 				// To get the depth at a given position, click on the DISPARITY / DEPTH map image
-				imshow(mouseStruct.name, disp);
+				imshow("Depth", disp);
 
 				if (displayConfidenceMap) {
 					confidencemap = StereoCam.GetNormConfidence();
@@ -296,12 +319,12 @@ int main(int argc, char **argv) {
 			}
 
 			case 'r':
-				StereoCam.dm_type = sl::SENSING_MODE_STANDARD;
+				StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 				std::cout << "SENSING_MODE: Standard" << std::endl;
 				break;
 
 			case 'f':
-				StereoCam.dm_type = sl::SENSING_MODE_FILL;
+				StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_FILL;
 				std::cout << "SENSING_MODE: FILL" << std::endl;
 				break;
 

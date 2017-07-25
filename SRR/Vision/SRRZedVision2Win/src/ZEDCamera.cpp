@@ -2,12 +2,9 @@
 #include "ZEDCamera.h"
 
 ZEDCamera::ZEDCamera(const char *file)
-	: dm_type(sl::SENSING_MODE_STANDARD),
-	  old_self_calibration_state (sl::SELF_CALIBRATION_STATE_NOT_STARTED),
+	: old_self_calibration_state (sl::SELF_CALIBRATION_STATE_NOT_STARTED),
 	  confidenceLevel(100),
 	  ViewID(0),
-	  width(0),
-	  height(0),
 	  bHaveFrame(true),
 	  IsOpen(false)
 {
@@ -33,11 +30,10 @@ ZEDCamera::ZEDCamera(const char *file)
 
 	IsOpen = true;
 
-	sl::Resolution res = zed->getResolution();
+	image_size = zed->getResolution();
 
-	width = res.width;
-	height = res.height;
-	
+	runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
+
 	//Jetson only. Execute the calling thread on core 2
 #ifdef __arm__ //only for Jetson K1/X1    
 	sl::zed::Camera::sticktoCPUCore(2);
@@ -57,7 +53,7 @@ cv::Mat ZEDCamera::GrabFrameAndDapth(void)
 {
 	zed->setConfidenceThreshold(confidenceLevel);
 
-	bHaveFrame = (zed->grab(dm_type) == sl::SUCCESS);
+	bHaveFrame = (zed->grab(runtime_parameters) == sl::SUCCESS);
 
 	sl::ERROR_CODE res;
 	sl::Mat zedFrame;
@@ -81,7 +77,7 @@ sl::Mat ZEDCamera::GrabDepth(void)
 {
 	zed->setConfidenceThreshold(confidenceLevel);
 
-	if (zed->grab(dm_type) == sl::SUCCESS)
+	if (zed->grab(runtime_parameters) == sl::SUCCESS)
 		zed->retrieveMeasure(depth, sl::MEASURE_DEPTH); // Get the pointer
 
 	return depth;
@@ -155,9 +151,9 @@ void ZEDCamera::saveSbSimage(std::string filename)
 {
 	sl::Resolution imSize = zed->getResolution();
 
-	cv::Mat SbS(imSize.height, imSize.width * 2, CV_8UC4);
-	cv::Mat leftIm(SbS, cv::Rect(0, 0, imSize.width, imSize.height));
-	cv::Mat rightIm(SbS, cv::Rect(imSize.width, 0, imSize.width, imSize.height));
+	cv::Mat SbS((int)imSize.height, (int)imSize.width * 2, CV_8UC4);
+	cv::Mat leftIm(SbS, cv::Rect(0, 0, (int)imSize.width, (int)imSize.height));
+	cv::Mat rightIm(SbS, cv::Rect((int)imSize.width, 0, (int)imSize.width, (int)imSize.height));
 
 	sl::Mat left;
 	sl::Mat right;
@@ -192,5 +188,5 @@ cv::Mat ZEDCamera::slMat2cvMat(sl::Mat& input)
 
 	// cv::Mat data requires a uchar* pointer. Therefore, we get the uchar1 pointer from sl::Mat (getPtr<T>())
 	//cv::Mat and sl::Mat will share the same memory pointer
-	return cv::Mat(input.getHeight(), input.getWidth(), cv_type, input.getPtr<sl::uchar1>(sl::MEM_CPU));
+	return cv::Mat((int)input.getHeight(), (int)input.getWidth(), cv_type, input.getPtr<sl::uchar1>(sl::MEM_CPU));
 }

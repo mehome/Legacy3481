@@ -24,11 +24,11 @@ public:
 
 	bool IsOpen;
 
-	int width;
-	int height;
+	sl::Resolution image_size;
+
 	bool bHaveFrame;
 
-	sl::SENSING_MODE dm_type;
+	sl::RuntimeParameters runtime_parameters;
 	int ViewID;
 
 	int confidenceLevel;
