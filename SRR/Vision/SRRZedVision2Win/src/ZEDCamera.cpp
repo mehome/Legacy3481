@@ -56,7 +56,6 @@ cv::Mat ZEDCamera::GrabFrameAndDapth(void)
 	bHaveFrame = (zed->grab(runtime_parameters) == sl::SUCCESS);
 
 	sl::ERROR_CODE res;
-	sl::Mat zedFrame;
 
 	if (bHaveFrame) {
 		// Estimated rotation :
@@ -73,7 +72,7 @@ cv::Mat ZEDCamera::GrabFrameAndDapth(void)
 	return frame;
 }
 
-sl::Mat ZEDCamera::GrabDepth(void)
+sl::Mat& ZEDCamera::GrabDepth(void)
 {
 	zed->setConfidenceThreshold(confidenceLevel);
 
@@ -104,7 +103,7 @@ cv::Mat ZEDCamera::GetNormDepth(void)
 	sl::Mat frm;
 	if (bHaveFrame)
 	{
-		zed->retrieveMeasure(frm, sl::MEASURE_DEPTH);
+		zed->retrieveImage(frm, sl::VIEW_DEPTH);
 		cvDepth = slMat2cvMat(frm);
 	}
 	return cvDepth;
@@ -115,7 +114,7 @@ cv::Mat ZEDCamera::GetNormConfidence(void)
 	sl::Mat frm;
 	if (bHaveFrame)
 	{
-		zed->retrieveMeasure(frm, sl::MEASURE_CONFIDENCE);
+		zed->retrieveImage(frm, sl::VIEW_CONFIDENCE);
 		cvConfidence = slMat2cvMat(frm);
 	}
 	return cvConfidence;

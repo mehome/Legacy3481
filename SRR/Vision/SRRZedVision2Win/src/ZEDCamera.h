@@ -8,9 +8,8 @@ public:
 	ZEDCamera(const char* file);
 	~ZEDCamera();
 
-	cv::Mat GrabFrame(void);
 	cv::Mat GrabFrameAndDapth(void);
-	sl::Mat GrabDepth(void);
+	sl::Mat& GrabDepth(void);
 	cv::Mat GetNormDisparity(void);
 	cv::Mat GetNormDepth(void);
 	cv::Mat GetNormConfidence(void);
@@ -34,12 +33,13 @@ public:
 	int confidenceLevel;
 
 	sl::Mat depth;
+	cv::Mat frame;
 
 	sl::Camera* zed;
 
 private:
 
-	cv::Mat frame;
+	sl::Mat zedFrame;
 	cv::Mat cvDepth;
 	cv::Mat cvDisparity;
 	cv::Mat cvConfidence;

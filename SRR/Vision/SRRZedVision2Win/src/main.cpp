@@ -129,8 +129,6 @@ int main(int argc, char **argv) {
 	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0");
 //	OCVCamera FrontCam = OCVCamera("rtsp://root:root@192.168.0.90/axis-media/media.amp");
 
-	cv::Mat frame;
-
 	ZEDCamera StereoCam = ZEDCamera(filearg);
     StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 
@@ -148,12 +146,10 @@ int main(int argc, char **argv) {
 
 	if (StereoCam.IsOpen)
 	{
-		/* Init mouse callback */
-		depth = StereoCam.GrabDepth();
-
 		// Mouse callback initialization
 		cv::Size displaySize(720, 404);
-		mouseStruct.depth.alloc(StereoCam.image_size, sl::MAT_TYPE_32F_C1);
+		StereoCam.GrabDepth();
+		mouseStruct.depth = StereoCam.depth;
 		mouseStruct._resize = displaySize;
 
 		//create Opencv Windows
@@ -183,7 +179,7 @@ int main(int argc, char **argv) {
 		/***** main video loop *****/
 		if (FrontCamEnabled)
 		{
-			frame = FrontCam.GrabFrame();
+			cv::Mat frame = FrontCam.GrabFrame();
 
 			if (cam2_op_mode == FindHook)
 				detectHookSample(frame, depth);
@@ -196,7 +192,8 @@ int main(int argc, char **argv) {
 		}
 		if (StereoCamEnabled)
 		{
-			anaplyph = StereoCam.GrabFrameAndDapth();
+			StereoCam.GrabFrameAndDapth();
+			anaplyph = StereoCam.frame;
 			depth = StereoCam.depth;
 			mouseStruct.depth = depth;
 			// TODO: optional depth and disparity display below.
