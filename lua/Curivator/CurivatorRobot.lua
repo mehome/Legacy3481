@@ -37,9 +37,10 @@ AutonTest_TestArm=2
 AutonTest_GrabSequence=3
 
 MainRobot = {
-	version = 1.1;
+	version = 1.12;
 	--Version 1.0
 	--Version 1.1, major calibration of the swerve drive wheels
+	--Version 1.12, had to keep the angles at 45 degrees to allows for in place turning
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -349,8 +350,8 @@ MainRobot = {
 			predict_up=.400,
 			predict_down=.400,
 
-			max_range_deg= 30,
-			min_range_deg=-20,
+			max_range_deg= 45,
+			min_range_deg=-45,
 			starting_position=0,
 			pot_offset=-45.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
@@ -384,8 +385,8 @@ MainRobot = {
 			predict_up=.400,
 			predict_down=.400,
 
-			max_range_deg= 35,
-			min_range_deg=-30,
+			max_range_deg= 45,
+			min_range_deg=-45,
 			starting_position=0,
 			pot_offset=-45.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
@@ -419,8 +420,8 @@ MainRobot = {
 			predict_up=.400,
 			predict_down=.400,
 
-			max_range_deg= 32,
-			min_range_deg=-20,
+			max_range_deg= 45,
+			min_range_deg=-45,
 			starting_position=0,
 			pot_offset=-45.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
@@ -454,8 +455,8 @@ MainRobot = {
 			predict_up=.400,
 			predict_down=.400,
 
-			max_range_deg= 25,
-			min_range_deg=-40,
+			max_range_deg= 45,
+			min_range_deg=-45,
 			starting_position=0,
 			pot_offset=-45.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
