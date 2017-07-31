@@ -37,8 +37,9 @@ AutonTest_TestArm=2
 AutonTest_GrabSequence=3
 
 MainRobot = {
-	version = 1.0;
+	version = 1.1;
 	--Version 1.0
+	--Version 1.1, major calibration of the swerve drive wheels
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -333,10 +334,10 @@ MainRobot = {
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--center around 166
-			pot_min_limit=50,  --45 forward   0
-			pot_max_limit=200,  -- 45 counter clockwise  962
+			pot_min_limit=77,  --45 forward   0
+			pot_max_limit=178,  -- 45 counter clockwise  962
 			curve_pot=
-			{t4=0.0, t3=0.00004, t2=-0.0215, t1=4.1186, c=-92.987},
+			{t4=0.0, t3=0.0, t2=0.024, t1=0.3169, c=38.099},
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
@@ -348,8 +349,8 @@ MainRobot = {
 			predict_up=.400,
 			predict_down=.400,
 
-			max_range_deg= 45,
-			min_range_deg=-45,
+			max_range_deg= 30,
+			min_range_deg=-20,
 			starting_position=0,
 			pot_offset=-45.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
@@ -368,10 +369,10 @@ MainRobot = {
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--center around 115
-			pot_min_limit=50,  --45 forward   0
-			pot_max_limit=200,  -- 45 counter clockwise  962
+			pot_min_limit=70,  --45 forward   0
+			pot_max_limit=215,  -- 45 counter clockwise  962
 			curve_pot=
-			{t4=0.0, t3=0.00004, t2=-0.0215, t1=4.1186, c=-92.987},
+			{t4=0.0, t3=0.0, t2=0.0008, t1=0.7594, c=5.3863},
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
@@ -383,8 +384,8 @@ MainRobot = {
 			predict_up=.400,
 			predict_down=.400,
 
-			max_range_deg= 45,
-			min_range_deg=-45,
+			max_range_deg= 35,
+			min_range_deg=-30,
 			starting_position=0,
 			pot_offset=-45.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
@@ -403,8 +404,10 @@ MainRobot = {
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--center around 80
-			pot_min_limit=60,  --45 forward   0
-			pot_max_limit=138,  -- 45 counter clockwise  962
+			pot_min_limit=54,  --45 forward   0
+			pot_max_limit=151,  -- 45 counter clockwise  962
+			curve_pot=
+			{t4=0.0, t3=0.00003, t2=-0.0151, t1=2.8628, c=-61.852},
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
@@ -416,8 +419,8 @@ MainRobot = {
 			predict_up=.400,
 			predict_down=.400,
 
-			max_range_deg= 45,
-			min_range_deg=-45,
+			max_range_deg= 32,
+			min_range_deg=-20,
 			starting_position=0,
 			pot_offset=-45.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
@@ -435,11 +438,11 @@ MainRobot = {
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=50,  
-			pot_max_limit=200, 
+			pot_min_limit=75,  
+			pot_max_limit=205, 
 			--Note 50 - 200 center 82... fixed using quad expression
 			curve_pot=
-			{t4=0.0, t3=0.00004, t2=-0.0215, t1=4.1186, c=-92.987},
+			{t4=0.0, t3=0.0, t2=-0.0007, t1=1.1606, c=-13.566},
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
@@ -451,8 +454,8 @@ MainRobot = {
 			predict_up=.400,
 			predict_down=.400,
 
-			max_range_deg= 45,
-			min_range_deg=-45,
+			max_range_deg= 25,
+			min_range_deg=-40,
 			starting_position=0,
 			pot_offset=-45.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
