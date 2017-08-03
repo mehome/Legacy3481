@@ -8,11 +8,11 @@ public:
 	ZEDCamera(const char* file);
 	~ZEDCamera();
 
-	cv::Mat GrabFrameAndDapth(void);
-	sl::Mat& GrabDepth(void);
-	cv::Mat GetNormDisparity(void);
-	cv::Mat GetNormDepth(void);
-	cv::Mat GetNormConfidence(void);
+	sl::ERROR_CODE GrabFrameAndDapth(void);
+	sl::ERROR_CODE GrabDepth(void);
+	sl::ERROR_CODE GetNormDisparity(void);
+	sl::ERROR_CODE GetNormDepth(void);
+	sl::ERROR_CODE GetNormConfidence(void);
 	void ResetCalibration(void);
 	int GetGain(void);
 	void SetGain(int);
@@ -34,15 +34,17 @@ public:
 
 	sl::Mat depth;
 	cv::Mat frame;
+	cv::Mat cvDisparity;
+	cv::Mat cvConfidence;
+	cv::Mat cvNormDepth;
 
 	sl::Camera* zed;
 
 private:
 
 	sl::Mat zedFrame;
-	cv::Mat cvDepth;
-	cv::Mat cvDisparity;
-	cv::Mat cvConfidence;
+	sl::Mat Disparity;
+	sl::Mat Confidence;
 
 	sl::SELF_CALIBRATION_STATE old_self_calibration_state;
 };

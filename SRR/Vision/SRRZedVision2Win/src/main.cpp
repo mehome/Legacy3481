@@ -204,15 +204,17 @@ int main(int argc, char **argv) {
 				/***************  DISPLAY:  ***************/
 				// Normalize the DISPARITY / DEPTH map in order to use the full color range of grey level image
 				if (DisplayDisp)
-					disp = StereoCam.GetNormDisparity();
+					StereoCam.GetNormDisparity();
 				else
-					disp = StereoCam.GetNormDepth();
+					StereoCam.GetNormDepth();
 
+				disp = StereoCam.cvDisparity;
 				// To get the depth at a given position, click on the DISPARITY / DEPTH map image
 				imshow("Depth", disp);
 
 				if (displayConfidenceMap) {
-					confidencemap = StereoCam.GetNormConfidence();
+					StereoCam.GetNormConfidence();
+					confidencemap = StereoCam.cvConfidence;
 					imshow("confidence", confidencemap);
 				}
 

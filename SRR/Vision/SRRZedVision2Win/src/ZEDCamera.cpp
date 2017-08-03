@@ -49,13 +49,13 @@ ZEDCamera::~ZEDCamera()
 	}
 }
 
-cv::Mat ZEDCamera::GrabFrameAndDapth(void)
+sl::ERROR_CODE ZEDCamera::GrabFrameAndDapth(void)
 {
 	zed->setConfidenceThreshold(confidenceLevel);
 
 	bHaveFrame = (zed->grab(runtime_parameters) == sl::SUCCESS);
 
-	sl::ERROR_CODE res;
+	sl::ERROR_CODE res = sl::SUCCESS;
 
 	if (bHaveFrame) {
 		// Estimated rotation :
@@ -69,17 +69,19 @@ cv::Mat ZEDCamera::GrabFrameAndDapth(void)
 		frame = slMat2cvMat(zedFrame);
 	}
 
-	return frame;
+	return res;
 }
 
-sl::Mat& ZEDCamera::GrabDepth(void)
+sl::ERROR_CODE ZEDCamera::GrabDepth(void)
 {
+	sl::ERROR_CODE res = sl::SUCCESS;
+
 	zed->setConfidenceThreshold(confidenceLevel);
 
 	if (zed->grab(runtime_parameters) == sl::SUCCESS)
-		zed->retrieveMeasure(depth, sl::MEASURE_DEPTH); // Get the pointer
+		res = zed->retrieveMeasure(depth, sl::MEASURE_DEPTH); // Get the pointer
 
-	return depth;
+	return res;
 }
 
 // The following is the best way to save a disparity map/ Image / confidence map in Opencv Mat.
@@ -87,37 +89,43 @@ sl::Mat& ZEDCamera::GrabDepth(void)
 // !! Disparity, Depth, confidence are in 8U,C4 if normalized format !! //
 // !! Disparity, Depth, confidence are in 32F,C1 if only retrieve !! //
 
-cv::Mat ZEDCamera::GetNormDisparity(void)
+sl::ERROR_CODE ZEDCamera::GetNormDisparity(void)
 {
-	sl::Mat frm;
+	sl::ERROR_CODE res = sl::SUCCESS;
+
 	if (bHaveFrame)
 	{
-		zed->retrieveMeasure(frm, sl::MEASURE_DISPARITY);
-		cvDisparity = slMat2cvMat(frm);
+		res = zed->retrieveMeasure(Disparity, sl::MEASURE_DISPARITY);
+		cvDisparity = slMat2cvMat(Disparity);
 	}
-	return cvDisparity;
+
+	return res;
 }
 
-cv::Mat ZEDCamera::GetNormDepth(void)
+sl::ERROR_CODE ZEDCamera::GetNormDepth(void)
 {
-	sl::Mat frm;
+	sl::ERROR_CODE res = sl::SUCCESS;
+
 	if (bHaveFrame)
 	{
-		zed->retrieveImage(frm, sl::VIEW_DEPTH);
-		cvDepth = slMat2cvMat(frm);
+		res = zed->retrieveImage(Disparity, sl::VIEW_DEPTH);
+		cvNormDepth = slMat2cvMat(Disparity);
 	}
-	return cvDepth;
+
+	return res;
 }
 
-cv::Mat ZEDCamera::GetNormConfidence(void)
+sl::ERROR_CODE ZEDCamera::GetNormConfidence(void)
 {
-	sl::Mat frm;
+	sl::ERROR_CODE res = sl::SUCCESS;
+
 	if (bHaveFrame)
 	{
-		zed->retrieveImage(frm, sl::VIEW_CONFIDENCE);
-		cvConfidence = slMat2cvMat(frm);
+		res = zed->retrieveImage(Confidence, sl::VIEW_CONFIDENCE);
+		cvConfidence = slMat2cvMat(Confidence);
 	}
-	return cvConfidence;
+
+	return res;
 }
 
 void ZEDCamera::ResetCalibration(void)
