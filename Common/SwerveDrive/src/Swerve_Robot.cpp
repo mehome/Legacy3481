@@ -783,7 +783,6 @@ __inline double Swerve_Robot_Control::Pot_GetRawValue(size_t index)
 {
 	//double raw_value = (double)m_Potentiometer.GetAverageValue();
 	double raw_value=(double)Analog_GetAverageValue(index);
-	raw_value = m_PotPoly[index](raw_value); //apply custom curve to make linear
 	raw_value = m_KalFilter[index](raw_value);  //apply the Kalman filter
 	raw_value=m_Averager[index].GetAverage(raw_value); //and Ricks x element averager
 	//Note: we keep the raw value in its native form... just averaging at most for less noise
@@ -826,7 +825,8 @@ double Swerve_Robot_Control::GetRotaryCurrentPorV(size_t index)
 		case Swerve_Robot::eSwivel_RR:
 			{
 				#ifndef Robot_TesterCode
-				double raw_value=Pot_GetRawValue(index);
+				const double raw_value=Pot_GetRawValue(index);
+				double adjusted_raw_value = m_PotPoly[index](raw_value); //apply custom curve to make linear
 				double PotentiometerRaw_To_Arm;
 
 				const double HiRange=m_SwerveRobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().PotMaxValue;
@@ -834,7 +834,7 @@ double Swerve_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				//If this is true, the value is inverted with the negative operator
 				const bool FlipRange=m_SwerveRobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().IsFlipped;
 
-				PotentiometerRaw_To_Arm = raw_value-LowRange;//zeros the potentiometer
+				PotentiometerRaw_To_Arm = adjusted_raw_value-LowRange;//zeros the potentiometer
 				PotentiometerRaw_To_Arm = PotentiometerRaw_To_Arm/(HiRange-LowRange);//scales values from 0 to 1 with +- .001
 
 				//Clip Range
