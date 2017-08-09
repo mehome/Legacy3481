@@ -37,12 +37,13 @@ AutonTest_TestArm=2
 AutonTest_GrabSequence=3
 
 MainRobot = {
-	version = 1.4;
+	version = 1.41;
 	--Version 1.0 only turret and big-arm
 	--Version 1.1 all 5 arm controls
 	--Version 1.2 added auto arm controls
 	--Version 1.3 added preliminary drive settings
 	--Version 1.4 added preliminary swerve drive settings
+	--Version 1.41 testing swerve pot for polynomial equation
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -78,7 +79,8 @@ MainRobot = {
 			id_2 = { name="arm_pot",  channel=3},
 			id_3 = { name="boom_pot",  channel=4},
 			id_4 = { name="bucket_pot",  channel=5},
-			id_5 = { name="clasp_pot",  channel=6}
+			id_5 = { name="clasp_pot",  channel=6},
+			id_6  ={ name="swivel_fl_pot", channel=7}, 
 		},
 		digital_input_encoder =
 		{	
@@ -308,7 +310,7 @@ MainRobot = {
 
 		swivel_fl =
 		{
-			--is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -320,8 +322,12 @@ MainRobot = {
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--center around 450
-			pot_min_limit=200,  --45 forward   0
-			pot_max_limit=762,  -- 45 counter clockwise  962
+			pot_min_limit=40,  --45 forward   0
+			pot_max_limit=200,  -- 45 counter clockwise  962
+			curve_pot=
+			{t4=0.0, t3=0.00004, t2=-0.0215, t1=4.1186, c=-92.987},
+			--curve_pot=
+			--{t4=0.0, t3=0.0, t2=0.0, t1=1.0, c=0.0},
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
@@ -329,7 +335,7 @@ MainRobot = {
 			brake=10.0,
 			max_accel_forward=4,			--These are in radians, just go with what feels right
 			max_accel_reverse=4,
-			--using_range=1,	--Warning Only use range if we have a potentiometer!
+			using_range=1,	--Warning Only use range if we have a potentiometer!
 			predict_up=.400,
 			predict_down=.400,
 
