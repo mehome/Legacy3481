@@ -10,7 +10,6 @@ public:
 
 	sl::ERROR_CODE GrabFrameAndDapth(void);
 	sl::ERROR_CODE GrabDepth(void);
-	sl::ERROR_CODE GetNormDisparity(void);
 	sl::ERROR_CODE GetNormDepth(void);
 	sl::ERROR_CODE GetNormConfidence(void);
 	void ResetCalibration(void);
@@ -34,7 +33,6 @@ public:
 
 	sl::Mat depth;
 	cv::Mat frame;
-	cv::Mat cvDisparity;
 	cv::Mat cvConfidence;
 	cv::Mat cvNormDepth;
 

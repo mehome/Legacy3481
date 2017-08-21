@@ -135,8 +135,7 @@ int main(int argc, char **argv) {
 	size_t width = StereoCam.image_size.width;
 	size_t height = StereoCam.image_size.height;
 
-	bool DisplayDisp = true;
-	bool displayConfidenceMap = false;
+	bool displayConfidenceMap = true;
 
 	cv::Mat disp((int)height, (int)width, CV_8UC4);
 	cv::Mat anaplyph((int)height, (int)width, CV_8UC4);
@@ -147,7 +146,7 @@ int main(int argc, char **argv) {
 	if (StereoCam.IsOpen)
 	{
 		// Mouse callback initialization
-		cv::Size displaySize(720, 404);
+		cv::Size displaySize(width, height);
 		StereoCam.GrabDepth();
 		mouseStruct.depth = StereoCam.depth;
 		mouseStruct._resize = displaySize;
@@ -203,12 +202,9 @@ int main(int argc, char **argv) {
 
 				/***************  DISPLAY:  ***************/
 				// Normalize the DISPARITY / DEPTH map in order to use the full color range of grey level image
-				if (DisplayDisp)
-					StereoCam.GetNormDisparity();
-				else
-					StereoCam.GetNormDepth();
+				StereoCam.GetNormDepth();
+				disp = StereoCam.cvNormDepth;
 
-				disp = StereoCam.cvDisparity;
 				// To get the depth at a given position, click on the DISPARITY / DEPTH map image
 				imshow("Depth", disp);
 
@@ -325,10 +321,6 @@ int main(int argc, char **argv) {
 			case 'f':
 				StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_FILL;
 				std::cout << "SENSING_MODE: FILL" << std::endl;
-				break;
-
-			case 'd':
-				DisplayDisp = !DisplayDisp;
 				break;
 
 			case 'c':

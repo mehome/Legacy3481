@@ -15,7 +15,7 @@ ZEDCamera::ZEDCamera(const char *file)
 	if (file != NULL) initParameters.svo_input_filename = file;
 	initParameters.camera_resolution = sl::RESOLUTION_HD720;
 	initParameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE; //need quite a powerful graphic card in QUALITY
-	initParameters.coordinate_units = sl::UNIT_MILLIMETER; // set meter as the OpenGL world will be in meters
+	initParameters.coordinate_units = sl::UNIT_METER; // set meter as the OpenGL world will be in meters
 	initParameters.coordinate_system = sl::COORDINATE_SYSTEM_RIGHT_HANDED_Y_UP; // OpenGL's coordinate system is right_handed
 	initParameters.sdk_verbose = 1;
 	initParameters.camera_disable_self_calib = false;
@@ -80,24 +80,6 @@ sl::ERROR_CODE ZEDCamera::GrabDepth(void)
 
 	if (zed->grab(runtime_parameters) == sl::SUCCESS)
 		res = zed->retrieveMeasure(depth, sl::MEASURE_DEPTH); // Get the pointer
-
-	return res;
-}
-
-// The following is the best way to save a disparity map/ Image / confidence map in Opencv Mat.
-// Be Careful, if you don't save the buffer/data on your own, it will be replace by a next retrieve (retrieveImage, NormalizeMeasure, getView....)
-// !! Disparity, Depth, confidence are in 8U,C4 if normalized format !! //
-// !! Disparity, Depth, confidence are in 32F,C1 if only retrieve !! //
-
-sl::ERROR_CODE ZEDCamera::GetNormDisparity(void)
-{
-	sl::ERROR_CODE res = sl::SUCCESS;
-
-	if (bHaveFrame)
-	{
-		res = zed->retrieveMeasure(Disparity, sl::MEASURE_DISPARITY);
-		cvDisparity = slMat2cvMat(Disparity);
-	}
 
 	return res;
 }
