@@ -25,6 +25,7 @@ class Vehicle_Drive_Common
 {
 	public:
 		Vehicle_Drive_Common(Vehicle_Drive_Common_Interface *VehicleProps);
+		virtual ~Vehicle_Drive_Common() {}
 		virtual void InterpolateThrusterChanges(Vec2D &LocalForce,double &Torque,double dTime_s);
 		virtual void UpdateVelocities(PhysicsEntity_2D &PhysicsToUse,const Vec2D &LocalForce,double Torque,double TorqueRestraint,double dTime_s)=0;
 
