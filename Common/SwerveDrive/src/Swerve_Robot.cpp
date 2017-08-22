@@ -343,7 +343,7 @@ void Swerve_Robot::InterpolateThrusterChanges(Vec2D &LocalForce,double &Torque,d
 		m_EncoderAngularVelocity=AngularVelocity;
 		if (!m_SwerveRobotProps.IsOpen_Wheel)
 		{
-			Vec2d Velocity=GetLinearVelocity_ToDisplay();
+			//Vec2d Velocity=GetLinearVelocity_ToDisplay();
 			SmartDashboard::PutNumber("Velocity",Meters2Feet(LocalVelocity[1]));
 			SmartDashboard::PutNumber("Rotation Velocity",AngularVelocity);
 		}
