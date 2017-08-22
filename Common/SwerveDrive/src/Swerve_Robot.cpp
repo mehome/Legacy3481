@@ -243,6 +243,10 @@ void Swerve_Robot::InterpolateThrusterChanges(Vec2D &LocalForce,double &Torque,d
 		encoders.Velocity.Named.aRR=m_RobotControl->GetRotaryCurrentPorV(eSwivel_RR+m_RotaryEnumOffset);
 	}
 
+	double aSwivelDirection[4];
+	double VelocityToUse[4];
+	double aDistanceToIntendedSwivel[4];
+	bool RestrictMotion=false;  //flagged if any of the wheels do not reach a threshold of their position
 	//Now the new UpdateVelocities was just called... work with these intended velocities
 	for (size_t i=0;i<4;i++)
 	{
@@ -253,45 +257,52 @@ void Swerve_Robot::InterpolateThrusterChanges(Vec2D &LocalForce,double &Torque,d
 		//This is normalized implicitly
 		//const double LastSwivelDirection=Swivel.GetPos_m();
 		const double LastSwivelDirection=encoders.Velocity.AsArray[i+4];
-		double DistanceToIntendedSwivel=fabs(NormalizeRotation2(LastSwivelDirection-SwivelDirection));
 
-		if ((DistanceToIntendedSwivel>PI_2) || 
-			(Swivel.GetUsingRange() &&
-			 ((SwivelDirection>Swivel.GetMaxRange()) || (SwivelDirection<Swivel.GetMinRange()))) 
-			)
+		double DirectionMultiplier=1.0; //changes to -1 when reversed
+		//Anything above 180 will need to be flipped favorably to the least traveled angle
+		if (fabs(SwivelDirection)>PI_2)
 		{
-			SwivelDirection=NormalizeRotation2(SwivelDirection+Pi);
-			if (Swivel.GetUsingRange())
+			const double TestOtherDirection=NormalizeRotation_HalfPi(SwivelDirection);
+			if (fabs(TestOtherDirection)<fabs(SwivelDirection))
 			{
-				double TestIntendedFlipped=NormalizeRotation2(IntendedDirection+Pi);
-				//If we flipped because of a huge delta check that the reverse position is in range... and flip it back if it exceed the range
-				if ((SwivelDirection>Swivel.GetMaxRange()) || (SwivelDirection<Swivel.GetMinRange()) ||
-					(TestIntendedFlipped>Swivel.GetMaxRange()) || (TestIntendedFlipped<Swivel.GetMinRange()))
-				{
-					SwivelDirection+=Pi;
-					NormalizeRotation(SwivelDirection);
-				}
+				SwivelDirection=TestOtherDirection;
+				DirectionMultiplier=-1;
 			}
 		}
+
+		//if we are using range... clip to the max range available
+		if (Swivel.GetUsingRange())
+		{
+			if (SwivelDirection>Swivel.GetMaxRange())
+				SwivelDirection=Swivel.GetMaxRange();
+			else if (SwivelDirection<Swivel.GetMinRange())
+				SwivelDirection=Swivel.GetMinRange();
+		}
+
+		aSwivelDirection[i]=SwivelDirection;
+
+		//recompute as SwivelDirection may be reduced
+		const double DistanceToIntendedSwivel=fabs(NormalizeRotation2(LastSwivelDirection-SwivelDirection));
+		aDistanceToIntendedSwivel[i]=DistanceToIntendedSwivel;  //export to other loop
 
 		//Note the velocity is checked once before the time change here, and once after for the current
 		//Only apply swivel adjustments if we have significant movement (this matters in targeting tests)
 		//if ((fabs(LocalForce[0])>1.5)||(fabs(LocalForce[1])>1.5)||(fabs(m_DrivingModule[i]->GetDrive().GetPhysics().GetVelocity()) > 0.05))
 		//This logic fails when driving a direct strafe from a stop
 
-		//This logic allows for 2 / 3 degrees of freedom... which help keep it from auto correcting too much
-		//if (DistanceToIntendedSwivel>0.034)
-		//For now I'll leave this disabled since close loop is doing so well, but once I get the swivel on-line for simulation I may need to reconsider
-
-		m_DrivingModule[i]->SetIntendedSwivelDirection(SwivelDirection);
-
-		const double IntendedSpeed=m_VehicleDrive->GetIntendedVelocitiesFromIndex(i);
+		const double IntendedSpeed=m_VehicleDrive->GetIntendedVelocitiesFromIndex(i)*DirectionMultiplier;
 
 		//To minimize error only apply the Y component amount to the velocity
 		//The less the difference between the current and actual swivel direction the greater the full amount can be applied
 		//On slower swerve drive mechanisms a check for a threshold of distance is included to minimize skid
-		double VelocityToUse=sin(DistanceToIntendedSwivel)<DEG_2_RAD(25.0)?cos(DistanceToIntendedSwivel)*IntendedSpeed:0.0;
+		VelocityToUse[i]=sin(DistanceToIntendedSwivel)<DEG_2_RAD(25.0)?cos(DistanceToIntendedSwivel)*IntendedSpeed:0.0;
+		if (sin(DistanceToIntendedSwivel)>=DEG_2_RAD(25.0))
+			RestrictMotion=true;
 		#if 0
+		string sm_name="a2_";
+		const char * const sm_name_suffix[]={"FL","FR","RL","RR"};
+		sm_name+=sm_name_suffix[i];
+		SmartDashboard::PutNumber(sm_name.c_str(),RAD_2_DEG(SwivelDirection));
 		if (i==0)
 		{
 			SmartDashboard::PutNumber("TestPredicted",RAD_2_DEG(LastSwivelDirection));
@@ -300,7 +311,18 @@ void Swerve_Robot::InterpolateThrusterChanges(Vec2D &LocalForce,double &Torque,d
 			SmartDashboard::PutNumber("TestVTU",Meters2Feet(VelocityToUse));
 		}
 		#endif
+	}
 
+	//Note: This is more conservative and is favorable for autonomous navigation, but may not be favorable for teleop as it restricts movement
+	if (RestrictMotion)
+		for (size_t i=0;i<4;i++)
+			VelocityToUse[i]=0.0;
+
+	for (size_t i=0;i<4;i++)
+	{
+		const Ship_1D &Swivel=m_DrivingModule[i]->GetSwivel();
+		const double IntendedDirection=m_VehicleDrive->GetIntendedVelocitiesFromIndex(i+4);
+		m_DrivingModule[i]->SetIntendedSwivelDirection(aSwivelDirection[i]);
 		#ifdef __DebugLUA__
 		if (m_SwerveProperties.GetRotaryProps(i).GetRotaryProps().PID_Console_Dump && (m_RobotControl->GetRotaryCurrentPorV(i)!=0.0))
 		{
@@ -309,7 +331,7 @@ void Swerve_Robot::InterpolateThrusterChanges(Vec2D &LocalForce,double &Torque,d
 		}
 		#endif
 
-		m_DrivingModule[i]->SetIntendedDriveVelocity(VelocityToUse);
+		m_DrivingModule[i]->SetIntendedDriveVelocity(VelocityToUse[i]);
 		m_DrivingModule[i]->TimeChange(dTime_s);
 
 		const double CurrentVelocity=m_DrivingModule[i]->GetDrive().GetPhysics().GetVelocity();
@@ -325,7 +347,7 @@ void Swerve_Robot::InterpolateThrusterChanges(Vec2D &LocalForce,double &Torque,d
 		//on Nona drive
 		//  [9/9/2012 Terminator]
 		m_Swerve_Robot_Velocities.Velocity.AsArray[i+4]=CurrentSwivelDirection;
-		if ((m_SwerveRobotProps.IsOpen_Swivel) && (IntendedDirection==0.0) && (DistanceToIntendedSwivel<0.005))
+		if ((m_SwerveRobotProps.IsOpen_Swivel) && (IntendedDirection==0.0) && (aDistanceToIntendedSwivel[i]<0.005))
 			m_Swerve_Robot_Velocities.Velocity.AsArray[i+4]=0.0;
 		m_Swerve_Robot_Velocities.Velocity.AsArray[i]=CurrentVelocity;
 		#else
