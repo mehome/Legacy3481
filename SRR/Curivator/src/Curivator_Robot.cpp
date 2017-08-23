@@ -785,8 +785,8 @@ void Curivator_Robot::ComputeArmPosition(double GlobalHeight,double GlobalDistan
 	const double BigArmUpper_Angle=LawOfCosines(BigArm_BigArmRadius,OriginToBP,Boom_BoomRadius_BP);
 	const double BigArmLower_Angle=atan2(BucketPivotPoint_y,BucketPivotPoint_x);
 	const double BigArmAngle=BigArmUpper_Angle+BigArmLower_Angle;
-	const double BigArmBoomPivot_height=sin(BigArmAngle)*BigArm_BigArmRadius;
-	const double BigArmBoomPivot_length=cos(BigArmAngle)*BigArm_BigArmRadius;
+	//const double BigArmBoomPivot_height=sin(BigArmAngle)*BigArm_BigArmRadius;
+	//const double BigArmBoomPivot_length=cos(BigArmAngle)*BigArm_BigArmRadius;
 	//Now that we know this point... we can find the boom angle from vertical using law of cosines from the big arm angle
 	const double BigArmBoomBP_Angle=LawOfCosines(Boom_BoomRadius_BP,BigArm_BigArmRadius,OriginToBP);
 	const double BoomAngle=BigArmBoomBP_Angle-(DEG_2_RAD(90)-BigArmAngle)+Boom_BP_To_RBP_RadiusAngle;
@@ -947,7 +947,7 @@ Curivator_Robot_Properties::Curivator_Robot_Properties()  : m_RobotControls(&s_C
 			//const double c_PotentiometerToGearRatio=c_PotentiometerToArmRatio * c_ArmToGearRatio;
 			const double c_PotentiometerMaxRotation=DEG_2_RAD(270.0);
 			const double c_GearHeightOffset=Inches2Meters(38.43);
-			const double c_WheelDiameter=0.1524;  //6 inches
+			//const double c_WheelDiameter=0.1524;  //6 inches
 			const double c_MotorToWheelGearRatio=12.0/36.0;
 
 			props.OptimalAngleUp=c_OptimalAngleUp_r;
@@ -963,7 +963,7 @@ Curivator_Robot_Properties::Curivator_Robot_Properties()  : m_RobotControls(&s_C
 			m_CurivatorRobotProps=props;
 		}
 
-		Curivator_Robot_Props::Autonomous_Properties &auton=props.Autonomous_Props;
+		//Curivator_Robot_Props::Autonomous_Properties &auton=props.Autonomous_Props;
 		m_CurivatorRobotProps=props;
 	}
 	{
@@ -1872,7 +1872,7 @@ __inline double Curivator_Robot_Control::Pot_GetRawValue(size_t index)
 double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 {
 	double result=0.0;
-	const Curivator_Robot_Props &props=m_RobotProps.GetCurivatorRobotProps();
+	//const Curivator_Robot_Props &props=m_RobotProps.GetCurivatorRobotProps();
 
 	switch (index)
 	{
