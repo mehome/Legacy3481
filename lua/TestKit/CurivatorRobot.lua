@@ -37,13 +37,14 @@ AutonTest_TestArm=2
 AutonTest_GrabSequence=3
 
 MainRobot = {
-	version = 1.41;
+	version = 1.42;
 	--Version 1.0 only turret and big-arm
 	--Version 1.1 all 5 arm controls
 	--Version 1.2 added auto arm controls
 	--Version 1.3 added preliminary drive settings
 	--Version 1.4 added preliminary swerve drive settings
 	--Version 1.41 testing swerve pot for polynomial equation
+	--Version 1.42 Revamped back to original range with padding example
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -322,12 +323,9 @@ MainRobot = {
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--center around 450
-			pot_min_limit=40,  --45 forward   0
-			pot_max_limit=200,  -- 45 counter clockwise  962
-			curve_pot=
-			{t4=0.0, t3=0.00004, t2=-0.0215, t1=4.1186, c=-92.987},
-			--curve_pot=
-			--{t4=0.0, t3=0.0, t2=0.0, t1=1.0, c=0.0},
+			pot_min_limit=200,  --45 forward   0
+			pot_max_limit=762,  -- 45 counter clockwise  962
+			pot_limit_tolerance=100,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
