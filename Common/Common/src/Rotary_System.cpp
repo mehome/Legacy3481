@@ -1115,6 +1115,8 @@ void Rotary_Pot_Properties::LoadFromScript(Scripting::Script& script)
 	if (!err) m_RotaryPotProps.PotMinValue=fValue;
 	err=script.GetField("pot_max_limit", NULL, NULL, &fValue);
 	if (!err) m_RotaryPotProps.PotMaxValue=fValue;
+	err=script.GetField("pot_limit_tolerance",NULL, NULL, &fValue);
+	m_RotaryPotProps.PotLimitTolerance=!err?fValue:0;  //this one needs to be initialized
 	script.GetField("pot_offset", NULL, NULL, &m_RotaryPotProps.PotentiometerOffset);
 	std::string sTest;
 	SCRIPT_TEST_BOOL_YES(m_RotaryPotProps.IsFlipped,"pot_range_flipped");

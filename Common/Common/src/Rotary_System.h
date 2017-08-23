@@ -249,6 +249,7 @@ struct COMMON_API Rotary_Pot_Props
 	double PotMinValue;
 	//This allows adjustment of the potentiometer in software to avoid manual recalibration.
 	double PotentiometerOffset;
+	double PotLimitTolerance;  //Specify extra padding to avoid accidental trigger of the safety
 	PolynomialEquation_forth_Props PotPolyTerms; //in some environments the potentiometer is not linear
 };
 
