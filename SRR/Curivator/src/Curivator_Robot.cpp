@@ -1605,9 +1605,23 @@ void Curivator_Robot_Control::ResetPos()
 	}
 }
 
+
+__inline void CheckDisableSafety(size_t index,bool &SafetyLock)
+{
+	//return;
+	std::string SmartLabel=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
+	SmartLabel[0]-=32; //Make first letter uppercase
+	//This section is extra control of each system while 3D positioning is operational... enable for diagnostics
+	std::string VoltageArmSafety=SmartLabel+"Disable";
+	const bool bVoltageArmDisable=SmartDashboard::GetBoolean(VoltageArmSafety.c_str());
+	if (bVoltageArmDisable)
+		SafetyLock=true;
+}
+
 void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 {
-	bool SafetyLock=SmartDashboard::GetBoolean("SafetyLock");
+	bool SafetyLock=SmartDashboard::GetBoolean("SafetyLock_Arm");
+	bool SafetyLock_Drive=SmartDashboard::GetBoolean("SafetyLock_Drive");  //for center wheels
 	double VoltageScalar=1.0;
 
 	switch (index)
@@ -1619,13 +1633,7 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 	case Curivator_Robot::eClasp:
 		{
 			#ifdef __EnableRobotArmDisable__
-			std::string SmartLabel=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
-			SmartLabel[0]-=32; //Make first letter uppercase
-			//This section is extra control of each system while 3D positioning is operational... enable for diagnostics
-			std::string VoltageArmSafety=SmartLabel+"Disable";
-			const bool bVoltageArmDisable=SmartDashboard::GetBoolean(VoltageArmSafety.c_str());
-			if (bVoltageArmDisable)
-				SafetyLock=true;
+			CheckDisableSafety(index,SafetyLock);
 			#endif
 			#ifdef Robot_TesterCode
 			m_Potentiometer[index].UpdatePotentiometerVoltage(SafetyLock?0.0:Voltage);
@@ -1635,7 +1643,13 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 		break;
 	case Curivator_Robot::eWheel_CL:
 	case Curivator_Robot::eWheel_CR:
+		SafetyLock=SafetyLock_Drive;  //using the drive's check box
+		#ifdef __EnableSafetyOnDrive__
+		CheckDisableSafety(index,SafetyLock);
+		#endif
 		#ifdef Robot_TesterCode
+		if (SafetyLock)
+			Voltage=0.0;
 		m_Encoders[index-Curivator_Robot::eWheel_CL].UpdateEncoderVoltage(Voltage);
 		m_Encoders[index-Curivator_Robot::eWheel_CL].TimeChange();
 		#endif
@@ -1770,9 +1784,9 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 	if (!m_Compressor)
 	{
 		#ifdef Robot_TesterCode
-		SmartDashboard::PutBoolean("SafetyLock",false);
+		SmartDashboard::PutBoolean("SafetyLock_Arm",false);
 		#else
-		SmartDashboard::PutBoolean("SafetyLock",true);
+		SmartDashboard::PutBoolean("SafetyLock_Arm",true);
 		#endif
 		//This one one must also be called for the lists that are specific to the robot
 		RobotControlCommon_Initialize(robot_props->Get_ControlAssignmentProps());
@@ -1800,6 +1814,22 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 		#endif
 		#ifdef __EnableRobotArmDisable__
 		for (size_t i=0;i<Curivator_Robot_NoArmRotarySystems;i++)
+		{
+			const char * const Prefix=csz_Curivator_Robot_SpeedControllerDevices_Enum[i];
+			string ContructedName;
+			ContructedName=Prefix;
+			ContructedName[0]-=32; //Make first letter uppercase
+			ContructedName+="Disable";
+			#ifdef Robot_TesterCode
+			const bool DisableDefault=false;
+			#else
+			const bool DisableDefault=true;
+			#endif
+			SmartDashboard::PutBoolean(ContructedName.c_str(),DisableDefault);
+		}
+		#endif
+		#ifdef __EnableSafetyOnDrive__
+		for (size_t i=Curivator_Robot::eWheel_CL;i<=Curivator_Robot::eWheel_CR;i++)
 		{
 			const char * const Prefix=csz_Curivator_Robot_SpeedControllerDevices_Enum[i];
 			string ContructedName;
