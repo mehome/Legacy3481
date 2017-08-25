@@ -73,7 +73,7 @@
 	<widget field="Disable_Setpoints" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="127" y="297"/>
 	</widget>
-	<widget field="SafetyLock" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+	<widget field="SafetyLock_Arm" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="10" y="296"/>
 	</widget>
 	<widget field="turretPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
@@ -462,6 +462,24 @@
 	</widget>
 	<widget field="ClaspDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="85" y="491"/>
+	</widget>
+	<widget field="Wheel_flDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="50" y="153"/>
+	</widget>
+	<widget field="Wheel_frDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="336" y="153"/>
+	</widget>
+	<widget field="Wheel_rlDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="54" y="223"/>
+	</widget>
+	<widget field="Wheel_rrDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="339" y="222"/>
+	</widget>
+	<widget field="Wheel_crDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="337" y="188"/>
+	</widget>
+	<widget field="Wheel_clDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="55" y="188"/>
 	</widget>
 </dashboard>
 <live-window>
