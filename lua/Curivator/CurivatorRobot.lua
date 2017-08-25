@@ -328,23 +328,22 @@ MainRobot = {
 			use_pid_up_only='y',
 			pid_up={p=100, i=0, d=25},
 			pid_down={p=100, i=0, d=25},
-			tolerance=0.3,
+			tolerance=0.04,
 			tolerance_count=1,
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--center around 166
-			pot_min_limit=50,  --45 forward   0
-			pot_max_limit=289,  -- 45 counter clockwise  962
-			curve_pot=
-			{t4=0.0, t3=4E-05, t2=-0.027, t1=6.1776, c=-194.41},  --50-289 (87 center)
+			--center around 1634
+			pot_min_limit=34,  --45 forward   0
+			pot_max_limit=3134,  -- 45 counter clockwise  962
+			pot_limit_tolerance=100,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=4,			--These are in radians, just go with what feels right
-			max_accel_reverse=4,
+			max_accel_forward=7,			--These are in radians, just go with what feels right
+			max_accel_reverse=7,
 			using_range=1,	--Warning Only use range if we have a potentiometer!
 			predict_up=.400,
 			predict_down=.400,
@@ -363,23 +362,22 @@ MainRobot = {
 			use_pid_up_only='y',
 			pid_up={p=100, i=0, d=25},
 			pid_down={p=100, i=0, d=25},
-			tolerance=0.3,
+			tolerance=0.03,
 			tolerance_count=1,
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--center around 115
-			pot_min_limit=60,  --45 forward   0
-			pot_max_limit=436,  -- 45 counter clockwise  962
-			curve_pot=
-			{t4=0.0, t3=0.0000174, t2=-0.0175392, t1=5.7967676, c=-200.0},  --60-436 (98 center)
+			--center around 1911
+			pot_min_limit=411,  --45 forward   0
+			pot_max_limit=3411,  -- 45 counter clockwise  962
+			pot_limit_tolerance=100,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=4,			--These are in radians, just go with what feels right
-			max_accel_reverse=4,
+			max_accel_forward=7,			--These are in radians, just go with what feels right
+			max_accel_reverse=7,
 			using_range=1,	--Warning Only use range if we have a potentiometer!
 			predict_up=.400,
 			predict_down=.400,
@@ -398,31 +396,30 @@ MainRobot = {
 			use_pid_up_only='y',
 			pid_up={p=100, i=0, d=25},
 			pid_down={p=100, i=0, d=25},
-			tolerance=0.3,
+			tolerance=0.05,
 			tolerance_count=1,
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--center around 80
-			pot_min_limit=50,  --45 forward   0
-			pot_max_limit=160,  -- 45 counter clockwise  962
-			curve_pot=
-			{t4=0.0, t3=0.0003638665, t2=-0.1259610821, t1=14.3665559247, c=-398.9084005696},  --50-160 (64 center)
+			--center around 1361
+			pot_min_limit=111,  --45 forward   0   -1250
+			pot_max_limit=2861,  -- 45 counter clockwise  962
+			pot_limit_tolerance=100,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=4,			--These are in radians, just go with what feels right
-			max_accel_reverse=4,
+			max_accel_forward=7,			--These are in radians, just go with what feels right
+			max_accel_reverse=7,
 			using_range=1,	--Warning Only use range if we have a potentiometer!
 			predict_up=.400,
 			predict_down=.400,
 
 			max_range_deg= 45,
-			min_range_deg=-45,
+			min_range_deg=-38,
 			starting_position=0,
-			pot_offset=-45.0 * Deg2Rad,
+			pot_offset=-38.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
 		},
 		swivel_rr =
@@ -433,27 +430,27 @@ MainRobot = {
 			use_pid_up_only='y',
 			pid_up={p=100, i=0, d=25},
 			pid_down={p=100, i=0, d=25},
-			tolerance=0.3,
+			tolerance=0.04,
 			tolerance_count=1,
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			pot_min_limit=60,  
-			pot_max_limit=436, 
-			curve_pot=
-			{t4=0.0, t3=0.0000174, t2=-0.0175392, t1=5.7967676, c=-200.0},  --60-436 (98 center)
+			--center around 2125
+			pot_min_limit=625,  --45 forward   0
+			pot_max_limit=3375,  -- 45 counter clockwise  962  +1250
+			pot_limit_tolerance=100,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
-			max_accel_forward=4,			--These are in radians, just go with what feels right
-			max_accel_reverse=4,
+			max_accel_forward=7,			--These are in radians, just go with what feels right
+			max_accel_reverse=7,
 			using_range=1,	--Warning Only use range if we have a potentiometer!
 			predict_up=.400,
 			predict_down=.400,
 
-			max_range_deg= 45,
+			max_range_deg= 38,
 			min_range_deg=-45,
 			starting_position=0,
 			pot_offset=-45.0 * Deg2Rad,
