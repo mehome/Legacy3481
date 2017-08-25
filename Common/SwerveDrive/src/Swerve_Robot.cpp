@@ -695,7 +695,12 @@ void Swerve_Robot_Control::Initialize(const Entity_Properties *props)
 		#else
 		SmartDashboard::PutBoolean("SafetyLock_Drive",true);
 		#endif
-		for (size_t i=Swerve_Robot::eSwivel_FL;i<Swerve_Robot::eNoSwerveRobotSpeedControllerDevices;i++)
+		#ifdef __EnableSafetyOnDrive__
+		const size_t SafetyEnumStart=0;
+		#else
+		const size_t SafetyEnumStart=Swerve_Robot::eSwivel_FL;
+		#endif
+		for (size_t i=SafetyEnumStart;i<Swerve_Robot::eNoSwerveRobotSpeedControllerDevices;i++)
 		{
 			const char * const Prefix=csz_Swerve_Robot_SpeedControllerDevices_Enum[i];
 			string ContructedName;
@@ -935,9 +940,14 @@ void Swerve_Robot_Control::UpdateRotaryVoltage(size_t index,double Voltage)
 	case Swerve_Robot::eWheel_FR:
 	case Swerve_Robot::eWheel_RL:
 	case Swerve_Robot::eWheel_RR:
+		#ifdef __EnableSafetyOnDrive__
+		CheckDisableSafety(index,SafetyLock);
+		#endif
 		#ifdef Robot_TesterCode
 		//if (m_SlowWheel) Voltage=0.0;
 		m_EncoderVoltage[index]=Voltage;
+		if (SafetyLock)
+			Voltage=0.0;
 		m_Encoders[index].UpdateEncoderVoltage(Voltage);
 		m_Encoders[index].TimeChange();
 		#endif

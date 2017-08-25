@@ -1,5 +1,8 @@
 #pragma once
 
+//This is only needed when needing to isolate the drive motors
+#define __EnableSafetyOnDrive__
+
 ///This is the interface to control the robot.  It is presented in a generic way that is easily compatible to the ship and robot tank
 class Swerve_Drive_Control_Interface : public Rotary_Control_Interface,
 									   public Robot_Control_Interface
