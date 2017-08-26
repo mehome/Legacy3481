@@ -8,6 +8,8 @@ enum histo_mode
 	h_clahe
 };
 
+float GetDistanceAtPoint(sl::Mat depth, int x, int y);
+
 enum histo_mode mode = h_original;
 
 bool bShowImg = false;
@@ -53,10 +55,9 @@ void detectHookSample(cv::Mat frame, sl::Mat depth)
 
 	for (size_t i = 0; i < hooks.size(); i++)
 	{
-#if 0   // TODO: distance depends on camera // fix reporting
 		float Distance = GetDistanceAtPoint(depth, hooks[i].x, hooks[i].y);
 		std::cout << "hook found at: " << hooks[i].x << ", " << hooks[i].y << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-#endif
+
 		cv::Point p1(hooks[i].x, hooks[i].y);
 		cv::Point p2(hooks[i].x + hooks[i].width, hooks[i].y + hooks[i].height);
 		rectangle(frame, p1, p2, cv::Scalar(255, 0, 255), 2, 8, 0);

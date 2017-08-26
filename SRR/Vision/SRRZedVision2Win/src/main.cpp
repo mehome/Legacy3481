@@ -20,25 +20,6 @@ typedef struct mouseOCVStruct {
 
 mouseOCV mouseStruct;
 
-#if 0
-static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, void * param) {
-    if (event == CV_EVENT_LBUTTONDOWN) {
-        mouseOCVStruct* data = (mouseOCVStruct*) param;
-
-        int y_int = (y /* * data->_image.height / data->_resize.height*/);
-        int x_int = (x /* * data->_image.width / data->_resize.width*/);
-
-        float* ptr_image_num = (float*) ((int8_t*) data->data + y_int * data->step);
-        float dist = ptr_image_num[x_int] / 1000.f;
-
-        if (dist > 0.)
-            printf("\n%s : %2.2f m : %2.2f ft\n", data->name.c_str(), dist, dist * 3.37);
-        else
-            printf("\n : NAN\n");
-    }
-}
-#endif
-
 static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, void * param) {
 	if (event == CV_EVENT_LBUTTONDOWN) {
 		mouseOCVStruct* data = (mouseOCVStruct*)param;
@@ -65,9 +46,8 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 
 float GetDistanceAtPoint(sl::Mat depth, int x, int y)
 {
-	float* ptr_image_num = (float*)(depth.getPtr<sl::float1>(sl::MEM_CPU)) + y * depth.getStep(sl::MEM_CPU);
-    float dist = ptr_image_num[x] / 1000.f;
-
+	sl::float1 dist;
+	depth.getValue(x, y, &dist);
 	return dist;
 }
 
@@ -135,7 +115,7 @@ int main(int argc, char **argv) {
 	size_t width = StereoCam.image_size.width;
 	size_t height = StereoCam.image_size.height;
 
-	bool displayConfidenceMap = true;
+	bool displayConfidenceMap = false;
 
 	cv::Mat disp((int)height, (int)width, CV_8UC4);
 	cv::Mat anaplyph((int)height, (int)width, CV_8UC4);
@@ -146,7 +126,7 @@ int main(int argc, char **argv) {
 	if (StereoCam.IsOpen)
 	{
 		// Mouse callback initialization
-		cv::Size displaySize(width, height);
+		cv::Size displaySize((int)width, (int)height);
 		StereoCam.GrabDepth();
 		mouseStruct.depth = StereoCam.depth;
 		mouseStruct._resize = displaySize;

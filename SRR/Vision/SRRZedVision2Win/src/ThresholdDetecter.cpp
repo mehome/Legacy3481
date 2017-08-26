@@ -10,6 +10,8 @@ int V_high = 255;
 
 int ThreshInc = 10;
 
+float GetDistanceAtPoint(sl::Mat depth, int x, int y);
+
 void detectRockSample(cv::Mat frame, sl::Mat depth)
 {
 	cv::Scalar color = cv::Scalar(255, 0, 255);
@@ -59,17 +61,14 @@ void detectRockSample(cv::Mat frame, sl::Mat depth)
 		/// Find the rotated rectangles for each contour
 		minRect[i] = cv::minAreaRect(cv::Mat(contours[i]));
 
-#if 0	// TODO: depends on camera
 		float Distance = GetDistanceAtPoint(depth, (int)mc[i].x, (int)mc[i].y);
-#endif
 
 		if ((contourArea(contours[i]) > 150) &&
 			(minRect[i].size.width > 10) &&
 			(minRect[i].size.height > 10))
 		{
-#if 0		// TODO: fix reporting
+
 			std::cout << "rock found at " << mc[i].x << ", " << mc[i].y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-#endif
 
 			/// Draw contours
 			cv::drawContours(frame, contours, i, color, 2, 8, hierarchy, 0, cv::Point());
