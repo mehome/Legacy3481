@@ -37,7 +37,7 @@ AutonTest_TestArm=2
 AutonTest_GrabSequence=3
 
 MainRobot = {
-	version = 1.42;
+	version = 1.43;
 	--Version 1.0 only turret and big-arm
 	--Version 1.1 all 5 arm controls
 	--Version 1.2 added auto arm controls
@@ -45,6 +45,7 @@ MainRobot = {
 	--Version 1.4 added preliminary swerve drive settings
 	--Version 1.41 testing swerve pot for polynomial equation
 	--Version 1.42 Revamped back to original range with padding example
+	--Version 1.43 Testing encoder
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -59,9 +60,6 @@ MainRobot = {
 			id_7= { name="boom", channel=6},
 			id_8= { name="bucket", channel=4},
 			id_9= { name="clasp", channel=5},
-			--If we decide we need more power we can assign these
-			--id_3 = { name= "right_drive_3", channel=3}, 
-			--id_6 = { name="left_drive_3", channel=6},
 		},
 		relay =
 		{
@@ -71,8 +69,8 @@ MainRobot = {
 		{
 			--These channels must be unique to digital input encoder channels as well
 			--Also ensure you do not use the slot for the compressor ;)
-			id_1 = { name="dart_upper_limit",  channel=5},
-			id_2 = { name="dart_lower_limit",  channel=6}
+			--id_1 = { name="dart_upper_limit",  channel=5},
+			--id_2 = { name="dart_lower_limit",  channel=6}
 		},
 		analog_input =
 		{
@@ -87,8 +85,13 @@ MainRobot = {
 		{	
 			--encoder names must be the same name list from the victor (or other speed controls)
 			--These channels must be unique to digital input channels as well
-			id_1 = { name= "left_drive_1",  a_channel=3, b_channel=4},
-			id_2 = { name="right_drive_1",  a_channel=1, b_channel=2},
+			id_1 = { name= "wheel_fl",  a_channel=1, b_channel=2},
+			id_2 = { name="wheel_fr",  a_channel=3, b_channel=4},
+			--id_1 = { name= "wheel_fl",  a_channel=15, b_channel=16},
+			--id_3 = { name= "wheel_cl",  a_channel=7, b_channel=8},
+			--id_4 = { name="wheel_cr",  a_channel=1, b_channel=2},
+			--id_5 = { name= "wheel_fl",  a_channel=5, b_channel=6},
+			--id_6 = { name="wheel_rr",  a_channel=3, b_channel=4}
 		},
 		compressor	=	{ relay=8, limit=14 }
 	},
@@ -214,7 +217,7 @@ MainRobot = {
 		},
 		wheel_fl =
 		{
-			--is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -238,7 +241,7 @@ MainRobot = {
 		},
 		wheel_fr =
 		{
-			--is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -262,7 +265,7 @@ MainRobot = {
 		},
 		wheel_rl =
 		{
-			--is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -286,7 +289,7 @@ MainRobot = {
 		},
 		wheel_rr =
 		{
-			--is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -771,7 +774,7 @@ MainRobot = {
 		},
 		wheel_cl =
 		{
-			--is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
@@ -795,7 +798,7 @@ MainRobot = {
 		},
 		wheel_cr =
 		{
-			--is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
