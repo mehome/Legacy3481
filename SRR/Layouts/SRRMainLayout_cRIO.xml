@@ -1,5 +1,32 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Wheel_crDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="280" y="187"/>
+	</widget>
+	<widget field="Wheel_clDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="6" y="186"/>
+	</widget>
+	<widget field="SafetyLock_Arm" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="7" y="297"/>
+	</widget>
+	<widget field="Wheel_rrDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="282" y="223"/>
+	</widget>
+	<widget field="Wheel_rlDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="5" y="222"/>
+	</widget>
+	<widget field="Wheel_flDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="7" y="152"/>
+	</widget>
+	<widget field="Wheel_frDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="284" y="151"/>
+	</widget>
+	<widget field="AxisCount_ch throttle quadrant" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="809" y="341"/>
+	</widget>
+	<widget field="AxisCount_airflo" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="806" y="316"/>
+	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="603" y="117"/>
 		<property name="Text" value="Drive Pot Safety"/>
@@ -94,10 +121,10 @@
 		<location x="127" y="297"/>
 	</widget>
 	<widget field="SafetyLock" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="10" y="296"/>
+		<location x="920" y="371"/>
 	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="33" y="300"/>
+		<location x="34" y="300"/>
 		<property name="Text" value="Main Arm Safety"/>
 	</static-widget>
 	<widget field="TurretDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
