@@ -177,7 +177,7 @@ MainRobot = {
 		arm =
 		{
 			is_closed=0,
-			show_pid_dump='y',
+			show_pid_dump='n',
 			ds_display_row=-1,
 			use_pid_up_only='y',
 			pid_up=
