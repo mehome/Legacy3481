@@ -42,7 +42,6 @@ struct Swerve_Robot_Props
 	//or alternatively solved empirically.  Using zero disables this feature
 	size_t Feedback_DiplayRow;  //Choose a row for display -1 for none (Only active if __DebugLUA__ is defined)
 	bool IsOpen_Wheel,IsOpen_Swivel;  //give ability to open or close loop for wheel or swivel system
-	bool EncoderReversed_Wheel[4];
 };
 
 #ifndef Robot_TesterCode

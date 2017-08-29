@@ -613,19 +613,33 @@ void Swerve_Robot_Properties::LoadFromScript(Scripting::Script& script)
 			}
 		}
 
-
-		err = script.GetFieldTable("encoder_reversed_wheel");
-		if (!err)
+		double Temp;
+		script.GetField("encoder_pulses_per_revolution", NULL, NULL, &Temp);
+		if (Temp!=0.0)
 		{
+			//delegate this value to each drive wheel for each that doesn't have its own override value
 			for (size_t i=0;i<4;i++)
 			{
-				err = script.GetField(section_table[i],&sTest , NULL, NULL);
-				if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
-					m_SwerveRobotProps.EncoderReversed_Wheel[i]=true;
-				ASSERT_MSG(!err, err);
+				const double currentvalue=m_RotaryProps[i].GetRotaryProps().EncoderPulsesPerRevolution;
+				if (currentvalue==0.0)
+					m_RotaryProps[i].RotaryProps().EncoderPulsesPerRevolution=Temp;
 			}
-			script.Pop();
 		}
+
+		//Moved to rotary system
+		//err = script.GetFieldTable("encoder_reversed_wheel");
+		//if (!err)
+		//{
+		//	for (size_t i=0;i<4;i++)
+		//	{
+		//		err = script.GetField(section_table[i],&sTest , NULL, NULL);
+		//		if ((sTest.c_str()[0]=='y')||(sTest.c_str()[0]=='Y')||(sTest.c_str()[0]=='1'))
+		//			m_SwerveRobotProps.EncoderReversed_Wheel[i]=true;
+		//		ASSERT_MSG(!err, err);
+		//	}
+		//	script.Pop();
+		//}
+
 		#ifdef Robot_TesterCode
 		err = script.GetFieldTable("motor_specs");
 		if (!err)
@@ -681,11 +695,13 @@ void Swerve_Robot_Control::Initialize(const Entity_Properties *props)
 
 		//This one one must also be called for the lists that are specific to the robot
 		RobotControlCommon_Initialize(robot_props->Get_ControlAssignmentProps());
-
-		const double EncoderPulseRate=(1.0/360.0);
 		for (size_t i=Swerve_Robot::eWheel_FL;i<Swerve_Robot::eSwivel_FL;i++)
 		{
-			Encoder_SetReverseDirection(i,m_SwerveRobotProps.GetSwerveRobotProps().EncoderReversed_Wheel[i]);
+			double PulsesPerRevolution=robot_props->GetRotaryProps(i).GetRotaryProps().EncoderPulsesPerRevolution;
+			if (PulsesPerRevolution==0.0) 
+				PulsesPerRevolution=360.0;
+			const double EncoderPulseRate=(1.0/PulsesPerRevolution);
+			Encoder_SetReverseDirection(i,robot_props->GetRotaryProps(i).GetRotaryProps().EncoderReversed_Wheel);
 			Encoder_SetDistancePerPulse(i,EncoderPulseRate);
 			Encoder_Start(i);
 		}
@@ -732,7 +748,7 @@ void Swerve_Robot_Control::Initialize(const Entity_Properties *props)
 			#ifdef Robot_TesterCode
 			drive.EncoderSimulationProps()=robot_props->GetEncoderSimulationProps();
 			m_Encoders[i].Initialize(&drive);
-			m_Encoders[i].SetReverseDirection(robot_props->GetSwerveRobotProps().EncoderReversed_Wheel[i]);
+			m_Encoders[i].SetReverseDirection(robot_props->GetRotaryProps(i).GetRotaryProps().EncoderReversed_Wheel);
 			m_Potentiometers[i].Initialize(&robot_props->GetRotaryProps(i));
 			//potentiometers have this solved within their class
 			#endif
@@ -789,7 +805,7 @@ void Swerve_Robot_Control::Reset_Rotary(size_t index)
 		case Swerve_Robot::eWheel_RL:
 		case Swerve_Robot::eWheel_RR:
 			m_KalFilter[index].Reset();
-			Encoder_SetReverseDirection(index,m_SwerveRobotProps.GetSwerveRobotProps().EncoderReversed_Wheel[index]);
+			Encoder_SetReverseDirection(index,m_SwerveRobotProps.GetRotaryProps(index).GetRotaryProps().EncoderReversed_Wheel);
 			#ifdef Robot_TesterCode
 			m_Encoders[index].ResetPos();
 			#endif
