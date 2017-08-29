@@ -1736,7 +1736,7 @@ void Curivator_Robot_Control::Reset_Rotary(size_t index)
 		break;
 	case Curivator_Robot::eWheel_CL:
 	case Curivator_Robot::eWheel_CR:
-		Encoder_SetReverseDirection(index,false);  //these should all be the same
+		Encoder_SetReverseDirection(index,m_RobotProps.GetRotaryProps(index).GetRotaryProps().EncoderReversed_Wheel);
 		m_Encoders[index-Curivator_Robot::eWheel_CL].ResetPos();
 		break;
 	}
@@ -1797,6 +1797,18 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 		//const double EncoderPulseRate=(1.0/360.0);
 		//Encoder_SetDistancePerPulse(Curivator_Robot::eWinch,EncoderPulseRate);
 		//Encoder_Start(Curivator_Robot::eWinch);
+
+		for (size_t i=Curivator_Robot::eWheel_CL;i<=Curivator_Robot::eWheel_CR;i++)
+		{
+			double PulsesPerRevolution=robot_props->GetRotaryProps(i).GetRotaryProps().EncoderPulsesPerRevolution;
+			if (PulsesPerRevolution==0.0) 
+				PulsesPerRevolution=360.0;
+			const double EncoderPulseRate=(1.0/PulsesPerRevolution);
+			Encoder_SetReverseDirection(i,robot_props->GetRotaryProps(i).GetRotaryProps().EncoderReversed_Wheel);
+			Encoder_SetDistancePerPulse(i,EncoderPulseRate);
+			Encoder_Start(i);
+		}
+
 		ResetPos(); //must be called after compressor is created
 		//Typically disabled, but may wish to enable initially
 		#if 0
