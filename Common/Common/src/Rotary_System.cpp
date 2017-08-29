@@ -933,6 +933,8 @@ void Rotary_Properties::Init()
 	props.InverseMaxAccel=props.InverseMaxDecel=0.0;
 	props.Positive_DeadZone=props.Negative_DeadZone=0.0;
 	props.MaxLimitRange=props.MinLimitRange=0.0;  //just zero out; these are optionally used and explicitly set when used
+	props.EncoderPulsesPerRevolution=0.0;
+	props.EncoderReversed_Wheel=false;
 	Rotary_Props::Rotary_Arm_GainAssist_Props &arm=props.ArmGainAssist; 
 	arm.SlowVelocity=arm.SlowVelocityVoltage=0.0;
 	arm.GainAssistAngleScalar=1.0;
@@ -962,6 +964,8 @@ void Rotary_Properties::LoadFromScript(Scripting::Script& script)
 
 		script.GetField("voltage_multiply", NULL, NULL, &m_RotaryProps.VoltageScalar);
 		script.GetField("encoder_to_wheel_ratio", NULL, NULL, &m_RotaryProps.EncoderToRS_Ratio);
+		script.GetField("encoder_pulses_per_revolution", NULL, NULL, &m_RotaryProps.EncoderPulsesPerRevolution);
+		SCRIPT_TEST_BOOL_YES(m_RotaryProps.EncoderReversed_Wheel,"encoder_reversed_wheel");
 		err = script.GetFieldTable("pid");
 		if (!err)
 		{

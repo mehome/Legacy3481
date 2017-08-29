@@ -8,6 +8,11 @@ struct Rotary_Props
 	//The gear reduction used when multiplied by the encoder RPS will equal the *Rotary System's* RPS
 	//This is typically the motor speed since this solves to apply voltage to it
 	double EncoderToRS_Ratio;
+	//Very similar to EncoderToRS_Ratio and is also a placeholder implemented in the robot control
+	 //to initialize the pulse count on the encoders (0 default implies 360)
+	//While it ultimately solves the "gear reduction" it allows the script to specify the encoders specifications of the pulse count
+	//while the EncoderToRS_Ratio can represent the actual gear reduction
+	double EncoderPulsesPerRevolution; 
 	double PID[3]; //p,i,d
 	double PrecisionTolerance;  //Used to manage voltage override and avoid oscillation
 	//Currently supporting 4 terms in polynomial equation
@@ -32,6 +37,9 @@ struct Rotary_Props
 
 	//Only supported in Rotary_Velocity_Control
 	bool UseAggressiveStop;  //If true, will use adverse force to assist in stopping.
+	//Very similar to EncoderToRS_Ratio and is also a placeholder implemented in the robot control
+	//This too is a method provided at startup to keep numbers positive
+	bool EncoderReversed_Wheel;
 
 	//Only supported in Rotary_Position_Control
 	struct Rotary_Arm_GainAssist_Props
