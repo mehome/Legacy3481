@@ -37,9 +37,10 @@ AutonTest_TestArm=2
 AutonTest_GrabSequence=3
 
 MainRobot = {
-	version = 1.1;
+	version = 1.12;
 	--Version 1.0
 	--Version 1.1, major calibration of the swerve drive wheels
+	--Version 1.12, calibration of the drive encoders
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -200,6 +201,7 @@ MainRobot = {
 		--strafe_to_scale=4/20,  --In autonomous we need the max to match the max forward and reverse
 		--This is obtainer from encoder RPM's of 1069.2 and Wheel RPM's 427.68 (both high and low have same ratio)
 		encoder_to_wheel_ratio=1.0,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
+		encoder_pulses_per_revolution=560/4,
 		voltage_multiply=1.0,				--May be reversed using -1.0
 		curve_voltage_wheel=
 		{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
@@ -228,16 +230,10 @@ MainRobot = {
 			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
-			use_pid_up_only='y',
-			pid_up={p=200, i=0, d=25},
-			pid_down={p=200, i=0, d=25},
-			voltage_multiply=-1.0,			--May be reversed
-			--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
-			--curve_voltage=
-			--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
-			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
+			pid={p=200, i=0, d=25},
+			voltage_multiply=-1.0,			--reversed
 			encoder_to_wheel_ratio=1.0,
-			--Arm_SetPotentiometerSafety=true,	
+			encoder_reversed_wheel=1,
 			max_speed=8.91*Feet2Meters,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -252,16 +248,10 @@ MainRobot = {
 			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
-			use_pid_up_only='y',
-			pid_up={p=200, i=0, d=25},
-			pid_down={p=200, i=0, d=25},
-			voltage_multiply=1.0,			--May be reversed
-			--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
-			--curve_voltage=
-			--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
-			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
+			pid={p=200, i=0, d=25},
+			voltage_multiply=1.0,			--not reversed
 			encoder_to_wheel_ratio=1.0,
-			--Arm_SetPotentiometerSafety=true,	
+			encoder_reversed_wheel=1,
 			max_speed=8.91*Feet2Meters,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -273,19 +263,13 @@ MainRobot = {
 		},
 		wheel_rl =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
-			use_pid_up_only='y',
-			pid_up={p=200, i=0, d=25},
-			pid_down={p=200, i=0, d=25},
-			voltage_multiply=-1.0,			--May be reversed
-			--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
-			--curve_voltage=
-			--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
-			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
+			pid={p=200, i=0, d=25},
+			voltage_multiply=-1.0,			--reversed
 			encoder_to_wheel_ratio=1.0,
-			--Arm_SetPotentiometerSafety=true,	
+			encoder_reversed_wheel=1,
 			max_speed=8.91*Feet2Meters,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -300,16 +284,10 @@ MainRobot = {
 			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
-			use_pid_up_only='y',
-			pid_up={p=200, i=0, d=25},
-			pid_down={p=200, i=0, d=25},
-			voltage_multiply=1.0,			--May be reversed
-			--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
-			--curve_voltage=
-			--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
-			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
+			pid={p=200, i=0, d=25},
+			voltage_multiply=1.0,			--not reversed
 			encoder_to_wheel_ratio=1.0,
-			--Arm_SetPotentiometerSafety=true,	
+			encoder_reversed_wheel=1,
 			max_speed=8.91*Feet2Meters,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -785,19 +763,14 @@ MainRobot = {
 		},
 		wheel_cl =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
-			use_pid_up_only='y',
-			pid_up={p=200, i=0, d=25},
-			pid_down={p=200, i=0, d=25},
+			pid={p=200, i=0, d=25},
 			voltage_multiply=-1.0,			--May be reversed
-			--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
-			--curve_voltage=
-			--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
-			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--Arm_SetPotentiometerSafety=true,	
+			encoder_pulses_per_revolution=560/4,
+			encoder_reversed_wheel=1,
 			max_speed=8.91*Feet2Meters,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -809,19 +782,14 @@ MainRobot = {
 		},
 		wheel_cr =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
-			use_pid_up_only='y',
-			pid_up={p=200, i=0, d=25},
-			pid_down={p=200, i=0, d=25},
+			pid={p=200, i=0, d=25},
 			voltage_multiply=1.0,			--May be reversed
-			--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
-			--curve_voltage=
-			--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
-			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--Arm_SetPotentiometerSafety=true,	
+			encoder_pulses_per_revolution=560/4,
+			encoder_reversed_wheel=1,
 			max_speed=8.91*Feet2Meters,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
