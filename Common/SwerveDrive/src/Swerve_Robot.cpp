@@ -553,7 +553,6 @@ void Swerve_Robot_Properties::LoadFromScript(Scripting::Script& script)
 			}
 			UsingCommon=(tally==2);  //both commons must be loaded
 			assert(tally==2 || tally==0);
-			printf("Checkpoint2 %d\n",tally);
 		}
 
 		for (size_t i=0;i<8;i++)
