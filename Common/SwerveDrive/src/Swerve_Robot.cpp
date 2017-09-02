@@ -524,12 +524,44 @@ void Swerve_Robot_Properties::LoadFromScript(Scripting::Script& script)
 	err = script.GetFieldTable("swerve_drive");
 	if (!err) 
 	{
+
+		bool UsingCommon=false;
+		{
+			size_t tally=0;
+			err = script.GetFieldTable("wheel_common");
+			if (!err)
+			{
+				tally++;
+				m_CommonRotary.LoadFromScript(script);
+				script.Pop();
+
+				//delegate this value to each drive wheel for each that doesn't have its own override value
+				for (size_t i=0;i<4;i++)
+					m_RotaryProps[i]=m_CommonRotary;
+			}
+
+			err = script.GetFieldTable("swivel_common");
+			if (!err)
+			{
+				tally++;
+				m_CommonRotary.LoadFromScript(script);
+				script.Pop();
+
+				//delegate this value to each drive wheel for each that doesn't have its own override value
+				for (size_t i=4;i<8;i++)
+					m_RotaryProps[i]=m_CommonRotary;
+			}
+			UsingCommon=(tally==2);  //both commons must be loaded
+			assert(tally==2 || tally==0);
+			printf("Checkpoint2 %d\n",tally);
+		}
+
 		for (size_t i=0;i<8;i++)
 		{
 			err = script.GetFieldTable(csz_Swerve_Robot_SpeedControllerDevices_Enum[i]);
 			if (!err)
 			{
-				m_RotaryProps[i].LoadFromScript(script);
+				m_RotaryProps[i].LoadFromScript(script,UsingCommon);
 				script.Pop();
 			}
 		}
@@ -613,18 +645,19 @@ void Swerve_Robot_Properties::LoadFromScript(Scripting::Script& script)
 			}
 		}
 
-		double Temp;
-		script.GetField("encoder_pulses_per_revolution", NULL, NULL, &Temp);
-		if (Temp!=0.0)
-		{
-			//delegate this value to each drive wheel for each that doesn't have its own override value
-			for (size_t i=0;i<4;i++)
-			{
-				const double currentvalue=m_RotaryProps[i].GetRotaryProps().EncoderPulsesPerRevolution;
-				if (currentvalue==0.0)
-					m_RotaryProps[i].RotaryProps().EncoderPulsesPerRevolution=Temp;
-			}
-		}
+		//Moved to a common class
+		//double Temp;
+		//script.GetField("encoder_pulses_per_revolution", NULL, NULL, &Temp);
+		//if (Temp!=0.0)
+		//{
+		//	//delegate this value to each drive wheel for each that doesn't have its own override value
+		//	for (size_t i=0;i<4;i++)
+		//	{
+		//		const double currentvalue=m_RotaryProps[i].GetRotaryProps().EncoderPulsesPerRevolution;
+		//		if (currentvalue==0.0)
+		//			m_RotaryProps[i].RotaryProps().EncoderPulsesPerRevolution=Temp;
+		//	}
+		//}
 
 		//Moved to rotary system
 		//err = script.GetFieldTable("encoder_reversed_wheel");

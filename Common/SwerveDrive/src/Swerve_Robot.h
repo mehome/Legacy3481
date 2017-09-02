@@ -73,6 +73,7 @@ class DRIVE_API Swerve_Robot_Properties : public UI_Ship_Properties
 	private:
 		//typedef Ship_Properties __super;
 		Rotary_Pot_Properties m_RotaryProps[8];  //see Swerve_Robot_SpeedControllerDevices for assignments
+		Rotary_Pot_Properties m_CommonRotary; //Tried to make this local but it would not succeed
 		#ifdef Robot_TesterCode
 		EncoderSimulation_Properties m_EncoderSimulation;
 		#endif
