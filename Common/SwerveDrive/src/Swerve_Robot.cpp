@@ -965,7 +965,7 @@ double Swerve_Robot_Control::GetRotaryCurrentPorV(size_t index)
 }
 
 
-__inline void CheckDisableSafety(size_t index,bool &SafetyLock)
+__inline void CheckDisableSafety_Swerve(size_t index,bool &SafetyLock)
 {
 	//return;
 	std::string SmartLabel=csz_Swerve_Robot_SpeedControllerDevices_Enum[index];
@@ -989,7 +989,7 @@ void Swerve_Robot_Control::UpdateRotaryVoltage(size_t index,double Voltage)
 	case Swerve_Robot::eWheel_RL:
 	case Swerve_Robot::eWheel_RR:
 		#ifdef __EnableSafetyOnDrive__
-		CheckDisableSafety(index,SafetyLock);
+		CheckDisableSafety_Swerve(index,SafetyLock);
 		#endif
 		#ifdef Robot_TesterCode
 		//if (m_SlowWheel) Voltage=0.0;
@@ -1004,7 +1004,7 @@ void Swerve_Robot_Control::UpdateRotaryVoltage(size_t index,double Voltage)
 	case Swerve_Robot::eSwivel_FR:
 	case Swerve_Robot::eSwivel_RL:
 	case Swerve_Robot::eSwivel_RR:
-		CheckDisableSafety(index,SafetyLock);
+		CheckDisableSafety_Swerve(index,SafetyLock);
 		#ifdef Robot_TesterCode
 		{
 			size_t i=index-4;
