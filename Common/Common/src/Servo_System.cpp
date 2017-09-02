@@ -109,7 +109,7 @@ void Servo_Properties::Init()
 	m_ServoProps=props;
 }
 
-void Servo_Properties::LoadFromScript(Scripting::Script& script)
+void Servo_Properties::LoadFromScript(Scripting::Script& script, bool NoDefaults)
 {
 	const char* err=NULL;
 
@@ -118,14 +118,15 @@ void Servo_Properties::LoadFromScript(Scripting::Script& script)
 	//if (!err) 
 
 	{
-		script.GetField("servo_ratio", NULL, NULL, &m_ServoProps.ServoScalar);
-		script.GetField("servo_offset", NULL, NULL, &m_ServoProps.ServoOffset);
-		script.GetField("tolerance", NULL, NULL, &m_ServoProps.PrecisionTolerance);
 
-		double fDisplayRow;
-		err=script.GetField("ds_display_row", NULL, NULL, &fDisplayRow);
+		double fValue;
+		SCRIPT_INIT_DOUBLE(m_ServoProps.ServoScalar,		 "servo_ratio");
+		SCRIPT_INIT_DOUBLE(m_ServoProps.ServoOffset,		 "servo_offset");
+		SCRIPT_INIT_DOUBLE(m_ServoProps.PrecisionTolerance,"tolerance");
+
+		err=script.GetField("ds_display_row", NULL, NULL, &fValue);
 		if (!err)
-			m_ServoProps.Feedback_DiplayRow=(size_t)fDisplayRow;
+			m_ServoProps.Feedback_DiplayRow=(size_t)fValue;
 
 		string sTest;
 		//err = script.GetField("show_pid_dump",&sTest,NULL,NULL);
@@ -135,5 +136,5 @@ void Servo_Properties::LoadFromScript(Scripting::Script& script)
 		//		m_ServoProps.PID_Console_Dump=true;
 		//}
 	}
-	__super::LoadFromScript(script);
+	__super::LoadFromScript(script,NoDefaults);
 }

@@ -47,7 +47,7 @@ class COMMON_API Ship_1D_Properties : public Entity1D_Properties
 			Ship_Type ShipType=Ship_1D_Props::eDefault, bool UsingRange=false, double MinRange=0.0, double MaxRange=0.0,
 			bool IsAngular=false);
 
-		virtual void LoadFromScript(Scripting::Script& script);
+		virtual void LoadFromScript(Scripting::Script& script, bool NoDefaults=false);
 		//This is depreciated (may need to review game use-case)
 		//void Initialize(Ship_1D *NewShip) const;
 		void UpdateShip1DProperties(const Ship_1D_Props &props);  //explicitly allow updating of ship props here

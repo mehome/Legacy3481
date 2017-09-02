@@ -949,7 +949,7 @@ void Rotary_Properties::Init()
 	m_RotaryProps=props;
 }
 
-void Rotary_Properties::LoadFromScript(Scripting::Script& script)
+void Rotary_Properties::LoadFromScript(Scripting::Script& script, bool NoDefaults)
 {
 	const char* err=NULL;
 	Rotary_Props::Rotary_Arm_GainAssist_Props &arm=m_RotaryProps.ArmGainAssist;
@@ -962,9 +962,10 @@ void Rotary_Properties::LoadFromScript(Scripting::Script& script)
 	{
 		double fValue;
 
-		script.GetField("voltage_multiply", NULL, NULL, &m_RotaryProps.VoltageScalar);
-		script.GetField("encoder_to_wheel_ratio", NULL, NULL, &m_RotaryProps.EncoderToRS_Ratio);
-		script.GetField("encoder_pulses_per_revolution", NULL, NULL, &m_RotaryProps.EncoderPulsesPerRevolution);
+		SCRIPT_INIT_DOUBLE(m_RotaryProps.VoltageScalar,"voltage_multiply");
+		SCRIPT_INIT_DOUBLE(m_RotaryProps.EncoderToRS_Ratio,"encoder_to_wheel_ratio");
+		SCRIPT_INIT_DOUBLE2_NoDefault(m_RotaryProps.EncoderPulsesPerRevolution,"encoder_pulses_per_revolution",360.0);
+
 		SCRIPT_TEST_BOOL_YES(m_RotaryProps.EncoderReversed_Wheel,"encoder_reversed_wheel");
 		err = script.GetFieldTable("pid");
 		if (!err)
@@ -1012,7 +1013,7 @@ void Rotary_Properties::LoadFromScript(Scripting::Script& script)
 			script.Pop();
 		}
 
-		script.GetField("tolerance", NULL, NULL, &m_RotaryProps.PrecisionTolerance);
+		SCRIPT_INIT_DOUBLE(m_RotaryProps.PrecisionTolerance,"tolerance");
 
 		err=script.GetField("tolerance_count", NULL, NULL, &fValue);
 		if (!err)
@@ -1072,31 +1073,36 @@ void Rotary_Properties::LoadFromScript(Scripting::Script& script)
 			if (!err) m_RotaryProps.MaxLimitRange=fValue;
 		}
 
-		script.GetField("inv_max_accel", NULL, NULL, &m_RotaryProps.InverseMaxAccel);
-		m_RotaryProps.InverseMaxDecel=m_RotaryProps.InverseMaxAccel;	//set up deceleration to be the same value by default
-		arm.InverseMaxAccel_Up=arm.InverseMaxAccel_Down=arm.InverseMaxDecel_Up=arm.InverseMaxDecel_Down=m_RotaryProps.InverseMaxAccel;
+		SCRIPT_INIT_DOUBLE(m_RotaryProps.InverseMaxAccel,"inv_max_accel");
+		if (!NoDefaults)
+		{
+			m_RotaryProps.InverseMaxDecel=m_RotaryProps.InverseMaxAccel;	//set up deceleration to be the same value by default
+			arm.InverseMaxAccel_Up=arm.InverseMaxAccel_Down=arm.InverseMaxDecel_Up=arm.InverseMaxDecel_Down=m_RotaryProps.InverseMaxAccel;
+		}
 		err=script.GetField("inv_max_decel", NULL, NULL, &m_RotaryProps.InverseMaxDecel);
 		if (!err)
 			arm.InverseMaxDecel_Up=arm.InverseMaxDecel_Down=m_RotaryProps.InverseMaxAccel;
-		script.GetField("inv_max_accel_up", NULL, NULL, &arm.InverseMaxAccel_Up);
-		script.GetField("inv_max_accel_down", NULL, NULL, &arm.InverseMaxAccel_Down);
-		script.GetField("inv_max_decel_up", NULL, NULL, &arm.InverseMaxDecel_Up);
-		script.GetField("inv_max_decel_down", NULL, NULL, &arm.InverseMaxDecel_Down);
 
-		script.GetField("forward_deadzone", NULL, NULL,&m_RotaryProps.Positive_DeadZone);
-		script.GetField("reverse_deadzone", NULL, NULL,&m_RotaryProps.Negative_DeadZone);
+		SCRIPT_INIT_DOUBLE(arm.InverseMaxAccel_Up,"inv_max_accel_up");
+		SCRIPT_INIT_DOUBLE(arm.InverseMaxAccel_Down,"inv_max_accel_down");
+		SCRIPT_INIT_DOUBLE(arm.InverseMaxDecel_Up,"inv_max_decel_up");
+		SCRIPT_INIT_DOUBLE(arm.InverseMaxDecel_Down,"inv_max_decel_down");
+
+		SCRIPT_INIT_DOUBLE(m_RotaryProps.Positive_DeadZone,"forward_deadzone");
+		SCRIPT_INIT_DOUBLE(m_RotaryProps.Negative_DeadZone,"reverse_deadzone");
+
 		//Ensure the negative settings are negative
 		if (m_RotaryProps.Negative_DeadZone>0.0)
 			m_RotaryProps.Negative_DeadZone=-m_RotaryProps.Negative_DeadZone;
 		//TODO may want to swap forward in reverse settings if the voltage multiply is -1  (I'll want to test this as it happens)
 
-		script.GetField("slow_velocity_voltage", NULL, NULL,&arm.SlowVelocityVoltage);
-		script.GetField("slow_velocity", NULL, NULL,&arm.SlowVelocity);
-		script.GetField("slow_angle_scalar", NULL, NULL, &arm.GainAssistAngleScalar);
-		script.GetField("predict_up",NULL,NULL,&arm.VelocityPredictUp);
-		script.GetField("predict_down",NULL,NULL,&arm.VelocityPredictDown);
-		script.GetField("pulse_burst_range",NULL,NULL,&arm.PulseBurstRange);
-		script.GetField("pulse_burst_time",NULL,NULL,&arm.PulseBurstTimeMs);
+		SCRIPT_INIT_DOUBLE(arm.SlowVelocityVoltage,	"slow_velocity_voltage");
+		SCRIPT_INIT_DOUBLE(arm.SlowVelocity,			"slow_velocity");
+		SCRIPT_INIT_DOUBLE(arm.GainAssistAngleScalar,	"slow_angle_scalar");
+		SCRIPT_INIT_DOUBLE(arm.VelocityPredictUp,		"predict_up");
+		SCRIPT_INIT_DOUBLE(arm.VelocityPredictDown,	"predict_down");
+		SCRIPT_INIT_DOUBLE(arm.PulseBurstRange,		"pulse_burst_range");
+		SCRIPT_INIT_DOUBLE(arm.PulseBurstTimeMs,		"pulse_burst_time");
 
 		#ifdef Robot_TesterCode
 		err = script.GetFieldTable("motor_specs");
@@ -1107,11 +1113,11 @@ void Rotary_Properties::LoadFromScript(Scripting::Script& script)
 		}
 		#endif
 	}
-	__super::LoadFromScript(script);
+	__super::LoadFromScript(script, NoDefaults);
 }
 
 
-void Rotary_Pot_Properties::LoadFromScript(Scripting::Script& script)
+void Rotary_Pot_Properties::LoadFromScript(Scripting::Script& script, bool NoDefaults)
 {
 	const char* err=NULL;
 	double fValue;
@@ -1119,11 +1125,10 @@ void Rotary_Pot_Properties::LoadFromScript(Scripting::Script& script)
 	if (!err) m_RotaryPotProps.PotMinValue=fValue;
 	err=script.GetField("pot_max_limit", NULL, NULL, &fValue);
 	if (!err) m_RotaryPotProps.PotMaxValue=fValue;
-	err=script.GetField("pot_limit_tolerance",NULL, NULL, &fValue);
-	m_RotaryPotProps.PotLimitTolerance=!err?fValue:0;  //this one needs to be initialized
-	script.GetField("pot_offset", NULL, NULL, &m_RotaryPotProps.PotentiometerOffset);
+	SCRIPT_INIT_DOUBLE_NoDefault(m_RotaryPotProps.PotLimitTolerance,"pot_limit_tolerance");
+	SCRIPT_INIT_DOUBLE(m_RotaryPotProps.PotentiometerOffset,"pot_offset");
 	std::string sTest;
-	SCRIPT_TEST_BOOL_YES(m_RotaryPotProps.IsFlipped,"pot_range_flipped");
+	SCRIPT_TEST_BOOL_YES_NoDefault(m_RotaryPotProps.IsFlipped,"pot_range_flipped");
 	m_RotaryPotProps.PotPolyTerms.LoadFromScript(script,"curve_pot");
-	__super::LoadFromScript(script);
+	__super::LoadFromScript(script,NoDefaults);
 }

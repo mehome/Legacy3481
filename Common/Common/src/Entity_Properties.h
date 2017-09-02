@@ -10,7 +10,7 @@ class COMMON_API Entity1D_Properties
 		Entity1D_Properties();
 		Entity1D_Properties(const char EntityName[],double Mass,double Dimension,bool IsAngular=false);
 		virtual ~Entity1D_Properties() {}
-		virtual void LoadFromScript(Scripting::Script& script);
+		virtual void LoadFromScript(Scripting::Script& script, bool NoDefaults=false);
 		void Initialize(Entity1D *NewEntity) const;
 		double GetMass() const {return m_Mass;}
 	protected:

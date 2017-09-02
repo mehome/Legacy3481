@@ -58,7 +58,7 @@ class COMMON_API Servo_Properties : public Ship_1D_Properties
 			MaxAccelReverse,ShipType,UsingRange,MinRange,MaxRange,IsAngular) {Init();}
 
 		Servo_Properties() {Init();}
-		virtual void LoadFromScript(Scripting::Script& script);
+		virtual void LoadFromScript(Scripting::Script& script, bool NoDefaults=false);
 		const Servo_Props &GetServoProps() const {return m_ServoProps;}
 		//Get and Set the properties
 		Servo_Props &ServoProps() {return m_ServoProps;}

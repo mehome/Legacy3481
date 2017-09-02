@@ -228,7 +228,7 @@ class COMMON_API Rotary_Properties : public Ship_1D_Properties
 			MaxAccelReverse,ShipType,UsingRange,MinRange,MaxRange,IsAngular) {Init();}
 
 		Rotary_Properties() {Init();}
-		virtual void LoadFromScript(Scripting::Script& script);
+		virtual void LoadFromScript(Scripting::Script& script, bool NoDefaults=false);
 		const Rotary_Props &GetRotaryProps() const {return m_RotaryProps;}
 		//Get and Set the properties
 		Rotary_Props &RotaryProps() {return m_RotaryProps;}
@@ -271,7 +271,7 @@ class COMMON_API Rotary_Pot_Properties : public Rotary_Properties
 			bool IsAngular=false) : Rotary_Properties(EntityName,Mass,Dimension,MAX_SPEED,ACCEL,BRAKE,MaxAccelForward,
 			MaxAccelReverse,ShipType,UsingRange,MinRange,MaxRange,IsAngular) {Pot_Init();}
 		Rotary_Pot_Properties() {Pot_Init();}
-		virtual void LoadFromScript(Scripting::Script& script);
+		virtual void LoadFromScript(Scripting::Script& script, bool NoDefaults=false);
 		const Rotary_Pot_Props &GetRotary_Pot_Properties() const {return m_RotaryPotProps;}
 	protected:
 		Rotary_Pot_Props m_RotaryPotProps;
