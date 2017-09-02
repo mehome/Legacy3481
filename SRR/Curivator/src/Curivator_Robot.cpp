@@ -1240,7 +1240,7 @@ void Curivator_Robot_Control::ResetPos()
 }
 
 
-__inline void CheckDisableSafety(size_t index,bool &SafetyLock)
+__inline void CheckDisableSafety_Curivator(size_t index,bool &SafetyLock)
 {
 	//return;
 	std::string SmartLabel=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
@@ -1267,7 +1267,7 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 	case Curivator_Robot::eClasp:
 		{
 			#ifdef __EnableRobotArmDisable__
-			CheckDisableSafety(index,SafetyLock);
+			CheckDisableSafety_Curivator(index,SafetyLock);
 			#endif
 			#ifdef Robot_TesterCode
 			m_Potentiometer[index].UpdatePotentiometerVoltage(SafetyLock?0.0:Voltage);
@@ -1279,7 +1279,7 @@ void Curivator_Robot_Control::UpdateVoltage(size_t index,double Voltage)
 	case Curivator_Robot::eWheel_CR:
 		SafetyLock=SafetyLock_Drive;  //using the drive's check box
 		#ifdef __EnableSafetyOnDrive__
-		CheckDisableSafety(index,SafetyLock);
+		CheckDisableSafety_Curivator(index,SafetyLock);
 		#endif
 		#ifdef Robot_TesterCode
 		if (SafetyLock)
