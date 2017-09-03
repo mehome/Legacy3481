@@ -79,6 +79,7 @@ class Curivator_Robot_Properties : public Swerve_Robot_Properties
 		#endif
 		#endif
 		Rotary_Pot_Properties m_RotaryProps[11];
+		Rotary_Pot_Properties m_CommonRotary;   //Like with swerve... preferably would like to make this local
 		Curivator_Robot_Props m_CurivatorRobotProps;
 
 		class ControlEvents : public LUA_Controls_Properties_Interface
