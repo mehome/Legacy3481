@@ -1113,71 +1113,55 @@ void Curivator_Robot_Properties::LoadFromScript(Scripting::Script& script)
 	std::string sTest;
 	if (!err) 
 	{
-		err = script.GetFieldTable("turret");
-		if (!err)
+
+		bool UsingCommon=false;
 		{
-			m_RotaryProps[Curivator_Robot::eTurret].LoadFromScript(script);
-			script.Pop();
+			size_t tally=0;
+			err = script.GetFieldTable("arm_common");
+			if (!err)
+			{
+				tally++;
+				m_CommonRotary.LoadFromScript(script);
+				script.Pop();
+
+				//delegate this value to each drive wheel for each that doesn't have its own override value
+				for (size_t i=0;i<5;i++)
+					m_RotaryProps[i]=m_CommonRotary;
+			}
+
+			err = script.GetFieldTable("arm_pos_common");
+			if (!err)
+			{
+				m_CommonRotary.Init(); //reset the props for proper defaults
+				tally++;
+				m_CommonRotary.LoadFromScript(script);
+				script.Pop();
+
+				//delegate this value to each drive wheel for each that doesn't have its own override value
+				for (size_t i=5;i<9;i++)
+					m_RotaryProps[i]=m_CommonRotary;
+			}
+			UsingCommon=(tally==2);  //both commons must be loaded
+			assert(tally==2 || tally==0);
 		}
-		err = script.GetFieldTable("arm");
-		if (!err)
+
+		for (size_t i=0;i<9;i++)
 		{
-			m_RotaryProps[Curivator_Robot::eArm].LoadFromScript(script);
-			script.Pop();
+			err = script.GetFieldTable(csz_Curivator_Robot_SpeedControllerDevices_Enum[i]);
+			if (!err)
+			{
+				m_RotaryProps[i].LoadFromScript(script,UsingCommon);
+				script.Pop();
+			}
 		}
-		err = script.GetFieldTable("boom");
-		if (!err)
+		for (size_t i=9;i<11;i++)
 		{
-			m_RotaryProps[Curivator_Robot::eBoom].LoadFromScript(script);
-			script.Pop();
-		}
-		err = script.GetFieldTable("bucket");
-		if (!err)
-		{
-			m_RotaryProps[Curivator_Robot::eBucket].LoadFromScript(script);
-			script.Pop();
-		}
-		err = script.GetFieldTable("clasp");
-		if (!err)
-		{
-			m_RotaryProps[Curivator_Robot::eClasp].LoadFromScript(script);
-			script.Pop();
-		}
-		err = script.GetFieldTable("arm_xpos");
-		if (!err)
-		{
-			m_RotaryProps[Curivator_Robot::eArm_Xpos].LoadFromScript(script);
-			script.Pop();
-		}
-		err = script.GetFieldTable("arm_ypos");
-		if (!err)
-		{
-			m_RotaryProps[Curivator_Robot::eArm_Ypos].LoadFromScript(script);
-			script.Pop();
-		}
-		err = script.GetFieldTable("bucket_angle");
-		if (!err)
-		{
-			m_RotaryProps[Curivator_Robot::eBucket_Angle].LoadFromScript(script);
-			script.Pop();
-		}
-		err = script.GetFieldTable("clasp_angle");
-		if (!err)
-		{
-			m_RotaryProps[Curivator_Robot::eClasp_Angle].LoadFromScript(script);
-			script.Pop();
-		}
-		err = script.GetFieldTable("wheel_cl");
-		if (!err)
-		{
-			m_RotaryProps[Curivator_Robot::eWheel_CL].LoadFromScript(script);
-			script.Pop();
-		}
-		err = script.GetFieldTable("wheel_cr");
-		if (!err)
-		{
-			m_RotaryProps[Curivator_Robot::eWheel_CR].LoadFromScript(script);
-			script.Pop();
+			err = script.GetFieldTable(csz_Curivator_Robot_SpeedControllerDevices_Enum[i]);
+			if (!err)
+			{
+				m_RotaryProps[i].LoadFromScript(script,UsingCommon);
+				script.Pop();
+			}
 		}
 
 		SCRIPT_TEST_BOOL_YES(props.EnableArmAutoPosition,"enable_arm_auto_position");
