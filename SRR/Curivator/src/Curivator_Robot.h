@@ -39,15 +39,7 @@ public:
 	bool EnableArmAutoPosition;
 	struct Autonomous_Properties
 	{
-		enum AutonType
-		{
-			eDoNothing,
-			eJustMoveForward,
-			eTestArm,
-			eArmGrabSequence,
-			eNoAutonTypes
-		} AutonTest;
-
+		size_t AutonTest;
 		//void ShowAutonParameters(); //This will show SmartDashboard variables if ShowParameters is true
 		bool ShowParameters;   //If true ShowAutonParameters will populate SmartDashboard with autonomous parameters
 	} Autonomous_Props;

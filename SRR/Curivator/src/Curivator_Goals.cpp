@@ -31,6 +31,18 @@ using namespace std;
 #endif
 
 
+enum AutonType
+{
+	eDoNothing,
+	eJustMoveForward,
+	eJustRotate,
+	eSimpleMoveRotateSequence,
+	eTestBoxWayPoints,
+	eTestArm,
+	eArmGrabSequence,
+	eNoAutonTypes
+};
+
 
   /***********************************************************************************************************************************/
  /*															Curivator_Goals															*/
@@ -102,6 +114,12 @@ class Curivator_Goals_Impl : public AtomicGoal
 			Goal_Ship_MoveToPosition *goal_drive=NULL;
 			goal_drive=new Goal_Ship_MoveToRelativePosition(Robot->GetController(),wp,true,LockOrientation,PrecisionTolerance);
 			return goal_drive;
+		}
+
+		static Goal * Rotate(Curivator_Goals_Impl *Parent,double Degrees)
+		{
+			Curivator_Robot *Robot=&Parent->m_Robot;
+			return new Goal_Ship_RotateToRelativePosition(Robot->GetController(),DEG_2_RAD(Degrees));
 		}
 
 		static Goal * Move_ArmXPosition(Curivator_Goals_Impl *Parent,double length_in)
@@ -209,18 +227,150 @@ class Curivator_Goals_Impl : public AtomicGoal
 			}
 		};
 
+		//Drive Tests----------------------------------------------------------------------
 		class MoveForward : public Generic_CompositeGoal, public SetUpProps
 		{
 		public:
-			MoveForward(Curivator_Goals_Impl *Parent)	: SetUpProps(Parent) {	m_Status=eActive;	}
+			MoveForward(Curivator_Goals_Impl *Parent, bool AutoActivate=false)	: Generic_CompositeGoal(AutoActivate),SetUpProps(Parent) 
+			{	
+				if(!AutoActivate) 
+					m_Status=eActive;	
+			}
 			virtual void Activate()
 			{
-				AddSubgoal(new Goal_Wait(0.500));  //Testing
-				AddSubgoal(Move_Straight(m_Parent,1.0));
+				double DistanceFeet=1.0; //should be a safe default
+				const char * const RotateSmartVar="TestMove";
+				#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+				try
+				{
+					DistanceFeet=SmartDashboard::GetNumber(RotateSmartVar);
+				}
+				catch (...)
+				{
+					//I may need to prime the pump here
+					SmartDashboard::PutNumber(RotateSmartVar,DistanceFeet);
+				}
+				#else
+				//Just set it for cRIO
+				SmartDashboard::PutNumber(RotateSmartVar,DistanceFeet);
+				#endif
+
+				AddSubgoal(new Goal_Wait(0.500));
+				AddSubgoal(Move_Straight(m_Parent,DistanceFeet));
+				AddSubgoal(new Goal_Wait(0.500));  //allow time for mass to settle
 				m_Status=eActive;
 			}
 		};
 
+		class RotateWithWait : public Generic_CompositeGoal, public SetUpProps
+		{
+		public:
+			RotateWithWait(Curivator_Goals_Impl *Parent, bool AutoActivate=false)	: Generic_CompositeGoal(AutoActivate),SetUpProps(Parent)
+			{	
+				if(!AutoActivate) 
+					m_Status=eActive;	
+			}
+			virtual void Activate()
+			{
+				double RotateDegrees=45.0; //should be a safe default
+				const char * const RotateSmartVar="TestRotate";
+				#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+				try
+				{
+					RotateDegrees=SmartDashboard::GetNumber(RotateSmartVar);
+				}
+				catch (...)
+				{
+					//I may need to prime the pump here
+					SmartDashboard::PutNumber(RotateSmartVar,RotateDegrees);
+				}
+				#else
+				//Just set it for cRIO
+				SmartDashboard::PutNumber(RotateSmartVar,RotateDegrees);
+				#endif
+
+				AddSubgoal(new Goal_Wait(0.500));
+				AddSubgoal(Rotate(m_Parent,RotateDegrees));
+				AddSubgoal(new Goal_Wait(0.500));  //allow time for mass to settle
+				m_Status=eActive;
+			}
+		};
+
+		class TestMoveRotateSequence : public Generic_CompositeGoal, public SetUpProps
+		{
+		public:
+			TestMoveRotateSequence(Curivator_Goals_Impl *Parent)	: m_pParent(Parent),SetUpProps(Parent) {	m_Status=eActive;	}
+			virtual void Activate()
+			{
+				size_t NoIterations=4;
+				#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+				try
+				{
+					NoIterations=SmartDashboard::GetNumber("TestMoveRotateIter");
+				}
+				catch (...)
+				{
+					//set up some good defaults for a small box
+					SmartDashboard::PutNumber("TestRotate",90.0);
+					SmartDashboard::PutNumber("TestMove",1.0);
+					SmartDashboard::PutNumber("TestMoveRotateIter",4.0);
+				}
+				#endif
+				for (size_t i=0;i<NoIterations;i++)
+				{
+					AddSubgoal(new MoveForward(m_pParent,true));
+					AddSubgoal(new RotateWithWait(m_pParent,true));
+				}
+				m_Status=eActive;
+			}
+		private:
+			Curivator_Goals_Impl *m_pParent;
+		};
+
+		static Goal * GiveRobotSquareWayPointGoal(Curivator_Goals_Impl *Parent)
+		{
+			Curivator_Robot *Robot=&Parent->m_Robot;
+			const char * const LengthSetting="TestDistance_ft";
+			double Length_m=Feet2Meters(1);
+			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			try
+			{
+				Length_m=Feet2Meters(SmartDashboard::GetNumber(LengthSetting));
+			}
+			catch (...)
+			{
+				//set up some good defaults for a small box
+				SmartDashboard::PutNumber(LengthSetting,Meters2Feet(Length_m));
+			}
+			#endif
+
+			std::list <WayPoint> points;
+			struct Locations
+			{
+				double x,y;
+			} test[]=
+			{
+				{Length_m,Length_m},
+				{Length_m,-Length_m},
+				{-Length_m,-Length_m},
+				{-Length_m,Length_m},
+				{0,0}
+			};
+			for (size_t i=0;i<_countof(test);i++)
+			{
+				WayPoint wp;
+				wp.Position[0]=test[i].x;
+				wp.Position[1]=test[i].y;
+				wp.Power=0.5;
+				points.push_back(wp);
+			}
+			//Now to setup the goal
+			Goal_Ship_FollowPath *goal=new Goal_Ship_FollowPath(Robot->GetController(),points,false,true);
+			return goal;
+		}
+
+
+		//Arm Tests----------------------------------------------------------------------
 		class SetArmWaypoint : public Generic_CompositeGoal, public SetUpProps
 		{
 		public:
@@ -353,21 +503,44 @@ class Curivator_Goals_Impl : public AtomicGoal
 			Autonomous_Properties &auton=m_Robot.GetAutonProps();
 			//auton.ShowAutonParameters();  //Grab again now in case user has tweaked values
 
-			Autonomous_Properties::AutonType AutonTest = auton.AutonTest;
+			AutonType AutonTest = (AutonType)auton.AutonTest;
+			const char * const AutonTestSelection="AutonTest";
+			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			double Length_m=Feet2Meters(1);
+			try
+			{
+				AutonTest=(AutonType)((size_t)SmartDashboard::GetNumber(AutonTestSelection));
+			}
+			catch (...)
+			{
+				//set up some good defaults for a small box
+				SmartDashboard::PutNumber(AutonTestSelection,(double)auton.AutonTest);
+			}
+			#endif
+
 			printf("Testing=%d \n",AutonTest);
 			switch(AutonTest)
 			{
-			case Autonomous_Properties::eJustMoveForward:
+			case eJustMoveForward:
 				m_Primer.AddGoal(new MoveForward(this));
 				break;
-			case Autonomous_Properties::eTestArm:
+			case eJustRotate:
+				m_Primer.AddGoal(new RotateWithWait(this));
+				break;
+			case eSimpleMoveRotateSequence:
+				m_Primer.AddGoal(new TestMoveRotateSequence(this));
+				break;
+			case eTestBoxWayPoints:
+				m_Primer.AddGoal(GiveRobotSquareWayPointGoal(this));
+				break;
+			case eTestArm:
 				m_Primer.AddGoal(TestArmMove(this));
 				break;
-			case Autonomous_Properties::eArmGrabSequence:
+			case eArmGrabSequence:
 				m_Primer.AddGoal(TestArmMove2(this));
 				break;
-			case Autonomous_Properties::eDoNothing:
-			case Autonomous_Properties::eNoAutonTypes: //grrr windriver and warning 1250
+			case eDoNothing:
+			case eNoAutonTypes: //grrr windriver and warning 1250
 				break;
 			}
 			m_Primer.AddGoal(new goal_clock(this));
