@@ -401,7 +401,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 
 		static Goal * TestArmMove(Curivator_Goals_Impl *Parent)
 		{
-			double length_in=30.0;
+			double length_in=20.0;
 			double height_in=0.0;
 			double bucket_Angle_deg=78.0;
 			double clasp_Angle_deg=13.0;
@@ -425,8 +425,10 @@ class Curivator_Goals_Impl : public AtomicGoal
 			#else
 			for (size_t i=0;i<_countof(SmartNames);i++)
 			{
-				//I may need to prime the pump here
-				SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+				if (!SmartDashboard::GetBoolean("TestVariables_set"))
+					SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+				else
+					*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
 			}
 			#endif
 			return new SetArmWaypoint(Parent,length_in,height_in,bucket_Angle_deg,clasp_Angle_deg);
@@ -506,7 +508,6 @@ class Curivator_Goals_Impl : public AtomicGoal
 			AutonType AutonTest = (AutonType)auton.AutonTest;
 			const char * const AutonTestSelection="AutonTest";
 			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
-			double Length_m=Feet2Meters(1);
 			try
 			{
 				AutonTest=(AutonType)((size_t)SmartDashboard::GetNumber(AutonTestSelection));
@@ -516,6 +517,15 @@ class Curivator_Goals_Impl : public AtomicGoal
 				//set up some good defaults for a small box
 				SmartDashboard::PutNumber(AutonTestSelection,(double)auton.AutonTest);
 			}
+			#else
+			//for cRIO checked in using zero in lua (default) to prompt the variable and then change to -1 to use it
+			if (auton.AutonTest!=(size_t)-1)
+			{
+				SmartDashboard::PutNumber(AutonTestSelection,(double)0.0);
+				SmartDashboard::PutBoolean("TestVariables_set",false);
+			}
+			else
+				AutonTest=(AutonType)((size_t)SmartDashboard::GetNumber(AutonTestSelection));
 			#endif
 
 			printf("Testing=%d \n",AutonTest);
