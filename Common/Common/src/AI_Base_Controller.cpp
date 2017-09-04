@@ -845,8 +845,8 @@ void Goal_Ship_MoveToRelativePosition::Activate()
  /*													Goal_Ship_FollowPath															*/
 /***********************************************************************************************************************************/
 
-Goal_Ship_FollowPath::Goal_Ship_FollowPath(AI_Base_Controller *controller,std::list<WayPoint> path,bool LoopMode) : 
-	m_Controller(controller),m_Path(path),m_PathCopy(path),m_LoopMode(LoopMode)
+Goal_Ship_FollowPath::Goal_Ship_FollowPath(AI_Base_Controller *controller,std::list<WayPoint> path,bool LoopMode,bool UseSafeStop) : 
+	m_Controller(controller),m_Path(path),m_PathCopy(path),m_LoopMode(LoopMode),m_UseSafeStop(UseSafeStop)
 {
 	m_Status=eInactive;
 }
@@ -858,7 +858,7 @@ void Goal_Ship_FollowPath::Activate()
 		m_Status=eActive;
 		WayPoint point=m_Path.front();
 		m_Path.pop_front();
-		AddSubgoal(new Goal_Ship_MoveToPosition(m_Controller,point,false));
+		AddSubgoal(new Goal_Ship_MoveToPosition(m_Controller,point,m_UseSafeStop));
 	}
 	else
 		m_Status=eFailed;

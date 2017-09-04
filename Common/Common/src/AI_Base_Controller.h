@@ -168,14 +168,14 @@ private:
 class COMMON_API Goal_Ship_FollowPath : public CompositeGoal
 {
 	public:
-		Goal_Ship_FollowPath(AI_Base_Controller *controller,std::list<WayPoint> path,bool LoopMode=false);
+		Goal_Ship_FollowPath(AI_Base_Controller *controller,std::list<WayPoint> path,bool LoopMode=false,bool UseSafeStop=false);
 		virtual void Activate();
 		virtual Goal_Status Process(double dTime_s);
 		virtual void Terminate();
 	private:
 		AI_Base_Controller * const m_Controller;
 		std::list<WayPoint> m_Path,m_PathCopy;
-		bool m_LoopMode;
+		bool m_LoopMode,m_UseSafeStop;
 };
 
 class COMMON_API Goal_Ship_FollowShip : public AtomicGoal
