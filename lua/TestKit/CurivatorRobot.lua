@@ -40,7 +40,7 @@ AutonTest_TestArm=5
 AutonTest_GrabSequence=6
 
 MainRobot = {
-	version = 1.45;
+	version = 1.46;
 	--Version 1.0 only turret and big-arm
 	--Version 1.1 all 5 arm controls
 	--Version 1.2 added auto arm controls
@@ -51,6 +51,7 @@ MainRobot = {
 	--Version 1.43 Testing encoder
 	--Version 1.44 Synced with drive settings, applied common settings for arm
 	--Version 1.45 added auton update with nothing for default
+	--Version 1.46 tested arm positioning with adjusted arm pid 
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -446,7 +447,7 @@ MainRobot = {
 			side_move_rad=10,
 			arm_height_in=12,
 			support_hotspot='n',
-			auton_test=AutonTest_DoNothing,
+			auton_test=0,
 			--auton_test=AutonTest_TestArm,
 			show_auton_variables='y'
 		},
@@ -497,8 +498,9 @@ MainRobot = {
 		},
 		arm =
 		{
-			pid_up={p=75, i=0, d=25},
-			pid_down={p=75, i=0, d=25},
+			show_pid_dump='n',
+			pid_up={p=200, i=0, d=25},
+			pid_down={p=200, i=0, d=25},
 			tolerance=0.3,
 			pot_min_limit=232,
 			pot_max_limit=890,
@@ -515,8 +517,8 @@ MainRobot = {
 			min_range=1,
 			pot_offset=1,
 			starting_position=6,
-			forward_deadzone=0.23,
-			reverse_deadzone=0.23,
+			forward_deadzone=0.37,
+			reverse_deadzone=0.37
 		},
 		boom =
 		{
