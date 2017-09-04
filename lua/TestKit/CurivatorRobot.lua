@@ -32,12 +32,15 @@ gMaxTorqueYaw = (2 * Drive_MaxAccel * Meters2Inches / WheelTurningDiameter_In) *
 
 -- Here are some auton tests
 AutonTest_DoNothing=0
-AutonTest_JustMoveForward=1
-AutonTest_TestArm=2
-AutonTest_GrabSequence=3
+AutonTest_JustMoveStraight=1
+AutonTest_JustRotate=2
+AutonTest_MoveRotateSequence=3
+AutonTest_BoxWayPoints=4
+AutonTest_TestArm=5
+AutonTest_GrabSequence=6
 
 MainRobot = {
-	version = 1.44;
+	version = 1.45;
 	--Version 1.0 only turret and big-arm
 	--Version 1.1 all 5 arm controls
 	--Version 1.2 added auto arm controls
@@ -47,6 +50,7 @@ MainRobot = {
 	--Version 1.42 Revamped back to original range with padding example
 	--Version 1.43 Testing encoder
 	--Version 1.44 Synced with drive settings, applied common settings for arm
+	--Version 1.45 added auton update with nothing for default
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -442,7 +446,7 @@ MainRobot = {
 			side_move_rad=10,
 			arm_height_in=12,
 			support_hotspot='n',
-			auton_test=AutonTest_GrabSequence,
+			auton_test=AutonTest_DoNothing,
 			--auton_test=AutonTest_TestArm,
 			show_auton_variables='y'
 		},
