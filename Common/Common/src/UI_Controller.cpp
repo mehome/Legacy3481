@@ -969,8 +969,10 @@ void UI_Controller::UpdateUI(double dTime_s)
 		SmartDashboard::PutNumber("X_ft ",Meters2Feet(pos[0]));
 		SmartDashboard::PutNumber("Y_ft ",Meters2Feet(pos[1]));
 		SmartDashboard::PutNumber("Heading",RAD_2_DEG(m_ship->GetAtt_r()));
-		//Vec2d Velocity=m_ship->GetLinearVelocity_ToDisplay();
+		#ifdef Robot_TesterCode
+		Vec2d Velocity=m_ship->GetLinearVelocity_ToDisplay();
 		DOUT(3,"Vel[0]=%.2f Vel[1]=%.2f Rot=%.2f mode=%s",Meters2Feet(Velocity[0]),Meters2Feet(Velocity[1]),m_ship->GetAngularVelocity_ToDisplay(),m_ship->GetAlterTrajectory()?"Sim":"Slide");
+		#endif
 		//These may be disabled and put from the encoder readings instead
 		#if 0
 		SmartDashboard::PutNumber("Velocity",Meters2Feet(Velocity[1]));
