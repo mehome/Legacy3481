@@ -297,6 +297,7 @@ class Curivator_Robot : public Swerve_Robot
 		const Curivator_Robot_Properties &GetRobotProps() const;
 		Curivator_Robot_Props::Autonomous_Properties &GetAutonProps();
 		//Accessors needed for setting goals
+		Robot_Arm &GetTurret() {return m_Turret;}
 		Robot_Arm &GetArmXpos() {return m_ArmXpos;}
 		Robot_Arm &GetArmYpos() {return m_ArmYpos;}
 		Robot_Arm &GetBucketAngle() {return m_BucketAngle;}

@@ -40,6 +40,8 @@ enum AutonType
 	eTestBoxWayPoints,
 	eTestArm,
 	eArmGrabSequence,
+	eTestTurret,
+	eArmAndTurretTest,
 	eNoAutonTypes
 };
 
@@ -122,6 +124,16 @@ class Curivator_Goals_Impl : public AtomicGoal
 			return new Goal_Ship_RotateToRelativePosition(Robot->GetController(),DEG_2_RAD(Degrees));
 		}
 
+		static Goal * Move_TurretPosition(Curivator_Goals_Impl *Parent,double Angle_Deg)
+		{
+			Curivator_Robot *Robot=&Parent->m_Robot;
+			Curivator_Robot::Robot_Arm &Arm=Robot->GetTurret();
+			const double PrecisionTolerance=Robot->GetRobotProps().GetRotaryProps(Curivator_Robot::eTurret).GetRotaryProps().PrecisionTolerance;
+			Goal_Ship1D_MoveToPosition *goal_arm=NULL;
+			const double position=Angle_Deg;
+			goal_arm=new Goal_Ship1D_MoveToPosition(Arm,DEG_2_RAD(position),PrecisionTolerance);
+			return goal_arm;
+		}
 		static Goal * Move_ArmXPosition(Curivator_Goals_Impl *Parent,double length_in)
 		{
 			Curivator_Robot *Robot=&Parent->m_Robot;
@@ -398,7 +410,24 @@ class Curivator_Goals_Impl : public AtomicGoal
 			const double m_bucket_Angle_deg;
 			const double m_clasp_Angle_deg;
 		};
-
+		class SetTurretWaypoint : public Generic_CompositeGoal, public SetUpProps
+		{
+		public:
+			SetTurretWaypoint(Curivator_Goals_Impl *Parent,double Angle_deg) : SetUpProps(Parent),m_Turret_Angle_deg(Angle_deg)
+			{
+				Activate(); //go ahead
+			}
+			virtual void Activate()
+			{
+				if (m_Status==eActive) return;  //allow for multiple calls
+				AddSubgoal(new Goal_Wait(0.500));
+				AddSubgoal(Move_TurretPosition(m_Parent,m_Turret_Angle_deg));
+				AddSubgoal(new Goal_Wait(0.500));
+				m_Status=eActive;
+			}
+		private:
+			const double m_Turret_Angle_deg;
+		};
 		static Goal * TestArmMove(Curivator_Goals_Impl *Parent)
 		{
 			double length_in=20.0;
@@ -432,6 +461,32 @@ class Curivator_Goals_Impl : public AtomicGoal
 			}
 			#endif
 			return new SetArmWaypoint(Parent,length_in,height_in,bucket_Angle_deg,clasp_Angle_deg);
+		}
+		static Goal * TestTurretMove(Curivator_Goals_Impl *Parent)
+		{
+			double clasp_Angle_deg=0.0;
+			const char * const SmartName="Test_TurretAngle";
+
+			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
+			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			{
+				try
+				{
+					clasp_Angle_deg=SmartDashboard::GetNumber(SmartName);
+				}
+				catch (...)
+				{
+					//I may need to prime the pump here
+					SmartDashboard::PutNumber(SmartName,clasp_Angle_deg);
+				}
+			}
+			#else
+			if (!SmartDashboard::GetBoolean("TestVariables_set"))
+				SmartDashboard::PutNumber(SmartName,clasp_Angle_deg);
+			else
+				clasp_Angle_deg=SmartDashboard::GetNumber(SmartName);
+			#endif
+			return new SetTurretWaypoint(Parent,clasp_Angle_deg);
 		}
 
 		class ArmGrabSequence : public Generic_CompositeGoal, public SetUpProps
@@ -488,6 +543,63 @@ class Curivator_Goals_Impl : public AtomicGoal
 			}
 			#endif
 			return new ArmGrabSequence(Parent,length_in,height_in);
+		}
+
+		class ArmTurretGrabSequence : public Generic_CompositeGoal, public SetUpProps
+		{
+		public:
+			ArmTurretGrabSequence(Curivator_Goals_Impl *Parent,double length_in,double height_in,double turret_start_deg,double turret_grab_deg) : 
+			  SetUpProps(Parent),m_length_in(length_in),m_height_in(height_in),m_turret_start_deg(turret_start_deg),m_turret_grab_deg(turret_grab_deg)
+			  {		Activate();  //we can set it up ahead of time
+			  }
+			  virtual void Activate()
+			  {
+				  if (m_Status==eActive) return;  //allow for multiple calls
+				  AddSubgoal(new SetTurretWaypoint(m_Parent,m_turret_start_deg));
+				  AddSubgoal(new ArmGrabSequence(m_Parent,m_length_in,m_height_in));
+				  AddSubgoal(new SetTurretWaypoint(m_Parent,m_turret_grab_deg));
+				  AddSubgoal(new SetTurretWaypoint(m_Parent,m_turret_start_deg));
+				  AddSubgoal(new SetArmWaypoint(m_Parent,CurivatorGoal_StartingPosition[0],CurivatorGoal_StartingPosition[1],CurivatorGoal_StartingPosition[2],CurivatorGoal_StartingPosition[3]));
+				  m_Status=eActive;
+			  }
+		private:
+			const double m_length_in;
+			const double m_height_in;
+			const double m_turret_start_deg;
+			const double m_turret_grab_deg;
+		};
+
+		static Goal * TestArmAndTurret(Curivator_Goals_Impl * Parent)
+		{
+			double turret_start_in=0;
+			double turret_grab_in=-70.0;
+			double length_in=30.0;
+			double height_in=-10.0;
+			const char * const SmartNames[]={"testTurret_Start","testTurret_Grab","testarm_length","testarm_height"};
+			double * const SmartVariables[]={&turret_start_in,&turret_grab_in,&length_in,&height_in};
+
+			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
+			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			for (size_t i=0;i<_countof(SmartNames);i++)
+			{
+				try
+				{
+					*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
+				}
+				catch (...)
+				{
+					//I may need to prime the pump here
+					SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+				}
+			}
+			#else
+			for (size_t i=0;i<_countof(SmartNames);i++)
+			{
+				//I may need to prime the pump here
+				SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+			}
+			#endif
+			return new ArmTurretGrabSequence(Parent,length_in,height_in,turret_start_in,turret_grab_in);
 		}
 	public:
 		Curivator_Goals_Impl(Curivator_Robot &robot) : m_Robot(robot), m_Timer(0.0), 
@@ -548,6 +660,12 @@ class Curivator_Goals_Impl : public AtomicGoal
 				break;
 			case eArmGrabSequence:
 				m_Primer.AddGoal(TestArmMove2(this));
+				break;
+			case eTestTurret:
+				m_Primer.AddGoal(TestTurretMove(this));
+				break;
+			case eArmAndTurretTest:
+				m_Primer.AddGoal(TestArmAndTurret(this));
 				break;
 			case eDoNothing:
 			case eNoAutonTypes: //grrr windriver and warning 1250
