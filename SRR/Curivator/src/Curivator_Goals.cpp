@@ -53,6 +53,73 @@ const double CurivatorGoal_StartingPosition[4]={13.0,4.0,60.0,5.0};
 const double CurivatorGoal_HoverPosition[4]={39.0,0.0,90.0,45.0};
 const double CurivatorGoal_PickupPosition[4]={39.0,-20.0,90.0,45.0};
 
+__inline double Auton_Smart_GetSingleValue(const char *SmartName,double default_value)
+{
+	double result=default_value;
+	//Can't use try catch on cRIO since Thunder RIO has issue with using catch(...)
+	//RoboRio uses SetDefault*() to accomplish same effect
+	//Simulation can use try catch method, but we could modify smart dashboard to allow using the new method
+	#if defined Robot_TesterCode
+	try
+	{
+		result=SmartDashboard::GetNumber(SmartName);
+	}
+	catch (...)
+	{
+		//set up some good defaults for a small box
+		SmartDashboard::PutNumber(SmartName,default_value);
+	}
+	#else
+	#if !defined __USE_LEGACY_WPI_LIBRARIES__
+	SmartDashboard::SetDefaultNumber(SmartName,default_value);
+	result=SmartDashboard::GetNumber(SmartName);
+	#else
+	//for cRIO checked in using zero in lua (default) to prompt the variable and then change to -1 to use it
+	if (!SmartDashboard::GetBoolean("TestVariables_set"))
+		SmartDashboard::PutNumber(SmartName,default_value);
+	else
+		result=SmartDashboard::GetNumber(SmartName);
+	#endif
+	#endif
+	return result;
+}
+
+__inline void Auton_Smart_GetMultiValue(size_t NoItems,const char * const SmartNames[],double * const SmartVariables[])
+{
+	//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
+	#if defined Robot_TesterCode
+	for (size_t i=0;i<NoItems;i++)
+	{
+		try
+		{
+			*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
+		}
+		catch (...)
+		{
+			//I may need to prime the pump here
+			SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+		}
+	}
+	#else
+	#if !defined __USE_LEGACY_WPI_LIBRARIES__
+	for (size_t i=0;i<NoItems;i++)
+	{
+		SmartDashboard::SetDefaultNumber(SmartNames[i],*(SmartVariables[i]));
+		*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
+	}
+	#else
+	for (size_t i=0;i<NoItems;i++)
+	{
+		if (SmartDashboard::GetBoolean("TestVariables_set"))
+			*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
+		else
+			SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
+	}
+	#endif
+	#endif
+}
+
+
 class Curivator_Goals_Impl : public AtomicGoal
 {
 	private:
@@ -250,22 +317,8 @@ class Curivator_Goals_Impl : public AtomicGoal
 			}
 			virtual void Activate()
 			{
-				double DistanceFeet=1.0; //should be a safe default
-				const char * const RotateSmartVar="TestMove";
-				#if defined Robot_TesterCode
-				try
-				{
-					DistanceFeet=SmartDashboard::GetNumber(RotateSmartVar);
-				}
-				catch (...)
-				{
-					//I may need to prime the pump here
-					SmartDashboard::PutNumber(RotateSmartVar,DistanceFeet);
-				}
-				#else
-				//Just set it for cRIO
-				SmartDashboard::PutNumber(RotateSmartVar,DistanceFeet);
-				#endif
+				const char * const MoveSmartVar="TestMove";
+				double DistanceFeet=Auton_Smart_GetSingleValue(MoveSmartVar,1.0); //should be a safe default
 
 				AddSubgoal(new Goal_Wait(0.500));
 				AddSubgoal(Move_Straight(m_Parent,DistanceFeet));
@@ -284,22 +337,8 @@ class Curivator_Goals_Impl : public AtomicGoal
 			}
 			virtual void Activate()
 			{
-				double RotateDegrees=45.0; //should be a safe default
 				const char * const RotateSmartVar="TestRotate";
-				#if defined Robot_TesterCode
-				try
-				{
-					RotateDegrees=SmartDashboard::GetNumber(RotateSmartVar);
-				}
-				catch (...)
-				{
-					//I may need to prime the pump here
-					SmartDashboard::PutNumber(RotateSmartVar,RotateDegrees);
-				}
-				#else
-				//Just set it for cRIO
-				SmartDashboard::PutNumber(RotateSmartVar,RotateDegrees);
-				#endif
+				const double RotateDegrees=Auton_Smart_GetSingleValue(RotateSmartVar,45.0); //should be a safe default
 
 				AddSubgoal(new Goal_Wait(0.500));
 				AddSubgoal(Rotate(m_Parent,RotateDegrees));
@@ -314,20 +353,14 @@ class Curivator_Goals_Impl : public AtomicGoal
 			TestMoveRotateSequence(Curivator_Goals_Impl *Parent)	: m_pParent(Parent),SetUpProps(Parent) {	m_Status=eActive;	}
 			virtual void Activate()
 			{
-				size_t NoIterations=4;
-				#if defined Robot_TesterCode
-				try
-				{
-					NoIterations=SmartDashboard::GetNumber("TestMoveRotateIter");
-				}
-				catch (...)
-				{
-					//set up some good defaults for a small box
-					SmartDashboard::PutNumber("TestRotate",90.0);
-					SmartDashboard::PutNumber("TestMove",1.0);
-					SmartDashboard::PutNumber("TestMoveRotateIter",4.0);
-				}
-				#endif
+				double dNoIterations=4.0;
+				double TestRotateDeg=90.0;
+				double TestMoveFeet=1.0;
+				const char * const SmartNames[]={"TestMoveRotateIter","TestRotate","TestMove"};
+				double * const SmartVariables[]={&dNoIterations,&TestRotateDeg,&TestMoveFeet};
+				Auton_Smart_GetMultiValue(3,SmartNames,SmartVariables);
+				size_t NoIterations=(size_t)dNoIterations;
+
 				for (size_t i=0;i<NoIterations;i++)
 				{
 					AddSubgoal(new MoveForward(m_pParent,true));
@@ -343,18 +376,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 		{
 			Curivator_Robot *Robot=&Parent->m_Robot;
 			const char * const LengthSetting="TestDistance_ft";
-			double Length_m=Feet2Meters(1);
-			#if defined Robot_TesterCode
-			try
-			{
-				Length_m=Feet2Meters(SmartDashboard::GetNumber(LengthSetting));
-			}
-			catch (...)
-			{
-				//set up some good defaults for a small box
-				SmartDashboard::PutNumber(LengthSetting,Meters2Feet(Length_m));
-			}
-			#endif
+			const double Length_m=Feet2Meters(Auton_Smart_GetSingleValue(LengthSetting,Feet2Meters(1)));
 
 			std::list <WayPoint> points;
 			struct Locations
@@ -430,62 +452,19 @@ class Curivator_Goals_Impl : public AtomicGoal
 		};
 		static Goal * TestArmMove(Curivator_Goals_Impl *Parent)
 		{
-			double length_in=20.0;
-			double height_in=0.0;
+			double length_in=25.0;
+			double height_in=-7.0;
 			double bucket_Angle_deg=78.0;
 			double clasp_Angle_deg=13.0;
 			const char * const SmartNames[]={"testarm_length","testarm_height","testarm_bucket","testarm_clasp"};
 			double * const SmartVariables[]={&length_in,&height_in,&bucket_Angle_deg,&clasp_Angle_deg};
-
-			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
-			#if defined Robot_TesterCode
-			for (size_t i=0;i<4;i++)
-			{
-				try
-				{
-					*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
-				}
-				catch (...)
-				{
-					//I may need to prime the pump here
-					SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
-				}
-			}
-			#else
-			for (size_t i=0;i<_countof(SmartNames);i++)
-			{
-				if (!SmartDashboard::GetBoolean("TestVariables_set"))
-					SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
-				else
-					*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
-			}
-			#endif
+			Auton_Smart_GetMultiValue(4,SmartNames,SmartVariables);
 			return new SetArmWaypoint(Parent,length_in,height_in,bucket_Angle_deg,clasp_Angle_deg);
 		}
 		static Goal * TestTurretMove(Curivator_Goals_Impl *Parent)
 		{
-			double clasp_Angle_deg=0.0;
 			const char * const SmartName="Test_TurretAngle";
-
-			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
-			#if defined Robot_TesterCode
-			{
-				try
-				{
-					clasp_Angle_deg=SmartDashboard::GetNumber(SmartName);
-				}
-				catch (...)
-				{
-					//I may need to prime the pump here
-					SmartDashboard::PutNumber(SmartName,clasp_Angle_deg);
-				}
-			}
-			#else
-			if (!SmartDashboard::GetBoolean("TestVariables_set"))
-				SmartDashboard::PutNumber(SmartName,clasp_Angle_deg);
-			else
-				clasp_Angle_deg=SmartDashboard::GetNumber(SmartName);
-			#endif
+			const double clasp_Angle_deg=Auton_Smart_GetSingleValue(SmartName,0.0);
 			return new SetTurretWaypoint(Parent,clasp_Angle_deg);
 		}
 
@@ -520,28 +499,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			double height_in=-20.0;
 			const char * const SmartNames[]={"testarm_length","testarm_height"};
 			double * const SmartVariables[]={&length_in,&height_in};
-
-			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
-			#if defined Robot_TesterCode
-			for (size_t i=0;i<2;i++)
-			{
-				try
-				{
-					*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
-				}
-				catch (...)
-				{
-					//I may need to prime the pump here
-					SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
-				}
-			}
-			#else
-			for (size_t i=0;i<_countof(SmartNames);i++)
-			{
-				//I may need to prime the pump here
-				SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
-			}
-			#endif
+			Auton_Smart_GetMultiValue(2,SmartNames,SmartVariables);
 			return new ArmGrabSequence(Parent,length_in,height_in);
 		}
 
@@ -573,32 +531,11 @@ class Curivator_Goals_Impl : public AtomicGoal
 		{
 			double turret_start_in=0;
 			double turret_grab_in=-70.0;
-			double length_in=30.0;
-			double height_in=-10.0;
+			double length_in=25.0;
+			double height_in=-7.0;
 			const char * const SmartNames[]={"testTurret_Start","testTurret_Grab","testarm_length","testarm_height"};
 			double * const SmartVariables[]={&turret_start_in,&turret_grab_in,&length_in,&height_in};
-
-			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
-			#if defined Robot_TesterCode
-			for (size_t i=0;i<_countof(SmartNames);i++)
-			{
-				try
-				{
-					*(SmartVariables[i])=SmartDashboard::GetNumber(SmartNames[i]);
-				}
-				catch (...)
-				{
-					//I may need to prime the pump here
-					SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
-				}
-			}
-			#else
-			for (size_t i=0;i<_countof(SmartNames);i++)
-			{
-				//I may need to prime the pump here
-				SmartDashboard::PutNumber(SmartNames[i],*(SmartVariables[i]));
-			}
-			#endif
+			Auton_Smart_GetMultiValue(4,SmartNames,SmartVariables);
 			return new ArmTurretGrabSequence(Parent,length_in,height_in,turret_start_in,turret_grab_in);
 		}
 	public:
@@ -630,7 +567,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 				SmartDashboard::PutNumber(AutonTestSelection,(double)auton.AutonTest);
 			}
 			#else
-			#if !defined __USE_LEGACY_WPI_LIBRARIES_
+			#if !defined __USE_LEGACY_WPI_LIBRARIES__
 			SmartDashboard::SetDefaultNumber(AutonTestSelection,0.0);
 			AutonTest=(AutonType)((size_t)SmartDashboard::GetNumber(AutonTestSelection));
 			#else
