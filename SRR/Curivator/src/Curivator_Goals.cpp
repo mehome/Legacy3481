@@ -252,7 +252,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			{
 				double DistanceFeet=1.0; //should be a safe default
 				const char * const RotateSmartVar="TestMove";
-				#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+				#if defined Robot_TesterCode
 				try
 				{
 					DistanceFeet=SmartDashboard::GetNumber(RotateSmartVar);
@@ -286,7 +286,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			{
 				double RotateDegrees=45.0; //should be a safe default
 				const char * const RotateSmartVar="TestRotate";
-				#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+				#if defined Robot_TesterCode
 				try
 				{
 					RotateDegrees=SmartDashboard::GetNumber(RotateSmartVar);
@@ -315,7 +315,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			virtual void Activate()
 			{
 				size_t NoIterations=4;
-				#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+				#if defined Robot_TesterCode
 				try
 				{
 					NoIterations=SmartDashboard::GetNumber("TestMoveRotateIter");
@@ -344,7 +344,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			Curivator_Robot *Robot=&Parent->m_Robot;
 			const char * const LengthSetting="TestDistance_ft";
 			double Length_m=Feet2Meters(1);
-			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			#if defined Robot_TesterCode
 			try
 			{
 				Length_m=Feet2Meters(SmartDashboard::GetNumber(LengthSetting));
@@ -438,7 +438,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			double * const SmartVariables[]={&length_in,&height_in,&bucket_Angle_deg,&clasp_Angle_deg};
 
 			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
-			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			#if defined Robot_TesterCode
 			for (size_t i=0;i<4;i++)
 			{
 				try
@@ -468,7 +468,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			const char * const SmartName="Test_TurretAngle";
 
 			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
-			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			#if defined Robot_TesterCode
 			{
 				try
 				{
@@ -522,7 +522,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			double * const SmartVariables[]={&length_in,&height_in};
 
 			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
-			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			#if defined Robot_TesterCode
 			for (size_t i=0;i<2;i++)
 			{
 				try
@@ -579,7 +579,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			double * const SmartVariables[]={&turret_start_in,&turret_grab_in,&length_in,&height_in};
 
 			//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
-			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			#if defined Robot_TesterCode
 			for (size_t i=0;i<_countof(SmartNames);i++)
 			{
 				try
@@ -619,7 +619,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 
 			AutonType AutonTest = (AutonType)auton.AutonTest;
 			const char * const AutonTestSelection="AutonTest";
-			#if defined Robot_TesterCode || !defined __USE_LEGACY_WPI_LIBRARIES__
+			#if defined Robot_TesterCode
 			try
 			{
 				AutonTest=(AutonType)((size_t)SmartDashboard::GetNumber(AutonTestSelection));
