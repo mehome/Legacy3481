@@ -630,6 +630,10 @@ class Curivator_Goals_Impl : public AtomicGoal
 				SmartDashboard::PutNumber(AutonTestSelection,(double)auton.AutonTest);
 			}
 			#else
+			#if !defined __USE_LEGACY_WPI_LIBRARIES_
+			SmartDashboard::SetDefaultNumber(AutonTestSelection,0.0);
+			AutonTest=(AutonType)((size_t)SmartDashboard::GetNumber(AutonTestSelection));
+			#else
 			//for cRIO checked in using zero in lua (default) to prompt the variable and then change to -1 to use it
 			if (auton.AutonTest!=(size_t)-1)
 			{
@@ -638,6 +642,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			}
 			else
 				AutonTest=(AutonType)((size_t)SmartDashboard::GetNumber(AutonTestSelection));
+			#endif
 			#endif
 
 			printf("Testing=%d \n",AutonTest);
