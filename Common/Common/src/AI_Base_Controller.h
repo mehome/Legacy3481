@@ -33,6 +33,7 @@ class COMMON_API AI_Base_Controller
 {
 	public:
 		AI_Base_Controller(Ship_2D &ship);
+		virtual ~AI_Base_Controller() {}
 
 		///This is the single update point to all controlling of the ship.  The base class contains no goal arbitration, but does implement
 		///Whatever goal is passed into it if the UI controller is off line
