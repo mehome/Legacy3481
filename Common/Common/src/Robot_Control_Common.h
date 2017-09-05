@@ -2,7 +2,7 @@
 
 //It is still not yet certain how the cRIO support will unfold in regards to updated WPI libraries, so until that is settled... enable this to build with cRIO
 //  [1/24/2015 JamesK]
-#define __USE_LEGACY_WPI_LIBRARIES__
+//#define __USE_LEGACY_WPI_LIBRARIES__
 
 //This parses out the LUA into two table for each control element... its population properties and LUT
 class COMMON_API Control_Assignment_Properties
