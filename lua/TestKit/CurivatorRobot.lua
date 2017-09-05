@@ -38,6 +38,8 @@ AutonTest_MoveRotateSequence=3
 AutonTest_BoxWayPoints=4
 AutonTest_TestArm=5
 AutonTest_GrabSequence=6
+AutonTest_TestTurret=7
+AutonTest_TestArmAndTurret=8
 
 MainRobot = {
 	version = 1.46;
@@ -476,9 +478,9 @@ MainRobot = {
 			voltage_multiply=1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--center around 450
-			pot_min_limit=265,  --180 forward
-			pot_max_limit=647,  -- 180 counter clockwise 
+			--center around (was 450) 424
+			pot_min_limit=224,  --180 forward            (was 265)
+			pot_max_limit=624,  -- 180 counter clockwise (was 647)
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=0.5,	--100 rpm... with a 15x reduction in radians
