@@ -278,7 +278,7 @@ bool JoyStick_Binder::IsDoubleClicked(size_t i)
 
 double GetJoystickValue(Framework::Base::IJoystick::JoyState joyinfo,JoyStick_Binder::JoyAxis_enum whichaxis)
 {
-	double Value;
+	double Value=0.0;
 	switch(whichaxis)
 	{
 	case JoyStick_Binder::eX_Axis:	Value=joyinfo.lX;	break;
