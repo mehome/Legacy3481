@@ -49,9 +49,9 @@ enum AutonType
   /***********************************************************************************************************************************/
  /*															Curivator_Goals															*/
 /***********************************************************************************************************************************/
-const double CurivatorGoal_StartingPosition[4]={13.0,4.0,60.0,5.0};
-const double CurivatorGoal_HoverPosition[4]={39.0,0.0,90.0,45.0};
-const double CurivatorGoal_PickupPosition[4]={39.0,-20.0,90.0,45.0};
+const double CurivatorGoal_StartingPosition[4]={18.0,4.0,60.0,5.0};
+const double CurivatorGoal_HoverPosition[4]={25.0,0.0,90.0,45.0};
+const double CurivatorGoal_PickupPosition[4]={25.0,-7.0,90.0,45.0};
 
 __inline double Auton_Smart_GetSingleValue(const char *SmartName,double default_value)
 {
@@ -495,8 +495,8 @@ class Curivator_Goals_Impl : public AtomicGoal
 
 		static Goal * TestArmMove2(Curivator_Goals_Impl *Parent)
 		{
-			double length_in=38.0;
-			double height_in=-20.0;
+			double length_in=25.0;
+			double height_in=-7.0;
 			const char * const SmartNames[]={"testarm_length","testarm_height"};
 			double * const SmartVariables[]={&length_in,&height_in};
 			Auton_Smart_GetMultiValue(2,SmartNames,SmartVariables);
