@@ -478,9 +478,10 @@ MainRobot = {
 			voltage_multiply=1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--center around (was 450) 424
-			pot_min_limit=224,  --180 forward            (was 265)
-			pot_max_limit=624,  -- 180 counter clockwise (was 647)
+			--On CRio the range is up to 960 so ideal center is 480
+			--center around 480
+			pot_min_limit=480-174,  --180 forward            (was 265)
+			pot_max_limit=480+174,  -- 180 counter clockwise (was 647)
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=0.5,	--100 rpm... with a 15x reduction in radians
