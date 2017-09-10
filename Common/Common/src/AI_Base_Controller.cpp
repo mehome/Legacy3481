@@ -997,9 +997,11 @@ void Goal_Wait::Terminate()
 /***********************************************************************************************************************************/
 
 
-Goal_NotifyWhenComplete::Goal_NotifyWhenComplete(EventMap &em,char *EventName) : m_EventName(EventName),m_EventMap(em)
+Goal_NotifyWhenComplete::Goal_NotifyWhenComplete(EventMap &em,const char *EventName,const char *FailedEventName) : m_EventName(EventName),m_EventMap(em)
 {
 	m_Status=eInactive;
+	if (FailedEventName)
+		m_FailedEventName=FailedEventName;
 }
 
 void Goal_NotifyWhenComplete::Activate()
@@ -1021,6 +1023,12 @@ Goal::Goal_Status Goal_NotifyWhenComplete::Process(double dTime_s)
 			m_EventMap.Event_Map[m_EventName].Fire(); //Fire the event
 			Terminate();
 		}
+	}
+	else if (m_Status==eFailed)
+	{
+		if (m_FailedEventName[0]!=0)
+			m_EventMap.Event_Map[m_FailedEventName].Fire(); //Fire the event
+		Terminate();
 	}
 	return m_Status;
 }

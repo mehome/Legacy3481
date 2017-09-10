@@ -219,10 +219,10 @@ class COMMON_API Goal_NotifyWhenComplete : public CompositeGoal
 		#ifndef Robot_TesterCode
 		typedef CompositeGoal __super;
 		#endif
-		std::string m_EventName;  //name to fire when complete
+		std::string m_EventName,m_FailedEventName;  //name to fire when complete
 		Base::EventMap &m_EventMap;
 	public:
-		Goal_NotifyWhenComplete(Base::EventMap &em,char *EventName);
+		Goal_NotifyWhenComplete(Base::EventMap &em,const char *EventName,const char *FailedEventName=NULL);
 		//give public access for client to populate goals
 		virtual void AddSubgoal(Goal *g) {__super::AddSubgoal(g);}
 		//client activates manually when goals are added
