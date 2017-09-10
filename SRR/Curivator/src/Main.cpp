@@ -29,6 +29,10 @@ class SetUp_Manager
 			printf("Goals completed!\n");
 		}
 
+		void GoalFailed()
+		{
+			printf("Goals failed!\n");
+		}
 		SetUp_Manager(bool UseSafety,bool UseEncoders=false) : m_Joystick(3,0), //3 joysticks starting at port 0
 			m_JoyBinder(m_Joystick),m_Control(UseSafety),m_pRobot(NULL),m_pUI(NULL)
 		{
@@ -65,6 +69,7 @@ class SetUp_Manager
 			}
 			//This is for testing purposes
 			m_EventMap.Event_Map["Complete"].Subscribe(ehl,*this,&SetUp_Manager::GoalComplete);
+			m_EventMap.Event_Map["Failed"].Subscribe(ehl,*this,&SetUp_Manager::GoalFailed);
 		}
 		void TimeChange(double dTime_s)
 		{
@@ -84,6 +89,7 @@ class SetUp_Manager
 		~SetUp_Manager()
 		{
 			m_EventMap.Event_Map["Complete"].Remove(*this,&SetUp_Manager::GoalComplete);
+			m_EventMap.Event_Map["Failed"].Remove(*this,&SetUp_Manager::GoalFailed);
 
 			//Note: in visual studio the delete pointer implicitly checks for NULL, but I do not want to assume this for wind river.
 			if (m_pUI)

@@ -21,6 +21,8 @@ public:
 	#ifdef Robot_TesterCode
 	virtual void BindAdditionalEventControls(bool Bind,GG_Framework::Base::EventMap *em,IEvent::HandlerList &ehl)=0;
 	#endif
+	//Transfer the computations into robot control where the rotary callback can access them
+	virtual void Update3DPositioningPosition(double BucketDistance,double BucketHeight, double BucketAngle)=0;
 };
 
 struct Curivator_Robot_Props
@@ -197,12 +199,13 @@ class Curivator_Robot : public Swerve_Robot
 				//override from rotary system... will implicitly manage limit switch support
 				virtual bool DidHitMinLimit() const;
 				virtual bool DidHitMaxLimit() const;
+			protected:
+				Curivator_Robot * const m_pParent;
 			private:
 				#ifndef Robot_TesterCode
 				typedef Rotary_Position_Control __super;
 				#endif
 				const size_t m_Index;
-				Curivator_Robot * const m_pParent;
 				double m_LastIntendedPosition;
 				bool m_Advance, m_Retract;
 		};
@@ -256,6 +259,7 @@ class Curivator_Robot : public Swerve_Robot
 				Boom &GetBoom() {return m_Boom;}  //avoid need of clasp having to aggregate a boom member variable
 			protected:
 				virtual void TimeChange(double dTime_s);
+				virtual void ResetPos();
 			private:
 				Boom &m_Boom;
 				double m_GlobalCoMHeight,m_GlobalCoMDistance;
@@ -353,6 +357,7 @@ class Curivator_Robot : public Swerve_Robot
 		#ifdef Robot_TesterCode
 		void TestAutonomous();
 		void GoalComplete();
+		void GoalFailed();
 		#endif
 };
 
@@ -418,7 +423,10 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 		#ifdef Robot_TesterCode
 		virtual void BindAdditionalEventControls(bool Bind,GG_Framework::Base::EventMap *em,IEvent::HandlerList &ehl);
 		#endif
-
+		double m_3DPos_BucketDistance,m_3DPos_BucketHeight,m_3DPos_BucketAngle;
+		virtual void Update3DPositioningPosition(double BucketDistance,double BucketHeight, double BucketAngle)
+		{ 	m_3DPos_BucketDistance=BucketDistance,m_3DPos_BucketHeight=BucketHeight,m_3DPos_BucketAngle=BucketAngle;
+		}
 	protected:
 		Curivator_Robot_Properties m_RobotProps;  //saves a copy of all the properties
 		#ifdef __UsingTankDrive__

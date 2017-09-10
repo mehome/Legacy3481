@@ -49,9 +49,9 @@ enum AutonType
   /***********************************************************************************************************************************/
  /*															Curivator_Goals															*/
 /***********************************************************************************************************************************/
-const double CurivatorGoal_StartingPosition[4]={18.0,4.0,60.0,5.0};
-const double CurivatorGoal_HoverPosition[4]={25.0,0.0,90.0,45.0};
-const double CurivatorGoal_PickupPosition[4]={25.0,-7.0,90.0,45.0};
+const double CurivatorGoal_StartingPosition[4]={18.0,10.0,60.0,5.0};
+const double CurivatorGoal_HoverPosition[4]={25.0,10.0,90.0,45.0};
+const double CurivatorGoal_PickupPosition[4]={25.0,10.0,90.0,45.0};
 
 __inline double Auton_Smart_GetSingleValue(const char *SmartName,double default_value)
 {
@@ -161,6 +161,28 @@ class Curivator_Goals_Impl : public AtomicGoal
 			}
 			void Terminate() {	m_Status=eFailed;	}
 		};
+
+		class goal_watchdog : public AtomicGoal
+		{
+		private:
+			Curivator_Goals_Impl *m_Parent;
+		public:
+			goal_watchdog(Curivator_Goals_Impl *Parent)	: m_Parent(Parent) {	m_Status=eInactive;	}
+			void Activate()  {	m_Status=eActive;	}
+			Goal_Status Process(double dTime_s)
+			{
+				if (m_Status==eActive)
+				{
+					bool SafetyLock=SmartDashboard::GetBoolean("SafetyLock_Arm") || SmartDashboard::GetBoolean("SafetyLock_Drive");
+					if (SafetyLock)
+						m_Status=eFailed;
+				}
+				return m_Status;
+			}
+			void Terminate() {	m_Status=eFailed;	}
+		};
+
+
 		MultitaskGoal m_Primer;
 		bool m_IsHot;
 		bool m_HasSecondShotFired;
@@ -614,6 +636,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 				break;
 			}
 			m_Primer.AddGoal(new goal_clock(this));
+			m_Primer.AddGoal(new goal_watchdog(this));
 			m_Status=eActive;
 		}
 
@@ -633,7 +656,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 
 Goal *Curivator_Goals::Get_Curivator_Autonomous(Curivator_Robot *Robot)
 {
-	Goal_NotifyWhenComplete *MainGoal=new Goal_NotifyWhenComplete(*Robot->GetEventMap(),(char *)"Complete");
+	Goal_NotifyWhenComplete *MainGoal=new Goal_NotifyWhenComplete(*Robot->GetEventMap(),"Complete","Failed");
 	//SmartDashboard::PutNumber("Sequence",1.0);  //ensure we are on the right sequence
 	//Inserted in reverse since this is LIFO stack list
 	MainGoal->AddSubgoal(new Curivator_Goals_Impl(*Robot));

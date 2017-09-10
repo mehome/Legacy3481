@@ -357,11 +357,20 @@ void Curivator_Robot::Bucket::TimeChange(double dTime_s)
 	const double globalTipHeight=GetBucketTipHeight();
 	const double globalRoundEndHeight=GetBucketRoundEndHeight();
 	const double globalBucketAngle_deg=RAD_2_DEG(GetBucketAngle());
-	SmartDashboard::PutNumber("BucketDistance",globalBucketDistance);
+	m_pParent->m_RobotControl->Update3DPositioningPosition(globalBucketDistance,min(globalTipHeight,globalRoundEndHeight),globalBucketAngle_deg);
+	if (m_pParent->m_ArmXpos.GetRotary_Properties().LoopState==Rotary_Props::eNone)
+		SmartDashboard::PutNumber("BucketDistance",globalBucketDistance);
 	//SmartDashboard::PutNumber("BucketTipHeight",globalTipHeight);
 	//SmartDashboard::PutNumber("BucketRoundEndHeight",globalRoundEndHeight);
-	SmartDashboard::PutNumber("BucketHeight",min(globalTipHeight,globalRoundEndHeight));
-	SmartDashboard::PutNumber("BucketAngle",globalBucketAngle_deg);
+	if (m_pParent->m_ArmYpos.GetRotary_Properties().LoopState==Rotary_Props::eNone)
+		SmartDashboard::PutNumber("BucketHeight",min(globalTipHeight,globalRoundEndHeight));
+	if (m_pParent->m_BucketAngle.GetRotary_Properties().LoopState==Rotary_Props::eNone)
+		SmartDashboard::PutNumber("BucketAngle",globalBucketAngle_deg);
+}
+void Curivator_Robot::Bucket::ResetPos()
+{
+	__super::ResetPos();
+	m_pParent->m_RobotControl->Update3DPositioningPosition(18.0,0.0,80.0);  //provide good defaults
 }
 
 double Curivator_Robot::Bucket::GetBucketLength() const
@@ -705,6 +714,7 @@ void Curivator_Robot::BindAdditionalEventControls(bool Bind)
 		#ifdef Robot_TesterCode
 		em->Event_Map["TestAuton"].Subscribe(ehl, *this, &Curivator_Robot::TestAutonomous);
 		em->Event_Map["Complete"].Subscribe(ehl,*this,&Curivator_Robot::GoalComplete);
+		em->Event_Map["Failed"].Subscribe(ehl,*this,&Curivator_Robot::GoalFailed);
 		#endif
 		em->EventOnOff_Map["StopAuton"].Subscribe(ehl,*this, &Curivator_Robot::StopAuton);
 		em->EventOnOff_Map["Robot_FreezeArm"].Subscribe(ehl,*this, &Curivator_Robot::FreezeArm);
@@ -715,6 +725,7 @@ void Curivator_Robot::BindAdditionalEventControls(bool Bind)
 		#ifdef Robot_TesterCode
 		em->Event_Map["TestAuton"]  .Remove(*this, &Curivator_Robot::TestAutonomous);
 		em->Event_Map["Complete"]  .Remove(*this, &Curivator_Robot::GoalComplete);
+		em->Event_Map["Failed"]  .Remove(*this, &Curivator_Robot::GoalFailed);
 		#endif
 		em->EventOnOff_Map["StopAuton"].Remove(*this, &Curivator_Robot::StopAuton);
 		em->EventOnOff_Map["Robot_FreezeArm"].Remove(*this, &Curivator_Robot::FreezeArm);
@@ -903,6 +914,12 @@ void Curivator_Robot::TestAutonomous()
 void Curivator_Robot::GoalComplete()
 {
 	printf("Goals completed!\n");
+	m_controller->GetUIController_RW()->SetAutoPilot(false);
+}
+void Curivator_Robot::GoalFailed()
+{
+	printf("Goals failed!\n");
+	//TODO see about having some way to dump a log or stack trace of where the failure occurred 
 	m_controller->GetUIController_RW()->SetAutoPilot(false);
 }
 #endif
@@ -1627,6 +1644,18 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				SmartDashboard::PutNumber(ContructedName.c_str(),result);
 			}
 
+			break;
+		case Curivator_Robot::eArm_Xpos:
+			result=m_3DPos_BucketDistance;
+			SmartDashboard::PutNumber("BucketDistance",result);
+			break;
+		case Curivator_Robot::eArm_Ypos:
+			result=m_3DPos_BucketHeight;
+			SmartDashboard::PutNumber("BucketHeight",result);
+			break;
+		case Curivator_Robot::eBucket_Angle:
+			result=m_3DPos_BucketAngle;
+			SmartDashboard::PutNumber("BucketAngle",result);
 			break;
 		default:
 			assert (index > Curivator_Robot::eClasp);
