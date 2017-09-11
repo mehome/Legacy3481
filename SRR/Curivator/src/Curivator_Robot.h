@@ -21,6 +21,7 @@ public:
 	#ifdef Robot_TesterCode
 	virtual void BindAdditionalEventControls(bool Bind,GG_Framework::Base::EventMap *em,IEvent::HandlerList &ehl)=0;
 	#endif
+	virtual void SetControlledEventMap(Base::EventMap* em)=0;
 	//Transfer the computations into robot control where the rotary callback can access them
 	virtual void Update3DPositioningPosition(double BucketDistance,double BucketHeight, double BucketAngle)=0;
 };
@@ -423,6 +424,8 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 		#ifdef Robot_TesterCode
 		virtual void BindAdditionalEventControls(bool Bind,GG_Framework::Base::EventMap *em,IEvent::HandlerList &ehl);
 		#endif
+		//allow robot control to send event to the robot
+		virtual void SetControlledEventMap(Base::EventMap* em) {m_EventMap=em;}
 		double m_3DPos_BucketDistance,m_3DPos_BucketHeight,m_3DPos_BucketAngle;
 		virtual void Update3DPositioningPosition(double BucketDistance,double BucketHeight, double BucketAngle)
 		{ 	m_3DPos_BucketDistance=BucketDistance,m_3DPos_BucketHeight=BucketHeight,m_3DPos_BucketAngle=BucketAngle;
@@ -438,6 +441,7 @@ class Curivator_Robot_Control : public RobotControlCommon, public Curivator_Cont
 		#endif
 		Compressor *m_Compressor;
 		Accelerometer *m_RoboRIO_Accelerometer;
+		Base::EventMap* m_EventMap;
 		//All digital input reads are done on time change and cached to avoid multiple reads to the FPGA
 		bool m_Limit_IntakeMin1,m_Limit_IntakeMin2,m_Limit_IntakeMax1,m_Limit_IntakeMax2;
 	private:

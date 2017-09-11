@@ -31,7 +31,17 @@ class SetUp_Manager
 
 		void GoalFailed()
 		{
-			printf("Goals failed!\n");
+			//printf("Goals failed!\n");
+			//Only take control of failed events if we don't have control of robot, as this may get triggered during teleop otherwise
+			if (m_pRobot->GetController()->GetUIController()->GetAutoPilot())
+			{
+				printf("Goals failed!\n");
+				//ensure everthing is disabled!
+				SmartDashboard::PutBoolean("SafetyLock_Arm",true);
+				SmartDashboard::PutBoolean("SafetyLock_Drive",true);
+				//TODO see about having some way to dump a log or stack trace of where the failure occurred
+				m_pRobot->GetController()->GetUIController_RW()->SetAutoPilot(false);
+			}
 		}
 		SetUp_Manager(bool UseSafety,bool UseEncoders=false) : m_Joystick(3,0), //3 joysticks starting at port 0
 			m_JoyBinder(m_Joystick),m_Control(UseSafety),m_pRobot(NULL),m_pUI(NULL)

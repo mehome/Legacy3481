@@ -49,9 +49,9 @@ enum AutonType
   /***********************************************************************************************************************************/
  /*															Curivator_Goals															*/
 /***********************************************************************************************************************************/
-const double CurivatorGoal_StartingPosition[4]={18.0,10.0,60.0,5.0};
-const double CurivatorGoal_HoverPosition[4]={25.0,10.0,90.0,45.0};
-const double CurivatorGoal_PickupPosition[4]={25.0,10.0,90.0,45.0};
+const double CurivatorGoal_StartingPosition[4]={18.0,4.0,70.0,5.0};
+const double CurivatorGoal_HoverPosition[4]={25.0,0.0,90.0,45.0};
+const double CurivatorGoal_PickupPosition[4]={25.0,-5.0,90.0,45.0};
 
 __inline double Auton_Smart_GetSingleValue(const char *SmartName,double default_value)
 {
@@ -500,10 +500,10 @@ class Curivator_Goals_Impl : public AtomicGoal
 			virtual void Activate()
 			{
 				if (m_Status==eActive) return;  //allow for multiple calls
-				AddSubgoal(new SetArmWaypoint(m_Parent,CurivatorGoal_StartingPosition[0],CurivatorGoal_StartingPosition[1],50.0,-7.0));
+				AddSubgoal(new SetArmWaypoint(m_Parent,CurivatorGoal_StartingPosition[0],CurivatorGoal_StartingPosition[1],65.0,5.0));
 				for (double angle=40;angle<=90;angle+=10)
-					AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,angle,-7.0)); //rotate bucket (slowly)
-				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,CurivatorGoal_PickupPosition[2],-7.0)); //close clasp
+					AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,angle,5.0)); //rotate bucket (slowly)
+				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,CurivatorGoal_PickupPosition[2],5.0)); //close clasp
 				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,CurivatorGoal_PickupPosition[2],CurivatorGoal_PickupPosition[3]));  //pickup position
 				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,CurivatorGoal_HoverPosition[1],CurivatorGoal_HoverPosition[2],CurivatorGoal_HoverPosition[3]));
 				//TODO move this to another goal once we start working with the turret
