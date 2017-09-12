@@ -1583,8 +1583,8 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 
 			//Clip Range
 			//I imagine .001 corrections will not be harmful for when in use.
-			if (PotentiometerRaw_To_Arm < 0) PotentiometerRaw_To_Arm = 0;//corrects .001 or less causing a negative value
-			if (PotentiometerRaw_To_Arm > 1 || PotentiometerRaw_To_Arm > .999) PotentiometerRaw_To_Arm = 1;//corrects .001 or lass causing value greater than 1
+			//if (PotentiometerRaw_To_Arm < 0) PotentiometerRaw_To_Arm = 0;//corrects .001 or less causing a negative value
+			//if (PotentiometerRaw_To_Arm > 1 || PotentiometerRaw_To_Arm > .999) PotentiometerRaw_To_Arm = 1;//corrects .001 or lass causing value greater than 1
 
 			//TODO see if we need a ratio multiply here... otherwise range is from 0-1 for full motion
 
