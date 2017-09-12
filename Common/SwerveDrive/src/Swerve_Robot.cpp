@@ -915,8 +915,8 @@ double Swerve_Robot_Control::GetRotaryCurrentPorV(size_t index)
 
 				//Clip Range
 				//I imagine .001 corrections will not be harmful for when in use.
-				if (PotentiometerRaw_To_Arm < 0) PotentiometerRaw_To_Arm = 0;//corrects .001 or less causing a negative value
-				if (PotentiometerRaw_To_Arm > 1 || PotentiometerRaw_To_Arm > .999) PotentiometerRaw_To_Arm = 1;//corrects .001 or lass causing value greater than 1
+				//if (PotentiometerRaw_To_Arm < 0) PotentiometerRaw_To_Arm = 0;//corrects .001 or less causing a negative value
+				//if (PotentiometerRaw_To_Arm > 1 || PotentiometerRaw_To_Arm > .999) PotentiometerRaw_To_Arm = 1;//corrects .001 or lass causing value greater than 1
 
 				if (FlipRange)
 					PotentiometerRaw_To_Arm=1.0-PotentiometerRaw_To_Arm;
