@@ -79,6 +79,14 @@ class COMMON_API Ship_1D : public Entity1D
 		///This implicitly will place back in auto mode with a speed of zero
 		void Stop(){SetRequestedVelocity(0.0);}
 		void SetRequestedVelocity(double Velocity);
+
+		//Allow read write access to the speed controls, these are native as velocity so typically the reverse will have a negative direction
+		//Note: client should ensure these get restored back to their default property value (hence the read access)
+		void SetMaxSpeedForward(double Velocity) {m_Ship_1D_Props.MaxSpeed_Forward=Velocity;}
+		double GetMaxSpeedForward() const {return m_Ship_1D_Props.MaxSpeed_Forward;}
+		void SetMaxSpeedReverse(double Velocity) {m_Ship_1D_Props.MaxSpeed_Reverse=Velocity;}
+		double GetMaxSpeedReverse() const {return m_Ship_1D_Props.MaxSpeed_Reverse;}
+
 		//This will scale the velocity by max speed and also handle flood control
 		void SetRequestedVelocity_FromNormalized(double Normalized_Velocity);
 		double GetRequestedVelocity() const {return m_RequestedVelocity;}
@@ -188,7 +196,7 @@ class COMMON_API Ship_1D : public Entity1D
 class COMMON_API Goal_Ship1D_MoveToPosition : public AtomicGoal
 {
 	public:
-		Goal_Ship1D_MoveToPosition(Ship_1D &ship,double position,double tolerance=0.10);
+		Goal_Ship1D_MoveToPosition(Ship_1D &ship,double position,double tolerance=0.10,double MaxForwardSpeedRatio=1.0,double MaxReverseSpeedRatio=1.0);
 		~Goal_Ship1D_MoveToPosition();
 		virtual void Activate();
 		virtual Goal_Status Process(double dTime_s);
@@ -197,7 +205,8 @@ class COMMON_API Goal_Ship1D_MoveToPosition : public AtomicGoal
 		Ship_1D &m_ship;
 		double m_Position;
 	private:
-		double m_Tolerance;
+		double m_Tolerance,m_MaxForwardSpeedRatio,m_MaxReverseSpeedRatio;
+		double m_DefaultForwardSpeed,m_DefaultReverseSpeed;
 		bool m_Terminate;
 };
 
@@ -206,8 +215,8 @@ class COMMON_API Goal_Ship1D_MoveToPosition : public AtomicGoal
 class COMMON_API Goal_Ship1D_MoveToRelativePosition : public Goal_Ship1D_MoveToPosition
 {
 public:
-	Goal_Ship1D_MoveToRelativePosition(Ship_1D &controller,double position,double tolerance=0.10) : 
-	  Goal_Ship1D_MoveToPosition(controller,position,tolerance) {}
+	Goal_Ship1D_MoveToRelativePosition(Ship_1D &controller,double position,double tolerance=0.10,double MaxForwardSpeedRatio=1.0,double MaxReverseSpeedRatio=1.0) : 
+	  Goal_Ship1D_MoveToPosition(controller,position,tolerance,MaxForwardSpeedRatio,MaxReverseSpeedRatio) {}
 	//Note: It is important for client code not to activate this... let process activate it... so that it sets the point at the correct time and current position
 	virtual void Activate();
 private:

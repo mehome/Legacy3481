@@ -349,8 +349,8 @@ void Ship_1D::TimeChange(double dTime_s)
  /*												Goal_Ship1D_MoveToPosition															*/
 /***********************************************************************************************************************************/
 
-Goal_Ship1D_MoveToPosition::Goal_Ship1D_MoveToPosition(Ship_1D &ship,double position,double tolerance) :
-	m_ship(ship),m_Position(position),m_Tolerance(tolerance),m_Terminate(false)
+Goal_Ship1D_MoveToPosition::Goal_Ship1D_MoveToPosition(Ship_1D &ship,double position,double tolerance,double MaxForwardSpeedRatio,double MaxReverseSpeedRatio) :
+	m_ship(ship),m_Position(position),m_Tolerance(tolerance),m_MaxForwardSpeedRatio(MaxForwardSpeedRatio),m_MaxReverseSpeedRatio(MaxReverseSpeedRatio),m_Terminate(false)
 {
 	m_Status=eInactive;
 }
@@ -362,6 +362,11 @@ Goal_Ship1D_MoveToPosition::~Goal_Ship1D_MoveToPosition()
 void Goal_Ship1D_MoveToPosition::Activate() 
 {
 	m_Status=eActive;
+	m_DefaultForwardSpeed=m_ship.GetMaxSpeedForward();
+	m_DefaultReverseSpeed=m_ship.GetMaxSpeedReverse();
+	m_ship.SetMaxSpeedForward(m_MaxForwardSpeedRatio*m_DefaultForwardSpeed);
+	m_ship.SetMaxSpeedReverse(m_MaxReverseSpeedRatio*m_DefaultReverseSpeed);
+
 	//During the activation we'll set the requested position
 	m_ship.SetIntendedPosition(m_Position);
 }
@@ -388,6 +393,9 @@ Goal::Goal_Status Goal_Ship1D_MoveToPosition::Process(double dTime_s)
 				//printf("completed %f\n",position_delta);
 				m_Status=eCompleted;
 				m_ship.SetRequestedVelocity(0.0);  //stop it
+				//restore speeds
+				m_ship.SetMaxSpeedForward(m_DefaultForwardSpeed);
+				m_ship.SetMaxSpeedReverse(m_DefaultReverseSpeed);
 			}
 		}
 		else
