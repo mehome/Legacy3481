@@ -244,14 +244,14 @@ class Curivator_Goals_Impl : public AtomicGoal
 			return goal_arm;
 		}
 
-		static Goal * Move_BucketAngle(Curivator_Goals_Impl *Parent,double Angle_Deg)
+		static Goal * Move_BucketAngle(Curivator_Goals_Impl *Parent,double Angle_Deg, double SpeedRatio=1.0)
 		{
 			Curivator_Robot *Robot=&Parent->m_Robot;
 			Curivator_Robot::Robot_Arm &Arm=Robot->GetBucketAngle();
 			const double PrecisionTolerance=Robot->GetRobotProps().GetRotaryProps(Curivator_Robot::eBucket_Angle).GetRotaryProps().PrecisionTolerance;
 			Goal_Ship1D_MoveToPosition *goal_arm=NULL;
 			const double position=Angle_Deg;
-			goal_arm=new Goal_Ship1D_MoveToPosition(Arm,position,PrecisionTolerance);
+			goal_arm=new Goal_Ship1D_MoveToPosition(Arm,position,PrecisionTolerance,SpeedRatio,SpeedRatio);
 			return goal_arm;
 		}
 
@@ -282,13 +282,14 @@ class Curivator_Goals_Impl : public AtomicGoal
 			return goal;
 		}
 
-		static Goal * Move_ArmAndBucket(Curivator_Goals_Impl *Parent,double length_in,double height_in,double Bucket_Angle_Deg,double Clasp_Angle_Deg)
+		static Goal * Move_ArmAndBucket(Curivator_Goals_Impl *Parent,double length_in,double height_in,double Bucket_Angle_Deg,double Clasp_Angle_Deg,
+			double length_in_speed=1.0,double height_in_speed=1.0,double Bucket_Angle_Deg_speed=1.0,double Clasp_Angle_Deg_speed=1.0)
 		{
 			MultitaskGoal *goal=new MultitaskGoal(true);
 			//I could have added both multi task goals here, but its easier to debug keeping it more flat lined
 			goal->AddGoal(Move_ArmXPosition(Parent,length_in));
 			goal->AddGoal(Move_ArmYPosition(Parent,height_in));
-			goal->AddGoal(Move_BucketAngle(Parent,Bucket_Angle_Deg));
+			goal->AddGoal(Move_BucketAngle(Parent,Bucket_Angle_Deg,Bucket_Angle_Deg_speed));
 			goal->AddGoal(Move_ClaspAngle(Parent,Clasp_Angle_Deg));
 			return goal;
 		}
@@ -430,8 +431,11 @@ class Curivator_Goals_Impl : public AtomicGoal
 		class SetArmWaypoint : public Generic_CompositeGoal, public SetUpProps
 		{
 		public:
-			SetArmWaypoint(Curivator_Goals_Impl *Parent,double length_in,double height_in,double bucket_Angle_deg,double clasp_Angle_deg) : 
-			  SetUpProps(Parent),m_length_in(length_in),m_height_in(height_in),m_bucket_Angle_deg(bucket_Angle_deg),m_clasp_Angle_deg(clasp_Angle_deg)
+			SetArmWaypoint(Curivator_Goals_Impl *Parent,double length_in,double height_in,double bucket_Angle_deg,double clasp_Angle_deg,
+				double length_in_speed=1.0,double height_in_speed=1.0,double bucket_Angle_deg_speed=1.0,double clasp_Angle_deg_speed=1.0) : 
+			  SetUpProps(Parent),m_length_in(length_in),m_length_in_speed(length_in_speed),m_height_in(height_in),m_height_in_speed(height_in_speed),
+				  m_bucket_Angle_deg(bucket_Angle_deg),m_bucket_Angle_deg_speed(bucket_Angle_deg_speed),
+				  m_clasp_Angle_deg(clasp_Angle_deg),m_clasp_Angle_deg_speed(clasp_Angle_deg_speed)
 			  {		Activate();  //we can set it up ahead of time
 			  }
 			virtual void Activate()
@@ -444,15 +448,16 @@ class Curivator_Goals_Impl : public AtomicGoal
 				AddSubgoal(Move_BucketClaspAngle(m_Parent,bucket_Angle_deg,clasp_Angle_deg));
 				#else
 				AddSubgoal(new RobotArmHoldStill(m_Parent));
-				AddSubgoal(Move_ArmAndBucket(m_Parent,m_length_in,m_height_in,m_bucket_Angle_deg,m_clasp_Angle_deg));
+				AddSubgoal(Move_ArmAndBucket(m_Parent,m_length_in,m_height_in,m_bucket_Angle_deg,m_clasp_Angle_deg,
+					m_length_in_speed,m_height_in_speed,m_bucket_Angle_deg_speed,m_clasp_Angle_deg_speed));
 				#endif
 				m_Status=eActive;
 			}
 		private:
-			const double m_length_in;
-			const double m_height_in;
-			const double m_bucket_Angle_deg;
-			const double m_clasp_Angle_deg;
+			const double m_length_in,m_length_in_speed;
+			const double m_height_in,m_height_in_speed;
+			const double m_bucket_Angle_deg,m_bucket_Angle_deg_speed;
+			const double m_clasp_Angle_deg,m_clasp_Angle_deg_speed;
 		};
 		class SetTurretWaypoint : public Generic_CompositeGoal, public SetUpProps
 		{
@@ -501,8 +506,8 @@ class Curivator_Goals_Impl : public AtomicGoal
 			{
 				if (m_Status==eActive) return;  //allow for multiple calls
 				AddSubgoal(new SetArmWaypoint(m_Parent,CurivatorGoal_StartingPosition[0],CurivatorGoal_StartingPosition[1],65.0,5.0));
-				for (double angle=40;angle<=90;angle+=10)
-					AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,angle,5.0)); //rotate bucket (slowly)
+				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,40.0,-7.0,1.0,1.0,0.5)); //rotate bucket (slowly)
+
 				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,CurivatorGoal_PickupPosition[2],5.0)); //close clasp
 				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,m_height_in,CurivatorGoal_PickupPosition[2],CurivatorGoal_PickupPosition[3]));  //pickup position
 				AddSubgoal(new SetArmWaypoint(m_Parent,m_length_in,CurivatorGoal_HoverPosition[1],CurivatorGoal_HoverPosition[2],CurivatorGoal_HoverPosition[3]));
