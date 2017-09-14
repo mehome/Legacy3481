@@ -567,10 +567,11 @@ MainRobot = {
 		},
 		clasp =
 		{
+		show_pid_dump='n',
 			tolerance=0.09,
 			pot_min_limit=675,  --was 584,522,415,440
 			pot_max_limit=955,  --was 969,907,800,760
-			pot_limit_tolerance=7,
+			pot_limit_tolerance=20,
 			pot_range_flipped='y',
 			--max_speed=0.64,	--was 0.64 but actual tests show a bit faster
 			max_speed=0.9,
@@ -581,7 +582,7 @@ MainRobot = {
 			--These min/max are in inch units
 			max_range= 5.0,  --was 5.75
 			min_range=1.0,
-			pot_offset=0.75,
+			pot_offset=1.0,
 			starting_position=3.5,
 			forward_deadzone=0.17,
 			reverse_deadzone=0.17,
