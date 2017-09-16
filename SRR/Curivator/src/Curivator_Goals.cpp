@@ -558,7 +558,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 		static Goal * TestArmAndTurret(Curivator_Goals_Impl * Parent)
 		{
 			double turret_start_in=0;
-			double turret_grab_in=-70.0;
+			double turret_grab_in=-90.0;
 			double length_in=25.0;
 			double height_in=-7.0;
 			const char * const SmartNames[]={"testTurret_Start","testTurret_Grab","testarm_length","testarm_height"};
@@ -579,7 +579,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 				  if (m_Status==eActive) return;  //allow for multiple calls
 				  AddSubgoal(new Goal_Wait(5.0));  //want to see the behavior of the voltage
 				  AddSubgoal(new SetArmWaypoint(m_Parent,19.14,-1.60,86.457,10.0)); //close clasp
-				  AddSubgoal(new SetArmWaypoint(m_Parent,19.14,-1.60,86.457,39.0));
+				  AddSubgoal(new SetArmWaypoint(m_Parent,19.14,-1.60,86.457,30.0));
 				  m_Status=eActive;
 			  }
 		};
