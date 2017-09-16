@@ -167,7 +167,7 @@ Rotary_Position_Control::Rotary_Position_Control(const char EntityName[],Rotary_
 	m_LastPosition(0.0),m_MatchVelocity(0.0),
 	m_ErrorOffset(0.0),
 	m_LastTime(0.0),m_PreviousVelocity(0.0),
-	m_BurstIntensity(0.0),m_CurrentBurstTime(0.0),
+	m_BurstIntensity(0.0),m_CurrentBurstTime(0.0),m_PulseBurstCounter(0),
 	m_PotentiometerState(eNoPot), //to be safe
 	m_ToleranceCounter(0)
 {
@@ -234,6 +234,7 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 	const bool TuneVelocity=false;
 	const double CurrentVelocity=m_Physics.GetVelocity();
 	const Rotary_Props::Rotary_Arm_GainAssist_Props &arm= m_Rotary_Props.ArmGainAssist;
+	const Rotary_Props::Voltage_Stall_Safety &arm_stall_safety= m_Rotary_Props.VoltageStallSafety;
 	const bool NeedGainAssistForUp=((arm.SlowVelocityVoltage!=0.0)&&(CurrentVelocity>0.0));
 
 	//Note: the order has to be in this order where it grabs the potentiometer position first and then performs the time change and finally updates the
@@ -287,7 +288,8 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 				}
 
 				//unlike for velocity all error offset values are taken... two PIDs and I should help stabilize oscillation
-				if ((arm.PulseBurstTimeMs>0.0)&&(fabs(m_ErrorOffset)<arm.PulseBurstRange)&&(fabs(m_ErrorOffset)>m_Rotary_Props.PrecisionTolerance))
+				if (((arm.PulseBurstTimeMs>0.0)&&(fabs(m_ErrorOffset)<arm.PulseBurstRange)&&(fabs(m_ErrorOffset)>m_Rotary_Props.PrecisionTolerance)) ||
+					(arm_stall_safety.ErrorThreshold>0.0 && fabs(m_ErrorOffset)>arm_stall_safety.ErrorThreshold) )
 				{
 					//we are in the pulse burst zone... now to manage the burst intensity
 					m_CurrentBurstTime+=dTime_s;  //increment the pulse burst time with this new time slice
@@ -299,15 +301,23 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 					{	//Burst has been off... is it time to turn it back on
 						if (m_CurrentBurstTime>=Off_Time)
 						{
-							//Turn on the pulse... the intensity here is computed by the overlap
-							const double overlap=m_CurrentBurstTime-Off_Time;
-							if (overlap<dTime_s)
-								BurstIntensity=overlap/dTime_s;
+							m_PulseBurstCounter++;
+							if (arm_stall_safety.ErrorThreshold>0.0)
+							{
+								BurstIntensity=arm_stall_safety.OnBurstLevel;
+							}
 							else
 							{
-								BurstIntensity=1.0;
-								//This shouldn't happen often... probably shouldn't matter much... but keep this for diagnostic testing
-								printf("test burst begin... overlap=%.2f vs delta slice=%.2f\n",overlap,dTime_s);
+								//Turn on the pulse... the intensity here is computed by the overlap
+								const double overlap=m_CurrentBurstTime-Off_Time;
+								if (overlap<dTime_s)
+									BurstIntensity=overlap/dTime_s;
+								else
+								{
+									BurstIntensity=1.0;
+									//This shouldn't happen often... probably shouldn't matter much... but keep this for diagnostic testing
+									printf("test burst begin... overlap=%.2f vs delta slice=%.2f\n",overlap,dTime_s);
+								}
 							}
 							m_CurrentBurstTime=0.0;  //reset timer
 						}
@@ -316,10 +326,10 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 					{  //Burst has been on... is it time to turn it back off
 						if (m_CurrentBurstTime>=arm.PulseBurstTimeMs)
 						{
-							//Turn on the pulse... the intensity here is computed by the overlap
+							//Turn off the pulse... the intensity here is computed by the overlap
 							const double overlap=m_CurrentBurstTime-arm.PulseBurstTimeMs;
 							//We use the negative sign bit to indicate it was turned off... or zero
-							if (overlap<dTime_s)
+							if ((overlap<dTime_s) && (arm_stall_safety.ErrorThreshold==0.0))
 								BurstIntensity=-(overlap/dTime_s);
 							else
 							{
@@ -330,7 +340,9 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 							m_CurrentBurstTime=0.0;  //reset timer
 						}
 						else
-							BurstIntensity=1.0;  //still on under time... so keep it on full
+						{
+							BurstIntensity=(arm_stall_safety.ErrorThreshold==0.0)?1.0:arm_stall_safety.OnBurstLevel;  //still on under time... so keep it on full
+						}
 					}
 				}
 				//When in eClosed_ManualAssist check the locked position to end weak voltage when it is within tolerance
@@ -349,8 +361,14 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 			m_PIDControllerDown.ResetI();
 		}
 
+		const bool IsPulsing=arm_stall_safety.ErrorThreshold>0.0 && fabs(m_ErrorOffset)>arm_stall_safety.ErrorThreshold;
+		if (!IsPulsing)
+			m_PulseBurstCounter=0;
+		//have a way to handle to end pulsing when timeout is exceeded
+		if (m_PulseBurstCounter>arm_stall_safety.PulseBurstTimeOut)
+			BurstIntensity=0.0;
 		//We do not want to alter position if we are using position control PID
-		if ((TuneVelocity) || IsZero(NewPosition-m_LastPosition) || NeedGainAssistForUp)
+		if ((TuneVelocity) || (IsZero(NewPosition-m_LastPosition) && (!IsPulsing)) || NeedGainAssistForUp)
 			SetPos_m(NewPosition);
 	}
 
@@ -440,9 +458,17 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 
 	//apply additional pulse burst as needed
 	m_BurstIntensity=BurstIntensity;
-	//The intensity we use is the same as full speed with the gain assist... we may want to have own properties for these if they do not work well
-	const double PulseBurst=fabs(m_BurstIntensity) * ((m_ErrorOffset>0.0)?MaxSpeed * 1.0 * arm.InverseMaxAccel_Up : (-MaxSpeed) * 1.0 * arm.InverseMaxAccel_Down);
-	Voltage+= PulseBurst;
+	if (arm_stall_safety.ErrorThreshold==0.0)
+	{
+		//The intensity we use is the same as full speed with the gain assist... we may want to have own properties for these if they do not work well
+		const double PulseBurst=fabs(m_BurstIntensity) * ((m_ErrorOffset>0.0)?MaxSpeed * 1.0 * arm.InverseMaxAccel_Up : (-MaxSpeed) * 1.0 * arm.InverseMaxAccel_Down);
+		Voltage+= PulseBurst;
+	}
+	else
+	{
+		if (fabs(m_ErrorOffset)>arm_stall_safety.ErrorThreshold)
+			Voltage=m_BurstIntensity;
+	}
 
 	//if (PulseBurst!=0.0)
 	//	printf("pb=%.2f\n",PulseBurst);
@@ -960,6 +986,7 @@ void Rotary_Properties::LoadFromScript(Scripting::Script& script, bool NoDefault
 {
 	const char* err=NULL;
 	Rotary_Props::Rotary_Arm_GainAssist_Props &arm=m_RotaryProps.ArmGainAssist;
+	Rotary_Props::Voltage_Stall_Safety &arm_voltage_safety=m_RotaryProps.VoltageStallSafety;
 	string sTest;
 	//I shouldn't need this nested field redundancy... just need to be sure all client cases like this
 	//err = script.GetFieldTable("rotary_settings");
@@ -1110,6 +1137,17 @@ void Rotary_Properties::LoadFromScript(Scripting::Script& script, bool NoDefault
 		SCRIPT_INIT_DOUBLE(arm.VelocityPredictDown,	"predict_down");
 		SCRIPT_INIT_DOUBLE(arm.PulseBurstRange,		"pulse_burst_range");
 		SCRIPT_INIT_DOUBLE(arm.PulseBurstTimeMs,		"pulse_burst_time");
+
+		//if we are not using gain assist... go ahead and load the Voltage_Stall_Safety props as they are mutually exclusive
+		if (arm.SlowVelocity==0.0)
+		{
+			SCRIPT_INIT_DOUBLE_NoDefault(arm.VelocityPredictUp,		"voltage_stall_safety_off_time");
+			arm.VelocityPredictDown=arm.VelocityPredictUp;
+			SCRIPT_INIT_DOUBLE_NoDefault(arm.PulseBurstTimeMs,		"voltage_stall_safety_on_time");
+			SCRIPT_INIT_DOUBLE_NoDefault(arm_voltage_safety.ErrorThreshold, "voltage_stall_safety_error_threshold");
+			SCRIPT_INIT_DOUBLE_NoDefault(arm_voltage_safety.OnBurstLevel, "voltage_stall_safety_on_burst_level");
+			SCRIPT_INIT_DOUBLE_NoDefault(arm_voltage_safety.PulseBurstTimeOut, "voltage_stall_safety_burst_timeout");
+		}
 
 		#ifdef Robot_TesterCode
 		err = script.GetFieldTable("motor_specs");

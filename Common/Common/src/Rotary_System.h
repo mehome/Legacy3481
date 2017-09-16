@@ -65,6 +65,14 @@ struct Rotary_Props
 		double PulseBurstRange;  //Extended tolerance time to activate pulse burst
 		bool UsePID_Up_Only;
 	} ArmGainAssist;
+
+	struct Voltage_Stall_Safety
+	{
+		//Note the on/off times will be shared resources of the gain assist
+		double ErrorThreshold;  //solved by observing a run without obstacle and run with obstacle finding a level as close with aome room for error
+		double OnBurstLevel;  //the voltage level of the pulse
+		size_t PulseBurstTimeOut; //specify the max number of pulses before it disengages the lock
+	} VoltageStallSafety;
 };
 
 class COMMON_API Rotary_System : public Ship_1D
@@ -130,6 +138,7 @@ class COMMON_API Rotary_Position_Control : public Rotary_System
 		//We use the negative sign bit to indicate it was turned off... or zero
 		double m_BurstIntensity;  //This keeps track of the current level of burst to apply... it usually is full 1.0 or 0.0 but will blend on unaligned frame boundaries
 		double m_CurrentBurstTime; //This keeps track of the time between bursts and the burst itself depending on the current state
+		size_t m_PulseBurstCounter;  //keeps count of how many pulse bursts have happened
 		PotUsage m_PotentiometerState; //dynamically able to turn off (e.g. panic button)
 		//A counter to count how many times the predicted position and intended position are withing tolerance consecutively
 		size_t m_ToleranceCounter;
