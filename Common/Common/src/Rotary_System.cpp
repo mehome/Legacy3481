@@ -167,7 +167,7 @@ Rotary_Position_Control::Rotary_Position_Control(const char EntityName[],Rotary_
 	m_LastPosition(0.0),m_MatchVelocity(0.0),
 	m_ErrorOffset(0.0),
 	m_LastTime(0.0),m_PreviousVelocity(0.0),
-	m_BurstIntensity(0.0),m_CurrentBurstTime(0.0),m_PulseBurstCounter(0),
+	m_BurstIntensity(0.0),m_CurrentBurstTime(0.0),m_PulseBurstCounter(0),m_StallCounter(0),
 	m_PotentiometerState(eNoPot), //to be safe
 	m_ToleranceCounter(0)
 {
@@ -251,7 +251,9 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 	const double Displacement=NewPosition-m_LastPosition;
 	const double PotentiometerVelocity=Displacement/m_LastTime;
 
+	const bool UsingMoterStallSafety=(arm_stall_safety.ErrorThreshold>0.0)||(arm_stall_safety.StallCounterThreshold>0);
 	double BurstIntensity=0.0;
+	bool IsPulsing=false;
 
 	//Update the position to where the potentiometer says where it actually is
 	if (m_PotentiometerState==eActive)
@@ -287,9 +289,26 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 					m_ErrorOffset=m_PIDControllerDown(GetPos_m(),PredictedPosition,dTime_s);
 				}
 
+				if (UsingMoterStallSafety && (IsZero(Displacement,1e-2))&&(m_Physics.GetVelocity()>0.0))
+				{
+					//to measure motor stall... we evaluate the voltage
+					const double MaxSpeed=m_Ship_1D_Props.MAX_SPEED;
+					const double Voltage=(m_Physics.GetVelocity()+m_ErrorOffset)/MaxSpeed;
+					//we may want a property for this value, but typically 0.1 is below dead zone and safe
+					if (Voltage>0.1)
+					{
+						//printf("[%d] %d %.3f \n",m_InstanceIndex,m_StallCounter,Displacement);
+						m_StallCounter++;
+					}
+				}
+				else
+					m_StallCounter=0;
+
+				IsPulsing=((arm_stall_safety.StallCounterThreshold>0)&&(m_StallCounter>arm_stall_safety.StallCounterThreshold))||
+					(arm_stall_safety.ErrorThreshold>0.0 && fabs(m_ErrorOffset)>arm_stall_safety.ErrorThreshold);
+
 				//unlike for velocity all error offset values are taken... two PIDs and I should help stabilize oscillation
-				if (((arm.PulseBurstTimeMs>0.0)&&(fabs(m_ErrorOffset)<arm.PulseBurstRange)&&(fabs(m_ErrorOffset)>m_Rotary_Props.PrecisionTolerance)) ||
-					(arm_stall_safety.ErrorThreshold>0.0 && fabs(m_ErrorOffset)>arm_stall_safety.ErrorThreshold) )
+				if (((arm.PulseBurstTimeMs>0.0)&&(fabs(m_ErrorOffset)<arm.PulseBurstRange)&&(fabs(m_ErrorOffset)>m_Rotary_Props.PrecisionTolerance)) ||	(IsPulsing) )
 				{
 					//we are in the pulse burst zone... now to manage the burst intensity
 					m_CurrentBurstTime+=dTime_s;  //increment the pulse burst time with this new time slice
@@ -302,7 +321,7 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 						if (m_CurrentBurstTime>=Off_Time)
 						{
 							m_PulseBurstCounter++;
-							if (arm_stall_safety.ErrorThreshold>0.0)
+							if (UsingMoterStallSafety)
 							{
 								BurstIntensity=arm_stall_safety.OnBurstLevel;
 							}
@@ -316,7 +335,7 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 								{
 									BurstIntensity=1.0;
 									//This shouldn't happen often... probably shouldn't matter much... but keep this for diagnostic testing
-									printf("test burst begin... overlap=%.2f vs delta slice=%.2f\n",overlap,dTime_s);
+									printf("test burst begin[%d]... overlap=%.2f vs delta slice=%.2f\n",m_InstanceIndex,overlap,dTime_s);
 								}
 							}
 							m_CurrentBurstTime=0.0;  //reset timer
@@ -329,19 +348,20 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 							//Turn off the pulse... the intensity here is computed by the overlap
 							const double overlap=m_CurrentBurstTime-arm.PulseBurstTimeMs;
 							//We use the negative sign bit to indicate it was turned off... or zero
-							if ((overlap<dTime_s) && (arm_stall_safety.ErrorThreshold==0.0))
+							if ((overlap<dTime_s) && (!UsingMoterStallSafety))
 								BurstIntensity=-(overlap/dTime_s);
 							else
 							{
 								BurstIntensity=0.0;
 								//This shouldn't happen often... probably shouldn't matter much... but keep this for diagnostic testing
-								printf("test burst end... overlap=%.2f vs delta slice=%.2f\n",overlap,dTime_s);
+								if (!UsingMoterStallSafety)
+									printf("test burst end[%d]... overlap=%.2f vs delta slice=%.2f\n",m_InstanceIndex,overlap,dTime_s);
 							}
 							m_CurrentBurstTime=0.0;  //reset timer
 						}
 						else
 						{
-							BurstIntensity=(arm_stall_safety.ErrorThreshold==0.0)?1.0:arm_stall_safety.OnBurstLevel;  //still on under time... so keep it on full
+							BurstIntensity=(!UsingMoterStallSafety)?1.0:arm_stall_safety.OnBurstLevel;  //still on under time... so keep it on full
 						}
 					}
 				}
@@ -361,7 +381,7 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 			m_PIDControllerDown.ResetI();
 		}
 
-		const bool IsPulsing=arm_stall_safety.ErrorThreshold>0.0 && fabs(m_ErrorOffset)>arm_stall_safety.ErrorThreshold;
+		
 		if (!IsPulsing)
 			m_PulseBurstCounter=0;
 		//have a way to handle to end pulsing when timeout is exceeded
@@ -458,7 +478,7 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 
 	//apply additional pulse burst as needed
 	m_BurstIntensity=BurstIntensity;
-	if (arm_stall_safety.ErrorThreshold==0.0)
+	if (!UsingMoterStallSafety)
 	{
 		//The intensity we use is the same as full speed with the gain assist... we may want to have own properties for these if they do not work well
 		const double PulseBurst=fabs(m_BurstIntensity) * ((m_ErrorOffset>0.0)?MaxSpeed * 1.0 * arm.InverseMaxAccel_Up : (-MaxSpeed) * 1.0 * arm.InverseMaxAccel_Down);
@@ -466,7 +486,7 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 	}
 	else
 	{
-		if (fabs(m_ErrorOffset)>arm_stall_safety.ErrorThreshold)
+		if (IsPulsing)
 			Voltage=m_BurstIntensity;
 	}
 
@@ -1147,6 +1167,7 @@ void Rotary_Properties::LoadFromScript(Scripting::Script& script, bool NoDefault
 			SCRIPT_INIT_DOUBLE_NoDefault(arm_voltage_safety.ErrorThreshold, "voltage_stall_safety_error_threshold");
 			SCRIPT_INIT_DOUBLE_NoDefault(arm_voltage_safety.OnBurstLevel, "voltage_stall_safety_on_burst_level");
 			SCRIPT_INIT_DOUBLE_NoDefault(arm_voltage_safety.PulseBurstTimeOut, "voltage_stall_safety_burst_timeout");
+			SCRIPT_INIT_DOUBLE_NoDefault(arm_voltage_safety.StallCounterThreshold, "voltage_stall_safety_stall_count");
 		}
 
 		#ifdef Robot_TesterCode
