@@ -103,7 +103,8 @@ class COMMON_API Rotary_Position_Control : public Rotary_System
 			ePassive,  //Will read them but never alter velocities
 			eActive, //Will attempt to match predicted velocity to actual velocity
 		};
-
+		//Give client code access to the actual position, as the position of the entity cannot be altered for its projected position
+		double GetActualPos() const;
 	private:
 		#ifndef Robot_TesterCode
 		typedef Rotary_System __super;

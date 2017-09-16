@@ -47,7 +47,7 @@ void Entity1D::ResetPos()
 
 void Entity1D::TimeChange(double dTime_s)
 {
-	double PositionDisplacement;
+	double PositionDisplacement=0.0;
 	//Either we apply displacement computations here or the derived class will handle it
 	if (!InjectDisplacement(dTime_s,PositionDisplacement))
 		m_Physics.TimeChangeUpdate(dTime_s,PositionDisplacement);
@@ -114,8 +114,8 @@ void Entity2D::ResetPos()
 
 void Entity2D::TimeChange(double dTime_s)
 {
-	Vec2D PositionDisplacement;
-	double RotationDisplacement;
+	Vec2D PositionDisplacement=Vec2D(0.0,0.0);
+	double RotationDisplacement=0.0;
 	//Either we apply displacement computations here or the derived class will handle it
 	if (!InjectDisplacement(dTime_s,PositionDisplacement,RotationDisplacement))
 		m_Physics.TimeChangeUpdate(dTime_s,PositionDisplacement,RotationDisplacement);

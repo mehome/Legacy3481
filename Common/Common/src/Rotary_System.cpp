@@ -222,6 +222,12 @@ void Rotary_Position_Control::Initialize(Base::EventMap& em,const Entity1D_Prope
 	}
 }
 
+double Rotary_Position_Control::GetActualPos() const
+{
+	const double NewPosition=(m_PotentiometerState!=eNoPot)?m_RobotControl->GetRotaryCurrentPorV(m_InstanceIndex):GetPos_m();
+	return NewPosition;
+}
+
 void Rotary_Position_Control::TimeChange(double dTime_s)
 {
 	//TODO we'll probably want velocity PID for turret no load type... we'll need to test to see
@@ -240,7 +246,7 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 		#endif
 	}
 
-	const double NewPosition=(m_PotentiometerState!=eNoPot)?m_RobotControl->GetRotaryCurrentPorV(m_InstanceIndex):GetPos_m();
+	const double NewPosition=GetActualPos();
 	const double Displacement=NewPosition-m_LastPosition;
 	const double PotentiometerVelocity=Displacement/m_LastTime;
 
@@ -342,6 +348,7 @@ void Rotary_Position_Control::TimeChange(double dTime_s)
 			m_PIDControllerUp.ResetI();
 			m_PIDControllerDown.ResetI();
 		}
+
 		//We do not want to alter position if we are using position control PID
 		if ((TuneVelocity) || IsZero(NewPosition-m_LastPosition) || NeedGainAssistForUp)
 			SetPos_m(NewPosition);
