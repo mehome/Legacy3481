@@ -195,7 +195,7 @@ void Curivator_Robot::BigArm::TimeChange(double dTime_s)
 	//Now to compute where we are based from our length of extension
 	//first start with the extension:
 	//Note: the position is inverted due to the nature of the darts... we subtract the range from position to acquire inverted value
-	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-GetPos_m()+m_Ship_1D_Props.MinRange;  //expecting a value from 0-12 in inches
+	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-GetActualPos()+m_Ship_1D_Props.MinRange;  //expecting a value from 0-12 in inches
 	const double FullActuatorLength=ShaftExtension_in+BigArm_DistanceDartPivotToTip+BigArm_DistanceFromTipDartToClevis;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
 	//c is FullActuatorLength
@@ -251,7 +251,7 @@ void Curivator_Robot::Boom::TimeChange(double dTime_s)
 	//Now to compute where we are based from our length of extension
 	//first start with the extension:
 	//Note: the position is inverted due to the nature of the darts... we subtract the range from position to acquire inverted value
-	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-GetPos_m()+m_Ship_1D_Props.MinRange;  //expecting a value from 0-12 in inches
+	const double ShaftExtension_in=m_Ship_1D_Props.MaxRange-GetActualPos()+m_Ship_1D_Props.MinRange;  //expecting a value from 0-12 in inches
 	const double FullActuatorLength=ShaftExtension_in+Boom_DistanceDartPivotToTip+Boom_DistanceFromTipDartToClevis;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
 	//c is FullActuatorLength
@@ -317,7 +317,7 @@ void Curivator_Robot::Bucket::TimeChange(double dTime_s)
 	__super::TimeChange(dTime_s);
 	//Now to compute where we are based from our length of extension
 	//first start with the extension:
-	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
+	const double ShaftExtension_in=GetActualPos();  //expecting a value from 0-12 in inches
 	//Note: unlike the dart... we just include the clevis as part of the shaft extension
 	const double FullActuatorLength=ShaftExtension_in+Bucket_LAB_houseingLength;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
@@ -430,7 +430,7 @@ void Curivator_Robot::Clasp::TimeChange(double dTime_s)
 	__super::TimeChange(dTime_s);
 	//Now to compute where we are based from our length of extension
 	//first start with the extension:
-	const double ShaftExtension_in=GetPos_m();  //expecting a value from 0-12 in inches
+	const double ShaftExtension_in=GetActualPos();  //expecting a value from 0-7 in inches
 	//Note: unlike the dart... we just include the clevis as part of the shaft extension
 	const double FullActuatorLength=ShaftExtension_in+Clasp_LAC_houseingLength;  //from center point to center point
 	//Now that we know all three lengths to the triangle use law of cosines to solve the angle of the linear actuator
@@ -1419,6 +1419,9 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 			drive.EncoderSimulationProps()=robot_props->GetEncoderSimulationProps();
 			m_Encoders[index].Initialize(&drive);
 		}
+
+		//Testing opposing forces
+		//m_Potentiometer[Curivator_Robot::eClaspPot].SetSimulateOpposingForce(true);
 		#endif
 	}
 	
