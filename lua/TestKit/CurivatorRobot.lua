@@ -474,14 +474,14 @@ MainRobot = {
 
 		turret =
 		{
-			tolerance=0.03,
+			tolerance=2 * Deg2Rad,
 			voltage_multiply=1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--On CRio the range is up to 960 so ideal center is 480
 			--center around 480
-			pot_min_limit=480-174,  --180 forward            (was 265)
-			pot_max_limit=480+174,  -- 180 counter clockwise (was 647)
+			pot_min_limit=473-200,  --180 forward            (was 265)
+			pot_max_limit=473+200,  -- 180 counter clockwise (was 647)
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=0.5,	--100 rpm... with a 15x reduction in radians
@@ -567,10 +567,10 @@ MainRobot = {
 		},
 		clasp =
 		{
-		show_pid_dump='n',
+			show_pid_dump='n',
 			tolerance=0.09,
-			pot_min_limit=675,  --was 584,522,415,440
-			pot_max_limit=955,  --was 969,907,800,760
+			pot_min_limit=300,  --was 584,522,415,440
+			pot_max_limit=700,  --was 969,907,800,760
 			pot_limit_tolerance=20,
 			pot_range_flipped='y',
 			--max_speed=0.64,	--was 0.64 but actual tests show a bit faster
@@ -586,6 +586,12 @@ MainRobot = {
 			starting_position=3.5,
 			forward_deadzone=0.17,
 			reverse_deadzone=0.17,
+			voltage_stall_safety_error_threshold=0.4,
+			voltage_stall_safety_off_time=0.200,
+			voltage_stall_safety_on_time=0.05,
+			voltage_stall_safety_on_burst_level=0.75,
+			voltage_stall_safety_burst_timeout=10,
+			voltage_stall_safety_stall_count=30
 		},
 		arm_pos_common =
 		{
