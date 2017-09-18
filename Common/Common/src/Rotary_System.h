@@ -292,3 +292,39 @@ class COMMON_API Rotary_Pot_Properties : public Rotary_Properties
 		typedef Rotary_Properties __super;
 		#endif
 };
+
+
+//This is similar to Traverse_Edge in book (not to be confused with its MoveToPosition)
+//Note: this is exact code of Ship_1d, since the code is so small... we can avoid virtual functions and dynamic casting and keep it simple
+//The main reason for this override is that it can access the actual position vs. the predicted position
+class COMMON_API Goal_Rotary_MoveToPosition : public AtomicGoal
+{
+	public:
+		Goal_Rotary_MoveToPosition(Rotary_Position_Control &rotary,double position,double tolerance=0.10,double MaxForwardSpeedRatio=1.0,double MaxReverseSpeedRatio=1.0);
+		~Goal_Rotary_MoveToPosition();
+		virtual void Activate();
+		virtual Goal_Status Process(double dTime_s);
+		virtual void Terminate() {m_Terminate=true;}
+	protected:
+		Rotary_Position_Control &m_rotary;
+		double m_Position;
+	private:
+		double m_Tolerance,m_MaxForwardSpeedRatio,m_MaxReverseSpeedRatio;
+		double m_DefaultForwardSpeed,m_DefaultReverseSpeed;
+		bool m_Terminate;
+};
+
+//This is like Goal_Rotary_MoveToPosition except it will set the waypoint relative to its current position and orientation
+//This will also set the trajectory point x distance (1 meter default) beyond the the point to help assist in orientation
+class COMMON_API Goal_Rotary_MoveToRelativePosition : public Goal_Rotary_MoveToPosition
+{
+public:
+	Goal_Rotary_MoveToRelativePosition(Rotary_Position_Control &controller,double position,double tolerance=0.10,double MaxForwardSpeedRatio=1.0,double MaxReverseSpeedRatio=1.0) : 
+	  Goal_Rotary_MoveToPosition(controller,position,tolerance,MaxForwardSpeedRatio,MaxReverseSpeedRatio) {}
+	//Note: It is important for client code not to activate this... let process activate it... so that it sets the point at the correct time and current position
+	virtual void Activate();
+private:
+#ifndef Robot_TesterCode
+	typedef Goal_Rotary_MoveToPosition __super;
+#endif
+};

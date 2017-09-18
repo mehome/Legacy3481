@@ -1198,3 +1198,79 @@ void Rotary_Pot_Properties::LoadFromScript(Scripting::Script& script, bool NoDef
 	m_RotaryPotProps.PotPolyTerms.LoadFromScript(script,"curve_pot");
 	__super::LoadFromScript(script,NoDefaults);
 }
+
+
+  /***********************************************************************************************************************************/
+ /*												Goal_Rotary_MoveToPosition															*/
+/***********************************************************************************************************************************/
+
+Goal_Rotary_MoveToPosition::Goal_Rotary_MoveToPosition(Rotary_Position_Control &rotary,double position,double tolerance,double MaxForwardSpeedRatio,double MaxReverseSpeedRatio) :
+	m_rotary(rotary),m_Position(position),m_Tolerance(tolerance),m_MaxForwardSpeedRatio(MaxForwardSpeedRatio),m_MaxReverseSpeedRatio(MaxReverseSpeedRatio),m_Terminate(false)
+{
+	m_Status=eInactive;
+}
+Goal_Rotary_MoveToPosition::~Goal_Rotary_MoveToPosition()
+{
+	Terminate(); //more for completion
+}
+
+void Goal_Rotary_MoveToPosition::Activate() 
+{
+	m_Status=eActive;
+	m_DefaultForwardSpeed=m_rotary.GetMaxSpeedForward();
+	m_DefaultReverseSpeed=m_rotary.GetMaxSpeedReverse();
+	m_rotary.SetMaxSpeedForward(m_MaxForwardSpeedRatio*m_DefaultForwardSpeed);
+	m_rotary.SetMaxSpeedReverse(m_MaxReverseSpeedRatio*m_DefaultReverseSpeed);
+
+	//During the activation we'll set the requested position
+	m_rotary.SetIntendedPosition(m_Position);
+}
+
+Goal::Goal_Status Goal_Rotary_MoveToPosition::Process(double dTime_s)
+{
+	//TODO this may be an inline check
+	if (m_Terminate)
+	{
+		if (m_Status==eActive)
+			m_Status=eFailed;
+		return m_Status;
+	}
+	ActivateIfInactive();
+	if (m_Status==eActive)
+	{
+		if (m_rotary.GetIntendedPosition()==m_Position)
+		{
+			double position_delta=m_rotary.GetActualPos()-m_Position;
+			//TODO check IsStuck for failed case
+			//printf("\r%f        ",position_delta);
+			if (fabs(position_delta)<m_Tolerance)  //When testing the arm it would idle around 0.02825
+			{
+				//printf("completed %f\n",position_delta);
+				m_Status=eCompleted;
+				m_rotary.SetRequestedVelocity(0.0);  //stop it
+				//restore speeds
+				m_rotary.SetMaxSpeedForward(m_DefaultForwardSpeed);
+				m_rotary.SetMaxSpeedReverse(m_DefaultReverseSpeed);
+			}
+		}
+		else
+		{
+			printf("Goal_Rotary_MoveToPosition failed\n");
+			m_Status=eFailed;  //Some thing else took control of the ship
+		}
+	}
+	return m_Status;
+}
+
+  /***********************************************************************************************************************************/
+ /*												Goal_Rotary_MoveToRelativePosition													*/
+/***********************************************************************************************************************************/
+
+void Goal_Rotary_MoveToRelativePosition::Activate()
+{
+	//Construct a way point
+	double current_pos=m_rotary.GetActualPos();
+	double dest_position=m_Position+current_pos;
+	m_Position=dest_position;  //This should be a one-time assignment
+	__super::Activate();
+}

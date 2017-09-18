@@ -408,7 +408,7 @@ Goal::Goal_Status Goal_Ship1D_MoveToPosition::Process(double dTime_s)
 }
 
   /***********************************************************************************************************************************/
- /*												Goal_Ship_MoveToRelativePosition													*/
+ /*												Goal_Ship1D_MoveToRelativePosition													*/
 /***********************************************************************************************************************************/
 
 void Goal_Ship1D_MoveToRelativePosition::Activate()
