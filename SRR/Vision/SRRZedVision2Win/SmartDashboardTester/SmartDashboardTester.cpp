@@ -13,31 +13,28 @@ int _tmain(int argc, _TCHAR* argv[])
 	SmartDashboard::SetIPAddress("127.0.0.1");
 	SmartDashboard::init();
 
+	double x_target = 0.0;
+	double y_target = 0.0;
+
 	while (true)
 	{
-		double x_target = 0.0;
-		double y_target = 0.0;
-
-		SmartDashboard::PutNumber("X Position", 0.0);
-		SmartDashboard::PutNumber("Y Position", 0.0);
-
 		if (SmartDashboard::IsConnected())
 		{
-			//try {
+			try {
 				x_target = SmartDashboard::GetNumber("X Position");
-			//}
-			//catch (TableKeyNotDefinedException& e)
-			//{
-			//	SmartDashboard::PutNumber("X Position", 0.0);
-			//}
+			}
+			catch (TableKeyNotDefinedException& e)
+			{
+				SmartDashboard::PutNumber("X Position", 0.0);
+			}
 
-			//try {
+			try {
 				y_target = SmartDashboard::GetNumber("Y Position");
-			//}
-			//catch (TableKeyNotDefinedException& e)
-			//{
-			//	SmartDashboard::PutNumber("Y Position", 0.0);
-			//}
+			}
+			catch (TableKeyNotDefinedException& e)
+			{
+				SmartDashboard::PutNumber("Y Position", 0.0);
+			}
 
 			std::cout << "X position " << x_target << "  Y position " << y_target << std::endl;
 		}

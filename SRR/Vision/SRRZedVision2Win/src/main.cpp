@@ -34,8 +34,8 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 			std::cout << "Depth at (" << x_int << "," << y_int << ") : " << dist << "m";
 		else {
 			std::string depth_status;
-			if (dist == TOO_FAR) depth_status = ("Depth is too far.");
-			else if (dist == TOO_CLOSE) depth_status = ("Depth is too close.");
+			if (dist == sl::TOO_FAR) depth_status = ("Depth is too far.");
+			else if (dist == sl::TOO_CLOSE) depth_status = ("Depth is too close.");
 			else depth_status = ("Depth not available");
 			std::cout << depth_status;
 		}
@@ -106,11 +106,12 @@ int main(int argc, char **argv) {
 	else
 		filearg = NULL;
 
+	std::cout << "Initializing OCV Camera." << std::endl;
 	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0");
 //	OCVCamera FrontCam = OCVCamera("rtsp://root:root@192.168.0.90/axis-media/media.amp");
 
+	std::cout << "Initializing ZED Camera." << std::endl;
 	ZEDCamera StereoCam = ZEDCamera(filearg);
-    StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 
 	size_t width = StereoCam.image_size.width;
 	size_t height = StereoCam.image_size.height;
@@ -148,6 +149,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	SmartDashboard::SetIPAddress("127.0.0.1");
 	SmartDashboard::init();
 
 	std::cout << "Press 'q' to exit." << std::endl;
