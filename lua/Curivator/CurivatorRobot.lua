@@ -37,11 +37,12 @@ AutonTest_TestArm=2
 AutonTest_GrabSequence=3
 
 MainRobot = {
-	version = 1.13;
+	version = 1.14;
 	--Version 1.0
 	--Version 1.1, major calibration of the swerve drive wheels
 	--Version 1.12, calibration of the drive encoders
 	--Version 1.13, initial port of Arm and wiring assignments
+	--Version 1.14, nuked tank drive, added scale offset to arm pot ranges
 	control_assignments =
 	{
 		--by default module is 1, so only really need it for 2
@@ -123,59 +124,7 @@ MainRobot = {
 	
 	Dimensions =
 	{ Length=0.9525, Width=0.6477 }, --These are 37.5 x 25.5 inches (This is not used except for UI ignore)
-	
-	tank_drive =
-	{
-		is_closed=0,
-		show_pid_dump='no',
-		--we should turn this off in bench mark testing
-		use_aggressive_stop=1,  --we are in small area want to have responsive stop
-		ds_display_row=-1,
-		wheel_base_dimensions =
-		{length_in=WheelBase_Length_In, width_in=WheelBase_Width_In},
 		
-		--This encoders/PID will only be used in autonomous if we decide to go steal balls
-		wheel_diameter_in = g_wheel_diameter_in,
-		left_pid=
-		{p=200, i=0, d=50},
-		right_pid=
-		{p=200, i=0, d=50},					--These should always match, but able to be made different
-		latency=0.0,
-		heading_latency=0.0,
-		drive_to_scale=0.50,				--For 4 to 10 50% gives a 5 inch tolerance
-		left_max_offset=0.0 , right_max_offset=0.0,   --Ensure both tread top speeds are aligned
-		--This is obtainer from encoder RPM's of 1069.2 and Wheel RPM's 427.68 (both high and low have same ratio)
-		encoder_to_wheel_ratio=0.5,			--example if encoder spins at 1069.2 multiply by this to get 427.68 (for the wheel rpm)
-		voltage_multiply=1.0,				--May be reversed using -1.0
-		--Note: this is only used in simulation as 884 victors were phased out, but encoder simulators still use it
-		--curve_voltage=
-		--{t4=3.1199, t3=-4.4664, t2=2.2378, t1=0.1222, c=0},
-		force_voltage=
-		{t4=0, t3=0, t2=0, t1=0, c=1},
-		reverse_steering='no',
-		 left_encoder_reversed='no',
-		right_encoder_reversed='no',
-		inv_max_accel = 1/15.0,  --solved empirically
-		forward_deadzone_left  = 0.02,
-		forward_deadzone_right = 0.02,
-		reverse_deadzone_left  = 0.02,
-		reverse_deadzone_right = 0.02,
-		motor_specs =
-		{
-			wheel_mass=1.5,
-			cof_efficiency=1.0,
-			gear_reduction=5310.0/749.3472,
-			torque_on_wheel_radius=Inches2Meters * 1,
-			drive_wheel_radius=Inches2Meters * 2,
-			number_of_motors=2,
-			
-			free_speed_rpm=5310.0,
-			stall_torque=2.43,
-			stall_current_amp=133,
-			free_current_amp=2.7
-		}
-	},
-	
 	swerve_drive =
 	{
 		is_closed=0,
@@ -478,8 +427,8 @@ MainRobot = {
 			encoder_to_wheel_ratio=1.0,
 			--On CRio the range is up to 960 so ideal center is 480
 			--center around 480
-			pot_min_limit=473-200,  --180 forward            (was 265)
-			pot_max_limit=473+200,  -- 180 counter clockwise (was 647)
+			pot_min_limit=(473-200)*4.215+5,  --180 forward            (was 265)
+			pot_max_limit=(473+200)*4.215+5,  -- 180 counter clockwise (was 647)
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=0.5,	--100 rpm... with a 15x reduction in radians
@@ -503,8 +452,8 @@ MainRobot = {
 			pid_up={p=200, i=0, d=25},
 			pid_down={p=200, i=0, d=25},
 			tolerance=0.3,
-			pot_min_limit=232,
-			pot_max_limit=890,
+			pot_min_limit=232*4.215+5,
+			pot_max_limit=890*4.215+5,
 			pot_range_flipped='n',
 			
 			--max_speed=13.3,	
@@ -524,8 +473,8 @@ MainRobot = {
 		boom =
 		{
 			tolerance=0.15,
-			pot_min_limit=200,
-			pot_max_limit=834,
+			pot_min_limit=200*4.215+5,
+			pot_max_limit=834*4.215+5,
 			pot_range_flipped='n',
 			--max_speed=13.3,	
 			max_speed=6.0,
@@ -548,8 +497,8 @@ MainRobot = {
 		bucket =
 		{
 			tolerance=0.15,
-			pot_min_limit=226,  --was 290 for 8
-			pot_max_limit=940,
+			pot_min_limit=226*4.215+5,  --was 290 for 8
+			pot_max_limit=940*4.215+5,
 			pot_range_flipped='y',
 			--max_speed=0.64,	
 			max_speed=1,
@@ -567,8 +516,8 @@ MainRobot = {
 		{
 			show_pid_dump='n',
 			tolerance=0.09,
-			pot_min_limit=300,  --was 584,522,415,440
-			pot_max_limit=700,  --was 969,907,800,760
+			pot_min_limit=300*4.215+5,  --was 584,522,415,440
+			pot_max_limit=700*4.215+5,  --was 969,907,800,760
 			pot_limit_tolerance=20,
 			pot_range_flipped='y',
 			--max_speed=0.64,	--was 0.64 but actual tests show a bit faster
