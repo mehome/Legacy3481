@@ -421,6 +421,8 @@ MainRobot = {
 
 		turret =
 		{
+			is_closed=0,
+			using_range=0,					--Warning Only use range if we have a potentiometer!
 			tolerance=2 * Deg2Rad,
 			voltage_multiply=1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
@@ -671,6 +673,7 @@ MainRobot = {
 	controls =
 	{
 		slotlist = {slot_1="gamepad f310 (controller)"},
+		--slotlist = {slot_1="gamepad f310 (controller)",slot_2="ch throttle quadrant"},
 		--slotlist = {slot_1="logitech dual action"},
 		--slotlist = {slot_1="airflo"},
 		--slotlist = {slot_1="airflo",slot_2="ch throttle quadrant"},
@@ -777,7 +780,7 @@ MainRobot = {
 			clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Robot_SetDefensiveKeyValue = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--intermediate closed loop test point of each position control
-			turret_SetIntendedPosition = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--turret_SetIntendedPosition = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--arm_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--boom_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--bucket_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
