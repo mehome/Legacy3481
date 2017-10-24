@@ -82,10 +82,10 @@ MainRobot = {
 			id_2  = { name="swivel_fr_pot", channel=1},
 			id_3  = { name= "swivel_rl_pot", channel=4}, 
 			id_4 =  { name="swivel_rr_pot", channel=2},
-			id_5 = { name="arm_pot",  channel=4},
-			id_6 = { name="boom_pot",  channel=5},
-			id_7 = { name="bucket_pot",  channel=6},
-			id_8 = { name="clasp_pot",  channel=7}
+			id_5 = { name="arm_pot",  channel=5},
+			id_6 = { name="boom_pot",  channel=6},
+			id_7 = { name="bucket_pot",  channel=7},
+			id_8 = { name="clasp_pot",  channel=8}
 			--todo borrow swivel pot until new analog is available
 			--id_9 = { name="turret_pot",  channel=?},
 		},
