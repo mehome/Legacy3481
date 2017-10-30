@@ -1601,8 +1601,10 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			ContructedName=Prefix,ContructedName+="Pot_Raw";
 			SmartDashboard::PutNumber(ContructedName.c_str(),PotentiometerRaw_To_Arm);
 			const double Tolerance=m_RobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().PotLimitTolerance;
+			//apply safety check for systems that are closed
+			const bool IsClosed=(m_RobotProps.GetRotaryProps(index).GetRotaryProps().LoopState==Rotary_Props::eClosed);
 			//Potentiometer safety, if we lose wire connection it will be out of range in which case we turn on the safety (we'll see it turned on)
-			if (raw_value>HiRange+Tolerance || raw_value<LowRange-Tolerance)
+			if ((IsClosed)&&(raw_value>HiRange+Tolerance || raw_value<LowRange-Tolerance))
 			{
 				std::string SmartLabel=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
 				SmartLabel[0]-=32; //Make first letter uppercase
