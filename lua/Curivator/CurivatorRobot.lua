@@ -478,6 +478,7 @@ MainRobot = {
 			pot_min_limit=200*4.215+5,
 			pot_max_limit=834*4.215+5,
 			pot_range_flipped='n',
+			voltage_multiply=-1.0,
 			--max_speed=13.3,	
 			max_speed=6.0,
 			max_accel_forward=25,			--just go with what feels right
@@ -672,8 +673,8 @@ MainRobot = {
 
 	controls =
 	{
-		slotlist = {slot_1="gamepad f310 (controller)"},
-		--slotlist = {slot_1="gamepad f310 (controller)",slot_2="ch throttle quadrant"},
+		--slotlist = {slot_1="gamepad f310 (controller)"},
+		slotlist = {slot_1="gamepad f310 (controller)",slot_2="ch throttle quadrant"},
 		--slotlist = {slot_1="logitech dual action"},
 		--slotlist = {slot_1="airflo"},
 		--slotlist = {slot_1="airflo",slot_2="ch throttle quadrant"},
@@ -742,7 +743,9 @@ MainRobot = {
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			--Turret_SetCurrentVelocity = {type="joystick_analog", key=3, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
+			turret_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
+			--arm_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
+			--boom_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
 			
 			--arm_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
