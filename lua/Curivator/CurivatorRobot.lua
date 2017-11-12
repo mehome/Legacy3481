@@ -451,8 +451,8 @@ MainRobot = {
 		arm =
 		{
 			show_pid_dump='n',
-			pid_up={p=200, i=0, d=25},
-			pid_down={p=200, i=0, d=25},
+			pid_up={p=175, i=1, d=25},
+			pid_down={p=175, i=1, d=25},
 			tolerance=0.3,
 			pot_min_limit=232*4.215+5,
 			pot_max_limit=890*4.215+5,
@@ -519,7 +519,9 @@ MainRobot = {
 		{
 			show_pid_dump='n',
 			tolerance=0.09,
+			--TODO increase min limit once we have a new lead screw that can work with longer lengths
 			pot_min_limit=300*4.215+5,  --was 584,522,415,440
+			--pot_min_limit=1198,
 			pot_max_limit=700*4.215+5,  --was 969,907,800,760
 			pot_limit_tolerance=20,
 			pot_range_flipped='y',
