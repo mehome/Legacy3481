@@ -1,7 +1,7 @@
 <xml version="1.0">
 <dashboard>
 	<widget field="ClaspDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-95" y="747"/>
+		<location x="-100" y="600"/>
 	</widget>
 	<widget field="SafetyLock_Drive" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="454" y="144"/>
@@ -488,10 +488,6 @@
 	</widget>
 	<widget field="BucketDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="-113" y="695"/>
-	</widget>
-	<widget field="AxisCount_gamepad f310 (controller)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1080" y="463"/>
-		<width>399</width>
 	</widget>
 	<widget field="Wheel_rrDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="505" y="396"/>
