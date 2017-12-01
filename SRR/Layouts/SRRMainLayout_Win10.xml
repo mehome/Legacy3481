@@ -1,7 +1,7 @@
 <xml version="1.0">
 <dashboard>
 	<widget field="ClaspDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-100" y="600"/>
+		<location x="-95" y="747"/>
 	</widget>
 	<widget field="SafetyLock_Drive" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="454" y="144"/>
@@ -39,20 +39,24 @@
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="ClaspShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="567" y="599"/>
-		<width>197</width>
+		<location x="602" y="753"/>
+		<width>202</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="BucketShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="572" y="570"/>
+		<location x="604" y="688"/>
 		<width>211</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="Boom_ShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="572" y="536"/>
+		<location x="600" y="622"/>
 		<width>210</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="BigArm_ShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="569" y="503"/>
+		<location x="603" y="571"/>
 		<width>230</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="28" y="35"/>
@@ -63,64 +67,73 @@
 		<property name="Minimum" value="-9.0"/>
 	</widget>
 	<widget field="Disable_Setpoints" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="166" y="437"/>
+		<location x="233" y="442"/>
 	</widget>
 	<widget field="SafetyLock_Arm" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="13" y="439"/>
 	</widget>
 	<widget field="turretPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="342" y="483"/>
+		<location x="403" y="483"/>
 		<width>205</width>
+		<height>44</height>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="armPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="342" y="511"/>
+		<location x="396" y="553"/>
 		<width>195</width>
+		<height>44</height>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="boomPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="342" y="536"/>
+		<location x="391" y="619"/>
 		<width>190</width>
+		<height>42</height>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="bucketPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="342" y="566"/>
+		<location x="398" y="677"/>
 		<width>186</width>
+		<height>43</height>
 		<property name="Foreground" value="0.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="claspPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="346" y="603"/>
+		<location x="397" y="747"/>
 		<width>181</width>
+		<height>39</height>
 		<property name="Foreground" value="0.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="clasp_angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="153" y="779"/>
+		<location x="1000" y="737"/>
 		<width>172</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="bucket_angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="35" y="733"/>
-		<width>170</width>
+		<location x="849" y="685"/>
+		<width>181</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="arm_ypos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="54" y="690"/>
-		<width>140</width>
+		<location x="861" y="622"/>
+		<width>159</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="arm_xpos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="48" y="652"/>
-		<width>137</width>
+		<location x="870" y="555"/>
+		<width>145</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="Clasp_angleVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="418" y="787"/>
+		<location x="1240" y="683"/>
 		<width>182</width>
 		<height>37</height>
 		<property name="Foreground" value="102.0.153.255"/>
@@ -129,7 +142,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Bucket_angleVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="409" y="747"/>
+		<location x="1243" y="636"/>
 		<width>195</width>
 		<height>38</height>
 		<property name="Foreground" value="102.0.153.255"/>
@@ -138,7 +151,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Arm_yposVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="413" y="705"/>
+		<location x="1244" y="590"/>
 		<width>162</width>
 		<height>40</height>
 		<property name="Foreground" value="102.0.153.255"/>
@@ -147,65 +160,75 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Arm_xposVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="412" y="664"/>
+		<location x="1245" y="544"/>
 		<width>187</width>
-		<height>43</height>
+		<height>39</height>
 		<property name="Foreground" value="102.0.153.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="BucketAngle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="220" y="725"/>
-		<width>161</width>
+		<location x="1041" y="689"/>
+		<width>188</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="BucketHeight" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="212" y="687"/>
-		<width>161</width>
+		<location x="1039" y="625"/>
+		<width>196</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="BucketDistance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="208" y="654"/>
-		<width>188</width>
+		<location x="1026" y="555"/>
+		<width>212</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="clasp_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="207" y="610"/>
-		<width>116</width>
+		<location x="205" y="746"/>
+		<width>138</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="bucket_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="203" y="574"/>
-		<width>116</width>
+		<location x="200" y="691"/>
+		<width>164</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="boom_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="202" y="544"/>
-		<width>116</width>
+		<location x="206" y="629"/>
+		<width>148</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="ClaspVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="58" y="600"/>
+		<location x="74" y="735"/>
 		<width>114</width>
+		<height>39</height>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="BucketVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="66" y="568"/>
+		<location x="71" y="679"/>
 		<width>114</width>
+		<height>42</height>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="BoomVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="69" y="537"/>
+		<location x="72" y="615"/>
 		<width>114</width>
+		<height>41</height>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="ArmVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="66" y="509"/>
+		<location x="73" y="555"/>
 		<width>114</width>
+		<height>42</height>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
@@ -217,18 +240,21 @@
 	<widget field="TurretVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="66" y="480"/>
 		<width>114</width>
+		<height>41</height>
 		<property name="Foreground" value="0.102.51.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="arm_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="203" y="512"/>
-		<width>116</width>
+		<location x="213" y="568"/>
+		<width>141</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="turret_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="197" y="482"/>
-		<width>116</width>
+		<location x="199" y="500"/>
+		<width>170</width>
+		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="Timer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="1169" y="45"/>
@@ -455,16 +481,16 @@
 		<location x="-107" y="480"/>
 	</widget>
 	<widget field="ArmDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-88" y="507"/>
+		<location x="-87" y="552"/>
 	</widget>
 	<widget field="BoomDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-102" y="539"/>
+		<location x="-100" y="618"/>
 	</widget>
 	<widget field="BucketDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-116" y="567"/>
+		<location x="-113" y="695"/>
 	</widget>
 	<widget field="AxisCount_gamepad f310 (controller)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="997" y="504"/>
+		<location x="1080" y="463"/>
 		<width>399</width>
 	</widget>
 	<widget field="Wheel_rrDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
