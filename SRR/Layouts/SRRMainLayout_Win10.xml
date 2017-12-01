@@ -1,7 +1,7 @@
 <xml version="1.0">
 <dashboard>
 	<widget field="ClaspDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-100" y="600"/>
+		<location x="-96" y="750"/>
 	</widget>
 	<widget field="SafetyLock_Drive" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="454" y="144"/>
@@ -39,17 +39,17 @@
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="ClaspShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="602" y="753"/>
+		<location x="618" y="759"/>
 		<width>202</width>
 		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="BucketShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="604" y="688"/>
+		<location x="608" y="695"/>
 		<width>211</width>
 		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="Boom_ShaftLength" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="600" y="622"/>
+		<location x="613" y="632"/>
 		<width>210</width>
 		<property name="Font Size" value="20"/>
 	</widget>
@@ -67,13 +67,13 @@
 		<property name="Minimum" value="-9.0"/>
 	</widget>
 	<widget field="Disable_Setpoints" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="233" y="442"/>
+		<location x="3" y="449"/>
 	</widget>
 	<widget field="SafetyLock_Arm" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="13" y="439"/>
+		<location x="668" y="474"/>
 	</widget>
 	<widget field="turretPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="403" y="483"/>
+		<location x="398" y="489"/>
 		<width>205</width>
 		<height>44</height>
 		<property name="Foreground" value="51.153.255.255"/>
@@ -105,9 +105,9 @@
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="claspPot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="397" y="747"/>
+		<location x="397" y="743"/>
 		<width>181</width>
-		<height>39</height>
+		<height>42</height>
 		<property name="Foreground" value="0.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
 		<property name="Maximum" value="1.0"/>
@@ -478,16 +478,16 @@
 		<location x="991" y="415"/>
 	</widget>
 	<widget field="TurretDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-107" y="480"/>
+		<location x="-109" y="498"/>
 	</widget>
 	<widget field="ArmDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-87" y="552"/>
+		<location x="-90" y="574"/>
 	</widget>
 	<widget field="BoomDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-100" y="618"/>
+		<location x="-99" y="637"/>
 	</widget>
 	<widget field="BucketDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="-113" y="695"/>
+		<location x="-110" y="697"/>
 	</widget>
 	<widget field="Wheel_rrDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="505" y="396"/>
