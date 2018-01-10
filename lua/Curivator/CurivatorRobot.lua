@@ -215,7 +215,7 @@ MainRobot = {
 			pid={p=200, i=0, d=25},
 			voltage_multiply=-1.0,			--reversed
 			encoder_to_wheel_ratio=1.0,
-			encoder_pulses_per_revolution=134.4/4,   --orbital spec 
+			encoder_pulses_per_revolution=537.6/4,   --orbital spec 
 			encoder_reversed_wheel=0,
 			max_speed=9.61*Feet2Meters,	--orbital using 19.2 gear reduction free speed of 6528 rpm
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
