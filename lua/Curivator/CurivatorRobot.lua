@@ -209,14 +209,15 @@ MainRobot = {
 		},
 		wheel_rl =
 		{
-			is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			pid={p=200, i=0, d=25},
 			voltage_multiply=-1.0,			--reversed
 			encoder_to_wheel_ratio=1.0,
+			encoder_pulses_per_revolution=134.4/4,   --orbital spec 
 			encoder_reversed_wheel=0,
-			max_speed=8.91*Feet2Meters,	--100 rpm... with a 12:36 reduction in radians
+			max_speed=9.61*Feet2Meters,	--orbital using 19.2 gear reduction free speed of 6528 rpm
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
 			max_accel_forward=Drive_MaxAccel,			--These are in radians, just go with what feels right
@@ -323,11 +324,10 @@ MainRobot = {
 			tolerance=0.05,
 			tolerance_count=1,
 			voltage_multiply=-1.0,			--May be reversed
-			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--center around 1361
-			pot_min_limit=111,  --45 forward   0   -1250
-			pot_max_limit=2861,  -- 45 counter clockwise  962
+			--center around 2000
+			pot_min_limit=500,  --45 forward   0   -1250
+			pot_max_limit=3500,  -- 45 counter clockwise  962
 			pot_limit_tolerance=100,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
@@ -341,9 +341,9 @@ MainRobot = {
 			predict_down=.400,
 
 			max_range_deg= 45,
-			min_range_deg=-38,
+			min_range_deg=-45,
 			starting_position=0,
-			pot_offset=-38.0 * Deg2Rad,
+			pot_offset=-45.0 * Deg2Rad,
 			use_aggressive_stop = 'yes',
 		},
 		swivel_rr =
