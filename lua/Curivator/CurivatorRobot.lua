@@ -179,7 +179,7 @@ MainRobot = {
 			pid={p=200, i=0, d=25},
 			voltage_multiply=-1.0,			--reversed
 			encoder_to_wheel_ratio=1.0,
-			encoder_reversed_wheel=1,
+			encoder_reversed_wheel=0,
 			max_speed=8.91*Feet2Meters,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -215,7 +215,7 @@ MainRobot = {
 			pid={p=200, i=0, d=25},
 			voltage_multiply=-1.0,			--reversed
 			encoder_to_wheel_ratio=1.0,
-			encoder_reversed_wheel=1,
+			encoder_reversed_wheel=0,
 			max_speed=8.91*Feet2Meters,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -635,14 +635,14 @@ MainRobot = {
 		},
 		wheel_cl =
 		{
-			is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			pid={p=200, i=0, d=25},
 			voltage_multiply=-1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
 			encoder_pulses_per_revolution=560/4,
-			encoder_reversed_wheel=1,
+			encoder_reversed_wheel=0,
 			max_speed=8.91*Feet2Meters,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -675,8 +675,8 @@ MainRobot = {
 
 	controls =
 	{
-		--slotlist = {slot_1="gamepad f310 (controller)"},
-		slotlist = {slot_1="gamepad f310 (controller)",slot_2="ch throttle quadrant"},
+		slotlist = {slot_1="gamepad f310 (controller)"},
+		--slotlist = {slot_1="gamepad f310 (controller)",slot_2="ch throttle quadrant"},
 		--slotlist = {slot_1="logitech dual action"},
 		--slotlist = {slot_1="airflo"},
 		--slotlist = {slot_1="airflo",slot_2="ch throttle quadrant"},
@@ -738,6 +738,7 @@ MainRobot = {
 		Joystick_3 =
 		{
 			control = "gamepad f310 (controller)",
+			axis_count = 4,
 			Analog_Turn = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
@@ -779,10 +780,10 @@ MainRobot = {
 		Joystick_5 =
 		{	
 			control = "ch throttle quadrant",
-			arm_xpos_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			arm_ypos_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			bucket_angle_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--arm_xpos_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--arm_ypos_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--bucket_angle_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Robot_SetDefensiveKeyValue = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--intermediate closed loop test point of each position control
 			--turret_SetIntendedPosition = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
