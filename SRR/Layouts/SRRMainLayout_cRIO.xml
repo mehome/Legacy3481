@@ -344,8 +344,8 @@
 		<height>30</height>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="2.715768"/>
-		<property name="Minimum" value="-2.715768"/>
+		<property name="Maximum" value="2.42733"/>
+		<property name="Minimum" value="-2.42733"/>
 	</widget>
 	<widget field="wheel_cl_Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="153" y="175"/>
@@ -353,24 +353,24 @@
 		<height>30</height>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="2.715768"/>
-		<property name="Minimum" value="-2.715768"/>
+		<property name="Maximum" value="2.42733"/>
+		<property name="Minimum" value="-2.42733"/>
 	</widget>
 	<widget field="wheel_fr_Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="441" y="140"/>
 		<width>115</width>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="2.715768"/>
-		<property name="Minimum" value="-2.715768"/>
+		<property name="Maximum" value="2.42733"/>
+		<property name="Minimum" value="-2.42733"/>
 	</widget>
 	<widget field="wheel_cr_Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="441" y="175"/>
 		<width>115</width>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="2.715768"/>
-		<property name="Minimum" value="-2.715768"/>
+		<property name="Maximum" value="2.42733"/>
+		<property name="Minimum" value="-2.42733"/>
 	</widget>
 	<widget field="wheel_rl_Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="153" y="210"/>
@@ -378,16 +378,16 @@
 		<height>30</height>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="2.715768"/>
-		<property name="Minimum" value="-2.715768"/>
+		<property name="Maximum" value="2.42733"/>
+		<property name="Minimum" value="-2.42733"/>
 	</widget>
 	<widget field="wheel_rr_Encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="440" y="210"/>
 		<width>115</width>
 		<property name="Foreground" value="51.153.255.255"/>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="2.715768"/>
-		<property name="Minimum" value="-2.715768"/>
+		<property name="Maximum" value="2.42733"/>
+		<property name="Minimum" value="-2.42733"/>
 	</widget>
 	<widget field="Y_ft " type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="587" y="66"/>

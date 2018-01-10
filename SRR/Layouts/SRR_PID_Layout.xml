@@ -300,15 +300,15 @@
 		<width>107</width>
 		<height>30</height>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="2.715768"/>
-		<property name="Minimum" value="-2.715768"/>
+		<property name="Maximum" value="2.42733"/>
+		<property name="Minimum" value="-2.42733"/>
 	</widget>
 	<widget field="RightEncoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="512" y="260"/>
 		<width>115</width>
 		<property name="Background" value="0.0.102.255"/>
-		<property name="Maximum" value="2.715768"/>
-		<property name="Minimum" value="-2.715768"/>
+		<property name="Maximum" value="2.42733"/>
+		<property name="Minimum" value="-2.42733"/>
 	</widget>
 	<widget field="Y_ft " type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
 		<location x="556" y="121"/>
