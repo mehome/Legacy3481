@@ -22,7 +22,7 @@ WheelBase_Width_In=WheelBase_Width_Curivator_In
 WheelTurningDiameter_In= ( (WheelBase_Width_In * WheelBase_Width_In) + (WheelBase_Length_In * WheelBase_Length_In) ) ^ 0.5
 DriveGearSpeed_Curivator = (255.15 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9
 LowGearSpeed_Rabbit  = (346.6368 / 60.0) * Pi * g_wheel_diameter_in * Inches2Meters  * 0.9 
-DriveGearSpeed = LowGearSpeed_Rabbit
+DriveGearSpeed = DriveGearSpeed_Curivator
 Drive_MaxAccel=5
 --Swerve wheels means no skid
 skid_rabbit=math.cos(math.atan2(WheelBase_Length_In,WheelBase_Width_In))
