@@ -209,14 +209,14 @@ MainRobot = {
 		},
 		wheel_rl =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			pid={p=200, i=0, d=25},
-			voltage_multiply=-1.0,			--reversed
+			voltage_multiply=1.0,	
 			encoder_to_wheel_ratio=1.0,
 			encoder_pulses_per_revolution=537.6/4,   --orbital spec 
-			encoder_reversed_wheel=0,
+			encoder_reversed_wheel=1,
 			max_speed=9.61*Feet2Meters,	--orbital using 19.2 gear reduction free speed of 6528 rpm
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -326,8 +326,8 @@ MainRobot = {
 			voltage_multiply=-1.0,			--May be reversed
 			encoder_to_wheel_ratio=1.0,
 			--center around 2000
-			pot_min_limit=500,  --45 forward   0   -1250
-			pot_max_limit=3500,  -- 45 counter clockwise  962
+			pot_min_limit=100,  --45 forward   0   -1250
+			pot_max_limit=3100,  -- 45 counter clockwise  962
 			pot_limit_tolerance=100,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
@@ -738,7 +738,7 @@ MainRobot = {
 		Joystick_3 =
 		{
 			control = "gamepad f310 (controller)",
-			axis_count = 4,
+			axis_count = 5,
 			Analog_Turn = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Analog_Turn = {type="joystick_culver", key_x=3, key_y=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			Joystick_SetCurrentSpeed_2 = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
