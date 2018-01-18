@@ -64,7 +64,7 @@ int cam2_op_mode = 0;
 int frameCount = 0;
 
 /** Functions **/
-void detectHookSample(cv::Mat frame, sl::Mat depth);
+void detectHookSample(cv::Mat frame, sl::Mat depth, sl:Mat point_cloud);
 void detectRockSample(cv::Mat frame, sl::Mat depth);
 void detectBeacon(cv::Mat frame, sl::Mat depth);
 
@@ -123,6 +123,7 @@ int main(int argc, char **argv) {
 	cv::Mat confidencemap((int)height, (int)width, CV_8UC4);
 
 	sl::Mat depth;
+	sl::Mat point_cloud;
 
 	if (StereoCam.IsOpen)
 	{
@@ -163,7 +164,7 @@ int main(int argc, char **argv) {
 			cv::Mat frame = FrontCam.GrabFrame();
 
 			if (cam2_op_mode == FindHook)
-				detectHookSample(frame, depth);
+				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for fromt cam.
 			else if (cam2_op_mode == FindRock)
 				detectRockSample(frame, depth);
 			else if (cam2_op_mode == FindBeacon)
@@ -176,6 +177,7 @@ int main(int argc, char **argv) {
 			StereoCam.GrabFrameAndDapth();
 			anaplyph = StereoCam.frame;
 			depth = StereoCam.depth;
+			point_cloud = StereoCam.point_cloud;
 			mouseStruct.depth = depth;
 			// TODO: optional depth and disparity display below.
 			// Get frames and launch the computation
@@ -197,7 +199,7 @@ int main(int argc, char **argv) {
 				}
 
 				if (cam1_op_mode == FindHook)
-					detectHookSample(anaplyph, depth);
+					detectHookSample(anaplyph, depth, point_cloud);
 				else if (cam1_op_mode == FindRock)
 					detectRockSample(anaplyph, depth);
 				else if (cam1_op_mode == FindBeacon)

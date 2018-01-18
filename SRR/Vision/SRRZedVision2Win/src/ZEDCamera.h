@@ -32,6 +32,7 @@ public:
 	int confidenceLevel;
 
 	sl::Mat depth;
+	sl::Mat point_cloud;
 	cv::Mat frame;
 	cv::Mat cvConfidence;
 	cv::Mat cvNormDepth;
