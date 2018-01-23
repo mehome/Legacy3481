@@ -53,30 +53,37 @@ void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 	int XRes = frame_gray.cols;
 	int YRes = frame_gray.rows;
 
+	// TODO: because it's possible to detect multiple objects, we need a method to eliminate false positives5
 	for (size_t i = 0; i < hooks.size(); i++)
 	{
-		float Distance = GetDistanceAtPoint(depth, hooks[i].x, hooks[i].y);
-		std::cout << "hook found at: " << hooks[i].x << ", " << hooks[i].y << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-
+		// draw a rect around the detected object
 		cv::Point p1(hooks[i].x, hooks[i].y);
 		cv::Point p2(hooks[i].x + hooks[i].width, hooks[i].y + hooks[i].height);
 		rectangle(frame, p1, p2, cv::Scalar(255, 0, 255), 2, 8, 0);
 
-#if 0
+		// get our pixel target center
+		float x_target = hooks[i].x + hooks[i].width / 2;
+		float y_target = hooks[i].y + hooks[i].height / 2;
+
+#ifdef USE_POINT_CLOUD 
 		float4 point3D;
-		// Get the 3D point cloud values for pixel (i,j)
-		point_cloud.getValue(i, j, &point3D);
-		float x = point3D.x;
-		float y = point3D.y;
-		float z = point3D.z;
-		float color = point3D.w;
+		// Get the 3D point cloud values for pixel 
+		point_cloud.getValue(x_target, y_target, &point3D);
 
-		float distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
-#endif
+		float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
 
-		double x_target = hooks[i].x + hooks[i].width / 2;
-		double y_target = hooks[i].y + hooks[i].height / 2;
+		std::cout << "hook found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+		SmartDashboard::PutNumber("X Position", point3D.x);
+		SmartDashboard::PutNumber("Y Position", point3D.y);
+		SmartDashboard::PutNumber("Z Position", point3D.z);
+		SmartDashboard::PutNumber("Distance", Distance);
+#else
+		float Distance = GetDistanceAtPoint(depth, x_target, y_target);
+
+		std::cout << "hook found at: " << x_target << ", " << y_target << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
 		SmartDashboard::PutNumber("X Position", x_target);
 		SmartDashboard::PutNumber("Y Position", y_target);
+		SmartDashboard::PutNumber("Distance", Distance);
+#endif
 	}
 }

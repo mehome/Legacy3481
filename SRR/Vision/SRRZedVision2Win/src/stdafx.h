@@ -17,3 +17,5 @@
 #pragma warning (disable: 4756)
 //ZED Includes
 #include <sl/Camera.hpp>
+
+#define USE_POINT_CLOUD
