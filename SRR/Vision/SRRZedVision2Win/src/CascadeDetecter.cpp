@@ -8,7 +8,7 @@ enum histo_mode
 	h_clahe
 };
 
-float GetDistanceAtPoint(sl::Mat depth, int x, int y);
+float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y);
 
 enum histo_mode mode = h_original;
 
@@ -62,11 +62,11 @@ void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 		rectangle(frame, p1, p2, cv::Scalar(255, 0, 255), 2, 8, 0);
 
 		// get our pixel target center
-		float x_target = hooks[i].x + hooks[i].width / 2;
-		float y_target = hooks[i].y + hooks[i].height / 2;
+		size_t x_target = hooks[i].x + hooks[i].width / 2;
+		size_t y_target = hooks[i].y + hooks[i].height / 2;
 
 #ifdef USE_POINT_CLOUD 
-		float4 point3D;
+		sl::float4 point3D;
 		// Get the 3D point cloud values for pixel 
 		point_cloud.getValue(x_target, y_target, &point3D);
 

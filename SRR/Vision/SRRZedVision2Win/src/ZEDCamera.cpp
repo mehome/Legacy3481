@@ -67,7 +67,7 @@ sl::ERROR_CODE ZEDCamera::GrabFrameAndDapth(void)
 		res = zed->retrieveMeasure(depth ,sl::MEASURE_DEPTH, sl::MEM_CPU); // Get the pointer
 		res = zed->retrieveImage(zedFrame, static_cast<sl::VIEW> (ViewID));
 #ifdef USE_POINT_CLOUD 
-		zed.retrieveMeasure(point_cloud, sl::MEASURE_XYZRGBA);
+		zed->retrieveMeasure(point_cloud, sl::MEASURE_XYZRGBA);
 #endif
 		frame = slMat2cvMat(zedFrame);
 	}

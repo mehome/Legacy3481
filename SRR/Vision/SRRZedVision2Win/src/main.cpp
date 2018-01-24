@@ -64,7 +64,7 @@ int cam2_op_mode = 0;
 int frameCount = 0;
 
 /** Functions **/
-void detectHookSample(cv::Mat frame, sl::Mat depth, sl:Mat point_cloud);
+void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
 void detectRockSample(cv::Mat frame, sl::Mat depth);
 void detectBeacon(cv::Mat frame, sl::Mat depth);
 
