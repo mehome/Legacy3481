@@ -10,7 +10,7 @@ int V_high = 255;
 
 int ThreshInc = 10;
 
-float GetDistanceAtPoint(sl::Mat depth, int x, int y);
+float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y);
 
 void detectRockSample(cv::Mat frame, sl::Mat depth)
 {
@@ -61,7 +61,7 @@ void detectRockSample(cv::Mat frame, sl::Mat depth)
 		/// Find the rotated rectangles for each contour
 		minRect[i] = cv::minAreaRect(cv::Mat(contours[i]));
 
-		float Distance = GetDistanceAtPoint(depth, (int)mc[i].x, (int)mc[i].y);
+		float Distance = GetDistanceAtPoint(depth, (size_t)mc[i].x, (size_t)mc[i].y);
 
 		if ((contourArea(contours[i]) > 150) &&
 			(minRect[i].size.width > 10) &&

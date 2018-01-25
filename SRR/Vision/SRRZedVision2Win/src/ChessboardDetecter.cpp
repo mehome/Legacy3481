@@ -4,7 +4,7 @@
 int count = 0;
 std::vector<cv::Point2f> pointBuf;
 
-float GetDistanceAtPoint(sl::Mat depth, int x, int y);
+float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y);
 
 // use calibration target for a beacon.
 void detectBeacon(cv::Mat view, sl::Mat depth)
@@ -49,7 +49,7 @@ void detectBeacon(cv::Mat view, sl::Mat depth)
 		// Draw the corners.
 		cv::drawChessboardCorners(view, boardSize, cv::Mat(pointBuf), found);
 
-		float Distance = GetDistanceAtPoint(depth, (int)center.x, (int)center.y);
+		float Distance = GetDistanceAtPoint(depth, (size_t)center.x, (size_t)center.y);
 		std::cout << "beacon found at " << center.x << ", " << center.y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
 	}
 }

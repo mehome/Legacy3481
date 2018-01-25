@@ -44,7 +44,7 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 }
 
 
-float GetDistanceAtPoint(sl::Mat depth, int x, int y)
+float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 {
 	sl::float1 dist;
 	depth.getValue(x, y, &dist);
