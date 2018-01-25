@@ -28,6 +28,10 @@ ZEDCamera::ZEDCamera(const char *file)
 		return; // Quit if an error occurred
 	}
 
+	// disable tracking until we put the camera on a thread.
+	zed->disableTracking("");
+	zed->disableSpatialMapping();
+
 	IsOpen = true;
 
 	image_size = zed->getResolution();

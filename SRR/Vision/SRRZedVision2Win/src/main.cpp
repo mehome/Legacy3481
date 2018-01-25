@@ -59,8 +59,8 @@ float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 std::string filename;
 bool FrontCamEnabled = false;
 bool StereoCamEnabled = true;
-int cam1_op_mode = 0;
-int cam2_op_mode = 0;
+int cam1_op_mode = FindHook;
+int cam2_op_mode = FindHook;
 int frameCount = 0;
 
 /** Functions **/
