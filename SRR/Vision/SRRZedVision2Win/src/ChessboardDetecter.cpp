@@ -49,7 +49,25 @@ void detectBeacon(cv::Mat view, sl::Mat depth)
 		// Draw the corners.
 		cv::drawChessboardCorners(view, boardSize, cv::Mat(pointBuf), found);
 
+#ifdef USE_POINT_CLOUD 
+		sl::float4 point3D;
+		// Get the 3D point cloud values for pixel 
+		point_cloud.getValue((size_t)center.x, (size_t)center.y, &point3D);
+
+		float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
+
+		std::cout << "hook found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+		SmartDashboard::PutNumber("X Position", point3D.x);
+		SmartDashboard::PutNumber("Y Position", point3D.y);
+		SmartDashboard::PutNumber("Z Position", point3D.z);
+		SmartDashboard::PutNumber("Distance", Distance);
+#else
 		float Distance = GetDistanceAtPoint(depth, (size_t)center.x, (size_t)center.y);
+
 		std::cout << "beacon found at " << center.x << ", " << center.y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+		SmartDashboard::PutNumber("X Position", center.x);
+		SmartDashboard::PutNumber("Y Position", center.y);
+		SmartDashboard::PutNumber("Distance", Distance);
+#endif
 	}
 }

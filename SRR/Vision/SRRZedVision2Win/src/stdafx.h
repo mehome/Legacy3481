@@ -18,4 +18,4 @@
 //ZED Includes
 #include <sl/Camera.hpp>
 
-#define USE_POINT_CLOUD
+//#define USE_POINT_CLOUD
