@@ -70,7 +70,12 @@ void detectBeacon(cv::Mat frame, sl::Mat depth);
 
 /** Cascade classifire data */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
-std::string hook_cascade_name = "data/SRR Samples/cascades/hook_cascade_gpu.xml";
+std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_gpu.xml";
+
+#define FRONT_CAM_URL ""
+//#define FRONT_CAM_URL "http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0"
+//#define FRONT_CAM_RUL "rtsp://root:root@192.168.0.90/axis-media/media.amp"
+
 
 extern cv::CascadeClassifier hook_cascade;
 
@@ -107,8 +112,7 @@ int main(int argc, char **argv) {
 		filearg = NULL;
 
 	std::cout << "Initializing OCV Camera." << std::endl;
-	OCVCamera FrontCam = OCVCamera("http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0");
-//	OCVCamera FrontCam = OCVCamera("rtsp://root:root@192.168.0.90/axis-media/media.amp");
+	OCVCamera FrontCam = OCVCamera(FRONT_CAM_URL);
 
 	std::cout << "Initializing ZED Camera." << std::endl;
 	ZEDCamera StereoCam = ZEDCamera(filearg);
