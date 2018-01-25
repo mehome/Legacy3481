@@ -1,5 +1,5 @@
-
 #include "stdafx.h"
+#include "../SmartDashboard/SmartDashboard_import.h"
 
 int H_low = 122;
 int H_high = 155;
@@ -12,7 +12,7 @@ int ThreshInc = 10;
 
 float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y);
 
-void detectRockSample(cv::Mat frame, sl::Mat depth)
+void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 {
 	cv::Scalar color = cv::Scalar(255, 0, 255);
 
@@ -72,18 +72,24 @@ void detectRockSample(cv::Mat frame, sl::Mat depth)
 
 			float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
 
-			std::cout << "rock found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-			SmartDashboard::PutNumber("X Position", point3D.x);
-			SmartDashboard::PutNumber("Y Position", point3D.y);
-			SmartDashboard::PutNumber("Z Position", point3D.z);
-			SmartDashboard::PutNumber("Distance", Distance);
+			if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
+			{
+				std::cout << "rock found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+				SmartDashboard::PutNumber("X Position", point3D.x);
+				SmartDashboard::PutNumber("Y Position", point3D.y);
+				SmartDashboard::PutNumber("Z Position", point3D.z);
+				SmartDashboard::PutNumber("Distance", Distance);
+			}
 #else
 			float Distance = GetDistanceAtPoint(depth, (size_t)mc[i].x, (size_t)mc[i].y);
 
-			std::cout << "rock found at " << mc[i].x << ", " << mc[i].y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-			SmartDashboard::PutNumber("X Position", mc[i].x);
-			SmartDashboard::PutNumber("Y Position", mc[i].y);
-			SmartDashboard::PutNumber("Distance", Distance);
+			if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
+			{
+				std::cout << "rock found at " << mc[i].x << ", " << mc[i].y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+				SmartDashboard::PutNumber("X Position", mc[i].x);
+				SmartDashboard::PutNumber("Y Position", mc[i].y);
+				SmartDashboard::PutNumber("Distance", Distance);
+			}
 #endif
 			/// Draw contours
 			cv::drawContours(frame, contours, i, color, 2, 8, hierarchy, 0, cv::Point());

@@ -1,5 +1,5 @@
-
 #include "stdafx.h"
+#include "../SmartDashboard/SmartDashboard_import.h"
 
 int count = 0;
 std::vector<cv::Point2f> pointBuf;
@@ -7,7 +7,7 @@ std::vector<cv::Point2f> pointBuf;
 float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y);
 
 // use calibration target for a beacon.
-void detectBeacon(cv::Mat view, sl::Mat depth)
+void detectBeacon(cv::Mat view, sl::Mat depth, sl::Mat point_cloud)
 {
 	cv::Size boardSize(9, 6);            // The size of the board -> Number of items by width and height
 	cv::Mat cameraMatrix, distCoeffs;
@@ -56,18 +56,24 @@ void detectBeacon(cv::Mat view, sl::Mat depth)
 
 		float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
 
-		std::cout << "hook found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-		SmartDashboard::PutNumber("X Position", point3D.x);
-		SmartDashboard::PutNumber("Y Position", point3D.y);
-		SmartDashboard::PutNumber("Z Position", point3D.z);
-		SmartDashboard::PutNumber("Distance", Distance);
+		if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
+		{
+			std::cout << "hook found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+			SmartDashboard::PutNumber("X Position", point3D.x);
+			SmartDashboard::PutNumber("Y Position", point3D.y);
+			SmartDashboard::PutNumber("Z Position", point3D.z);
+			SmartDashboard::PutNumber("Distance", Distance);
+		}
 #else
 		float Distance = GetDistanceAtPoint(depth, (size_t)center.x, (size_t)center.y);
 
-		std::cout << "beacon found at " << center.x << ", " << center.y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-		SmartDashboard::PutNumber("X Position", center.x);
-		SmartDashboard::PutNumber("Y Position", center.y);
-		SmartDashboard::PutNumber("Distance", Distance);
+		if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
+		{
+			std::cout << "beacon found at " << center.x << ", " << center.y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+			SmartDashboard::PutNumber("X Position", center.x);
+			SmartDashboard::PutNumber("Y Position", center.y);
+			SmartDashboard::PutNumber("Distance", Distance);
+		}
 #endif
 	}
 }

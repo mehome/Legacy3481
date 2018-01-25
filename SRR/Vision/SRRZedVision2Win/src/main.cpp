@@ -65,8 +65,8 @@ int frameCount = 0;
 
 /** Functions **/
 void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
-void detectRockSample(cv::Mat frame, sl::Mat depth);
-void detectBeacon(cv::Mat frame, sl::Mat depth);
+void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
+void detectBeacon(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
 
 /** Cascade classifire data */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
@@ -170,9 +170,9 @@ int main(int argc, char **argv) {
 			if (cam2_op_mode == FindHook)
 				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for fromt cam.
 			else if (cam2_op_mode == FindRock)
-				detectRockSample(frame, depth);
+				detectRockSample(frame, depth, point_cloud);
 			else if (cam2_op_mode == FindBeacon)
-				detectBeacon(frame, depth);
+				detectBeacon(frame, depth, point_cloud);
 
 			cv::imshow("camera", frame);
 		}
@@ -205,9 +205,9 @@ int main(int argc, char **argv) {
 				if (cam1_op_mode == FindHook)
 					detectHookSample(anaplyph, depth, point_cloud);
 				else if (cam1_op_mode == FindRock)
-					detectRockSample(anaplyph, depth);
+					detectRockSample(anaplyph, depth, point_cloud);
 				else if (cam1_op_mode == FindBeacon)
-					detectBeacon(anaplyph, depth);
+					detectBeacon(anaplyph, depth, point_cloud);
 
 				imshow("VIEW", anaplyph);
 			}
