@@ -235,9 +235,9 @@ int main(int argc, char **argv) {
             }
                 break;
 
-            case 'h': //decrease gain of 1
+            case 'G': //decrease gain of 1
             {
-				int current_gain = StereoCam.GetGain() + 1;
+				int current_gain = StereoCam.GetGain() - 1;
 				StereoCam.SetGain(current_gain);
 				std::cout << "set Gain to " << current_gain << std::endl;
             }
@@ -253,7 +253,7 @@ int main(int argc, char **argv) {
 
 			case 'E': //decrease exposure of 1
 			{
-				int current_exp = StereoCam.GetExposure() + 1;
+				int current_exp = StereoCam.GetExposure() - 1;
 				StereoCam.SetExposure(current_exp);
 				std::cout << "set Exposure to " << current_exp << std::endl;
 			}
