@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ZEDCamera.h"
+//#define SDK230
 
 ZEDCamera::ZEDCamera(const char *file)
 	: old_self_calibration_state (sl::SELF_CALIBRATION_STATE_NOT_STARTED),
@@ -23,7 +24,11 @@ ZEDCamera::ZEDCamera(const char *file)
 	// Open the ZED
 	sl::ERROR_CODE err = zed->open(initParameters);
 	if (err != sl::SUCCESS) {
+#ifdef SDK230
+		std::cout << toString(err) << std::endl;
+#else
 		std::cout << errorCode2str(err) << std::endl;
+#endif
 		zed->close();
 		return; // Quit if an error occurred
 	}
