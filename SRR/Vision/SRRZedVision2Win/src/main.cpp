@@ -12,6 +12,24 @@
 
 #include "../SmartDashboard/SmartDashboard_import.h"
 
+/**
+This function displays help
+**/
+void printHelp() {
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << "Camera controls hotkeys: " << std::endl;
+	std::cout << "  Increase camera settings value:            '+'" << std::endl;
+	std::cout << "  Decrease camera settings value:            '-'" << std::endl;
+	std::cout << "  Toggle camera settings:                    's'" << std::endl;
+	std::cout << "  Reset all parameters:                      'r'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Exit : 'q'" << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
+}
+
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
 	sl::Mat depth;
@@ -98,7 +116,7 @@ int main(int argc, char **argv) {
 
     //-- 1. Load the cascades
     if (!hook_cascade.load(hook_cascade_name)){	
-		std::cout << "--(!)Error loading" << std::endl; 
+		std::cout << "--(!)Error loading cascade data" << std::endl; 
 		return -1; 
     };
 
@@ -116,6 +134,12 @@ int main(int argc, char **argv) {
 
 	std::cout << "Initializing ZED Camera." << std::endl;
 	ZEDCamera StereoCam = ZEDCamera(filearg);
+
+	if (!FrontCam.IsOpen && !StereoCam.IsOpen)
+	{
+		std::cout << "No Cameras!" << std::endl;
+		return -1;
+	}
 
 	size_t width = StereoCam.image_size.width;
 	size_t height = StereoCam.image_size.height;
@@ -157,7 +181,8 @@ int main(int argc, char **argv) {
 	SmartDashboard::SetIPAddress("127.0.0.1");
 	SmartDashboard::init();
 
-	std::cout << "Press 'q' to exit." << std::endl;
+	// Print help in console
+	printHelp();
 
     //loop until 'q' is pressed
     while (key != 'q') 
@@ -227,39 +252,13 @@ int main(int argc, char **argv) {
                 break;
 
             //Change camera settings (here --> gain)
-            case 'g': //increase gain of 1
-            {
-				int current_gain = StereoCam.GetGain() + 1;
-				StereoCam.SetGain(current_gain);
-                std::cout << "set Gain to " << current_gain << std::endl;
-            }
-                break;
+			case 's':
+			case 'r':
+			case '+':
+			case '-':
+				StereoCam.updateCameraSettings(key);
 
-            case 'G': //decrease gain of 1
-            {
-				int current_gain = StereoCam.GetGain() - 1;
-				StereoCam.SetGain(current_gain);
-				std::cout << "set Gain to " << current_gain << std::endl;
-            }
-                break;
-
-			case 'e': //increase exposure of 1
-			{
-				int current_exp = StereoCam.GetExposure() + 1;
-				StereoCam.SetExposure(current_exp);
-				std::cout << "set Exposure to " << current_exp << std::endl;
-			}
-			break;
-
-			case 'E': //decrease exposure of 1
-			{
-				int current_exp = StereoCam.GetExposure() - 1;
-				StereoCam.SetExposure(current_exp);
-				std::cout << "set Exposure to " << current_exp << std::endl;
-			}
-			break;
-
-                // ______________  VIEW __________________
+				// ______________  VIEW __________________
             case '0': // left
                 StereoCam.ViewID = 0;
                 break;
@@ -280,7 +279,7 @@ int main(int argc, char **argv) {
                 break;
 
 				// ______________  Display Confidence Map __________________
-			case 's':
+			case 'p':
 				displayConfidenceMap = !displayConfidenceMap;
 				break;
 
@@ -301,7 +300,7 @@ int main(int argc, char **argv) {
 				break;
 			}
 
-			case 'r':
+			case 'S':
 				StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 				std::cout << "SENSING_MODE: Standard" << std::endl;
 				break;
@@ -353,7 +352,7 @@ int main(int argc, char **argv) {
 				}
 				break;
 
-			case '+':
+			case 'i':
 				if (ThreshInc == 1)
 					ThreshInc = 5;
 				else
@@ -362,7 +361,7 @@ int main(int argc, char **argv) {
 				printf("ThreshInc: %d\n", ThreshInc);
 				break;
 				
-			case '-':
+			case 'I':
 				if (ThreshInc == 5)
 					ThreshInc = 1;
 				else

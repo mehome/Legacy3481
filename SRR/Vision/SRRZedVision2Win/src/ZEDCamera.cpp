@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ZEDCamera.h"
-//#define SDK230
+#define SDK230
 
 ZEDCamera::ZEDCamera(const char *file)
 	: old_self_calibration_state (sl::SELF_CALIBRATION_STATE_NOT_STARTED),
@@ -42,6 +42,15 @@ ZEDCamera::ZEDCamera(const char *file)
 	image_size = zed->getResolution();
 
 	runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
+
+	// Print camera information
+#ifdef SDK230
+	printf("ZED Model                 : %s\n", sl::toString(zed->getCameraInformation().camera_model).c_str());
+#endif
+	printf("ZED Serial Number         : %d\n", zed->getCameraInformation().serial_number);
+	printf("ZED Firmware              : %d\n", zed->getCameraInformation().firmware_version);
+	printf("ZED Camera Resolution     : %dx%d\n", (int)zed->getResolution().width, (int)zed->getResolution().height);
+	printf("ZED Camera FPS            : %d\n", (int)zed->getCameraFPS());
 
 	//Jetson only. Execute the calling thread on core 2
 #ifdef __arm__ //only for Jetson K1/X1    
@@ -127,26 +136,6 @@ void ZEDCamera::ResetCalibration(void)
 	zed->resetSelfCalibration();
 }
 
-int ZEDCamera::GetGain(void)
-{
-	return zed->getCameraSettings(sl::CAMERA_SETTINGS_GAIN);
-}
-
-void ZEDCamera::SetGain(int gain)
-{
-	zed->setCameraSettings(sl::CAMERA_SETTINGS_GAIN, gain);
-}
-
-int ZEDCamera::GetExposure(void)
-{
-	return zed->getCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE);
-}
-
-void ZEDCamera::SetExposure(int exp)
-{
-	zed->setCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE, exp);
-}
-
 // save function using opencv
 void ZEDCamera::saveSbSimage(std::string filename) 
 {
@@ -190,4 +179,99 @@ cv::Mat ZEDCamera::slMat2cvMat(sl::Mat& input)
 	// cv::Mat data requires a uchar* pointer. Therefore, we get the uchar1 pointer from sl::Mat (getPtr<T>())
 	//cv::Mat and sl::Mat will share the same memory pointer
 	return cv::Mat((int)input.getHeight(), (int)input.getWidth(), cv_type, input.getPtr<sl::uchar1>(sl::MEM_CPU));
+}
+
+/**
+This function updates camera settings
+**/
+void ZEDCamera::updateCameraSettings(char key) {
+	int current_value;
+
+	// Keyboard shortcuts
+	switch (key) {
+
+		// Switch to the next camera parameter
+	case 's':
+		switchCameraSettings();
+		break;
+
+		// Increase camera settings value ('+' key)
+	case '+':
+		current_value = zed->getCameraSettings(camera_settings_);
+		zed->setCameraSettings(camera_settings_, current_value + step_camera_setting);
+		std::cout << str_camera_settings << ": " << current_value + step_camera_setting << std::endl;
+		break;
+
+		// Decrease camera settings value ('-' key)
+	case '-':
+		current_value = zed->getCameraSettings(camera_settings_);
+		if (current_value >= 1) {
+			zed->setCameraSettings(camera_settings_, current_value - step_camera_setting);
+			std::cout << str_camera_settings << ": " << current_value - step_camera_setting << std::endl;
+		}
+		break;
+
+		// Reset to default parameters
+	case 'r':
+		std::cout << "Reset all settings to default" << std::endl;
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_BRIGHTNESS, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_CONTRAST, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_HUE, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_SATURATION, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_GAIN, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_WHITEBALANCE, -1, true);
+		break;
+	}
+}
+
+/**
+This function toggles between camera settings
+**/
+void ZEDCamera::switchCameraSettings() {
+	step_camera_setting = 1;
+	switch (camera_settings_) {
+	case sl::CAMERA_SETTINGS_BRIGHTNESS:
+		camera_settings_ = sl::CAMERA_SETTINGS_CONTRAST;
+		str_camera_settings = "Contrast";
+		std::cout << "Camera Settings: CONTRAST" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_CONTRAST:
+		camera_settings_ = sl::CAMERA_SETTINGS_HUE;
+		str_camera_settings = "Hue";
+		std::cout << "Camera Settings: HUE" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_HUE:
+		camera_settings_ = sl::CAMERA_SETTINGS_SATURATION;
+		str_camera_settings = "Saturation";
+		std::cout << "Camera Settings: SATURATION" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_SATURATION:
+		camera_settings_ = sl::CAMERA_SETTINGS_GAIN;
+		str_camera_settings = "Gain";
+		std::cout << "Camera Settings: GAIN" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_GAIN:
+		camera_settings_ = sl::CAMERA_SETTINGS_EXPOSURE;
+		str_camera_settings = "Exposure";
+		std::cout << "Camera Settings: EXPOSURE" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_EXPOSURE:
+		camera_settings_ = sl::CAMERA_SETTINGS_WHITEBALANCE;
+		str_camera_settings = "White Balance";
+		step_camera_setting = 100;
+		std::cout << "Camera Settings: WHITE BALANCE" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_WHITEBALANCE:
+		camera_settings_ = sl::CAMERA_SETTINGS_BRIGHTNESS;
+		str_camera_settings = "Brightness";
+		std::cout << "Camera Settings: BRIGHTNESS" << std::endl;
+		break;
+	}
 }
