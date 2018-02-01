@@ -36,6 +36,101 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 
 }
 
+#if 0
+/**
+This function updates threshold settings
+**/
+void ThresholdDetecter::updateThresholdSettings(char key) {
+
+	// Keyboard shortcuts
+	switch (key) {
+
+		// Switch to the next camera parameter
+	case 'S':
+		switchThresholdSettings();
+		break;
+
+		// Increase camera settings value 
+	case '>':
+		current_value = zed->getCameraSettings(camera_settings_);
+		zed->setCameraSettings(camera_settings_, current_value + step_camera_setting);
+		std::cout << str_camera_settings << ": " << current_value + step_camera_setting << std::endl;
+		break;
+
+		// Decrease camera settings value 
+	case '<':
+		current_value = zed->getCameraSettings(camera_settings_);
+		if (current_value >= 1) {
+			zed->setCameraSettings(camera_settings_, current_value - step_camera_setting);
+			std::cout << str_camera_settings << ": " << current_value - step_camera_setting << std::endl;
+		}
+		break;
+
+		// Reset to default parameters
+	case 'r':
+		std::cout << "Reset all settings to default" << std::endl;
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_BRIGHTNESS, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_CONTRAST, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_HUE, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_SATURATION, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_GAIN, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE, -1, true);
+		zed->setCameraSettings(sl::CAMERA_SETTINGS_WHITEBALANCE, -1, true);
+		break;
+	}
+}
+
+/**
+This function toggles between threshold settings
+**/
+void ThresholdDetecter::switchThresholdSettings() {
+	switch (camera_settings_) {
+	case sl::CAMERA_SETTINGS_BRIGHTNESS:
+		camera_settings_ = sl::CAMERA_SETTINGS_CONTRAST;
+		str_camera_settings = "Contrast";
+		std::cout << "Camera Settings: CONTRAST" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_CONTRAST:
+		camera_settings_ = sl::CAMERA_SETTINGS_HUE;
+		str_camera_settings = "Hue";
+		std::cout << "Camera Settings: HUE" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_HUE:
+		camera_settings_ = sl::CAMERA_SETTINGS_SATURATION;
+		str_camera_settings = "Saturation";
+		std::cout << "Camera Settings: SATURATION" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_SATURATION:
+		camera_settings_ = sl::CAMERA_SETTINGS_GAIN;
+		str_camera_settings = "Gain";
+		std::cout << "Camera Settings: GAIN" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_GAIN:
+		camera_settings_ = sl::CAMERA_SETTINGS_EXPOSURE;
+		str_camera_settings = "Exposure";
+		std::cout << "Camera Settings: EXPOSURE" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_EXPOSURE:
+		camera_settings_ = sl::CAMERA_SETTINGS_WHITEBALANCE;
+		str_camera_settings = "White Balance";
+		step_camera_setting = 100;
+		std::cout << "Camera Settings: WHITE BALANCE" << std::endl;
+		break;
+
+	case sl::CAMERA_SETTINGS_WHITEBALANCE:
+		camera_settings_ = sl::CAMERA_SETTINGS_BRIGHTNESS;
+		str_camera_settings = "Brightness";
+		std::cout << "Camera Settings: BRIGHTNESS" << std::endl;
+		break;
+	}
+}
+#endif
+
 void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 {
 	cv::Scalar color = cv::Scalar(255, 0, 255);
