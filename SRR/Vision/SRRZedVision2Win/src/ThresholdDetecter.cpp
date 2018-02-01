@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "../SmartDashboard/SmartDashboard_import.h"
+#include "ThresholdDetecter.h"
 
 int H_low = 122;
 int H_high = 155;
@@ -11,6 +12,29 @@ int V_high = 255;
 int ThreshInc = 10;
 
 float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y);
+
+ThresholdDetecter::ThresholdDetecter()
+	: ThreshInc(10)
+{
+	HSVLow.x = 0; HSVHigh.y = 0; HSVHigh.z = 0;
+	HSVHigh.x = 255; HSVHigh.y = 255; HSVHigh.z = 255;
+}
+
+ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
+	:	ThreshInc(10),
+		HSVLow(low),
+		HSVHigh(high)
+{
+}
+
+ThresholdDetecter::~ThresholdDetecter()
+{
+}
+
+void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
+{
+
+}
 
 void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 {

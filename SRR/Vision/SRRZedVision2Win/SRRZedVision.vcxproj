@@ -155,6 +155,7 @@
   <ItemGroup>
     <ClInclude Include="src\OCVCamera.h" />
     <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\ThresholdDetecter.h" />
     <ClInclude Include="src\ZEDCamera.h" />
   </ItemGroup>
   <ItemGroup>
