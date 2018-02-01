@@ -14,10 +14,11 @@ public:
 	void switchThresholdSettings();
 
 private:
-	int3 HSVLow;
-	int3 HSVHigh;
+	int HSV_Range[6];
+	int3 HSV_low;
+	int3 HSV_high;
 
-	int ThreshInc = 10;
+	std::string str_threshold_setting[6];
 
 	enum THRESHOLD_SETTING {
 		H_Low,
@@ -28,6 +29,6 @@ private:
 		V_High
 	};
 
-	THRESHOLD_SETTING treshold_setting = H_Low;
-	std::string str_threshold_setting = "THRESHOLD HUE LOW";
+	THRESHOLD_SETTING threshold_setting;
+	int thresh_inc;
 };

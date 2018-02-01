@@ -14,21 +14,53 @@ int ThreshInc = 10;
 float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y);
 
 ThresholdDetecter::ThresholdDetecter()
-	: ThreshInc(10)
+	:	thresh_inc(10),
+		threshold_setting(H_Low)
 {
-	HSVLow.x = 0; HSVHigh.y = 0; HSVHigh.z = 0;
-	HSVHigh.x = 255; HSVHigh.y = 255; HSVHigh.z = 255;
 }
 
 ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
-	:	ThreshInc(10),
-		HSVLow(low),
-		HSVHigh(high)
-{
-}
+	: thresh_inc(10),
+	threshold_setting(H_Low)
+{	// original values
+	HSV_low = low;
+	HSV_high = high;
+	// working values
+	HSV_Range[H_Low] = HSV_low.x;
+	HSV_Range[S_Low] = HSV_low.y;
+	HSV_Range[V_Low] = HSV_low.z;
+	HSV_Range[H_High] = HSV_high.x;
+	HSV_Range[S_High] = HSV_high.y;
+	HSV_Range[V_High] = HSV_high.z;
+
+	str_threshold_setting[H_Low] = "THRESHOLD HUE LOW";
+	str_threshold_setting[H_High] = "THRESHOLD HUE HIGH";
+	str_threshold_setting[S_Low] = "THRESHOLD SATURATION LOW";
+	str_threshold_setting[S_High] = "THRESHOLD SATURATION HIGH";
+	str_threshold_setting[V_Low] = "THRESHOLD VALUE LOW";
+	str_threshold_setting[V_High] = "THRESHOLD VALUE HIGH";
+};
+
+
 
 ThresholdDetecter::~ThresholdDetecter()
-{
+{	// original values (wide open)
+	HSV_low.x = HSV_low.y = HSV_low.z = 0;
+	HSV_high.x = HSV_high.y = HSV_high.z = 255;
+	// working values
+	HSV_Range[H_Low] = HSV_low.x;
+	HSV_Range[S_Low] = HSV_low.y;
+	HSV_Range[V_Low] = HSV_low.z;
+	HSV_Range[H_High] = HSV_high.x;
+	HSV_Range[S_High] = HSV_high.y;
+	HSV_Range[V_High] = HSV_high.z;
+
+	str_threshold_setting[H_Low] = "THRESHOLD HUE LOW";
+	str_threshold_setting[H_High] = "THRESHOLD HUE HIGH";
+	str_threshold_setting[S_Low] = "THRESHOLD SATURATION LOW";
+	str_threshold_setting[S_High] = "THRESHOLD SATURATION HIGH";
+	str_threshold_setting[V_Low] = "THRESHOLD VALUE LOW";
+	str_threshold_setting[V_High] = "THRESHOLD VALUE HIGH";
 }
 
 void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
@@ -36,7 +68,6 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 
 }
 
-#if 0
 /**
 This function updates threshold settings
 **/
@@ -52,30 +83,25 @@ void ThresholdDetecter::updateThresholdSettings(char key) {
 
 		// Increase camera settings value 
 	case '>':
-		current_value = zed->getCameraSettings(camera_settings_);
-		zed->setCameraSettings(camera_settings_, current_value + step_camera_setting);
-		std::cout << str_camera_settings << ": " << current_value + step_camera_setting << std::endl;
+		HSV_Range[threshold_setting] += thresh_inc;
+		std::cout << str_threshold_setting[threshold_setting] << ": " << HSV_Range[threshold_setting] << std::endl;
 		break;
 
 		// Decrease camera settings value 
 	case '<':
-		current_value = zed->getCameraSettings(camera_settings_);
-		if (current_value >= 1) {
-			zed->setCameraSettings(camera_settings_, current_value - step_camera_setting);
-			std::cout << str_camera_settings << ": " << current_value - step_camera_setting << std::endl;
-		}
+		HSV_Range[threshold_setting] -= thresh_inc;
+		std::cout << str_threshold_setting[threshold_setting] << ": " << HSV_Range[threshold_setting] << std::endl;
 		break;
 
 		// Reset to default parameters
-	case 'r':
-		std::cout << "Reset all settings to default" << std::endl;
-		zed->setCameraSettings(sl::CAMERA_SETTINGS_BRIGHTNESS, -1, true);
-		zed->setCameraSettings(sl::CAMERA_SETTINGS_CONTRAST, -1, true);
-		zed->setCameraSettings(sl::CAMERA_SETTINGS_HUE, -1, true);
-		zed->setCameraSettings(sl::CAMERA_SETTINGS_SATURATION, -1, true);
-		zed->setCameraSettings(sl::CAMERA_SETTINGS_GAIN, -1, true);
-		zed->setCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE, -1, true);
-		zed->setCameraSettings(sl::CAMERA_SETTINGS_WHITEBALANCE, -1, true);
+	case 'R':
+		std::cout << "Reset HSV settings to default" << std::endl;
+		HSV_Range[H_Low] = HSV_low.x;
+		HSV_Range[S_Low] = HSV_low.y;
+		HSV_Range[V_Low] = HSV_low.z;
+		HSV_Range[H_High] = HSV_high.x;
+		HSV_Range[S_High] = HSV_high.y;
+		HSV_Range[V_High] = HSV_high.z;
 		break;
 	}
 }
@@ -84,52 +110,38 @@ void ThresholdDetecter::updateThresholdSettings(char key) {
 This function toggles between threshold settings
 **/
 void ThresholdDetecter::switchThresholdSettings() {
-	switch (camera_settings_) {
-	case sl::CAMERA_SETTINGS_BRIGHTNESS:
-		camera_settings_ = sl::CAMERA_SETTINGS_CONTRAST;
-		str_camera_settings = "Contrast";
-		std::cout << "Camera Settings: CONTRAST" << std::endl;
+	switch (threshold_setting) {
+	case H_Low:
+		threshold_setting = S_Low;
+		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 
-	case sl::CAMERA_SETTINGS_CONTRAST:
-		camera_settings_ = sl::CAMERA_SETTINGS_HUE;
-		str_camera_settings = "Hue";
-		std::cout << "Camera Settings: HUE" << std::endl;
+	case S_Low:
+		threshold_setting = V_Low;
+		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 
-	case sl::CAMERA_SETTINGS_HUE:
-		camera_settings_ = sl::CAMERA_SETTINGS_SATURATION;
-		str_camera_settings = "Saturation";
-		std::cout << "Camera Settings: SATURATION" << std::endl;
+	case V_Low:
+		threshold_setting = H_High;
+		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 
-	case sl::CAMERA_SETTINGS_SATURATION:
-		camera_settings_ = sl::CAMERA_SETTINGS_GAIN;
-		str_camera_settings = "Gain";
-		std::cout << "Camera Settings: GAIN" << std::endl;
+	case H_High:
+		threshold_setting = S_High;
+		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 
-	case sl::CAMERA_SETTINGS_GAIN:
-		camera_settings_ = sl::CAMERA_SETTINGS_EXPOSURE;
-		str_camera_settings = "Exposure";
-		std::cout << "Camera Settings: EXPOSURE" << std::endl;
+	case S_High:
+		threshold_setting = V_High;
+		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 
-	case sl::CAMERA_SETTINGS_EXPOSURE:
-		camera_settings_ = sl::CAMERA_SETTINGS_WHITEBALANCE;
-		str_camera_settings = "White Balance";
-		step_camera_setting = 100;
-		std::cout << "Camera Settings: WHITE BALANCE" << std::endl;
-		break;
-
-	case sl::CAMERA_SETTINGS_WHITEBALANCE:
-		camera_settings_ = sl::CAMERA_SETTINGS_BRIGHTNESS;
-		str_camera_settings = "Brightness";
-		std::cout << "Camera Settings: BRIGHTNESS" << std::endl;
+	case V_High:
+		threshold_setting = H_Low;
+		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 	}
 }
-#endif
 
 void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 {
