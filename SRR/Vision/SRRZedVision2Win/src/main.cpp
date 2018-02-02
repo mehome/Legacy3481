@@ -9,6 +9,7 @@
 //My stuff
 #include "OCVCamera.h"
 #include "ZEDCamera.h"
+#include "ThresholdDetecter.h"
 
 #include "../SmartDashboard/SmartDashboard_import.h"
 
@@ -83,7 +84,6 @@ int frameCount = 0;
 
 /** Functions **/
 void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
-void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
 void detectBeacon(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
 
 /** Cascade classifire data */
@@ -98,12 +98,6 @@ std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_gpu.
 extern cv::CascadeClassifier hook_cascade;
 
 /** threishold values **/
-extern int H_low;
-extern int H_high;
-extern int S_low;
-extern int S_high;
-extern int V_low;
-extern int V_high;
 extern int ThreshInc;
 
 //main  function
@@ -119,6 +113,13 @@ int main(int argc, char **argv) {
 		std::cout << "--(!)Error loading cascade data" << std::endl; 
 		return -1; 
     };
+
+	// set up detectors
+	int3 HSV_low;
+	int3 HSV_high;
+	HSV_low.x = 122; HSV_low.y = 50; HSV_low.z = 90;
+	HSV_high.x = 155; HSV_high.y = 255; HSV_high.z = 255;
+	ThresholdDetecter ThresholdDet(HSV_low, HSV_high);
 
 	char key = ' ';
 	int count = 0;
@@ -195,7 +196,7 @@ int main(int argc, char **argv) {
 			if (cam2_op_mode == FindHook)
 				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for fromt cam.
 			else if (cam2_op_mode == FindRock)
-				detectRockSample(frame, depth, point_cloud);
+				ThresholdDet.detectRockSample(frame, depth, point_cloud);
 			else if (cam2_op_mode == FindBeacon)
 				detectBeacon(frame, depth, point_cloud);
 
@@ -230,7 +231,7 @@ int main(int argc, char **argv) {
 				if (cam1_op_mode == FindHook)
 					detectHookSample(anaplyph, depth, point_cloud);
 				else if (cam1_op_mode == FindRock)
-					detectRockSample(anaplyph, depth, point_cloud);
+					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud);
 				else if (cam1_op_mode == FindBeacon)
 					detectBeacon(anaplyph, depth, point_cloud);
 
@@ -300,7 +301,7 @@ int main(int argc, char **argv) {
 				break;
 			}
 
-			case 'S':
+			case 'd':
 				StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 				std::cout << "SENSING_MODE: Standard" << std::endl;
 				break;
@@ -352,6 +353,7 @@ int main(int argc, char **argv) {
 				}
 				break;
 
+			//TODO: add to class
 			case 'i':
 				if (ThreshInc == 1)
 					ThreshInc = 5;
@@ -369,66 +371,13 @@ int main(int argc, char **argv) {
 				if (ThreshInc <= 0) ThreshInc = 1;
 				printf("ThreshInc: %d\n", ThreshInc);
 				break;
-				
-            case '[':
-            	if ((H_low -= ThreshInc) < 0) H_low = 0;
-            	printf("H low: %d\n", H_low);
-            	break;
-            	
-            case ']':
-            	if ((H_low += ThreshInc) > 255) H_low = 255;
-            	printf("H low: %d\n", H_low);
-            	break;
-            	
-            case ';':
-            	if ((S_low -= ThreshInc) < 0) S_low = 0;
-            	printf("S low: %d\n", S_low);
-            	break;
-            	
-            case '\'':
-            	if ((S_low += ThreshInc) > 255) S_low = 255;
-            	printf("S low: %d\n", S_low);
-            	break;
-            	
-            case ',':
-            	if ((V_low -= ThreshInc) < 0) V_low = 0;
-            	printf("V low: %d\n", V_low);
-            	break;
-            	
-            case '.':
-            	if ((V_low += ThreshInc) > 255) V_low = 255;
-            	printf("V low: %d\n", V_low);
-            	break;
-                
-            case '{':
-            	if ((H_high -= ThreshInc) < 0) H_high = 0;
-            	printf("H high: %d\n", H_high);
-            	break;
-            	
-            case '}':
-            	if ((H_high += ThreshInc) > 255) H_high = 255;
-            	printf("H high: %d\n", H_high);
-            	break;
-            	
-            case ':':
-            	if ((S_high -= ThreshInc) < 0) S_high = 0;
-            	printf("S high: %d\n", S_high);
-            	break;
-            	
-            case '\"':
-            	if ((S_high += ThreshInc) > 255) S_high = 255;
-            	printf("S high: %d\n", S_high);
-            	break;
-            	
-            case '<':
-            	if ((V_high -= ThreshInc) < 0) V_high = 0;
-            	printf("V high: %d\n", V_high);
-            	break;
-            	
-            case '>':
-            	if ((V_high += ThreshInc) > 255) V_high = 255;
-            	printf("V high: %d\n", V_high);
-            	break;
+
+			case 'S':
+			case 'R':
+			case '<':
+			case '>':
+				ThresholdDet.updateThresholdSettings(key);
+				break;
         }
     }
 
