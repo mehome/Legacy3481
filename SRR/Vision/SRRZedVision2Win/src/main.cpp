@@ -97,9 +97,6 @@ std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_gpu.
 
 extern cv::CascadeClassifier hook_cascade;
 
-/** threishold values **/
-extern int ThreshInc;
-
 //main  function
 int main(int argc, char **argv) {
 
@@ -353,25 +350,9 @@ int main(int argc, char **argv) {
 				}
 				break;
 
-			//TODO: add to class
+			// threshold values
 			case 'i':
-				if (ThreshInc == 1)
-					ThreshInc = 5;
-				else
-					ThreshInc += 5;
-				if (ThreshInc > 20) ThreshInc = 20;
-				printf("ThreshInc: %d\n", ThreshInc);
-				break;
-				
 			case 'I':
-				if (ThreshInc == 5)
-					ThreshInc = 1;
-				else
-					ThreshInc -= 5;
-				if (ThreshInc <= 0) ThreshInc = 1;
-				printf("ThreshInc: %d\n", ThreshInc);
-				break;
-
 			case 'S':
 			case 'R':
 			case '<':

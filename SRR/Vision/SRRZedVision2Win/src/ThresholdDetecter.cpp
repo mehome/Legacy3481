@@ -2,8 +2,6 @@
 #include "../SmartDashboard/SmartDashboard_import.h"
 #include "ThresholdDetecter.h"
 
-int ThreshInc = 10;
-
 ThresholdDetecter::ThresholdDetecter()
 	:	thresh_inc(10),
 		threshold_setting(H_Low)
@@ -170,6 +168,24 @@ void ThresholdDetecter::updateThresholdSettings(char key) {
 	case '<':
 		HSV_Range[threshold_setting] -= thresh_inc;
 		std::cout << str_threshold_setting[threshold_setting] << ": " << HSV_Range[threshold_setting] << std::endl;
+		break;
+
+	case 'i':
+		if (thresh_inc == 1)
+			thresh_inc = 5;
+		else
+			thresh_inc += 5;
+		if (thresh_inc > 20) thresh_inc = 20;
+		std::cout << "threshold_inc: " << thresh_inc << std::endl;
+		break;
+
+	case 'I':
+		if (thresh_inc == 5)
+			thresh_inc = 1;
+		else
+			thresh_inc -= 5;
+		if (thresh_inc <= 0) thresh_inc = 1;
+		std::cout << "threshold_inc: " << thresh_inc << std::endl;
 		break;
 
 		// Reset to default parameters
