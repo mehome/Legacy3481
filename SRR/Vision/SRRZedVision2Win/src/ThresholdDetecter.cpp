@@ -4,14 +4,17 @@
 
 ThresholdDetecter::ThresholdDetecter()
 	:	thresh_inc(10),
-		threshold_setting(H_Low)
+		threshold_setting(H_Low),
+		color(255, 0, 255)
 {
 }
 
 ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
 	: thresh_inc(10),
-	threshold_setting(H_Low)
-{	// original values
+	threshold_setting(H_Low),
+	color(255, 0, 255)
+{	
+	// original values
 	HSV_low = low;
 	HSV_high = high;
 	// working values
@@ -54,9 +57,7 @@ ThresholdDetecter::~ThresholdDetecter()
 
 void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 {
-	cv::Scalar color = cv::Scalar(255, 0, 255);
-
-	cv::Mat hsv, binary, masked;
+	cv::Mat binary;
 
 	//convert the img from color to hsv
 	cv::cvtColor(frame, hsv, CV_BGR2HSV);
@@ -75,9 +76,11 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 	cv::erode(binary, binary, element);
 	cv::dilate(binary, binary, element);
 
-	// countours
-	std::vector<std::vector<cv::Point> > contours;
-	std::vector<cv::Vec4i> hierarchy;
+	//if (HSV_Range[threshold_setting] < 32)
+	//	DebugBreak();
+
+	//contours.clear();
+	//hierarchy.clear();
 
 	/// Find contours
 	cv::findContours(binary, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
@@ -109,11 +112,16 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 			sl::float4 point3D;
 			// Get the 3D point cloud values for pixel 
 			point_cloud.getValue((size_t)mc[i].x, (size_t)mc[i].y, &point3D);
-
-			float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
-
-			if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
+#if 1
+			if ((!isnan(point3D.x) && point3D.x != sl::TOO_CLOSE && point3D.x != sl::TOO_FAR) &&
+				(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
+				(!isnan(point3D.z) && point3D.z != sl::TOO_CLOSE && point3D.z != sl::TOO_FAR))
+#else
+			if (false)
+#endif
 			{
+				float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
+
 				std::cout << "rock found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
 				SmartDashboard::PutNumber("X Position", point3D.x);
 				SmartDashboard::PutNumber("Y Position", point3D.y);
@@ -161,12 +169,14 @@ void ThresholdDetecter::updateThresholdSettings(char key) {
 		// Increase camera settings value 
 	case '>':
 		HSV_Range[threshold_setting] += thresh_inc;
+		if (HSV_Range[threshold_setting] > 255) HSV_Range[threshold_setting] = 255;
 		std::cout << str_threshold_setting[threshold_setting] << ": " << HSV_Range[threshold_setting] << std::endl;
 		break;
 
 		// Decrease camera settings value 
 	case '<':
 		HSV_Range[threshold_setting] -= thresh_inc;
+		if (HSV_Range[threshold_setting] < 0) HSV_Range[threshold_setting] = 0;
 		std::cout << str_threshold_setting[threshold_setting] << ": " << HSV_Range[threshold_setting] << std::endl;
 		break;
 

@@ -31,4 +31,12 @@ private:
 
 	THRESHOLD_SETTING threshold_setting;
 	int thresh_inc;
+
+	cv::Scalar color;
+	cv::Mat hsv, masked;
+
+	// countours
+	std::vector<std::vector<cv::Point> > contours;
+	std::vector<cv::Vec4i> hierarchy;
+
 };
