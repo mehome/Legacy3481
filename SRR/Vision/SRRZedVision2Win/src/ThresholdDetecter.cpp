@@ -58,6 +58,7 @@ ThresholdDetecter::~ThresholdDetecter()
 void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 {
 	cv::Mat binary;
+	cv::Mat hsv, masked;
 
 	//convert the img from color to hsv
 	cv::cvtColor(frame, hsv, CV_BGR2HSV);
