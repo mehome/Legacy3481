@@ -148,7 +148,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(OPENCV_DIR)\x64\vc14\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(OPENCV_DIR)\x64\vc12\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world310.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
