@@ -110,7 +110,7 @@
       <Version>
       </Version>
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world310d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(OPENCV_DIR)\x64\vc14\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(OPENCV_DIR)\x64\vc12\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

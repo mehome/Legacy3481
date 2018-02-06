@@ -218,26 +218,26 @@ This function toggles between threshold settings
 void ThresholdDetecter::switchThresholdSettings() {
 	switch (threshold_setting) {
 	case H_Low:
-		threshold_setting = S_Low;
-		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
-		break;
-
-	case S_Low:
-		threshold_setting = V_Low;
-		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
-		break;
-
-	case V_Low:
 		threshold_setting = H_High;
 		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 
 	case H_High:
+		threshold_setting = S_Low;
+		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
+		break;
+
+	case S_Low:
 		threshold_setting = S_High;
 		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 
 	case S_High:
+		threshold_setting = V_Low;
+		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
+		break;
+
+	case V_Low:
 		threshold_setting = V_High;
 		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
