@@ -192,7 +192,6 @@
     <ClInclude Include="SmartDashboard\SmartDashboard.h" />
     <ClInclude Include="SmartDashboard_Import.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="stdint.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="SmartDashboard\ReadMe.txt" />

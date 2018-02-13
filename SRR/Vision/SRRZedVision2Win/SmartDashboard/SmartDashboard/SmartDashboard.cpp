@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "SmartDashboard.h"
-
 //#include "../NetworkCommunication/UsageReporting.h"
 #include "NamedSendable.h"
 //#include "WPIErrors.h"
