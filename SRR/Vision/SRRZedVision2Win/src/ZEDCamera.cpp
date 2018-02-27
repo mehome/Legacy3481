@@ -24,11 +24,11 @@ ZEDCamera::ZEDCamera(const char *file)
 	// Open the ZED
 	sl::ERROR_CODE err = zed->open(initParameters);
 	if (err != sl::SUCCESS) {
-#ifdef SDK230
-		std::cout << toString(err) << std::endl;
-#else
+		#ifdef SDK230
+		//std::cout << toString(err) << std::endl;
+		#else
 		std::cout << errorCode2str(err) << std::endl;
-#endif
+		#endif
 		zed->close();
 		return; // Quit if an error occurred
 	}
@@ -44,9 +44,9 @@ ZEDCamera::ZEDCamera(const char *file)
 	runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 
 	// Print camera information
-#ifdef SDK230
-	printf("ZED Model                 : %s\n", sl::toString(zed->getCameraInformation().camera_model).c_str());
-#endif
+	#ifdef SDK230
+//	printf("ZED Model                 : %s\n", sl::toString(zed->getCameraInformation().camera_model).c_str());
+	#endif
 	printf("ZED Serial Number         : %d\n", zed->getCameraInformation().serial_number);
 	printf("ZED Firmware              : %d\n", zed->getCameraInformation().firmware_version);
 	printf("ZED Camera Resolution     : %dx%d\n", (int)zed->getResolution().width, (int)zed->getResolution().height);
