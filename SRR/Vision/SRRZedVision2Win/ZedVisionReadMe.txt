@@ -15,3 +15,7 @@ library dirs -
 ZED_LIBRARY_DIR = C:\Program Files (x86)\ZED SDK\lib
 additional deps - 
 ZED_LIBRARIES_64 = sl_core64.lib;sl_input64.lib;sl_zed64.lib
+
+Other build considerations:
+The bin directory contains a folder called dependencies which has the last 2 versions of the zed sdk, 
+and has lib folders for opencv 3.1.0 for use with VS 2013.
