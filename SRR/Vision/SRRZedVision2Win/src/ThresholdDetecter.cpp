@@ -209,6 +209,16 @@ void ThresholdDetecter::updateThresholdSettings(char key) {
 		HSV_Range[S_High] = HSV_high.y;
 		HSV_Range[V_High] = HSV_high.z;
 		break;
+
+	case 'Z':
+		std::cout << "Full range" << std::endl;
+		HSV_Range[H_Low] = 0;
+		HSV_Range[S_Low] = 0;
+		HSV_Range[V_Low] = 0;
+		HSV_Range[H_High] = 255;
+		HSV_Range[S_High] = 255;
+		HSV_Range[V_High] = 255;
+		break;
 	}
 }
 

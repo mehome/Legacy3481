@@ -249,12 +249,24 @@ int main(int argc, char **argv) {
 				StereoCam.ResetCalibration();
                 break;
 
-            //Change camera settings (here --> gain)
+            //Change camera settings 
 			case 's':
 			case 'r':
 			case '+':
 			case '-':
 				StereoCam.updateCameraSettings(key);
+				break;
+
+				// threshold values
+			case 'i':
+			case 'I':
+			case 'S':
+			case 'R':
+			case '<':
+			case '>':
+			case 'Z':
+				ThresholdDet.updateThresholdSettings(key);
+				break;
 
 				// ______________  VIEW __________________
             case '0': // left
@@ -348,16 +360,6 @@ int main(int argc, char **argv) {
 				case 2: printf("mode Find Rock\n"); break;
 				case 3: printf("mode Find Beacon\n"); break;
 				}
-				break;
-
-			// threshold values
-			case 'i':
-			case 'I':
-			case 'S':
-			case 'R':
-			case '<':
-			case '>':
-				ThresholdDet.updateThresholdSettings(key);
 				break;
         }
     }
