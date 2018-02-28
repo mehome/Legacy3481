@@ -157,7 +157,7 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 /**
 This function updates threshold settings
 **/
-void ThresholdDetecter::updateThresholdSettings(char key) {
+void ThresholdDetecter::updateThresholdSettings(int key) {
 
 	// Keyboard shortcuts
 	switch (key) {

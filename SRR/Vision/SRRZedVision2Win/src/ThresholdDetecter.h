@@ -10,7 +10,7 @@ public:
 	~ThresholdDetecter();
 
 	void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
-	void updateThresholdSettings(char key);
+	void updateThresholdSettings(int key);
 	void switchThresholdSettings();
 
 private:

@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ZEDCamera.h"
-#define SDK230
 
 ZEDCamera::ZEDCamera(const char *file)
 	: old_self_calibration_state (sl::SELF_CALIBRATION_STATE_NOT_STARTED),
@@ -24,11 +23,7 @@ ZEDCamera::ZEDCamera(const char *file)
 	// Open the ZED
 	sl::ERROR_CODE err = zed->open(initParameters);
 	if (err != sl::SUCCESS) {
-		#ifdef SDK230
-		//std::cout << toString(err) << std::endl;
-		#else
-		std::cout << errorCode2str(err) << std::endl;
-		#endif
+		std::cout << toString(err) << std::endl;
 		zed->close();
 		return; // Quit if an error occurred
 	}
@@ -44,9 +39,7 @@ ZEDCamera::ZEDCamera(const char *file)
 	runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 
 	// Print camera information
-	#ifdef SDK230
-//	printf("ZED Model                 : %s\n", sl::toString(zed->getCameraInformation().camera_model).c_str());
-	#endif
+	printf("ZED Model                 : %s\n", sl::toString(zed->getCameraInformation().camera_model).c_str());
 	printf("ZED Serial Number         : %d\n", zed->getCameraInformation().serial_number);
 	printf("ZED Firmware              : %d\n", zed->getCameraInformation().firmware_version);
 	printf("ZED Camera Resolution     : %dx%d\n", (int)zed->getResolution().width, (int)zed->getResolution().height);
@@ -184,7 +177,7 @@ cv::Mat ZEDCamera::slMat2cvMat(sl::Mat& input)
 /**
 This function updates camera settings
 **/
-void ZEDCamera::updateCameraSettings(char key) {
+void ZEDCamera::updateCameraSettings(int key) {
 	int current_value;
 
 	// Keyboard shortcuts

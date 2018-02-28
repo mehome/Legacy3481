@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "../SmartDashboard/SmartDashboard_import.h"
 #include "../SmartDashboard/tables/TableKeyNotDefinedException.h"
+#pragma warning (disable: 4101)
 
 int _tmain(int argc, _TCHAR* argv[])
 {

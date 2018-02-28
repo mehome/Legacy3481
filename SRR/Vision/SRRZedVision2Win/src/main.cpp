@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
 	HSV_high.x = 155; HSV_high.y = 255; HSV_high.z = 255;
 	ThresholdDetecter ThresholdDet(HSV_low, HSV_high);
 
-	char key = ' ';
+	int key = ' ';
 	int count = 0;
 
 	char * filearg;
@@ -239,8 +239,8 @@ int main(int argc, char **argv) {
 		}
 		/** end of main video loop **/
 
-        key = cv::waitKey(5);
-        
+        key = cv::waitKey(5000);
+ 
         // Keyboard shortcuts
         switch (key) {
 			// ZED
@@ -250,43 +250,54 @@ int main(int argc, char **argv) {
                 break;
 
             //Change camera settings 
-			case 's':
-			case 'r':
-			case '+':
-			case '-':
+			case 's':	// setting
+			case 'r':	// reset (all)
+			case '+':	// increase
+			case '-':	// decrease
 				StereoCam.updateCameraSettings(key);
 				break;
 
 				// threshold values
-			case 'i':
-			case 'I':
-			case 'S':
-			case 'R':
-			case '<':
-			case '>':
-			case 'Z':
+			case 'i':	// increase increment
+			case 'I':	// decrease increment
+			case 'S':	// setting
+			case 'R':	// reset
+			case '<':	// decrease
+			case '>':	// increase
+			case 'Z':	// full range (0 - 255)
+			case 0x00700000:	// function keys - 1st 4 save, 2nd 4 load
+			case 0x00710000:
+			case 0x00720000:
+			case 0x00730000:
+			case 0x00740000:
+			case 0x00750000:
+			case 0x00760000:
+			case 0x00770000:
 				ThresholdDet.updateThresholdSettings(key);
 				break;
 
 				// ______________  VIEW __________________
-            case '0': // left
-                StereoCam.ViewID = 0;
+            case '0': 
+				StereoCam.ViewID = sl::VIEW_LEFT;
                 break;
-            case '1': // right
-				StereoCam.ViewID = 1;
+            case '1': 
+				StereoCam.ViewID = sl::VIEW_RIGHT;
                 break;
-            case '2': // anaglyph
-				StereoCam.ViewID = 2;
+            case '2': 
+				StereoCam.ViewID = sl::VIEW_LEFT_UNRECTIFIED;
                 break;
-            case '3': // gray scale diff
-				StereoCam.ViewID = 3;
+            case '3': 
+				StereoCam.ViewID = sl::VIEW_RIGHT_UNRECTIFIED;
                 break;
-            case '4': // Side by side
-				StereoCam.ViewID = 4;
+            case '4': 
+				StereoCam.ViewID = sl::VIEW_DEPTH;
                 break;
-            case '5': // overlay
-				StereoCam.ViewID = 5;
-                break;
+			case '5':
+				StereoCam.ViewID = sl::VIEW_CONFIDENCE;
+				break;
+			case '6':
+				StereoCam.ViewID = sl::VIEW_NORMALS;
+				break;
 
 				// ______________  Display Confidence Map __________________
 			case 'p':

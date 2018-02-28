@@ -13,7 +13,7 @@ public:
 	sl::ERROR_CODE GetNormDepth(void);
 	sl::ERROR_CODE GetNormConfidence(void);
 	void ResetCalibration(void);
-	void updateCameraSettings(char key);
+	void updateCameraSettings(int key);
 	void switchCameraSettings();
 	void saveSbSimage(std::string);
 	cv::Mat slMat2cvMat(sl::Mat& input);

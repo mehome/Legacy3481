@@ -15,6 +15,8 @@
 
 #pragma warning (disable: 4251)		// TODO: see if there is a fix that doesn't require modifying zed includes.
 #pragma warning (disable: 4756)
+#pragma warning (disable: 4056)
+
 //ZED Includes
 #include <sl/Camera.hpp>
 
