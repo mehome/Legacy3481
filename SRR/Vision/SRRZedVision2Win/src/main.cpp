@@ -176,7 +176,12 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	SmartDashboard::SetIPAddress("127.0.0.1");
+	//For now hard code the IP address, but we may want to pass it as an argument
+	#if 0
+	SmartDashboard::SetIPAddress("10.34.81.2");  //robot
+	#else
+	SmartDashboard::SetIPAddress("127.0.0.1");   //localhost
+	#endif
 	SmartDashboard::init();
 
 	// Print help in console
@@ -239,7 +244,7 @@ int main(int argc, char **argv) {
 		}
 		/** end of main video loop **/
 
-        key = cv::waitKey(5000);
+        key = cv::waitKey(5);
  
         // Keyboard shortcuts
         switch (key) {
