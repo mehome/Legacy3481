@@ -15,6 +15,8 @@ public:
 	void ResetCalibration(void);
 	void updateCameraSettings(int key);
 	void switchCameraSettings();
+	bool loadSettings(void);
+	void saveSettings(void);
 	void saveSbSimage(std::string);
 	cv::Mat slMat2cvMat(sl::Mat& input);
 

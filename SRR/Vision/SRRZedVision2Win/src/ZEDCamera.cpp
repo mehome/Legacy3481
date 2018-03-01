@@ -175,6 +175,54 @@ cv::Mat ZEDCamera::slMat2cvMat(sl::Mat& input)
 }
 
 /**
+This function saves current camera settings
+**/
+void ZEDCamera::saveSettings(void)
+{
+	std::ofstream myfile;
+	myfile.open("camera_settings");
+	myfile << zed->getCameraSettings(sl::CAMERA_SETTINGS_BRIGHTNESS) << std::endl;
+	myfile << zed->getCameraSettings(sl::CAMERA_SETTINGS_CONTRAST) << std::endl;
+	myfile << zed->getCameraSettings(sl::CAMERA_SETTINGS_HUE) << std::endl;
+	myfile << zed->getCameraSettings(sl::CAMERA_SETTINGS_SATURATION) << std::endl;
+	myfile << zed->getCameraSettings(sl::CAMERA_SETTINGS_GAIN) << std::endl;
+	myfile << zed->getCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE) << std::endl;
+	myfile << zed->getCameraSettings(sl::CAMERA_SETTINGS_WHITEBALANCE) << std::endl;
+	myfile.close();
+	std::cout << "Camera settings saved." << std::endl;
+}
+
+/**
+This function loads camera settings
+**/
+bool ZEDCamera::loadSettings(void)
+{
+	bool ret = false;
+	std::string line;
+	std::string::size_type sz;   // alias of size_t
+
+	std::ifstream myfile("camera_settings");
+	if (myfile.is_open())
+	{
+		for (int i = 0; i < sl::CAMERA_SETTINGS_LAST; i++)
+		{
+			if (getline(myfile, line))
+			{
+				int setting = std::stoi(line, &sz);
+				zed->setCameraSettings((sl::CAMERA_SETTINGS)i, setting);
+			}
+		}
+		myfile.close();
+		std::cout << "camera settings loaded." << std::endl;
+
+		ret = true;
+	}
+	else std::cout << "Unable to open camera settings" << std::endl;
+
+	return ret;
+}
+
+/**
 This function updates camera settings
 **/
 void ZEDCamera::updateCameraSettings(int key) {
@@ -215,6 +263,10 @@ void ZEDCamera::updateCameraSettings(int key) {
 		zed->setCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE, -1, true);
 		zed->setCameraSettings(sl::CAMERA_SETTINGS_WHITEBALANCE, -1, true);
 		break;
+
+	case 0x00780000:	saveSettings(); break;
+	case 0x00790000:	loadSettings(); break;
+
 	}
 }
 

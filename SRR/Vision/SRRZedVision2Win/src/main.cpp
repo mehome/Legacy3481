@@ -24,6 +24,8 @@ void printHelp() {
 	std::cout << "  Decrease camera settings value:            '-'" << std::endl;
 	std::cout << "  Toggle camera settings:                    's'" << std::endl;
 	std::cout << "  Reset all parameters:                      'r'" << std::endl;
+	std::cout << "  Save camera values:            Function key F9" << std::endl;
+	std::cout << "  Load camera values:            Function key F10" << std::endl;
 	std::cout << std::endl;
 	std::cout << "HSV values adjustment: " << std::endl;
 	std::cout << "  Increase increment:                        'i'" << std::endl;
@@ -278,6 +280,8 @@ int main(int argc, char **argv) {
 			case 'r':	// reset (all)
 			case '+':	// increase
 			case '-':	// decrease
+			case 0x00780000:
+			case 0x00790000:
 				StereoCam.updateCameraSettings(key);
 				break;
 
