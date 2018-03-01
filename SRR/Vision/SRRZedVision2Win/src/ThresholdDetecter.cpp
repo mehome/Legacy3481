@@ -151,7 +151,7 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 		}
 	}
 
-	cv::imshow("Maksed", masked);
+	cv::imshow("Masked", masked);
 }
 
 /**
@@ -219,6 +219,17 @@ void ThresholdDetecter::updateThresholdSettings(int key) {
 		HSV_Range[S_High] = 255;
 		HSV_Range[V_High] = 255;
 		break;
+
+	case 0x00700000:	saveThreshold("slot1"); break;
+	case 0x00710000:	saveThreshold("slot2"); break;
+	case 0x00720000:	saveThreshold("slot3"); break;
+	case 0x00730000:	saveThreshold("slot4"); break;
+	
+	case 0x00740000:	loadThreshold("slot1"); break;
+	case 0x00750000:	loadThreshold("slot2"); break;
+	case 0x00760000:	loadThreshold("slot3"); break;
+	case 0x00770000:	loadThreshold("slot4"); break;
+
 	}
 }
 
@@ -258,4 +269,46 @@ void ThresholdDetecter::switchThresholdSettings() {
 		break;
 	}
 }
+
+/**
+/ This function loads threshold settings from one of 4 slots
+**/
+bool ThresholdDetecter::loadThreshold(std::string file)
+{
+	bool ret = false;
+	std::string line;
+	std::string::size_type sz;   // alias of size_t
+
+	std::ifstream myfile(file);
+	if (myfile.is_open())
+	{
+		for (int i = 0; i < 6; i++)
+		{
+			if(getline(myfile, line))
+				HSV_Range[i] = std::stoi(line, &sz);
+		}
+		myfile.close();
+		std::cout << "HSV " << file << " loaded." << std::endl;
+
+		ret = true;
+	}
+	else std::cout << "Unable to open " << file << std::endl;
+
+	return ret;
+}
+
+/**
+/ This function saves threashold settings into one of 4 slots
+**/
+void ThresholdDetecter::saveThreshold(std::string file)
+{
+	std::ofstream myfile;
+	myfile.open(file);
+	for (int i = 0; i < 6; i++)
+		myfile << HSV_Range[i] << std::endl;
+	myfile.close();
+	std::cout << "HSV " << file << " saved." << std::endl;
+}
+
+
 

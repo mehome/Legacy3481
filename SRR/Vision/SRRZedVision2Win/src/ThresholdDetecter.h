@@ -12,6 +12,8 @@ public:
 	void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
 	void updateThresholdSettings(int key);
 	void switchThresholdSettings();
+	bool loadThreshold(std::string file);
+	void saveThreshold(std::string file);
 
 private:
 	int HSV_Range[6];

@@ -25,6 +25,19 @@ void printHelp() {
 	std::cout << "  Toggle camera settings:                    's'" << std::endl;
 	std::cout << "  Reset all parameters:                      'r'" << std::endl;
 	std::cout << std::endl;
+	std::cout << "HSV values adjustment: " << std::endl;
+	std::cout << "  Increase increment:                        'i'" << std::endl;
+	std::cout << "  Decrease increment:                        'I'" << std::endl;
+	std::cout << "  Increase HSV value:                        '>'" << std::endl;
+	std::cout << "  Decrease HSV value:                        '<'" << std::endl;
+	std::cout << "  Toggle HSV settings:                       'S'" << std::endl;
+	std::cout << "  Reset HSV to default:                      'R'" << std::endl;
+	std::cout << "  Reset HSV to full range:                   'Z'" << std::endl;
+	std::cout << "  Save HSV values:           Function keys F1-F4" << std::endl;
+	std::cout << "  Load HSV values:           Function keys F5-F8" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Help : 'h'" << std::endl;
+	std::cout << std::endl;
 	std::cout << "Exit : 'q'" << std::endl;
 	std::cout << std::endl;
 	std::cout << std::endl;
@@ -73,7 +86,6 @@ float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 #define FindHook 1
 #define FindRock 2
 #define FindBeacon 3
-#define FindObsticals 4
 
 std::string filename;
 bool FrontCamEnabled = false;
@@ -204,6 +216,7 @@ int main(int argc, char **argv) {
 
 			cv::imshow("camera", frame);
 		}
+
 		if (StereoCamEnabled)
 		{
 			StereoCam.GrabFrameAndDapth();
@@ -253,6 +266,10 @@ int main(int argc, char **argv) {
             case 'a':	
 				StereoCam.ResetCalibration();
                 break;
+
+			case 'h':
+				printHelp();
+				break;
 
             //Change camera settings 
 			case 's':	// setting
@@ -355,14 +372,13 @@ int main(int argc, char **argv) {
 				// ______________  Search mode _____________________________
 			case 'm':
 				cam1_op_mode++;
-				if (cam1_op_mode > FindObsticals )
+				if (cam1_op_mode > FindBeacon)
 					cam1_op_mode = 0;
 				switch (cam1_op_mode) {
-					case 0: printf("mode NONE\n");break;
-					case 1: printf("mode Find Hook\n");break;
-					case 2: printf("mode Find Rock\n");break;
-					case 3: printf("mode Find Beacon\n");break;
-					case 4: printf("mode Find Obsticals\n");break;
+					case 0: printf("mode NONE\n"); break;
+					case 1: printf("mode Find Hook\n"); break;
+					case 2: printf("mode Find Rock\n"); break;
+					case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
 				}
 				break;
 
@@ -374,7 +390,7 @@ int main(int argc, char **argv) {
 				case 0: printf("mode NONE\n"); break;
 				case 1: printf("mode Find Hook\n"); break;
 				case 2: printf("mode Find Rock\n"); break;
-				case 3: printf("mode Find Beacon\n"); break;
+				case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
 				}
 				break;
         }
