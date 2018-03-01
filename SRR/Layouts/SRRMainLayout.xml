@@ -1,7 +1,19 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Z Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="692" y="98"/>
+		<property name="Foreground" value="153.0.255.255"/>
+		<property name="Background" value="0.0.102.255"/>
+		<property name="Maximum" value="2.0"/>
+		<property name="Minimum" value="-2.0"/>
+	</widget>
+	<widget field="Distance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
+		<location x="422" y="70"/>
+		<property name="Foreground" value="204.102.0.255"/>
+		<property name="Maximum" value="2.0"/>
+	</widget>
 	<widget field="SafetyLock_Drive" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="611" y="117"/>
+		<location x="443" y="109"/>
 	</widget>
 	<widget field="swivel_rr_Pot_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="863" y="245"/>
@@ -64,7 +76,7 @@
 		<width>147</width>
 	</widget>
 	<widget field="Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="19" y="17"/>
+		<location x="9" y="15"/>
 		<property name="Foreground" value="0.153.0.255"/>
 		<property name="Background" value="0.51.153.255"/>
 		<property name="Maximum" value="9.0"/>
@@ -480,6 +492,12 @@
 	</widget>
 	<widget field="Wheel_clDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="55" y="188"/>
+	</widget>
+	<widget field="AxisCount_ch throttle quadrant" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="842" y="298"/>
+	</widget>
+	<widget field="AxisCount_gamepad f310 (controller)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="830" y="330"/>
 	</widget>
 </dashboard>
 <live-window>
