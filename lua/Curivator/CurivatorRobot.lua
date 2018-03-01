@@ -261,7 +261,7 @@ MainRobot = {
 			--center around 1634
 			pot_min_limit=34,  --45 forward   0
 			pot_max_limit=3134,  -- 45 counter clockwise  962
-			pot_limit_tolerance=100,  --add extra padding to avoid accidental trigger of the safety
+			pot_limit_tolerance=200,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
 			max_speed=2.0,	--100 rpm... with a 12:36 reduction in radians
@@ -746,13 +746,16 @@ MainRobot = {
 			--Joystick_SetRightVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--Joystick_FieldCentric_XAxis = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=1.0},
 			--Joystick_FieldCentric_YAxis = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
-			turret_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
-			--arm_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
-			--boom_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--PitchRamp_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=2.0},
 			
 			--arm_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=true, multiplier=0.6, filter=0.1, curve_intensity=3.0},
 			--FieldCentric_EnableValue = {type="joystick_analog", key=2, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=0.0},
+
+			turret_SetCurrentVelocity = {type="joystick_analog", key=5, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
+			--arm_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=0.75, filter=0.3, curve_intensity=3.0},
+			--boom_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=3.0},
+			--bucket_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=3.0},
+			--clasp_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=3.0},
 
 			Robot_SetLowGearOff = {type="joystick_button", key=6, on_off=false},
 			Robot_SetLowGearOn = {type="joystick_button", key=5, on_off=false},
