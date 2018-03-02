@@ -1,5 +1,12 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Test_Auton" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="969" y="58"/>
+	</widget>
+	<widget field="AutonTest" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="852" y="58"/>
+		<width>99</width>
+	</widget>
 	<widget field="Z Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
 		<location x="692" y="98"/>
 		<property name="Foreground" value="153.0.255.255"/>
@@ -76,7 +83,7 @@
 		<width>147</width>
 	</widget>
 	<widget field="Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="9" y="15"/>
+		<location x="18" y="40"/>
 		<property name="Foreground" value="0.153.0.255"/>
 		<property name="Background" value="0.51.153.255"/>
 		<property name="Maximum" value="9.0"/>
@@ -255,16 +262,16 @@
 		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="877" y="63"/>
+		<location x="302" y="75"/>
 	</widget>
 	<widget field="AutoPilot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="367" y="20"/>
 	</widget>
 	<widget field="Main_Is_Targeting" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="929" y="34"/>
+		<location x="996" y="128"/>
 	</widget>
 	<widget field="Sequence" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="846" y="32"/>
+		<location x="305" y="96"/>
 		<width>78</width>
 	</widget>
 	<widget field="Y Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
@@ -353,7 +360,7 @@
 		<property name="Tick Interval" value="45.0"/>
 	</widget>
 	<widget field="Rotation Velocity" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="16" y="52"/>
+		<location x="19" y="84"/>
 		<width>89</width>
 		<property name="Maximum" value="10.0"/>
 		<property name="Minimum" value="-10.0"/>
