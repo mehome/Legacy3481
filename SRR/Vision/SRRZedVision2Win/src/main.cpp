@@ -214,11 +214,14 @@ int main(int argc, char **argv) {
 	}
 
 	//This app is a client... let SmartDashboard know
-	SmartDashboard::SetClientMode();
 	//For now hard code the IP address, but we may want to pass it as an argument
 	#if 0
+	SmartDashboard::SetClientMode();
 	SmartDashboard::SetIPAddress("10.34.81.99");  //robot
 	#else
+	//Run as a server to test directly to SmartDashboard UI locally
+	//But set as client if testing with a robot server (e.g. robot simulation)
+	//SmartDashboard::SetClientMode();
 	SmartDashboard::SetIPAddress("127.0.0.1");   //localhost
 	#endif
 	SmartDashboard::init();
