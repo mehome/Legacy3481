@@ -161,6 +161,7 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 This function updates threshold settings
 **/
 void ThresholdDetecter::updateThresholdSettings(int key) {
+#define USE_UNTESTED
 
 	// Keyboard shortcuts
 	switch (key) {
@@ -172,17 +173,102 @@ void ThresholdDetecter::updateThresholdSettings(int key) {
 
 		// Increase camera settings value 
 	case '>':
-		HSV_Range[threshold_setting] += thresh_inc;
-		if (HSV_Range[threshold_setting] > 255) HSV_Range[threshold_setting] = 255;
-		std::cout << str_threshold_setting[threshold_setting] << ": " << HSV_Range[threshold_setting] << std::endl;
+#ifdef USE_UNTESTED
+		switch (threshold_setting) {
+		case H_Range:
+		{
+			int range = HSV_Range[H_High] - HSV_Range[H_Low];
+			int center = HSV_Range[H_High] - range / 2;
+			range += thresh_inc;
+			if (range > 255) range = 255;
+			std::cout << str_threshold_setting[threshold_setting] << ": " << range << std::endl;
+			HSV_Range[H_High] = center + range;
+			HSV_Range[H_Low] = center - range;
+			break;
+		}
+		case H_Center:
+		{
+			int range = HSV_Range[H_High] - HSV_Range[H_Low];
+			int center = HSV_Range[H_High] - range / 2;
+			center += thresh_inc;
+			if (center + range / 2 > 255) center = 255 - range / 2;
+			std::cout << str_threshold_setting[threshold_setting] << ": " << center << std::endl;
+			HSV_Range[H_High] = center + range;
+			HSV_Range[H_Low] = center - range;
+			break;
+		}
+		default:
+#endif
+			HSV_Range[threshold_setting] += thresh_inc;
+#ifdef USE_UNTESTED
+			if (threshold_setting % 2 == 0)
+			{
+				if (HSV_Range[threshold_setting] > HSV_Range[threshold_setting + 1])
+					HSV_Range[threshold_setting] = HSV_Range[threshold_setting + 1];
+			}
+			else
+			{
+#endif
+				if (HSV_Range[threshold_setting] > 255)
+					HSV_Range[threshold_setting] = 255;
+#ifdef USE_UNTESTED
+			}
+#endif
+			std::cout << str_threshold_setting[threshold_setting] << ": " << HSV_Range[threshold_setting] << std::endl;
+			break;
+#ifdef USE_UNTESTED
+		}
 		break;
-
+#endif
 		// Decrease camera settings value 
 	case '<':
-		HSV_Range[threshold_setting] -= thresh_inc;
-		if (HSV_Range[threshold_setting] < 0) HSV_Range[threshold_setting] = 0;
-		std::cout << str_threshold_setting[threshold_setting] << ": " << HSV_Range[threshold_setting] << std::endl;
+#ifdef USE_UNTESTED
+		switch (threshold_setting) {
+		case H_Range:
+		{
+			int range = HSV_Range[H_High] - HSV_Range[H_Low];
+			int center = HSV_Range[H_High] - range / 2;
+			range -= thresh_inc;
+			if (range < 0) range = 0;
+			std::cout << str_threshold_setting[threshold_setting] << ": " << range << std::endl;
+			HSV_Range[H_High] = center + range;
+			HSV_Range[H_Low] = center - range;
+			break;
+		}
+		case H_Center:
+		{
+			int range = HSV_Range[H_High] - HSV_Range[H_Low];
+			int center = HSV_Range[H_High] - range / 2;
+			center -= thresh_inc;
+			if (center - range / 2 < 0) center = 0 + range / 2;
+			std::cout << str_threshold_setting[threshold_setting] << ": " << center << std::endl;
+			HSV_Range[H_High] = center + range;
+			HSV_Range[H_Low] = center - range;
+			break;
+		}
+		default:
+#endif
+			HSV_Range[threshold_setting] -= thresh_inc;
+#ifdef USE_UNTESTED
+			if (threshold_setting % 2 == 0)
+			{
+				if (HSV_Range[threshold_setting] < 0)
+					HSV_Range[threshold_setting] = 0;
+			}
+			else
+			{
+#endif
+				if (HSV_Range[threshold_setting] < HSV_Range[threshold_setting - 1])
+					HSV_Range[threshold_setting] = HSV_Range[threshold_setting - 1];
+#ifdef USE_UNTESTED
+			}
+#endif
+			std::cout << str_threshold_setting[threshold_setting] << ": " << HSV_Range[threshold_setting] << std::endl;
+			break;
+#ifdef USE_UNTESTED
+		}
 		break;
+#endif
 
 	case 'i':
 		if (thresh_inc == 1)
