@@ -55,7 +55,7 @@ ThresholdDetecter::~ThresholdDetecter()
 	str_threshold_setting[V_High] = "THRESHOLD VALUE HIGH";
 }
 
-void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
+void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, bool small_display)
 {
 	cv::Mat binary;
 	cv::Mat hsv, masked;
@@ -135,7 +135,7 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 
 			if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
 			{
-				std::cout << "rock found at " << mc[i].x << ", " << mc[i].y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+				//std::cout << "rock found at " << mc[i].x << ", " << mc[i].y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
 				SmartDashboard::PutNumber("X Position", mc[i].x);
 				SmartDashboard::PutNumber("Y Position", mc[i].y);
 				SmartDashboard::PutNumber("Distance", Distance);
@@ -150,6 +150,9 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 				cv::line(frame, rect_points[j], rect_points[(j + 1) % 4], color, 1, 8);
 		}
 	}
+
+	if (small_display)
+		resize(masked, masked, cv::Size((int)masked.cols / 2, (int)masked.rows / 2));
 
 	cv::imshow("Masked", masked);
 }

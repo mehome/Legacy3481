@@ -58,7 +58,7 @@ void detectBeacon(cv::Mat view, sl::Mat depth, sl::Mat point_cloud)
 
 		if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
 		{
-			std::cout << "hook found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+			//std::cout << "hook found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
 			SmartDashboard::PutNumber("X Position", point3D.x);
 			SmartDashboard::PutNumber("Y Position", point3D.y);
 			SmartDashboard::PutNumber("Z Position", point3D.z);
@@ -69,7 +69,7 @@ void detectBeacon(cv::Mat view, sl::Mat depth, sl::Mat point_cloud)
 
 		if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
 		{
-			std::cout << "beacon found at " << center.x << ", " << center.y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+			//std::cout << "beacon found at " << center.x << ", " << center.y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
 			SmartDashboard::PutNumber("X Position", center.x);
 			SmartDashboard::PutNumber("Y Position", center.y);
 			SmartDashboard::PutNumber("Distance", Distance);

@@ -74,7 +74,7 @@ void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 
 		if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
 		{
-			std::cout << "hook found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+			//std::cout << "hook found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
 			SmartDashboard::PutNumber("X Position", point3D.x);
 			SmartDashboard::PutNumber("Y Position", point3D.y);
 			SmartDashboard::PutNumber("Z Position", point3D.z);
@@ -85,7 +85,7 @@ void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud)
 
 		if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
 		{
-			std::cout << "hook found at: " << x_target << ", " << y_target << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+			//std::cout << "hook found at: " << x_target << ", " << y_target << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
 			SmartDashboard::PutNumber("X Position", x_target);
 			SmartDashboard::PutNumber("Y Position", y_target);
 			SmartDashboard::PutNumber("Distance", Distance);

@@ -38,7 +38,25 @@ void printHelp() {
 	std::cout << "  Save HSV values:           Function keys F1-F4" << std::endl;
 	std::cout << "  Load HSV values:           Function keys F5-F8" << std::endl;
 	std::cout << std::endl;
-	std::cout << "Help : 'h'" << std::endl;
+	std::cout << "Help (this):                                 'h'" << std::endl;
+	std::cout << "recalibrate camera:                          'a'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "views:" << std::endl;
+	std::cout << "  left:                                      '0'" << std::endl;
+	std::cout << "  right:                                     '1'" << std::endl;
+	std::cout << "  left unrectified:                          '2'" << std::endl;
+	std::cout << "  right unrectified:                         '3'" << std::endl;
+	std::cout << "  depth:                                     '4'" << std::endl;
+	std::cout << "  confidence:                                '5'" << std::endl;
+	std::cout << "  normals:                                   '6'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "window size:                                 'z'" << std::endl;
+	std::cout << "write png image:                             'w'" << std::endl;
+	std::cout << "sending mode standard:                       'd'" << std::endl;
+	std::cout << "sensing mode fill:                           'f'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "toggle front camera:                         'c'" << std::endl;
+	std::cout << "toggle stereo camera:                        'C'" << std::endl;
 	std::cout << std::endl;
 	std::cout << "Exit : 'q'" << std::endl;
 	std::cout << std::endl;
@@ -46,6 +64,7 @@ void printHelp() {
 	std::cout << std::endl;
 }
 
+#ifdef MOUSEDEPTH
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
 	sl::Mat depth;
@@ -76,7 +95,7 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		std::cout << std::endl;
 	}
 }
-
+#endif
 
 float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 {
@@ -92,6 +111,7 @@ float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 std::string filename;
 bool FrontCamEnabled = false;
 bool StereoCamEnabled = true;
+bool SmallWindow = true;
 int cam1_op_mode = FindHook;
 int cam2_op_mode = FindHook;
 int frameCount = 0;
@@ -156,9 +176,9 @@ int main(int argc, char **argv) {
 	size_t width = StereoCam.image_size.width;
 	size_t height = StereoCam.image_size.height;
 
-	bool displayConfidenceMap = false;
-
+#ifdef MOUSEDEPTH
 	cv::Mat disp((int)height, (int)width, CV_8UC4);
+#endif
 	cv::Mat anaplyph((int)height, (int)width, CV_8UC4);
 	cv::Mat confidencemap((int)height, (int)width, CV_8UC4);
 
@@ -170,12 +190,15 @@ int main(int argc, char **argv) {
 		// Mouse callback initialization
 		cv::Size displaySize((int)width, (int)height);
 		StereoCam.GrabDepth();
+#ifdef MOUSEDEPTH
 		mouseStruct.depth = StereoCam.depth;
 		mouseStruct._resize = displaySize;
-
+#endif
 		//create Opencv Windows
+#ifdef MOUSEDEPTH
 		cv::namedWindow("Depth", cv::WINDOW_AUTOSIZE);
 		cv::setMouseCallback("Depth", onMouseCallback, (void*)&mouseStruct);
+#endif
 		cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
 	}
 	else
@@ -214,7 +237,7 @@ int main(int argc, char **argv) {
 			if (cam2_op_mode == FindHook)
 				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for fromt cam.
 			else if (cam2_op_mode == FindRock)
-				ThresholdDet.detectRockSample(frame, depth, point_cloud);
+				ThresholdDet.detectRockSample(frame, depth, point_cloud, SmallWindow);
 			else if (cam2_op_mode == FindBeacon)
 				detectBeacon(frame, depth, point_cloud);
 
@@ -227,33 +250,31 @@ int main(int argc, char **argv) {
 			anaplyph = StereoCam.frame;
 			depth = StereoCam.depth;
 			point_cloud = StereoCam.point_cloud;
+#ifdef MOUSEDEPTH
 			mouseStruct.depth = depth;
+#endif
 			// TODO: optional depth and disparity display below.
 			// Get frames and launch the computation
 			if (StereoCam.bHaveFrame)
 			{
-
 				/***************  DISPLAY:  ***************/
+#ifdef MOUSEDEPTH
 				// Normalize the DISPARITY / DEPTH map in order to use the full color range of grey level image
 				StereoCam.GetNormDepth();
 				disp = StereoCam.cvNormDepth;
 
 				// To get the depth at a given position, click on the DISPARITY / DEPTH map image
 				imshow("Depth", disp);
-
-				if (displayConfidenceMap) {
-					StereoCam.GetNormConfidence();
-					confidencemap = StereoCam.cvConfidence;
-					imshow("confidence", confidencemap);
-				}
-
+#endif
 				if (cam1_op_mode == FindHook)
 					detectHookSample(anaplyph, depth, point_cloud);
 				else if (cam1_op_mode == FindRock)
-					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud);
+					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, SmallWindow);
 				else if (cam1_op_mode == FindBeacon)
 					detectBeacon(anaplyph, depth, point_cloud);
 
+				if (SmallWindow)
+					resize(anaplyph, anaplyph, cv::Size((int)width / 2, (int)height / 2));
 				imshow("VIEW", anaplyph);
 			}
 
@@ -285,7 +306,7 @@ int main(int argc, char **argv) {
 				StereoCam.updateCameraSettings(key);
 				break;
 
-				// threshold values
+			// threshold values
 			case 'i':	// increase increment
 			case 'I':	// decrease increment
 			case 'S':	// setting
@@ -305,31 +326,16 @@ int main(int argc, char **argv) {
 				break;
 
 				// ______________  VIEW __________________
-            case '0': 
-				StereoCam.ViewID = sl::VIEW_LEFT;
-                break;
-            case '1': 
-				StereoCam.ViewID = sl::VIEW_RIGHT;
-                break;
-            case '2': 
-				StereoCam.ViewID = sl::VIEW_LEFT_UNRECTIFIED;
-                break;
-            case '3': 
-				StereoCam.ViewID = sl::VIEW_RIGHT_UNRECTIFIED;
-                break;
-            case '4': 
-				StereoCam.ViewID = sl::VIEW_DEPTH;
-                break;
-			case '5':
-				StereoCam.ViewID = sl::VIEW_CONFIDENCE;
-				break;
-			case '6':
-				StereoCam.ViewID = sl::VIEW_NORMALS;
-				break;
+            case '0':	StereoCam.ViewID = sl::VIEW_LEFT; break;
+            case '1':	StereoCam.ViewID = sl::VIEW_RIGHT; break;
+            case '2':	StereoCam.ViewID = sl::VIEW_LEFT_UNRECTIFIED; break;
+            case '3':	StereoCam.ViewID = sl::VIEW_RIGHT_UNRECTIFIED; break;
+            case '4':	StereoCam.ViewID = sl::VIEW_DEPTH; break;
+			case '5':	StereoCam.ViewID = sl::VIEW_CONFIDENCE;	break;
+			case '6':	StereoCam.ViewID = sl::VIEW_NORMALS; break;
 
-				// ______________  Display Confidence Map __________________
-			case 'p':
-				displayConfidenceMap = !displayConfidenceMap;
+			case 'z':
+				SmallWindow = !SmallWindow;
 				break;
 
 				//______________ SAVE ______________
@@ -337,17 +343,6 @@ int main(int argc, char **argv) {
 				StereoCam.saveSbSimage(std::string("ZEDImage") + std::to_string(count) + std::string(".png"));
 				count++;
 				break;
-
-			case 'v': // disparity
-			{
-				std::string filename = std::string(("ZEDDisparity") + std::to_string(count) + std::string(".png"));
-				cv::Mat dispSnapshot;
-				disp.copyTo(dispSnapshot);
-				cv::imshow("Saving Disparity", dispSnapshot);
-				cv::imwrite(filename, dispSnapshot);
-				count++;
-				break;
-			}
 
 			case 'd':
 				StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
