@@ -24,7 +24,9 @@ private:
 
 	enum THRESHOLD_SETTING {
 		H_Low,
+		H_Range = H_Low,
 		H_High,
+		H_Center = H_High,
 		S_Low,
 		S_High,
 		V_Low,

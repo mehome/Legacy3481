@@ -25,8 +25,8 @@ ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
 	HSV_Range[S_High] = HSV_high.y;
 	HSV_Range[V_High] = HSV_high.z;
 
-	str_threshold_setting[H_Low] = "THRESHOLD HUE LOW";
-	str_threshold_setting[H_High] = "THRESHOLD HUE HIGH";
+	str_threshold_setting[H_Range] = "THRESHOLD HUE RANGE";
+	str_threshold_setting[H_Center] = "THRESHOLD HUE CENTER";
 	str_threshold_setting[S_Low] = "THRESHOLD SATURATION LOW";
 	str_threshold_setting[S_High] = "THRESHOLD SATURATION HIGH";
 	str_threshold_setting[V_Low] = "THRESHOLD VALUE LOW";
@@ -241,12 +241,12 @@ This function toggles between threshold settings
 **/
 void ThresholdDetecter::switchThresholdSettings() {
 	switch (threshold_setting) {
-	case H_Low:
-		threshold_setting = H_High;
+	case H_Range:
+		threshold_setting = H_Center;
 		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 
-	case H_High:
+	case H_Center:
 		threshold_setting = S_Low;
 		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
@@ -267,7 +267,7 @@ void ThresholdDetecter::switchThresholdSettings() {
 		break;
 
 	case V_High:
-		threshold_setting = H_Low;
+		threshold_setting = H_Range;
 		std::cout << "Threshold Settings: " << str_threshold_setting[threshold_setting] << std::endl;
 		break;
 	}
