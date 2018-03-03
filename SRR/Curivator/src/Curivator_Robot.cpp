@@ -508,7 +508,8 @@ Curivator_Robot::Curivator_Robot(const char EntityName[],Curivator_Control_Inter
 		m_ClaspAngle(eClasp_Angle,this,robot_control),
 		m_CenterLeftWheel(csz_Curivator_Robot_SpeedControllerDevices_Enum[eWheel_CL],robot_control,eWheel_CL),
 		m_CenterRightWheel(csz_Curivator_Robot_SpeedControllerDevices_Enum[eWheel_CR],robot_control,eWheel_CR),
-		m_YawErrorCorrection(1.0),m_PowerErrorCorrection(1.0),m_AutonPresetIndex(0),m_FreezeArm(false),m_LockPosition(false)
+		m_YawErrorCorrection(1.0),m_PowerErrorCorrection(1.0),m_AutonPresetIndex(0),
+		m_FreezeArm(false),m_LockPosition(false),m_SmartDashboard_AutonTest_Valve(false)
 {
 	mp_Arm[eTurret]=&m_Turret;
 	mp_Arm[eArm]=&m_Arm;
@@ -522,6 +523,7 @@ Curivator_Robot::Curivator_Robot(const char EntityName[],Curivator_Control_Inter
 	//ensure the variables are initialized before calling get
 	SmartDashboard::PutNumber("X Position",0.0);
 	SmartDashboard::PutNumber("Y Position",0.0);
+	SmartDashboard::PutNumber("Z Position",0.0);
 	SmartDashboard::PutBoolean("Main_Is_Targeting",false);
 	//Note: The processing vision is setup to use these same variables for both tracking processes (i.e. front and rear camera) we should only need to be tracking one of them at a time
 	//We may want to add a prefix window to identify which window they are coming from, but this may not be necessary.
@@ -622,6 +624,20 @@ namespace VisionConversion
 
 void Curivator_Robot::TimeChange(double dTime_s)
 {
+	//monitor the AutonTest CheckBox
+	if (m_SmartDashboard_AutonTest_Valve)
+	{
+		//check if it's turned off now
+		if (!SmartDashboard::GetBoolean("Test_Auton"))
+			StopAuton(false);   //I do not care about the freeze arm (we have other checkboxes now)
+	}
+	else
+	{
+		//check if it is now on
+		if (SmartDashboard::GetBoolean("Test_Auton"))
+			TestAutonomous();
+	}
+
 	//const Curivator_Robot_Props &robot_props=m_RobotProps.GetCurivatorRobotProps();
 
 	//For the simulated code this must be first so the simulators can have the correct times
@@ -882,9 +898,11 @@ void Curivator_Robot::ComputeArmPosition(double GlobalHeight,double GlobalDistan
 	ClaspShaftLength=EnforceShaftLimits(Clasp_LA_Length-Clasp_LAC_houseingLength,0.75,6.0);
 }
 
-#ifdef Robot_TesterCode
+//#ifdef Robot_TesterCode
 void Curivator_Robot::TestAutonomous()
 {
+	m_SmartDashboard_AutonTest_Valve=true;
+	SmartDashboard::PutBoolean("Test_Auton",true);
 	//keep around to test geometry
 	#if 0
 	double BigArm_ShaftLength;
@@ -930,7 +948,7 @@ void Curivator_Robot::GoalFailed()
 		m_controller->GetUIController_RW()->SetAutoPilot(false);
 	}
 }
-#endif
+//#endif
 
 double Curivator_Robot::GetBucketAngleContinuity()
 {
@@ -940,8 +958,11 @@ double Curivator_Robot::GetBucketAngleContinuity()
 
 void Curivator_Robot::StopAuton(bool isOn)
 {
+	m_SmartDashboard_AutonTest_Valve=false;
+	SmartDashboard::PutBoolean("Test_Auton",false);
 	FreezeArm(isOn);
 	m_controller->GetUIController_RW()->SetAutoPilot(false);
+	ClearGoal();
 	LockPosition(false);
 }
 
@@ -1434,6 +1455,7 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 		#else
 		SmartDashboard::PutBoolean("SafetyLock_Arm",true);
 		#endif
+		SmartDashboard::PutBoolean("Test_Auton",false);
 		//This one one must also be called for the lists that are specific to the robot
 		RobotControlCommon_Initialize(robot_props->Get_ControlAssignmentProps());
 		//This may return NULL for systems that do not support it
@@ -1601,10 +1623,8 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 			ContructedName=Prefix,ContructedName+="Pot_Raw";
 			SmartDashboard::PutNumber(ContructedName.c_str(),PotentiometerRaw_To_Arm);
 			const double Tolerance=m_RobotProps.GetRotaryProps(index).GetRotary_Pot_Properties().PotLimitTolerance;
-			//apply safety check for systems that are closed
-			const bool IsClosed=(m_RobotProps.GetRotaryProps(index).GetRotaryProps().LoopState==Rotary_Props::eClosed);
 			//Potentiometer safety, if we lose wire connection it will be out of range in which case we turn on the safety (we'll see it turned on)
-			if ((IsClosed)&&(raw_value>HiRange+Tolerance || raw_value<LowRange-Tolerance))
+			if (raw_value>HiRange+Tolerance || raw_value<LowRange-Tolerance)
 			{
 				std::string SmartLabel=csz_Curivator_Robot_SpeedControllerDevices_Enum[index];
 				SmartLabel[0]-=32; //Make first letter uppercase

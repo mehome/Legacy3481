@@ -43,7 +43,96 @@ enum AutonType
 	eTestTurret,
 	eArmAndTurretTest,
 	eArmClawGrab,
+	eTurretTracking,
+	eDriveTracking,
 	eNoAutonTypes
+};
+
+
+//TODO Move into Misc
+//The way this works is that we keep track of the sign of each entry and all numbers that go it are negative
+//This way the priority makes the sort in reverse and the top number ends up being the floor number
+//Since we have both number sets on the same side of zero the result of the sign is also averaged using a blend average
+//where the smoothing value is the reciprocal of the sample size 
+class Priority_Averager_floor
+{
+private:
+	// Priority queue using operator < for ordering
+	//std::priority_queue<double, vector<double>,std::less<double>> m_queue;
+	struct NumberSign
+	{
+		NumberSign(double number)
+		{
+			if (number>0)
+			{
+				Number=number*-1.0;
+				sign=false;
+			}
+			else
+			{
+				Number=number;
+				sign=true;  //for zero we want this to be true as well
+			}
+		}
+		//This method is not needed, but kept here to illustrate how to obtain the numbers original value
+		#if 0
+		double GetNumber()
+		{
+			if (sign)
+				return Number;
+			else
+				return Number*-1.0;
+		}
+		#endif
+		double Number;
+		bool sign;
+		bool operator >  (const NumberSign& rhs) const { return Number>rhs.Number; }
+		bool operator <  (const NumberSign& rhs) const { return Number<rhs.Number; }
+		bool operator == (const NumberSign& rhs) const { return ((Number==rhs.Number)&&(sign==rhs.sign)); }
+	};
+	std::priority_queue<NumberSign> m_queue;
+	const size_t m_SampleSize;
+	const double m_PurgePercent;
+
+	double m_CurrentBadApple_Percentage;
+	size_t m_Iteration_Counter;
+	void flush()
+	{
+		while (!m_queue.empty())
+			m_queue.pop();
+	}
+	Blend_Averager<double > m_SignInfluence;  //have some weight on which sign to use
+public:
+	Priority_Averager_floor(size_t SampleSize, double PurgePercent) : m_SampleSize(SampleSize),m_PurgePercent(PurgePercent),
+		m_CurrentBadApple_Percentage(0.0),m_Iteration_Counter(0),m_SignInfluence(1.0/(double)SampleSize)
+	{
+	}
+	double operator()(double newItem)
+	{
+		m_queue.push(NumberSign(newItem));
+		//This is a bit convoluted... 
+		//The sign influence does a blend average of the sign of the new entry and depending on this result will impact the final sign of our answer
+		const double sign_influence=(m_SignInfluence((newItem>0)? 1.0: -1.0) > 0)? -1.0 : 1.0;
+		double ret=m_queue.top().Number	* sign_influence;
+		if (m_queue.size()>m_SampleSize)
+			m_queue.pop();
+		//Now to manage when to purge the bad apples
+		m_Iteration_Counter++;
+		if ((m_Iteration_Counter % m_SampleSize)==0)
+		{
+			m_CurrentBadApple_Percentage+=m_PurgePercent;
+			//printf(" p=%.2f ",m_CurrentBadApple_Percentage);
+			if (m_CurrentBadApple_Percentage >= 1.0)
+			{
+				//Time to purge all the bad apples
+				flush();
+				m_queue.push(NumberSign(ret));  //put one good apple back in to start the cycle over
+				m_CurrentBadApple_Percentage-=1.0;
+				//printf(" p=%.2f ",m_CurrentBadApple_Percentage);
+			}
+		}
+		return ret;
+	}
 };
 
 
@@ -60,6 +149,73 @@ const double CurivatorGoal_StartingPosition[4]={18.0,4.0,70.0,5.0};
 const double CurivatorGoal_HoverPosition[4]={25.0,0.0,90.0,45.0};
 const double CurivatorGoal_PickupPosition[4]={25.0,-5.0,90.0,45.0};
 #endif
+
+__inline bool Auton_Smart_GetSingleValue_Bool(const char *SmartName,bool default_value)
+{
+	bool result=default_value;
+	//Can't use try catch on cRIO since Thunder RIO has issue with using catch(...)
+	//RoboRio uses SetDefault*() to accomplish same effect
+	//Simulation can use try catch method, but we could modify smart dashboard to allow using the new method
+	#if defined Robot_TesterCode
+	try
+	{
+		result=SmartDashboard::GetBoolean(SmartName);
+	}
+	catch (...)
+	{
+		//set up some good defaults for a small box
+		SmartDashboard::PutBoolean(SmartName,default_value);
+	}
+	#else
+	#if !defined __USE_LEGACY_WPI_LIBRARIES__
+	SmartDashboard::SetDefaultBoolean(SmartName,default_value);
+	result=SmartDashboard::GetBoolean(SmartName);
+	#else
+	//for cRIO checked in using zero in lua (default) to prompt the variable and then change to -1 to use it
+	if (!SmartDashboard::GetBoolean("TestVariables_set"))
+		SmartDashboard::PutBoolean(SmartName,default_value);
+	else
+		result=SmartDashboard::GetBoolean(SmartName);
+	#endif
+	#endif
+	return result;
+}
+
+__inline void Auton_Smart_GetMultiValue_Bool(size_t NoItems,const char * const SmartNames[],bool * const SmartVariables[])
+{
+	//Remember can't do this on cRIO since Thunder RIO has issue with using catch(...)
+#if defined Robot_TesterCode
+	for (size_t i=0;i<NoItems;i++)
+	{
+		try
+		{
+			*(SmartVariables[i])=SmartDashboard::GetBoolean(SmartNames[i]);
+		}
+		catch (...)
+		{
+			//I may need to prime the pump here
+			SmartDashboard::PutBoolean(SmartNames[i],*(SmartVariables[i]));
+		}
+	}
+#else
+#if !defined __USE_LEGACY_WPI_LIBRARIES__
+	for (size_t i=0;i<NoItems;i++)
+	{
+		SmartDashboard::SetDefaultNumber(SmartNames[i],*(SmartVariables[i]));
+		*(SmartVariables[i])=SmartDashboard::GetBoolean(SmartNames[i]);
+	}
+#else
+	for (size_t i=0;i<NoItems;i++)
+	{
+		if (SmartDashboard::GetBoolean("TestVariables_set"))
+			*(SmartVariables[i])=SmartDashboard::GetBoolean(SmartNames[i]);
+		else
+			SmartDashboard::PutBoolean(SmartNames[i],*(SmartVariables[i]));
+	}
+#endif
+#endif
+}
+
 
 __inline double Auton_Smart_GetSingleValue(const char *SmartName,double default_value)
 {
@@ -221,14 +377,17 @@ class Curivator_Goals_Impl : public AtomicGoal
 			return new Goal_Ship_RotateToRelativePosition(Robot->GetController(),DEG_2_RAD(Degrees));
 		}
 
-		static Goal * Move_TurretPosition(Curivator_Goals_Impl *Parent,double Angle_Deg)
+		static Goal * Move_TurretPosition(Curivator_Goals_Impl *Parent,double Angle_Deg, bool RelativePosition=false)
 		{
 			Curivator_Robot *Robot=&Parent->m_Robot;
 			Curivator_Robot::Robot_Arm &Arm=Robot->GetTurret();
 			const double PrecisionTolerance=Robot->GetRobotProps().GetRotaryProps(Curivator_Robot::eTurret).GetRotaryProps().PrecisionTolerance;
 			Goal_Rotary_MoveToPosition *goal_arm=NULL;
 			const double position=Angle_Deg;
-			goal_arm=new Goal_Rotary_MoveToPosition(Arm,DEG_2_RAD(position),PrecisionTolerance);
+			if (!RelativePosition)
+				goal_arm=new Goal_Rotary_MoveToPosition(Arm,DEG_2_RAD(position),PrecisionTolerance);
+			else
+				goal_arm=new Goal_Rotary_MoveToRelativePosition(Arm,DEG_2_RAD(position),PrecisionTolerance);
 			return goal_arm;
 		}
 		static Goal * Move_ArmXPosition(Curivator_Goals_Impl *Parent,double length_in)
@@ -603,6 +762,266 @@ class Curivator_Goals_Impl : public AtomicGoal
 			  }
 		};
 
+		//--Vision Tracking
+		//This class is a helper class to be aggregated into a goal; it feed/translates the camera vectors into yaw angle, and filters the coordinates
+		class VisionTracking
+		{
+		public:
+			VisionTracking() : m_X_PriorityAverager(10,0.30),m_Z_PriorityAverager(10,0.30)
+			{
+			}
+			void Process(double dTime_s)
+			{
+				//Now to manage the actual vector feed
+				double ZRawPositon=SmartDashboard::GetNumber("Z Position");
+				//Sanity check... if the distance is negative it must be invalid
+				if (ZRawPositon<0)
+				{
+					double RawPositon=SmartDashboard::GetNumber("X Position");
+					RawPositon=m_X_PriorityAverager(RawPositon);
+					RawPositon=m_X_KalmanFilter(RawPositon);
+					RawPositon=m_X_Averager.GetAverage(RawPositon);
+					SmartDashboard::PutNumber("X_Pos_Average",RawPositon);  //Observe *no* false positives
+					//leave negative going in... this will give me the least value
+					ZRawPositon=m_Z_PriorityAverager(ZRawPositon);
+					ZRawPositon*=-1;  //invert from Zed
+					ZRawPositon=m_Z_KalmanFilter(ZRawPositon);
+					ZRawPositon=m_Z_Averager.GetAverage(ZRawPositon);
+					SmartDashboard::PutNumber("Z_Pos_Average",ZRawPositon);  //Observe *no* false positives
+					const double YawAngle=atan(RawPositon/ZRawPositon);  //opposite/adjacent
+					SmartDashboard::PutNumber("YawAngle",RAD_2_DEG(YawAngle));
+					SmartDashboard::PutNumber("DriveDistance",ZRawPositon); //follow suit with yaw, so we can test it separately
+				}
+			}
+		private:
+			//filter out noise! 
+			KalmanFilter m_X_KalmanFilter,m_Z_KalmanFilter;
+			Averager<double,5> m_X_Averager,m_Z_Averager;
+			Priority_Averager_floor m_X_PriorityAverager;
+			Priority_Averager m_Z_PriorityAverager;
+		};
+
+		class TurretTracking : public AtomicGoal, public SetUpProps
+		{
+		public:
+			TurretTracking(Curivator_Goals_Impl *Parent) : SetUpProps(Parent)
+			{
+				Activate();  //no need to delay activation
+			}
+			virtual void Activate()
+			{
+				Curivator_Robot::Robot_Arm &Arm=m_Robot.GetTurret();
+				m_Position=Arm.GetActualPos(); //start out on the actual position
+				m_LatencyCounter=0.0;
+				m_Status=eActive;
+				m_IsTargeting=false;
+				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
+			}
+			virtual Goal_Status Process(double dTime_s)
+			{
+				if (m_Status==eActive)
+				{
+					{
+						const char * const SmartVar="EnableVision";
+						bool EnableVision=Auton_Smart_GetSingleValue_Bool(SmartVar,false);
+						if (m_IsTargeting)
+						{
+							if (!EnableVision)
+							{
+								SmartDashboard::PutBoolean("Main_Is_Targeting",false);
+								m_IsTargeting=false;
+							}
+						}
+						else
+						{
+							if (EnableVision)
+							{
+								SmartDashboard::PutBoolean("Main_Is_Targeting",true);
+								m_IsTargeting=true;
+							}
+						}
+						if (EnableVision)
+							m_Vision.Process(dTime_s);
+					}
+					const char * const SmartVar="EnableTurret";
+					bool EnableTurret=Auton_Smart_GetSingleValue_Bool(SmartVar,false);
+					if (EnableTurret)
+					{
+						double YawAngle=0.0;
+						double TrackLatency=0.5;  //default high seconds
+						double YawScaleFactor=0.5;  //ability to tune adjustment intensity... default half to under estimate avoid oscillation
+						double YawTolerance=0.4; //degrees tolerance before taking action
+						const char * const SmartNames[]={"YawAngle","TrackLatency","YawScaleFactor","YawTolerance"};
+						double * const SmartVariables[]={&YawAngle,&TrackLatency,&YawScaleFactor,&YawTolerance};
+						Auton_Smart_GetMultiValue(4,SmartNames,SmartVariables);
+
+						m_LatencyCounter+=dTime_s;
+						if (m_LatencyCounter>TrackLatency)
+						{
+							Curivator_Robot::Robot_Arm &Arm=m_Robot.GetTurret();
+							const double YawAngleRad=DEG_2_RAD(YawAngle);
+							m_Position=Arm.GetActualPos()+(YawAngleRad*YawScaleFactor);  //set out new position
+							if (fabs(YawAngle)>YawTolerance*YawScaleFactor)
+								Arm.SetIntendedPosition(m_Position);
+							m_LatencyCounter=0.0;
+						}
+					}
+				}
+				return m_Status;   //Just pass through m_Status
+			}
+			virtual void Terminate() 
+			{
+				m_Status=eInactive;  //this goal never really completes
+				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
+			}
+		private:
+			VisionTracking m_Vision;
+			double m_LatencyCounter;
+			double m_Position; //keep track of last position between each latency count
+			bool m_IsTargeting;  //Have a valve for targeting
+		};
+
+		class DriveTracking : public AtomicGoal, public SetUpProps
+		{
+		public:
+			DriveTracking(Curivator_Goals_Impl *Parent) : SetUpProps(Parent)
+			{
+				Activate();  //no need to delay activation
+			}
+			virtual void Activate()
+			{
+				Curivator_Robot::Robot_Arm &Arm=m_Robot.GetTurret();
+				m_Position=Arm.GetActualPos(); //start out on the actual position
+				m_LatencyCounter=0.0;
+				m_Status=eActive;
+				m_IsTargeting=false;
+				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
+			}
+			virtual Goal_Status Process(double dTime_s)
+			{
+				if (m_Status==eActive)
+				{
+					bool EnableVision=false;
+					bool EnableDriveYaw=false;
+					bool EnableDrive=false;
+					{
+						const char * const SmartNames[]={"EnableVision","EnableDriveYaw","EnableDrive"};
+						bool * const SmartVariables[]={&EnableVision,&EnableDriveYaw,&EnableDrive};
+						Auton_Smart_GetMultiValue_Bool(3,SmartNames,SmartVariables);
+					}
+					if (m_IsTargeting)
+					{
+						if (!EnableVision)
+						{
+							SmartDashboard::PutBoolean("Main_Is_Targeting",false);
+							m_IsTargeting=false;
+						}
+					}
+					else
+					{
+						if (EnableVision)
+						{
+							SmartDashboard::PutBoolean("Main_Is_Targeting",true);
+							m_IsTargeting=true;
+						}
+					}
+					if (EnableVision)
+						m_Vision.Process(dTime_s);
+
+					double YawAngle=0.0;
+					double TrackLatency=0.5;  //default high seconds
+					double YawScaleFactor=0.5;  //ability to tune adjustment intensity... default half to under estimate avoid oscillation
+					double YawTolerance=0.4; //degrees tolerance before taking action, also threshold before advancing drive
+					{
+						const char * const SmartNames[]={"YawAngle","TrackLatency","YawScaleFactor","YawTolerance"};
+						double * const SmartVariables[]={&YawAngle,&TrackLatency,&YawScaleFactor,&YawTolerance};
+						Auton_Smart_GetMultiValue(4,SmartNames,SmartVariables);
+					}
+					bool LatencyIntervalTriggered=false; //share the latency check with the drive
+					if (EnableDriveYaw)
+					{
+						m_LatencyCounter+=dTime_s;
+						if (m_LatencyCounter>TrackLatency)
+						{
+							LatencyIntervalTriggered=true;
+							const double YawAngleRad=DEG_2_RAD(YawAngle);
+							m_Position=m_Robot.GetAtt_r() +(YawAngleRad*YawScaleFactor);  //set out new position
+							//Note: we needn't normalize here as that happens implicitly 
+							//printf("rotation=%.2f\n",RAD_2_DEG(m_Position));
+							if (fabs(YawAngle)>YawTolerance*YawScaleFactor)
+								m_Robot.GetController()->SetIntendedOrientation(m_Position);
+							m_LatencyCounter=0.0;
+						}
+					}
+					if (EnableDrive)
+					{
+						double DriveDistance=1.0;  //start with same value as the z offset
+						double DriveScaleFactor=0.25;  //ability to tune adjustment intensity... default to 1/4 under estimate avoid oscillation
+						double DriveTolerance=0.4; //degrees tolerance before taking action, also threshold before advancing drive
+						double Z_Offset=DriveDistance;  //used to tune how close we wish to be away from our target
+						{
+							const char * const SmartNames[]={"DriveDistance","DriveScaleFactor","DriveTolerance","Z_Offset"};
+							double * const SmartVariables[]={&DriveDistance,&DriveScaleFactor,&DriveTolerance,&Z_Offset};
+							Auton_Smart_GetMultiValue(4,SmartNames,SmartVariables);
+						}
+
+						//Much like driving to a way point where it waits until yaw alignment, but it may be more rigid as it doesn't turn to it
+						//however, this may be fine for shorter distance tracking
+						if ((YawAngle<YawTolerance)||(!EnableDriveYaw))
+						{
+							if (!EnableDriveYaw)
+							{
+								m_LatencyCounter+=dTime_s;
+								LatencyIntervalTriggered=(m_LatencyCounter>TrackLatency);
+							}
+							if (LatencyIntervalTriggered)
+							{
+
+								m_LatencyCounter=0; //may be redundant if drive yaw is active
+								const double distance_m=(DriveDistance-Z_Offset)*DriveScaleFactor;
+								if (fabs(distance_m)>DriveTolerance*DriveScaleFactor)
+								{
+									//expand out the functionality to drive forward or reverse using Goal_Ship_MoveToRelativePosition
+									WayPoint wp;
+									const Vec2d Local_GoalTarget(0.0,distance_m); //where postive if forward and negative is reverse
+									wp.Power=1.0;
+									//set up all the other fields
+									const Vec2d &pos=m_Robot.GetPos_m();
+									const Vec2d Global_GoalTarget=LocalToGlobal(m_Robot.GetAtt_r(),Local_GoalTarget);
+									wp.Position=Global_GoalTarget+pos;
+									//set the trajectory point
+									double lookDir_radians= atan2(Local_GoalTarget[0],Local_GoalTarget[1]);
+									const Vec2d LocalTrajectoryOffset(sin(lookDir_radians),cos(lookDir_radians));
+									const Vec2d  GlobalTrajectoryOffset=LocalToGlobal(m_Robot.GetAtt_r(),LocalTrajectoryOffset);
+									const Vec2d TrajectoryPoint(wp.Position+GlobalTrajectoryOffset);
+									Vec2d Temp(0,0);
+									m_Robot.GetController()->DriveToLocation(TrajectoryPoint , wp.Position, wp.Power, dTime_s,&Temp,true);
+								}
+								else
+								{
+									//we're good for now
+									m_Robot.GetController()->SetShipVelocity(0.0);
+								}
+							}
+						}
+					}
+				}
+				return m_Status;   //Just pass through m_Status
+			}
+			virtual void Terminate() 
+			{
+				//stop it
+				m_Robot.GetController()->SetShipVelocity(0.0);
+				m_Status=eInactive;  //this goal never really completes
+				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
+			}
+		private:
+			VisionTracking m_Vision;
+			double m_LatencyCounter;
+			double m_Position; //keep track of last position between each latency count
+			bool m_IsTargeting;  //Have a valve for targeting
+		};
+
 	public:
 		Curivator_Goals_Impl(Curivator_Robot &robot) : m_Robot(robot), m_Timer(0.0), 
 			m_Primer(false)  //who ever is done first on this will complete the goals (i.e. if time runs out)
@@ -676,6 +1095,12 @@ class Curivator_Goals_Impl : public AtomicGoal
 				break;
 			case eArmClawGrab:
 				m_Primer.AddGoal(new ClawGrabSequence(this));
+				break;
+			case eTurretTracking:
+				m_Primer.AddGoal(new TurretTracking(this));
+				break;
+			case eDriveTracking:
+				m_Primer.AddGoal(new DriveTracking(this));
 				break;
 			case eDoNothing:
 			case eNoAutonTypes: //grrr windriver and warning 1250

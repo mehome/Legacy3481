@@ -354,12 +354,13 @@ class Curivator_Robot : public Swerve_Robot
 		size_t m_AutonPresetIndex;  //used only because encoder tracking is disabled
 		bool m_FreezeArm;  //used mostly during calibration to have ability to stop movement, also to freeze to a way point in auton
 		bool m_LockPosition; //used to allow a position to remain locked to allow arm to catch up and stabilize
+		bool m_SmartDashboard_AutonTest_Valve; //Value used to detect change of AutonTest CheckBox
 
-		#ifdef Robot_TesterCode
+		//#ifdef Robot_TesterCode
 		void TestAutonomous();
 		void GoalComplete();
 		void GoalFailed();
-		#endif
+		//#endif
 };
 
 namespace Curivator_Goals
