@@ -727,22 +727,22 @@ void Curivator_Robot::BindAdditionalEventControls(bool Bind)
 	Entity2D_Kind::EventMap *em=GetEventMap(); 
 	if (Bind)
 	{
-		#ifdef Robot_TesterCode
+		//#ifdef Robot_TesterCode
 		em->Event_Map["TestAuton"].Subscribe(ehl, *this, &Curivator_Robot::TestAutonomous);
 		em->Event_Map["Complete"].Subscribe(ehl,*this,&Curivator_Robot::GoalComplete);
 		em->Event_Map["Failed"].Subscribe(ehl,*this,&Curivator_Robot::GoalFailed);
-		#endif
+		//#endif
 		em->EventOnOff_Map["StopAuton"].Subscribe(ehl,*this, &Curivator_Robot::StopAuton);
 		em->EventOnOff_Map["Robot_FreezeArm"].Subscribe(ehl,*this, &Curivator_Robot::FreezeArm);
 		em->EventOnOff_Map["Robot_LockPosition"].Subscribe(ehl,*this, &Curivator_Robot::LockPosition);
 	}
 	else
 	{
-		#ifdef Robot_TesterCode
+		//#ifdef Robot_TesterCode
 		em->Event_Map["TestAuton"]  .Remove(*this, &Curivator_Robot::TestAutonomous);
 		em->Event_Map["Complete"]  .Remove(*this, &Curivator_Robot::GoalComplete);
 		em->Event_Map["Failed"]  .Remove(*this, &Curivator_Robot::GoalFailed);
-		#endif
+		//#endif
 		em->EventOnOff_Map["StopAuton"].Remove(*this, &Curivator_Robot::StopAuton);
 		em->EventOnOff_Map["Robot_FreezeArm"].Remove(*this, &Curivator_Robot::FreezeArm);
 		em->EventOnOff_Map["Robot_LockPosition"].Remove(*this, &Curivator_Robot::LockPosition);

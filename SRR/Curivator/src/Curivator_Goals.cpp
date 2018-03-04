@@ -201,7 +201,7 @@ __inline void Auton_Smart_GetMultiValue_Bool(size_t NoItems,const char * const S
 #if !defined __USE_LEGACY_WPI_LIBRARIES__
 	for (size_t i=0;i<NoItems;i++)
 	{
-		SmartDashboard::SetDefaultNumber(SmartNames[i],*(SmartVariables[i]));
+		SmartDashboard::SetDefaultBoolean(SmartNames[i],*(SmartVariables[i]));
 		*(SmartVariables[i])=SmartDashboard::GetBoolean(SmartNames[i]);
 	}
 #else
@@ -848,8 +848,8 @@ class Curivator_Goals_Impl : public AtomicGoal
 					if (EnableTurret)
 					{
 						double YawAngle=0.0;
-						double TrackLatency=0.5;  //default high seconds
-						double YawScaleFactor=0.5;  //ability to tune adjustment intensity... default half to under estimate avoid oscillation
+						double TrackLatency=0.25;  //default high seconds
+						double YawScaleFactor=0.35;  //ability to tune adjustment intensity... default half to under estimate avoid oscillation
 						double YawTolerance=0.4; //degrees tolerance before taking action
 						const char * const SmartNames[]={"YawAngle","TrackLatency","YawScaleFactor","YawTolerance"};
 						double * const SmartVariables[]={&YawAngle,&TrackLatency,&YawScaleFactor,&YawTolerance};
@@ -871,6 +871,9 @@ class Curivator_Goals_Impl : public AtomicGoal
 			}
 			virtual void Terminate() 
 			{
+				//pacify the set point
+				Curivator_Robot::Robot_Arm &Arm=m_Robot.GetTurret();
+				Arm.SetIntendedPosition(Arm.GetActualPos());
 				m_Status=eInactive;  //this goal never really completes
 				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
 			}
@@ -929,8 +932,8 @@ class Curivator_Goals_Impl : public AtomicGoal
 						m_Vision.Process(dTime_s);
 
 					double YawAngle=0.0;
-					double TrackLatency=0.5;  //default high seconds
-					double YawScaleFactor=0.5;  //ability to tune adjustment intensity... default half to under estimate avoid oscillation
+					double TrackLatency=0.25;  //default high seconds
+					double YawScaleFactor=0.35;  //ability to tune adjustment intensity... default half to under estimate avoid oscillation
 					double YawTolerance=0.4; //degrees tolerance before taking action, also threshold before advancing drive
 					{
 						const char * const SmartNames[]={"YawAngle","TrackLatency","YawScaleFactor","YawTolerance"};
@@ -1011,6 +1014,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			virtual void Terminate() 
 			{
 				//stop it
+				m_Robot.GetController()->SetIntendedOrientation(m_Robot.GetAtt_r());
 				m_Robot.GetController()->SetShipVelocity(0.0);
 				m_Status=eInactive;  //this goal never really completes
 				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
