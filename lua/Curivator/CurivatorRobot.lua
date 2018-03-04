@@ -197,7 +197,7 @@ MainRobot = {
 			pid={p=200, i=0, d=25},
 			voltage_multiply=1.0,			--not reversed
 			encoder_to_wheel_ratio=1.0,
-			encoder_reversed_wheel=0,
+			encoder_reversed_wheel=1,
 			max_speed=8.91*Feet2Meters,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
@@ -429,11 +429,15 @@ MainRobot = {
 			encoder_to_wheel_ratio=1.0,
 			--On CRio the range is up to 960 so ideal center is 480
 			--center around 480
-			pot_min_limit=(473-200)*4.215+5,  --180 forward            (was 265)
-			pot_max_limit=(473+200)*4.215+5,  -- 180 counter clockwise (was 647)
+			--pot_min_limit=(473-200)*4.215+5,  --180 forward            (was 265)
+			--pot_max_limit=(473+200)*4.215+5,  -- 180 counter clockwise (was 647)
+			--Hack for open loop
+			pot_min_limit=-4000,
+			pot_max_limit=4000,
 			pot_range_flipped='y',
 			--Arm_SetPotentiometerSafety=true,	
-			max_speed=0.5,	--100 rpm... with a 15x reduction in radians
+			--max_speed=0.5,	--100 rpm... with a 15x reduction in radians
+			max_speed=3.0,
 			max_accel_forward=3,			--These are in radians, just go with what feels right
 			max_accel_reverse=3,
 			predict_up=.400,
@@ -675,8 +679,8 @@ MainRobot = {
 
 	controls =
 	{
-		--slotlist = {slot_1="gamepad f310 (controller)"},
-		slotlist = {slot_1="gamepad f310 (controller)",slot_2="ch throttle quadrant"},
+		slotlist = {slot_1="gamepad f310 (controller)"},
+		--slotlist = {slot_1="gamepad f310 (controller)",slot_2="ch throttle quadrant"},
 		--slotlist = {slot_1="logitech dual action"},
 		--slotlist = {slot_1="airflo"},
 		--slotlist = {slot_1="airflo",slot_2="ch throttle quadrant"},
@@ -704,7 +708,8 @@ MainRobot = {
 			--FlipY_Hold = {type="joystick_button", key=7, on_off=true},
 			--SlideHold = {type="joystick_button", key=7, on_off=true},
 			--TestWaypoint={type="joystick_button", key=3, keyboard='q', on_off=true},
-			TestAuton={type="keyboard", key='g', on_off=false},
+			TestAuton={type="joystick_button", key=1, on_off=false},
+			StopAuton={type="joystick_button", key=2, on_off=true},
 			--Slide={type="keyboard", key='g', on_off=false},
 			
 			--turret_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=true, multiplier=1.0, filter=0.1, curve_intensity=3.0},
@@ -717,7 +722,6 @@ MainRobot = {
 			arm_ypos_Retract={type="keyboard", key='l', on_off=true},
 			clasp_angle_Advance={type="keyboard", key='o', on_off=true},
 			clasp_angle_Retract={type="keyboard", key='p', on_off=true},
-			StopAuton={type="keyboard", key='x', on_off=true},
 		},
 		
 		Joystick_2 =
@@ -756,10 +760,12 @@ MainRobot = {
 			--boom_SetCurrentVelocity = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.1, curve_intensity=3.0},
 			--bucket_SetCurrentVelocity = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=3.0},
 			--clasp_SetCurrentVelocity = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.3, curve_intensity=3.0},
+			TestAuton={type="joystick_button", key=1, on_off=false},
+			StopAuton={type="joystick_button", key=2, on_off=true},
 
-			Robot_SetLowGearOff = {type="joystick_button", key=6, on_off=false},
-			Robot_SetLowGearOn = {type="joystick_button", key=5, on_off=false},
-			TestWaypoint={type="joystick_button", key=3, on_off=true},
+			--Robot_SetLowGearOff = {type="joystick_button", key=6, on_off=false},
+			--Robot_SetLowGearOn = {type="joystick_button", key=5, on_off=false},
+			--TestWaypoint={type="joystick_button", key=3, on_off=true},
 		},
 		Joystick_4 =
 		{
