@@ -775,7 +775,8 @@ class Curivator_Goals_Impl : public AtomicGoal
 				//Now to manage the actual vector feed
 				double ZRawPositon=SmartDashboard::GetNumber("Z Position");
 				//Sanity check... if the distance is negative it must be invalid
-				if (ZRawPositon<0)
+				//		--for now, given the probably of false positives... limit the range to 2 meters
+				if ((ZRawPositon<0)&&(ZRawPositon>-2.0))
 				{
 					double RawPositon=SmartDashboard::GetNumber("X Position");
 					RawPositon=m_X_PriorityAverager(RawPositon);
