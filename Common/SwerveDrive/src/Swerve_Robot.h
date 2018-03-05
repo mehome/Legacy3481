@@ -147,6 +147,13 @@ class DRIVE_API Swerve_Robot : public Ship_Tester,
 		const Swerve_Drive_Control_Interface &GetRobotControl() const {return *m_RobotControl;}
 		//Give ability to change properties
 		void UpdateDriveProps(const Rotary_Props &DriveProps,const Ship_1D_Props &ShipProps,size_t index);
+		//For now offer this as a public method, but eventually this needs to be managed internally
+		void Swerve_Robot_SetAggresiveStop(bool UseAggresiveStop) 
+		{	m_DrivingModule[0]->SetAggresiveStop(UseAggresiveStop),
+			m_DrivingModule[1]->SetAggresiveStop(UseAggresiveStop),
+			m_DrivingModule[2]->SetAggresiveStop(UseAggresiveStop),
+			m_DrivingModule[3]->SetAggresiveStop(UseAggresiveStop);
+		}
 	protected:
 		friend Swerve_Robot_UI;
 
@@ -220,7 +227,7 @@ class DRIVE_API Swerve_Robot : public Ship_Tester,
 				//Get and Set the Drive properties
 				Rotary_Velocity_Control &Drive() {return m_Drive;}
 				void ResetPos() {m_Drive.ResetPos(),m_Swivel.ResetPos();}
-				
+				void SetAggresiveStop(bool UseAggresiveStop) {m_Drive.SetAggresiveStop(UseAggresiveStop);}
 			private:
 				std::string m_ModuleName,m_SwivelName,m_DriveName;
 				Rotary_Position_Control m_Swivel;  //apply control to swivel mechanism
