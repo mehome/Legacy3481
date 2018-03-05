@@ -220,6 +220,8 @@ class COMMON_API Rotary_Velocity_Control : public Rotary_System
 		void UpdateRotaryProps(const Rotary_Props &RotaryProps);
 		virtual void SetEncoderSafety(bool DisableFeedback);
 		EncoderUsage GetEncoderUsage() const {return m_EncoderState;}
+		//Give client code ability to change rotary system to break or coast
+		void SetAggresiveStop(bool UseAggresiveStop) {m_Rotary_Props.UseAggressiveStop=UseAggresiveStop;} 
 	protected:
 		//Intercept the time change to obtain current height as well as sending out the desired velocity
 		virtual void TimeChange(double dTime_s);

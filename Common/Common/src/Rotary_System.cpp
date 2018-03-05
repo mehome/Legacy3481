@@ -782,13 +782,16 @@ void Rotary_Velocity_Control::TimeChange(double dTime_s)
 	}
 	__super::TimeChange(dTime_s);
 	const double Velocity=m_Physics.GetVelocity();
-	const double Acceleration=(Velocity-m_PreviousVelocity)/dTime_s;
+	double Acceleration=(Velocity-m_PreviousVelocity)/dTime_s;
 	//CurrentVelocity is retained before the time change (for proper debugging of PID) we use the new velocity here for voltage
 	//Either error offset or calibrated scaler will be used depending on the aggressive stop property, we need not branch this as
 	//they both can be represented in the same equation
 	double Voltage=(Velocity+m_ErrorOffset)/m_CalibratedScaler;
 
 	bool IsAccel=(Acceleration * Velocity > 0);
+	//if we are coasting we must not apply reverse voltage when decelerating
+	if (!IsAccel && m_Rotary_Props.UseAggressiveStop==false)
+		Acceleration=0.0;
 	Voltage+=Acceleration*(IsAccel? m_Rotary_Props.InverseMaxAccel : m_Rotary_Props.InverseMaxDecel);
 
 	//Keep track of previous velocity to compute acceleration
