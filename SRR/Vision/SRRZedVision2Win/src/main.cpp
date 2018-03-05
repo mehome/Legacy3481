@@ -132,6 +132,10 @@ std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_gpu.
 extern cv::CascadeClassifier hook_cascade;
 
 //main  function
+//mode 0 = robot
+//mode 1 = simulation
+//mode 2 = stand alone (runs directly with SmartDashboard UI)
+//SRRZedVision.exe [mode=0] [run svo file]
 int main(int argc, char **argv) {
 
     if (argc > 2) {
@@ -156,8 +160,8 @@ int main(int argc, char **argv) {
 	int count = 0;
 
 	char * filearg;
-	if (argc == 2)
-		filearg = argv[1];
+	if (argc == 3)
+		filearg = argv[2];
 	else
 		filearg = NULL;
 
@@ -213,17 +217,25 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	//This app is a client... let SmartDashboard know
-	//For now hard code the IP address, but we may want to pass it as an argument
-	#if 0
-	SmartDashboard::SetClientMode();
-	SmartDashboard::SetIPAddress("10.34.81.99");  //robot
-	#else
-	//Run as a server to test directly to SmartDashboard UI locally
-	//But set as client if testing with a robot server (e.g. robot simulation)
-	//SmartDashboard::SetClientMode();
-	SmartDashboard::SetIPAddress("127.0.0.1");   //localhost
-	#endif
+	size_t SmartDashboard_Mode = 0;
+	if (argc > 1)
+		SmartDashboard_Mode = atoi(argv[1]);
+	switch (SmartDashboard_Mode)
+	{
+	case 0:
+		SmartDashboard::SetClientMode();
+		SmartDashboard::SetIPAddress("10.34.81.99");  //robot
+		break;
+	case 1:
+		//But set as client if testing with a robot server (e.g. robot simulation)
+		SmartDashboard::SetClientMode();
+		SmartDashboard::SetIPAddress("127.0.0.1");   //localhost
+		break;
+	case 2:
+		//Run as a server to test directly to SmartDashboard UI locally
+		SmartDashboard::SetIPAddress("127.0.0.1");   //localhost
+		break;
+	}
 	SmartDashboard::init();
 
 	// Print help in console
