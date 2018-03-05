@@ -793,6 +793,12 @@ class Curivator_Goals_Impl : public AtomicGoal
 					SmartDashboard::PutNumber("YawAngle",RAD_2_DEG(YawAngle));
 					SmartDashboard::PutNumber("DriveDistance",ZRawPositon); //follow suit with yaw, so we can test it separately
 				}
+				else
+				{
+					//If it's not able to detect it then we zero out, which will stop all motion until we can detect it again
+					SmartDashboard::PutNumber("YawAngle",0.0);
+					SmartDashboard::PutNumber("DriveDistance",0.0);  //we check for 0.0 to obtain the z_offset
+				}
 			}
 		private:
 			//filter out noise! 
@@ -1000,6 +1006,10 @@ class Curivator_Goals_Impl : public AtomicGoal
 							{
 
 								m_LatencyCounter=0; //may be redundant if drive yaw is active
+								//If we are exactly 0.0 its because we don't have a lock on the target setting it to Z_offset will 
+								//make it stop
+								if (DriveDistance==0.0)
+									DriveDistance=Z_Offset;
 								const double distance_m=(DriveDistance-Z_Offset)*DriveScaleFactor;
 								if (fabs(distance_m)>DriveTolerance*DriveScaleFactor)
 								{
