@@ -151,6 +151,7 @@ class Curivator_Robot : public Swerve_Robot
 		}
 
 		Curivator_Robot(const char EntityName[],Curivator_Control_Interface *robot_control,bool IsAutonomous=false);
+		~Curivator_Robot();
 		IEvent::HandlerList ehl;
 		virtual void Initialize(Entity2D_Kind::EventMap& em, const Entity_Properties *props=NULL);
 		virtual void ResetPos();
@@ -160,6 +161,13 @@ class Curivator_Robot : public Swerve_Robot
 		void StopAuton(bool isOn);  //just like freeze arm but puts things back in teleop
 		//simple computation between the target angle against the actual angle measured
 		double GetBucketAngleContinuity();
+
+		//For now offer this as a public method, but eventually this needs to be managed internally
+		void Curivator_Robot_SetAggresiveStop(bool UseAggresiveStop) 
+		{	m_CenterLeftWheel.SetAggresiveStop(UseAggresiveStop),
+			m_CenterRightWheel.SetAggresiveStop(UseAggresiveStop);
+			Swerve_Robot_SetAggresiveStop(UseAggresiveStop);
+		}
 
 	protected:
 		class Turret
@@ -356,11 +364,9 @@ class Curivator_Robot : public Swerve_Robot
 		bool m_LockPosition; //used to allow a position to remain locked to allow arm to catch up and stabilize
 		bool m_SmartDashboard_AutonTest_Valve; //Value used to detect change of AutonTest CheckBox
 
-		//#ifdef Robot_TesterCode
 		void TestAutonomous();
 		void GoalComplete();
 		void GoalFailed();
-		//#endif
 };
 
 namespace Curivator_Goals

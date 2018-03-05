@@ -898,8 +898,23 @@ class Curivator_Goals_Impl : public AtomicGoal
 				m_LatencyCounter=0.0;
 				m_Status=eActive;
 				m_IsTargeting=false;
+				m_SAS_FloodControl=true;  //assume we have aggressive stop by default
 				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
 			}
+
+			//This is a short-term fix to handle yaw tracking on drive without the clicking.  The actual fix will become more clear once I start
+			//working with the gyro
+			void Set_UseAggresiveStop(bool UseAgressiveStop)
+			{
+				if (m_SAS_FloodControl!=UseAgressiveStop)
+				{
+					//printf("AggresiveStop=%d\n",UseAgressiveStop);  //testing flooding
+					SmartDashboard::PutBoolean("UseAggresiveStop",UseAgressiveStop);  //monitor this
+					m_Robot.Curivator_Robot_SetAggresiveStop(UseAgressiveStop);
+					m_SAS_FloodControl=UseAgressiveStop;
+				}
+			}
+
 			virtual Goal_Status Process(double dTime_s)
 			{
 				if (m_Status==eActive)
@@ -952,7 +967,10 @@ class Curivator_Goals_Impl : public AtomicGoal
 							//Note: we needn't normalize here as that happens implicitly 
 							//printf("rotation=%.2f\n",RAD_2_DEG(m_Position));
 							if (fabs(YawAngle)>YawTolerance*YawScaleFactor)
+							{
+								Set_UseAggresiveStop(false);  //avoid clicking while tracking yaw (short term solution)
 								m_Robot.GetController()->SetIntendedOrientation(m_Position);
+							}
 							m_LatencyCounter=0.0;
 						}
 					}
@@ -984,6 +1002,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 								const double distance_m=(DriveDistance-Z_Offset)*DriveScaleFactor;
 								if (fabs(distance_m)>DriveTolerance*DriveScaleFactor)
 								{
+									Set_UseAggresiveStop(true);
 									//expand out the functionality to drive forward or reverse using Goal_Ship_MoveToRelativePosition
 									WayPoint wp;
 									const Vec2d Local_GoalTarget(0.0,distance_m); //where postive if forward and negative is reverse
@@ -1016,6 +1035,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 				//stop it
 				m_Robot.GetController()->SetIntendedOrientation(m_Robot.GetAtt_r());
 				m_Robot.GetController()->SetShipVelocity(0.0);
+				Set_UseAggresiveStop(true);  //back to default
 				m_Status=eInactive;  //this goal never really completes
 				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
 			}
@@ -1024,6 +1044,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 			double m_LatencyCounter;
 			double m_Position; //keep track of last position between each latency count
 			bool m_IsTargeting;  //Have a valve for targeting
+			bool m_SAS_FloodControl;  //Limit writes to the properties
 		};
 
 	public:
