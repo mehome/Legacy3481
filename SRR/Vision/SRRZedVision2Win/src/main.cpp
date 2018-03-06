@@ -64,6 +64,7 @@ void printHelp() {
 	std::cout << std::endl;
 }
 
+#define MOUSECLICK
 #ifdef MOUSECLICK
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
@@ -84,10 +85,12 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		int y_int = (y * data->image.rows / data->_resize.height);
 		int x_int = (x * data->image.cols / data->_resize.width);
 
-		uchar val1, val2, val3;
-		val1 = data->image.at<uchar>(x_int, y_int);
+		cv::Vec3b intensity = hsv.at<cv::Vec3b>(y_int, x_int);
+		uchar hue = intensity.val[0];
+		uchar sat = intensity.val[1];
+		uchar val = intensity.val[2];
 
-		std::cout << val1 << std::endl;
+		std::cout << "h: " << (int)hue << " s: " << (int)sat << " v: " << (int)val << std::endl;
 		std::cout << std::endl;
 	}
 }
