@@ -64,10 +64,10 @@ void printHelp() {
 	std::cout << std::endl;
 }
 
-#ifdef MOUSEDEPTH
+#ifdef MOUSECLICK
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
-	sl::Mat depth;
+	cv::Mat image;
 	cv::Size _resize;
 } mouseOCV;
 
@@ -76,22 +76,18 @@ mouseOCV mouseStruct;
 static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, void * param) {
 	if (event == CV_EVENT_LBUTTONDOWN) {
 		mouseOCVStruct* data = (mouseOCVStruct*)param;
-		size_t y_int = (y * data->depth.getHeight() / data->_resize.height);
-		size_t x_int = (x * data->depth.getWidth() / data->_resize.width);
 
-		sl::float1 dist;
-		data->depth.getValue(x_int, y_int, &dist);
+		//convert the img from color to hsv
+		cv::Mat hsv;
+		cv::cvtColor(data->image, hsv, CV_BGR2HSV);
 
-		std::cout << std::endl;
-		if (isValidMeasure(dist))
-			std::cout << "Depth at (" << x_int << "," << y_int << ") : " << dist << "m";
-		else {
-			std::string depth_status;
-			if (dist == sl::TOO_FAR) depth_status = ("Depth is too far.");
-			else if (dist == sl::TOO_CLOSE) depth_status = ("Depth is too close.");
-			else depth_status = ("Depth not available");
-			std::cout << depth_status;
-		}
+		int y_int = (y * data->image.rows / data->_resize.height);
+		int x_int = (x * data->image.cols / data->_resize.width);
+
+		uchar val1, val2, val3;
+		val1 = data->image.at<uchar>(x_int, y_int);
+
+		std::cout << val1 << std::endl;
 		std::cout << std::endl;
 	}
 }
@@ -180,9 +176,6 @@ int main(int argc, char **argv) {
 	size_t width = StereoCam.image_size.width;
 	size_t height = StereoCam.image_size.height;
 
-#ifdef MOUSEDEPTH
-	cv::Mat disp((int)height, (int)width, CV_8UC4);
-#endif
 	cv::Mat anaplyph((int)height, (int)width, CV_8UC4);
 	cv::Mat confidencemap((int)height, (int)width, CV_8UC4);
 
@@ -194,16 +187,15 @@ int main(int argc, char **argv) {
 		// Mouse callback initialization
 		cv::Size displaySize((int)width, (int)height);
 		StereoCam.GrabDepth();
-#ifdef MOUSEDEPTH
-		mouseStruct.depth = StereoCam.depth;
+#ifdef MOUSECLICK
+		mouseStruct.image = StereoCam.frame;
 		mouseStruct._resize = displaySize;
 #endif
 		//create Opencv Windows
-#ifdef MOUSEDEPTH
-		cv::namedWindow("Depth", cv::WINDOW_AUTOSIZE);
-		cv::setMouseCallback("Depth", onMouseCallback, (void*)&mouseStruct);
-#endif
 		cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
+#ifdef MOUSECLICK
+		cv::setMouseCallback("VIEW", onMouseCallback, (void*)&mouseStruct);
+#endif
 	}
 	else
 	{
@@ -265,22 +257,13 @@ int main(int argc, char **argv) {
 			anaplyph = StereoCam.frame;
 			depth = StereoCam.depth;
 			point_cloud = StereoCam.point_cloud;
-#ifdef MOUSEDEPTH
-			mouseStruct.depth = depth;
+#ifdef MOUSECLICK
+			mouseStruct.image = anaplyph;
 #endif
-			// TODO: optional depth and disparity display below.
 			// Get frames and launch the computation
 			if (StereoCam.bHaveFrame)
 			{
 				/***************  DISPLAY:  ***************/
-#ifdef MOUSEDEPTH
-				// Normalize the DISPARITY / DEPTH map in order to use the full color range of grey level image
-				StereoCam.GetNormDepth();
-				disp = StereoCam.cvNormDepth;
-
-				// To get the depth at a given position, click on the DISPARITY / DEPTH map image
-				imshow("Depth", disp);
-#endif
 				if (cam1_op_mode == FindHook)
 					detectHookSample(anaplyph, depth, point_cloud);
 				else if (cam1_op_mode == FindRock)

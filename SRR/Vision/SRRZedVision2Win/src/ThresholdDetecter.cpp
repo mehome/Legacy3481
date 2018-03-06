@@ -55,6 +55,29 @@ ThresholdDetecter::~ThresholdDetecter()
 	str_threshold_setting[V_High] = "THRESHOLD VALUE HIGH";
 }
 
+void ThresholdDetecter::setThreshold(int3 low, int3 high)
+{
+	HSV_Range[H_Low] = low.x;
+	HSV_Range[S_Low] = low.y;
+	HSV_Range[V_Low] = low.z;
+	HSV_Range[H_High] = high.x;
+	HSV_Range[S_High] = high.y;
+	HSV_Range[V_High] = high.z;
+}
+
+std::pair<int3, int3> ThresholdDetecter::getThreshold(void)
+{
+	int3 low, high;
+	low.x = HSV_Range[H_Low];
+	low.y = HSV_Range[S_Low];
+	low.z = HSV_Range[V_Low];
+	high.x = HSV_Range[H_High];
+	high.y = HSV_Range[S_High];
+	high.z = HSV_Range[V_High];
+	std::pair<int3, int3> retval(low, high);
+	return retval;
+}
+
 void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, bool small_display)
 {
 	cv::Mat binary;

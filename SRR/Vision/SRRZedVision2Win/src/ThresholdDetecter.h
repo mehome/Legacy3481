@@ -14,6 +14,8 @@ public:
 	void switchThresholdSettings();
 	bool loadThreshold(std::string file);
 	void saveThreshold(std::string file);
+	void setThreshold(int3 low, int3 high);
+	std::pair<int3, int3> getThreshold(void);
 
 private:
 	int HSV_Range[6];
