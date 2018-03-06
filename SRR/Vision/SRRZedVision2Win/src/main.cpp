@@ -18,7 +18,6 @@ This function displays help
 **/
 void printHelp() {
 	std::cout << std::endl;
-	std::cout << std::endl;
 	std::cout << "Camera controls hotkeys: " << std::endl;
 	std::cout << "  Increase camera settings value:            '+'" << std::endl;
 	std::cout << "  Decrease camera settings value:            '-'" << std::endl;
@@ -59,7 +58,6 @@ void printHelp() {
 	std::cout << "toggle stereo camera:                        'C'" << std::endl;
 	std::cout << std::endl;
 	std::cout << "Exit : 'q'" << std::endl;
-	std::cout << std::endl;
 	std::cout << std::endl;
 	std::cout << std::endl;
 }
@@ -118,6 +116,7 @@ int frameCount = 0;
 /** Functions **/
 void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
 void detectBeacon(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
+void printInfo();
 
 /** Cascade classifire data */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
@@ -184,19 +183,18 @@ int main(int argc, char **argv) {
 
 	sl::Mat depth;
 	sl::Mat point_cloud;
+	cv::Size displaySize((int)(SmallWindow ? width / 2 : width), (int)(SmallWindow ? height / 2 : height));
 
 	if (StereoCam.IsOpen)
 	{
 		// Mouse callback initialization
-		cv::Size displaySize((int)width, (int)height);
 		StereoCam.GrabDepth();
-#ifdef MOUSECLICK
-		mouseStruct.image = StereoCam.frame;
-		mouseStruct._resize = displaySize;
-#endif
+
 		//create Opencv Windows
 		cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
 #ifdef MOUSECLICK
+		mouseStruct.image = StereoCam.frame;
+		mouseStruct._resize = displaySize;
 		cv::setMouseCallback("VIEW", onMouseCallback, (void*)&mouseStruct);
 #endif
 	}
@@ -255,13 +253,17 @@ int main(int argc, char **argv) {
 		}
 
 		if (StereoCamEnabled)
-		{
+		{	// update
 			StereoCam.GrabFrameAndDapth();
 			anaplyph = StereoCam.frame;
 			depth = StereoCam.depth;
 			point_cloud = StereoCam.point_cloud;
+
+			displaySize.height = (int)(SmallWindow ? height / 2 : height);
+			displaySize.width = (int)(SmallWindow ? width / 2 : width);
 #ifdef MOUSECLICK
 			mouseStruct.image = anaplyph;
+			mouseStruct._resize = displaySize;
 #endif
 			// Get frames and launch the computation
 			if (StereoCam.bHaveFrame)
@@ -275,7 +277,7 @@ int main(int argc, char **argv) {
 					detectBeacon(anaplyph, depth, point_cloud);
 
 				if (SmallWindow)
-					resize(anaplyph, anaplyph, cv::Size((int)width / 2, (int)height / 2));
+					resize(anaplyph, anaplyph, displaySize);
 				imshow("VIEW", anaplyph);
 			}
 
@@ -295,6 +297,10 @@ int main(int argc, char **argv) {
 
 			case 'h':
 				printHelp();
+				break;
+
+			case '?':
+				printInfo();
 				break;
 
             //Change camera settings 
@@ -323,7 +329,9 @@ int main(int argc, char **argv) {
 			case 0x00750000:
 			case 0x00760000:
 			case 0x00770000:
-				ThresholdDet.updateThresholdSettings(key);
+				// only change values if we are in that mode.
+				if (cam1_op_mode == FindRock || cam2_op_mode == FindRock)
+					ThresholdDet.updateThresholdSettings(key);
 				break;
 
 				// ______________  VIEW __________________
@@ -402,3 +410,19 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
+
+/**
+This function display current settings and values.
+**/
+void printInfo()
+{
+	std::cout << std::endl;
+	std::cout << "Stereo cam enabled: " << StereoCamEnabled << std::endl;
+	std::cout << "Front cam mode: " << cam1_op_mode << std::endl;
+	std::cout << "Front cam enable: " << FrontCamEnabled << std::endl;
+	std::cout << "Front cam mode: " << cam2_op_mode << std::endl;
+	std::cout << "small display window: " << SmallWindow << std::endl;
+
+	std::cout << std::endl;
+}
+
