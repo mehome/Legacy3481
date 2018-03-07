@@ -102,16 +102,12 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		if (y_low < 0) y_low = 0;
 		if (y_high > 255) y_high = 255;
 
-		int cn = hsv.channels();
-		cv::Rect rc(cv::Point(x_low, y_low), cv::Point(x_high, y_high));
-		cv::Mat roi(hsv, rc);
-
 		// there has to be a more efficient way to do this
-		for (int i = 0; i < roi.rows; i++)
+		for (int i = y_low; i < y_high; i++)
 		{
-			for (int j = 0; j < roi.cols; j++)
+			for (int j = x_low; j < x_high; j++)
 			{	// find low high values
-				cv::Vec3b intensity = roi.at<cv::Vec3b>(i, j);
+				cv::Vec3b intensity = hsv.at<cv::Vec3b>(i, j);
 				if (intensity.val[0] < data->low.x)  data->low.x = intensity.val[0];
 				if (intensity.val[1] < data->low.y)  data->low.y = intensity.val[1];
 				if (intensity.val[2] < data->low.z)	 data->low.z = intensity.val[2];
