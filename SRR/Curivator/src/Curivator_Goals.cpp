@@ -956,7 +956,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 					double YawAngle=0.0;
 					double TrackLatency=0.25;  //default high seconds
 					double YawScaleFactor=0.35;  //ability to tune adjustment intensity... default half to under estimate avoid oscillation
-					double YawTolerance=0.4; //degrees tolerance before taking action, also threshold before advancing drive
+					double YawTolerance=0.15; //degrees tolerance before taking action, also threshold before advancing drive
 					{
 						const char * const SmartNames[]={"YawAngle","TrackLatency","YawScaleFactor","YawTolerance"};
 						double * const SmartVariables[]={&YawAngle,&TrackLatency,&YawScaleFactor,&YawTolerance};
@@ -973,7 +973,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 							m_Position=m_Robot.GetAtt_r() +(YawAngleRad*YawScaleFactor);  //set out new position
 							//Note: we needn't normalize here as that happens implicitly 
 							//printf("rotation=%.2f\n",RAD_2_DEG(m_Position));
-							if (fabs(YawAngle)>YawTolerance*YawScaleFactor)
+							if (fabs(YawAngle)>YawTolerance)
 							{
 								Set_UseAggresiveStop(false);  //avoid clicking while tracking yaw (short term solution)
 								m_Robot.GetController()->SetIntendedOrientation(m_Position);
@@ -984,8 +984,8 @@ class Curivator_Goals_Impl : public AtomicGoal
 					if (EnableDrive)
 					{
 						double DriveDistance=1.0;  //start with same value as the z offset
-						double DriveScaleFactor=0.25;  //ability to tune adjustment intensity... default to 1/4 under estimate avoid oscillation
-						double DriveTolerance=0.4; //degrees tolerance before taking action, also threshold before advancing drive
+						double DriveScaleFactor=0.35;  //ability to tune adjustment intensity... default to 1/4 under estimate avoid oscillation
+						double DriveTolerance=0.05; //degrees tolerance before taking action, also threshold before advancing drive
 						double Z_Offset=DriveDistance;  //used to tune how close we wish to be away from our target
 						{
 							const char * const SmartNames[]={"DriveDistance","DriveScaleFactor","DriveTolerance","Z_Offset"};
@@ -1011,7 +1011,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 								if (DriveDistance==0.0)
 									DriveDistance=Z_Offset;
 								const double distance_m=(DriveDistance-Z_Offset)*DriveScaleFactor;
-								if (fabs(distance_m)>DriveTolerance*DriveScaleFactor)
+								if (fabs(distance_m)>DriveTolerance)
 								{
 									Set_UseAggresiveStop(true);
 									//expand out the functionality to drive forward or reverse using Goal_Ship_MoveToRelativePosition
