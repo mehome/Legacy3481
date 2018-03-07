@@ -992,10 +992,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 							double * const SmartVariables[]={&DriveDistance,&DriveScaleFactor,&DriveTolerance,&Z_Offset};
 							Auton_Smart_GetMultiValue(4,SmartNames,SmartVariables);
 						}
-
-						//Much like driving to a way point where it waits until yaw alignment, but it may be more rigid as it doesn't turn to it
-						//however, this may be fine for shorter distance tracking
-						if ((YawAngle<YawTolerance)||(!EnableDriveYaw))
+						//Note: It can handle whatever yaw is being set to
 						{
 							if (!EnableDriveYaw)
 							{
