@@ -71,6 +71,14 @@ typedef struct mouseOCVStruct {
 mouseOCV mouseStruct;
 
 static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, void * param) {
+
+	int3 low, high;
+	if (flag == (CV_EVENT_FLAG_LBUTTON | CV_EVENT_FLAG_RBUTTON))
+	{	// reset if both down
+		low.x = 255; low.y = 255; low.z = 255;
+		high.x = 0; high.y = 0; high.z = 0;
+	}
+
 	if (event == CV_EVENT_LBUTTONDOWN) {
 		mouseOCVStruct* data = (mouseOCVStruct*)param;
 
@@ -78,8 +86,18 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		cv::Mat hsv;
 		cv::cvtColor(data->image, hsv, CV_BGR2HSV);
 
-		int y_int = (y * data->image.rows / data->_resize.height);
 		int x_int = (x * data->image.cols / data->_resize.width);
+		int y_int = (y * data->image.rows / data->_resize.height);
+
+		// find our 9x9 area
+		int x_low = x_int - 4;
+		int x_high = x_int + 4;
+		int y_low = y_int - 4;
+		int y_high = y_int + 4;
+		if (x_low < 0) x_low = 0;
+		if (x_high > 255) x_high = 255;
+		if (y_low < 0) y_low = 0;
+		if (y_high > 255) y_high = 255;
 
 		cv::Vec3b intensity = hsv.at<cv::Vec3b>(y_int, x_int);
 		uchar hue = intensity.val[0];
