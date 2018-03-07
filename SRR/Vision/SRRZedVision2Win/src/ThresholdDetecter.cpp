@@ -78,6 +78,14 @@ std::pair<int3, int3> ThresholdDetecter::getThreshold(void)
 	return retval;
 }
 
+void ThresholdDetecter::printThreshold(void)
+{
+	std::cout << "Threshold range" << std::endl;
+	std::cout << "H: " << HSV_Range[H_Low] << " - " << HSV_Range[H_High] << std::endl;
+	std::cout << "S: " << HSV_Range[S_Low] << " - " << HSV_Range[S_High] << std::endl;
+	std::cout << "V: " << HSV_Range[V_Low] << " - " << HSV_Range[V_High] << std::endl;
+}
+
 void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, bool small_display)
 {
 	cv::Mat binary;

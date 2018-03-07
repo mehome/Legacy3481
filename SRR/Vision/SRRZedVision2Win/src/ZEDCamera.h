@@ -14,7 +14,8 @@ public:
 	sl::ERROR_CODE GetNormConfidence(void);
 	void ResetCalibration(void);
 	void updateCameraSettings(int key);
-	void switchCameraSettings();
+	void switchCameraSettings(void);
+	void printCameraSettings(void);
 	bool loadSettings(void);
 	void saveSettings(void);
 	void saveSbSimage(std::string);

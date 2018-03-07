@@ -62,8 +62,6 @@ void printHelp() {
 	std::cout << std::endl;
 }
 
-#define MOUSECLICK
-#ifdef MOUSECLICK
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
 	cv::Mat image;
@@ -92,7 +90,6 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		std::cout << std::endl;
 	}
 }
-#endif
 
 float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 {
@@ -112,11 +109,12 @@ bool SmallWindow = true;
 int cam1_op_mode = FindHook;
 int cam2_op_mode = FindHook;
 int frameCount = 0;
+size_t SmartDashboard_Mode = 0;
 
 /** Functions **/
 void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
 void detectBeacon(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
-void printInfo();
+void printInfo(ThresholdDetecter &, ZEDCamera &);
 
 /** Cascade classifire data */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
@@ -136,11 +134,6 @@ extern cv::CascadeClassifier hook_cascade;
 //SRRZedVision.exe [mode=0] [run svo file]
 int main(int argc, char **argv) {
 
-    if (argc > 2) {
-        std::cout << "Only the path of a SVO can be passed in arg" << std::endl;
-        return -1;
-    }
-
     //-- 1. Load the cascades
     if (!hook_cascade.load(hook_cascade_name)){	
 		std::cout << "--(!)Error loading cascade data" << std::endl; 
@@ -157,17 +150,16 @@ int main(int argc, char **argv) {
 	int key = ' ';
 	int count = 0;
 
-	char * filearg;
 	if (argc == 3)
-		filearg = argv[2];
+		filename = argv[2];
 	else
-		filearg = NULL;
+		filename = "";
 
 	std::cout << "Initializing OCV Camera." << std::endl;
 	OCVCamera FrontCam = OCVCamera(FRONT_CAM_URL);
 
 	std::cout << "Initializing ZED Camera." << std::endl;
-	ZEDCamera StereoCam = ZEDCamera(filearg);
+	ZEDCamera StereoCam = ZEDCamera(filename.c_str());
 
 	if (!FrontCam.IsOpen && !StereoCam.IsOpen)
 	{
@@ -192,11 +184,9 @@ int main(int argc, char **argv) {
 
 		//create Opencv Windows
 		cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
-#ifdef MOUSECLICK
 		mouseStruct.image = StereoCam.frame;
 		mouseStruct._resize = displaySize;
 		cv::setMouseCallback("VIEW", onMouseCallback, (void*)&mouseStruct);
-#endif
 	}
 	else
 	{
@@ -210,7 +200,6 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	size_t SmartDashboard_Mode = 0;
 	if (argc > 1)
 		SmartDashboard_Mode = atoi(argv[1]);
 	switch (SmartDashboard_Mode)
@@ -261,10 +250,8 @@ int main(int argc, char **argv) {
 
 			displaySize.height = (int)(SmallWindow ? height / 2 : height);
 			displaySize.width = (int)(SmallWindow ? width / 2 : width);
-#ifdef MOUSECLICK
 			mouseStruct.image = anaplyph;
 			mouseStruct._resize = displaySize;
-#endif
 			// Get frames and launch the computation
 			if (StereoCam.bHaveFrame)
 			{
@@ -300,7 +287,7 @@ int main(int argc, char **argv) {
 				break;
 
 			case '?':
-				printInfo();
+				printInfo(ThresholdDet, StereoCam);
 				break;
 
             //Change camera settings 
@@ -414,15 +401,53 @@ int main(int argc, char **argv) {
 /**
 This function display current settings and values.
 **/
-void printInfo()
+void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
 {
 	std::cout << std::endl;
 	std::cout << "Stereo cam enabled: " << StereoCamEnabled << std::endl;
-	std::cout << "Front cam mode: " << cam1_op_mode << std::endl;
-	std::cout << "Front cam enable: " << FrontCamEnabled << std::endl;
-	std::cout << "Front cam mode: " << cam2_op_mode << std::endl;
-	std::cout << "small display window: " << SmallWindow << std::endl;
+	if (StereoCamEnabled)
+	{
+		std::cout << "Stereo cam mode: ";
+		switch (cam1_op_mode) {
+		case 0: std::cout << "None" << std::endl; break;
+		case FindHook: std::cout << "FindHook" << std::endl; break;
+		case FindRock: std::cout << "FindRock" << std::endl; break;
+		case FindBeacon: std::cout << "FindBeakon" << std::endl; break;
+		}
+		if (filename.size()) std::cout << "video from file: " << filename << std::endl;
+		std::cout << "Stereo cam view: ";
+		switch (StereoCam.ViewID) {
+		case sl::VIEW_LEFT: std::cout << "VIEW_LEFT" << std::endl; break;
+		case sl::VIEW_RIGHT: std::cout << "VIEW_RIGHT" << std::endl; break;
+		case sl::VIEW_LEFT_UNRECTIFIED: std::cout << "VIEW_LEFT_UNRECTIFIED" << std::endl; break;
+		case sl::VIEW_RIGHT_UNRECTIFIED: std::cout << "VIEW_RIGHT_UNRECTIFIED" << std::endl; break;
+		case sl::VIEW_DEPTH: std::cout << "VIEW_DEPTH" << std::endl; break;
+		case sl::VIEW_CONFIDENCE: std::cout << "VIEW_CONFIDENCE" << std::endl;	break;
+		case sl::VIEW_NORMALS: std::cout << "VIEW_NORMALS" << std::endl; break;
+		}
+		std::cout << "Stereo cam sensing mode: ";
+		if (StereoCam.runtime_parameters.sensing_mode == sl::SENSING_MODE_STANDARD)
+			std::cout << "Standard" << std::endl;
+		if (StereoCam.runtime_parameters.sensing_mode == sl::SENSING_MODE_FILL)
+			std::cout << "Fill" << std::endl;
+		StereoCam.printCameraSettings();
+	}
 
+	std::cout << "Front cam enabled: " << FrontCamEnabled << std::endl;
+	if (FrontCamEnabled)
+	{
+		std::cout << "Front cam mode: ";
+		switch (cam2_op_mode) {
+		case 0: std::cout << "None" << std::endl; break;
+		case FindHook: std::cout << "FindHook" << std::endl; break;
+		case FindRock: std::cout << "FindRock" << std::endl; break;
+		case FindBeacon: std::cout << "FindBeakon" << std::endl; break;
+		}
+	}
+	std::cout << "small display window: " << SmallWindow << std::endl;
+	std::cout << "SmartDashboard mode: " << SmartDashboard_Mode << std::endl;
+	std::cout << std::endl;
+	ThresholdDet.printThreshold();
 	std::cout << std::endl;
 }
 

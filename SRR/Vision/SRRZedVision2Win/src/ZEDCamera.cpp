@@ -273,7 +273,7 @@ void ZEDCamera::updateCameraSettings(int key) {
 /**
 This function toggles between camera settings
 **/
-void ZEDCamera::switchCameraSettings() {
+void ZEDCamera::switchCameraSettings(void) {
 	step_camera_setting = 1;
 	switch (camera_settings_) {
 	case sl::CAMERA_SETTINGS_BRIGHTNESS:
@@ -319,4 +319,18 @@ void ZEDCamera::switchCameraSettings() {
 		std::cout << "Camera Settings: BRIGHTNESS" << std::endl;
 		break;
 	}
+}
+
+void ZEDCamera::printCameraSettings(void)
+{
+	std::cout << std::endl;
+	std::cout << "Camera settings: " << std::endl;
+	std::cout << "BRIGHTNESS " << zed->getCameraSettings(sl::CAMERA_SETTINGS_BRIGHTNESS) << std::endl;
+	std::cout << "CONTRAST " << zed->getCameraSettings(sl::CAMERA_SETTINGS_CONTRAST) << std::endl;
+	std::cout << "HUE " << zed->getCameraSettings(sl::CAMERA_SETTINGS_HUE) << std::endl;
+	std::cout << "SATURATION " << zed->getCameraSettings(sl::CAMERA_SETTINGS_SATURATION) << std::endl;
+	std::cout << "GAIN " << zed->getCameraSettings(sl::CAMERA_SETTINGS_GAIN) << std::endl;
+	std::cout << "EXPOSURE " << zed->getCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE) << std::endl;
+	std::cout << "WHITEBALANCE " << zed->getCameraSettings(sl::CAMERA_SETTINGS_WHITEBALANCE) << std::endl;
+	std::cout << std::endl;
 }
