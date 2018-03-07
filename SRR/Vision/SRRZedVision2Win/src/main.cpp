@@ -102,6 +102,13 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		if (y_low < 0) y_low = 0;
 		if (y_high > 255) y_high = 255;
 
+#if 1
+		cv::Vec3b intensity = hsv.at<cv::Vec3b>(y_int, x_int);
+		std::cout << "H: " << (int)intensity.val[0] << std::endl;
+		std::cout << "S: " << (int)intensity.val[1] << std::endl;
+		std::cout << "V: " << (int)intensity.val[2] << std::endl;
+		std::cout << std::endl;
+#else
 		// there has to be a more efficient way to do this
 		for (int i = y_low; i < y_high; i++)
 		{
@@ -122,6 +129,7 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		std::cout << "S: " << data->low.y << " - " << data->high.y << std::endl;
 		std::cout << "V: " << data->low.z << " - " << data->high.z << std::endl;
 		std::cout << std::endl;
+#endif
 		data->update = true;
 	}
 	else if (event == CV_EVENT_RBUTTONDOWN)
