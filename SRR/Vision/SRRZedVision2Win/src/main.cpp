@@ -66,22 +66,25 @@ void printHelp() {
 typedef struct mouseOCVStruct {
 	cv::Mat image;
 	cv::Size _resize;
+	int3 low, high;
+	bool update = false;
 } mouseOCV;
 
 mouseOCV mouseStruct;
 
 static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, void * param) {
 
-	int3 low, high;
+	mouseOCVStruct* data = (mouseOCVStruct*)param;
+
 	if (flag == (CV_EVENT_FLAG_LBUTTON | CV_EVENT_FLAG_RBUTTON))
 	{	// reset if both down
-		low.x = 255; low.y = 255; low.z = 255;
-		high.x = 0; high.y = 0; high.z = 0;
+		data->low.x = 255; data->low.y = 255; data->low.z = 255;
+		data->high.x = 0;  data->high.y = 0;  data->high.z = 0;
+		std::cout << "mouse pick reset." << std::endl;
+		data->update = true;
 	}
-
-	if (event == CV_EVENT_LBUTTONDOWN) {
-		mouseOCVStruct* data = (mouseOCVStruct*)param;
-
+	else if (event == CV_EVENT_LBUTTONDOWN) 
+	{
 		//convert the img from color to hsv
 		cv::Mat hsv;
 		cv::cvtColor(data->image, hsv, CV_BGR2HSV);
@@ -99,13 +102,36 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		if (y_low < 0) y_low = 0;
 		if (y_high > 255) y_high = 255;
 
-		cv::Vec3b intensity = hsv.at<cv::Vec3b>(y_int, x_int);
-		uchar hue = intensity.val[0];
-		uchar sat = intensity.val[1];
-		uchar val = intensity.val[2];
+		int cn = hsv.channels();
+		cv::Rect rc(cv::Point(x_low, y_low), cv::Point(x_high, y_high));
+		cv::Mat roi(hsv, rc);
 
-		std::cout << "h: " << (int)hue << " s: " << (int)sat << " v: " << (int)val << std::endl;
+		// there has to be a more efficient way to do this
+		for (int i = 0; i < roi.rows; i++)
+		{
+			for (int j = 0; j < roi.cols; j++)
+			{	// find low high values
+				cv::Vec3b intensity = roi.at<cv::Vec3b>(i, j);
+				if (intensity.val[0] < data->low.x)  data->low.x = intensity.val[0];
+				if (intensity.val[1] < data->low.y)  data->low.y = intensity.val[1];
+				if (intensity.val[2] < data->low.z)	 data->low.z = intensity.val[2];
+
+				if (intensity.val[0] > data->high.x)  data->high.x = intensity.val[0];
+				if (intensity.val[1] > data->high.y)  data->high.y = intensity.val[1];
+				if (intensity.val[2] > data->high.z)  data->high.z = intensity.val[2];
+			}
+		}
+
+		std::cout << "H: " << data->low.x << " - " << data->high.x << std::endl;
+		std::cout << "S: " << data->low.y << " - " << data->high.y << std::endl;
+		std::cout << "V: " << data->low.z << " - " << data->high.z << std::endl;
 		std::cout << std::endl;
+		data->update = true;
+	}
+	else if (event == CV_EVENT_RBUTTONDOWN)
+	{
+
+		data->update = true;
 	}
 }
 
@@ -158,6 +184,11 @@ int main(int argc, char **argv) {
 		return -1; 
     };
 
+	int3 low;
+	int3 high;
+	low.x = low.y = low.z = 255;
+	high.x = high.y = high.z = 0;
+
 	// set up detectors
 	int3 HSV_low;
 	int3 HSV_high;
@@ -204,6 +235,8 @@ int main(int argc, char **argv) {
 		cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
 		mouseStruct.image = StereoCam.frame;
 		mouseStruct._resize = displaySize;
+		mouseStruct.low = low;
+		mouseStruct.high = high;
 		cv::setMouseCallback("VIEW", onMouseCallback, (void*)&mouseStruct);
 	}
 	else
@@ -270,6 +303,7 @@ int main(int argc, char **argv) {
 			displaySize.width = (int)(SmallWindow ? width / 2 : width);
 			mouseStruct.image = anaplyph;
 			mouseStruct._resize = displaySize;
+
 			// Get frames and launch the computation
 			if (StereoCam.bHaveFrame)
 			{
@@ -277,7 +311,16 @@ int main(int argc, char **argv) {
 				if (cam1_op_mode == FindHook)
 					detectHookSample(anaplyph, depth, point_cloud);
 				else if (cam1_op_mode == FindRock)
+				{
+#if 0	// need to confirm resonable numbers
+					if (mouseStruct.update)
+					{
+						ThresholdDet.setThreshold(mouseStruct.low, mouseStruct.high);
+						mouseStruct.update = false;
+					}
+#endif
 					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, SmallWindow);
+				}
 				else if (cam1_op_mode == FindBeacon)
 					detectBeacon(anaplyph, depth, point_cloud);
 
