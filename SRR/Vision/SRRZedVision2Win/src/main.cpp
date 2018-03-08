@@ -76,6 +76,9 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 
 	mouseOCVStruct* data = (mouseOCVStruct*)param;
 
+	int x_int = (x * data->image.cols / data->_resize.width);
+	int y_int = (y * data->image.rows / data->_resize.height);
+
 	if (flag == (CV_EVENT_FLAG_LBUTTON | CV_EVENT_FLAG_RBUTTON))
 	{	// reset if both down
 		data->low.x = 255; data->low.y = 255; data->low.z = 255;
@@ -84,19 +87,17 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		data->update = true;
 	}
 	else if (event == CV_EVENT_LBUTTONDOWN) 
-	{
+	{	// make the range wider
 		//convert the img from color to hsv
 		cv::Mat hsv;
 		cv::cvtColor(data->image, hsv, CV_BGR2HSV);
-
-		int x_int = (x * data->image.cols / data->_resize.width);
-		int y_int = (y * data->image.rows / data->_resize.height);
 
 		// find our 9x9 area
 		int x_low = x_int - 4;
 		int x_high = x_int + 4;
 		int y_low = y_int - 4;
 		int y_high = y_int + 4;
+
 		if (x_low < 0) x_low = 0;
 		if (x_high > 255) x_high = 255;
 		if (y_low < 0) y_low = 0;
@@ -115,13 +116,13 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 			for (int j = x_low; j < x_high; j++)
 			{	// find low high values
 				cv::Vec3b intensity = hsv.at<cv::Vec3b>(i, j);
-				if (intensity.val[0] < data->low.x)  data->low.x = intensity.val[0];
-				if (intensity.val[1] < data->low.y)  data->low.y = intensity.val[1];
-				if (intensity.val[2] < data->low.z)	 data->low.z = intensity.val[2];
+				if ((int)intensity.val[0] < data->low.x)  data->low.x = (int)intensity.val[0];
+				if ((int)intensity.val[1] < data->low.y)  data->low.y = (int)intensity.val[1];
+				if ((int)intensity.val[2] < data->low.z)  data->low.z = (int)intensity.val[2];
 
-				if (intensity.val[0] > data->high.x)  data->high.x = intensity.val[0];
-				if (intensity.val[1] > data->high.y)  data->high.y = intensity.val[1];
-				if (intensity.val[2] > data->high.z)  data->high.z = intensity.val[2];
+				if ((int)intensity.val[0] > data->high.x)  data->high.x = (int)intensity.val[0];
+				if ((int)intensity.val[1] > data->high.y)  data->high.y = (int)intensity.val[1];
+				if ((int)intensity.val[2] > data->high.z)  data->high.z = (int)intensity.val[2];
 			}
 		}
 
@@ -133,8 +134,50 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		data->update = true;
 	}
 	else if (event == CV_EVENT_RBUTTONDOWN)
-	{
+	{	// make the range narrower
+		//convert the img from color to hsv
+		cv::Mat hsv;
+		cv::cvtColor(data->image, hsv, CV_BGR2HSV);
 
+		// find our 9x9 area
+		int x_low = x_int - 4;
+		int x_high = x_int + 4;
+		int y_low = y_int - 4;
+		int y_high = y_int + 4;
+
+		if (x_low < 0) x_low = 0;
+		if (x_high > 255) x_high = 255;
+		if (y_low < 0) y_low = 0;
+		if (y_high > 255) y_high = 255;
+
+#if 1
+		cv::Vec3b intensity = hsv.at<cv::Vec3b>(y_int, x_int);
+		std::cout << "H: " << (int)intensity.val[0] << std::endl;
+		std::cout << "S: " << (int)intensity.val[1] << std::endl;
+		std::cout << "V: " << (int)intensity.val[2] << std::endl;
+		std::cout << std::endl;
+#else
+		// there has to be a more efficient way to do this
+		for (int i = y_low; i < y_high; i++)
+		{
+			for (int j = x_low; j < x_high; j++)
+			{	// find low high values
+				cv::Vec3b intensity = hsv.at<cv::Vec3b>(i, j);
+				if ((int)intensity.val[0] > data->low.x)  data->low.x = (int)intensity.val[0];
+				if ((int)intensity.val[1] > data->low.y)  data->low.y = (int)intensity.val[1];
+				if ((int)intensity.val[2] > data->low.z)  data->low.z = (int)intensity.val[2];
+
+				if ((int)intensity.val[0] < data->high.x)  data->high.x = (int)intensity.val[0];
+				if ((int)intensity.val[1] < data->high.y)  data->high.y = (int)intensity.val[1];
+				if ((int)intensity.val[2] < data->high.z)  data->high.z = (int)intensity.val[2];
+			}
+		}
+
+		std::cout << "H: " << data->low.x << " - " << data->high.x << std::endl;
+		std::cout << "S: " << data->low.y << " - " << data->high.y << std::endl;
+		std::cout << "V: " << data->low.z << " - " << data->high.z << std::endl;
+		std::cout << std::endl;
+#endif
 		data->update = true;
 	}
 }
