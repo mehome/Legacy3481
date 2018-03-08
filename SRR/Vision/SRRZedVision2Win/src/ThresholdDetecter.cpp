@@ -108,12 +108,6 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 	cv::erode(binary, binary, element);
 	cv::dilate(binary, binary, element);
 
-	//if (HSV_Range[threshold_setting] < 32)
-	//	DebugBreak();
-
-	//contours.clear();
-	//hierarchy.clear();
-
 	/// Find contours
 	cv::findContours(binary, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
@@ -212,7 +206,7 @@ void ThresholdDetecter::updateThresholdSettings(int key) {
 			if (range > 255) range = 255;
 			std::cout << str_threshold_setting[threshold_setting] << ": " << range << std::endl;
 			HSV_Range[H_High] = center + range / 2;
-			HSV_Range[H_Low] = center - range / 2 - 1;
+			HSV_Range[H_Low] = center - range / 2;
 			break;
 		}
 		case H_Center:
@@ -223,7 +217,7 @@ void ThresholdDetecter::updateThresholdSettings(int key) {
 			if (center + range / 2 > 255) center = 255 - range / 2;
 			std::cout << str_threshold_setting[threshold_setting] << ": " << center << std::endl;
 			HSV_Range[H_High] = center + range / 2;
-			HSV_Range[H_Low] = center - range / 2 - 1;
+			HSV_Range[H_Low] = center - range / 2;
 			break;
 		}
 		default:
@@ -286,8 +280,8 @@ void ThresholdDetecter::updateThresholdSettings(int key) {
 		break;
 
 	case 'i':
-		if (thresh_inc == 1)
-			thresh_inc = 5;
+		if (thresh_inc < 10)
+			thresh_inc++;
 		else
 			thresh_inc += 5;
 		if (thresh_inc > 20) thresh_inc = 20;
@@ -295,11 +289,11 @@ void ThresholdDetecter::updateThresholdSettings(int key) {
 		break;
 
 	case 'I':
-		if (thresh_inc == 5)
-			thresh_inc = 1;
+		if (thresh_inc < 10)
+			thresh_inc--;
 		else
 			thresh_inc -= 5;
-		if (thresh_inc <= 0) thresh_inc = 1;
+		if (thresh_inc <= 2) thresh_inc = 2;
 		std::cout << "threshold_inc: " << thresh_inc << std::endl;
 		break;
 

@@ -37,6 +37,8 @@ ZEDCamera::ZEDCamera(const char *file)
 	image_size = zed->getResolution();
 
 	runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
+	updateCameraSettings('r');
+	loadSettings();
 
 	// Print camera information
 	printf("ZED Model                 : %s\n", sl::toString(zed->getCameraInformation().camera_model).c_str());
@@ -44,11 +46,6 @@ ZEDCamera::ZEDCamera(const char *file)
 	printf("ZED Firmware              : %d\n", zed->getCameraInformation().firmware_version);
 	printf("ZED Camera Resolution     : %dx%d\n", (int)zed->getResolution().width, (int)zed->getResolution().height);
 	printf("ZED Camera FPS            : %d\n", (int)zed->getCameraFPS());
-
-	//Jetson only. Execute the calling thread on core 2
-#ifdef __arm__ //only for Jetson K1/X1    
-	sl::zed::Camera::sticktoCPUCore(2);
-#endif
 }
 
 ZEDCamera::~ZEDCamera() 

@@ -57,6 +57,10 @@ void printHelp() {
 	std::cout << "toggle front camera:                         'c'" << std::endl;
 	std::cout << "toggle stereo camera:                        'C'" << std::endl;
 	std::cout << std::endl;
+	std::cout << "Mouse:" << std::endl;
+	std::cout << "hold both buttons to reset HSV values" << std::endl;
+	std::cout << "LButton - Additive selection for HSV" << std::endl;
+	std::cout << "RButton - show HSV value at pointer" << std::endl;
 	std::cout << "Exit : 'q'" << std::endl;
 	std::cout << std::endl;
 	std::cout << std::endl;
@@ -99,17 +103,10 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		int y_high = y_int + 4;
 
 		if (x_low < 0) x_low = 0;
-		if (x_high > 255) x_high = 255;
+		if (x_high > data->image.cols) x_high = data->image.cols;
 		if (y_low < 0) y_low = 0;
-		if (y_high > 255) y_high = 255;
+		if (y_high > data->image.rows) y_high = data->image.rows;
 
-#if 1
-		cv::Vec3b intensity = hsv.at<cv::Vec3b>(y_int, x_int);
-		std::cout << "H: " << (int)intensity.val[0] << std::endl;
-		std::cout << "S: " << (int)intensity.val[1] << std::endl;
-		std::cout << "V: " << (int)intensity.val[2] << std::endl;
-		std::cout << std::endl;
-#else
 		// there has to be a more efficient way to do this
 		for (int i = y_low; i < y_high; i++)
 		{
@@ -130,55 +127,19 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		std::cout << "S: " << data->low.y << " - " << data->high.y << std::endl;
 		std::cout << "V: " << data->low.z << " - " << data->high.z << std::endl;
 		std::cout << std::endl;
-#endif
 		data->update = true;
 	}
 	else if (event == CV_EVENT_RBUTTONDOWN)
-	{	// make the range narrower
+	{	// show value at click
 		//convert the img from color to hsv
 		cv::Mat hsv;
 		cv::cvtColor(data->image, hsv, CV_BGR2HSV);
 
-		// find our 9x9 area
-		int x_low = x_int - 4;
-		int x_high = x_int + 4;
-		int y_low = y_int - 4;
-		int y_high = y_int + 4;
-
-		if (x_low < 0) x_low = 0;
-		if (x_high > 255) x_high = 255;
-		if (y_low < 0) y_low = 0;
-		if (y_high > 255) y_high = 255;
-
-#if 1
 		cv::Vec3b intensity = hsv.at<cv::Vec3b>(y_int, x_int);
 		std::cout << "H: " << (int)intensity.val[0] << std::endl;
 		std::cout << "S: " << (int)intensity.val[1] << std::endl;
 		std::cout << "V: " << (int)intensity.val[2] << std::endl;
 		std::cout << std::endl;
-#else
-		// there has to be a more efficient way to do this
-		for (int i = y_low; i < y_high; i++)
-		{
-			for (int j = x_low; j < x_high; j++)
-			{	// find low high values
-				cv::Vec3b intensity = hsv.at<cv::Vec3b>(i, j);
-				if ((int)intensity.val[0] > data->low.x)  data->low.x = (int)intensity.val[0];
-				if ((int)intensity.val[1] > data->low.y)  data->low.y = (int)intensity.val[1];
-				if ((int)intensity.val[2] > data->low.z)  data->low.z = (int)intensity.val[2];
-
-				if ((int)intensity.val[0] < data->high.x)  data->high.x = (int)intensity.val[0];
-				if ((int)intensity.val[1] < data->high.y)  data->high.y = (int)intensity.val[1];
-				if ((int)intensity.val[2] < data->high.z)  data->high.z = (int)intensity.val[2];
-			}
-		}
-
-		std::cout << "H: " << data->low.x << " - " << data->high.x << std::endl;
-		std::cout << "S: " << data->low.y << " - " << data->high.y << std::endl;
-		std::cout << "V: " << data->low.z << " - " << data->high.z << std::endl;
-		std::cout << std::endl;
-#endif
-		data->update = true;
 	}
 }
 
@@ -359,13 +320,11 @@ int main(int argc, char **argv) {
 					detectHookSample(anaplyph, depth, point_cloud);
 				else if (cam1_op_mode == FindRock)
 				{
-#if 0	// need to confirm resonable numbers
 					if (mouseStruct.update)
 					{
 						ThresholdDet.setThreshold(mouseStruct.low, mouseStruct.high);
 						mouseStruct.update = false;
 					}
-#endif
 					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, SmallWindow);
 				}
 				else if (cam1_op_mode == FindBeacon)
@@ -501,6 +460,7 @@ int main(int argc, char **argv) {
         }
     }
 
+	std::cout << "shutting down SmartDashboard..." << std::endl;
 	SmartDashboard::shutdown();
 
 	return 0;
