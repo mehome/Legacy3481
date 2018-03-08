@@ -385,7 +385,12 @@ int main(int argc, char **argv) {
 			case 0x00770000:
 				// only change values if we are in that mode.
 				if (cam1_op_mode == FindRock || cam2_op_mode == FindRock)
+				{
 					ThresholdDet.updateThresholdSettings(key);
+					std::pair<int3, int3> threshold = ThresholdDet.getThreshold();
+					mouseStruct.low = threshold.first;
+					mouseStruct.high = threshold.second;
+				}
 				break;
 
 				// ______________  VIEW __________________
