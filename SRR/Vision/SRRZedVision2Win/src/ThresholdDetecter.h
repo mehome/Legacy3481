@@ -39,7 +39,8 @@ private:
 	THRESHOLD_SETTING threshold_setting;
 	int thresh_inc;
 
-	cv::Scalar color;
+	cv::Scalar passcolor;
+	cv::Scalar failcolor;
 	cv::Mat hsv, masked;
 
 	// countours

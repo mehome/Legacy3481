@@ -5,15 +5,17 @@
 ThresholdDetecter::ThresholdDetecter()
 	:	thresh_inc(10),
 		threshold_setting(H_Low),
-		color(255, 0, 255)
+		passcolor(0, 255, 0),
+		failcolor(0, 0, 255)
 {
 }
 
 ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
 	: thresh_inc(10),
 	threshold_setting(H_Low),
-	color(255, 0, 255)
-{	
+	passcolor(0, 255, 0),
+	failcolor(0, 0, 255)
+{
 	// original values
 	HSV_low = low;
 	HSV_high = high;
@@ -130,9 +132,9 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 		/// Find the rotated rectangles for each contour
 		minRect[i] = cv::minAreaRect(cv::Mat(contours[i]));
 
-		if ((contourArea(contours[i]) > 150) &&
-			(minRect[i].size.width > 10) &&
-			(minRect[i].size.height > 10))
+		if ((contourArea(contours[i]) > 250) &&
+			(minRect[i].size.width > 20) &&
+			(minRect[i].size.height > 20))
 		{
 #ifdef USE_POINT_CLOUD 
 			sl::float4 point3D;
@@ -167,12 +169,22 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 			}
 #endif
 			/// Draw contours
-			cv::drawContours(frame, contours, i, color, 2, 8, hierarchy, 0, cv::Point());
-			cv::circle(frame, mc[i], 4, color, -1, 8, 0);
+			cv::drawContours(frame, contours, i, passcolor, 2, 8, hierarchy, 0, cv::Point());
+			cv::circle(frame, mc[i], 4, passcolor, -1, 8, 0);
 			// rotated rectangle
 			cv::Point2f rect_points[4]; minRect[i].points(rect_points);
 			for (int j = 0; j < 4; j++)
-				cv::line(frame, rect_points[j], rect_points[(j + 1) % 4], color, 1, 8);
+				cv::line(frame, rect_points[j], rect_points[(j + 1) % 4], passcolor, 1, 8);
+		}
+		else
+		{
+			/// Draw contours
+			cv::drawContours(frame, contours, i, failcolor, 2, 8, hierarchy, 0, cv::Point());
+			cv::circle(frame, mc[i], 4, failcolor, -1, 8, 0);
+			// rotated rectangle
+			cv::Point2f rect_points[4]; minRect[i].points(rect_points);
+			for (int j = 0; j < 4; j++)
+				cv::line(frame, rect_points[j], rect_points[(j + 1) % 4], failcolor, 1, 8);
 		}
 	}
 
