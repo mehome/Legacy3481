@@ -907,6 +907,9 @@ class Curivator_Goals_Impl : public AtomicGoal
 				m_IsTargeting=false;
 				m_SAS_FloodControl=true;  //assume we have aggressive stop by default
 				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
+				const char * const CameraModeSmartVar="ZedMode";
+				double CurrentMode=Auton_Smart_GetSingleValue(CameraModeSmartVar,0.0); //should be a safe default
+				m_PriorCameraMode=CurrentMode;  //mode to put back to when not tracking
 			}
 
 			//This is a short-term fix to handle yaw tracking on drive without the clicking.  The actual fix will become more clear once I start
@@ -939,6 +942,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 						if (!EnableVision)
 						{
 							SmartDashboard::PutBoolean("Main_Is_Targeting",false);
+							SmartDashboard::PutNumber("ZedMode",m_PriorCameraMode);
 							m_IsTargeting=false;
 						}
 					}
@@ -947,6 +951,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 						if (EnableVision)
 						{
 							SmartDashboard::PutBoolean("Main_Is_Targeting",true);
+							SmartDashboard::PutNumber("ZedMode",2); //put to track rock
 							m_IsTargeting=true;
 						}
 					}
@@ -1046,11 +1051,13 @@ class Curivator_Goals_Impl : public AtomicGoal
 				Set_UseAggresiveStop(true);  //back to default
 				m_Status=eInactive;  //this goal never really completes
 				SmartDashboard::PutBoolean("Main_Is_Targeting",false);
+				SmartDashboard::PutNumber("ZedMode",m_PriorCameraMode);
 			}
 		private:
 			VisionTracking m_Vision;
 			double m_LatencyCounter;
 			double m_Position; //keep track of last position between each latency count
+			double m_PriorCameraMode;  //keep track of camera mode prior to activation
 			bool m_IsTargeting;  //Have a valve for targeting
 			bool m_SAS_FloodControl;  //Limit writes to the properties
 		};
