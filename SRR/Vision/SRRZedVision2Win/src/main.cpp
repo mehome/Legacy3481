@@ -150,16 +150,18 @@ float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 	return dist;
 }
 
+#define Idle 0
 #define FindHook 1
 #define FindRock 2
 #define FindBeacon 3
+#define PassThrough 4
 
 std::string filename;
 bool FrontCamEnabled = false;
 bool StereoCamEnabled = true;
 bool SmallWindow = true;
-int cam1_op_mode = FindHook;
-int cam2_op_mode = FindHook;
+int cam1_op_mode = FindRock;
+int cam2_op_mode = FindRock;
 int frameCount = 0;
 size_t SmartDashboard_Mode = 0;
 
@@ -302,11 +304,13 @@ int main(int argc, char **argv) {
 
 		if (StereoCamEnabled)
 		{	// update
-			StereoCam.GrabFrameAndDapth();
-			anaplyph = StereoCam.frame;
-			depth = StereoCam.depth;
-			point_cloud = StereoCam.point_cloud;
-
+			if (cam1_op_mode != Idle)
+			{
+				StereoCam.GrabFrameAndDapth();
+				anaplyph = StereoCam.frame;
+				depth = StereoCam.depth;
+				point_cloud = StereoCam.point_cloud;
+			}
 			displaySize.height = (int)(SmallWindow ? height / 2 : height);
 			displaySize.width = (int)(SmallWindow ? width / 2 : width);
 			mouseStruct.image = anaplyph;
@@ -330,9 +334,12 @@ int main(int argc, char **argv) {
 				else if (cam1_op_mode == FindBeacon)
 					detectBeacon(anaplyph, depth, point_cloud);
 
-				if (SmallWindow)
-					resize(anaplyph, anaplyph, displaySize);
-				imshow("VIEW", anaplyph);
+				if (cam1_op_mode != Idle)
+				{
+					if (SmallWindow)
+						resize(anaplyph, anaplyph, displaySize);
+					imshow("VIEW", anaplyph);
+				}
 			}
 
 			frameCount++;
@@ -441,25 +448,27 @@ int main(int argc, char **argv) {
 				// ______________  Search mode _____________________________
 			case 'm':
 				cam1_op_mode++;
-				if (cam1_op_mode > FindBeacon)
+				if (cam1_op_mode > PassThrough)
 					cam1_op_mode = 0;
 				switch (cam1_op_mode) {
 					case 0: printf("mode NONE\n"); break;
 					case 1: printf("mode Find Hook\n"); break;
 					case 2: printf("mode Find Rock\n"); break;
 					case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
+					case 4: printf("mode passthrough\n"); break;
 				}
 				break;
 
 			case 'M':
 				cam2_op_mode++;
-				if (cam2_op_mode > FindBeacon)
+				if (cam2_op_mode > PassThrough)
 					cam2_op_mode = 0;
 				switch (cam2_op_mode) {
 				case 0: printf("mode NONE\n"); break;
 				case 1: printf("mode Find Hook\n"); break;
 				case 2: printf("mode Find Rock\n"); break;
 				case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
+				case 4: printf("mode passthrough\n"); break;
 				}
 				break;
         }
