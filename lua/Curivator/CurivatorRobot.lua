@@ -259,8 +259,8 @@ MainRobot = {
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
 			--center around 1634
-			pot_min_limit=34,  --45 forward   0
-			pot_max_limit=3134,  -- 45 counter clockwise  962
+			pot_min_limit=600,  --45 forward   0
+			pot_max_limit=3600,  -- 45 counter clockwise  962  +1250
 			pot_limit_tolerance=200,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
