@@ -72,6 +72,7 @@ typedef struct mouseOCVStruct {
 	cv::Mat image;
 	cv::Size _resize;
 	int3 low, high;
+	int hit_x, hit_y;
 	bool update = false;
 } mouseOCV;
 
@@ -83,6 +84,22 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 
 	int x_int = (x * data->image.cols / data->_resize.width);
 	int y_int = (y * data->image.rows / data->_resize.height);
+
+	if (flag == CV_EVENT_FLAG_MBUTTON)
+	{	// middle button sets hit location
+		if (x_int < 0) x_int = -1;
+		if (x_int > data->image.cols) x_int = -1; // data->image.cols;
+		if (y_int < 0) y_int = -1;
+		if (y_int > data->image.rows) y_int = -1; // data->image.rows;
+
+		data->hit_x = x_int;
+		data->hit_y = y_int;
+	}
+	else
+	{
+		data->hit_x = -1;
+		data->hit_y = -1;
+	}
 
 	if (flag == (CV_EVENT_FLAG_LBUTTON | CV_EVENT_FLAG_RBUTTON))
 	{	// reset if both down
@@ -130,11 +147,16 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 		std::cout << std::endl;
 		data->update = true;
 	}
-	else if (event == CV_EVENT_RBUTTONDOWN)
+	else if (flag == CV_EVENT_FLAG_RBUTTON)
 	{	// show value at click
 		//convert the img from color to hsv
 		cv::Mat hsv;
 		cv::cvtColor(data->image, hsv, CV_BGR2HSV);
+
+		if (x_int < 0) x_int = 0;
+		if (x_int > data->image.cols) x_int = data->image.cols;
+		if (y_int < 0) y_int = 0;
+		if (y_int > data->image.rows) y_int = data->image.rows;
 
 		cv::Vec3b intensity = hsv.at<cv::Vec3b>(y_int, x_int);
 		std::cout << "H: " << (int)intensity.val[0] << std::endl;
@@ -292,6 +314,7 @@ int main(int argc, char **argv) {
 	mouseStruct._resize = displaySize;
 	mouseStruct.low = low;
 	mouseStruct.high = high;
+	mouseStruct.hit_x = mouseStruct.hit_y = -1;
 	cv::setMouseCallback("VIEW", onMouseCallback, (void*)&mouseStruct);
 
 	// make a controls window
@@ -393,6 +416,7 @@ int main(int argc, char **argv) {
 						cv::setTrackbarPos("V High", "Controls", mouseStruct.high.z);
 						mouseStruct.update = false;
 					}
+				//	std::cout << "hit_x " << mouseStruct.hit_x << " hit_y " << mouseStruct.hit_y << std::endl;
 					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, SmallWindow);
 				}
 				else if (cam1_op_mode == FindBeacon)
