@@ -12,6 +12,7 @@
 #include "ThresholdDetecter.h"
 
 #include "../SmartDashboard/SmartDashboard_import.h"
+#include "SmartDashbrdMode.h"
 
 /**
 This function displays help
@@ -143,6 +144,56 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 	}
 }
 
+// trackbar callbacks
+static void on_HLowChange(int val, void* param)
+{
+	mouseOCVStruct* data = (mouseOCVStruct*)param;
+
+	data->low.x = val;
+	data->update = true;
+}
+
+static void on_HHighChange(int val, void* param)
+{
+	mouseOCVStruct* data = (mouseOCVStruct*)param;
+
+	data->high.x = val;
+	data->update = true;
+}
+
+static void on_SLowChange(int val, void* param)
+{
+	mouseOCVStruct* data = (mouseOCVStruct*)param;
+
+	data->low.y = val;
+	data->update = true;
+}
+
+static void on_SHighChange(int val, void* param)
+{
+	mouseOCVStruct* data = (mouseOCVStruct*)param;
+
+	data->high.y = val;
+	data->update = true;
+}
+
+static void on_VLowChange(int val, void* param)
+{
+	mouseOCVStruct* data = (mouseOCVStruct*)param;
+	
+	data->low.z = val;
+	data->update = true;
+}
+
+static void on_VHighChange(int val, void* param)
+{
+	mouseOCVStruct* data = (mouseOCVStruct*)param;
+
+	data->high.z = val;
+	data->update = true;
+}
+
+
 float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 {
 	sl::float1 dist;
@@ -180,71 +231,6 @@ std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_gpu.
 
 
 extern cv::CascadeClassifier hook_cascade;
-
-
-//Helper class that will manipulate cam#_op_mode variable through SmartDashboard
-class SmartDashboard_ModeManager
-{
-	private:
-		int &m_CurrentSelection;  //reference to actual variable to manipulate
-		std::string Variable_Name;
-		int m_LastMode; //used as a valve for flood control
-		size_t m_IterationCount=0;  //used to cut down on probing iterations as changes do not need to happen immediately
-	public:
-		SmartDashboard_ModeManager(int &CurrentSelection, const char *SmartName, int DefaultMode) : m_CurrentSelection(CurrentSelection),
-			Variable_Name(SmartName), m_LastMode(DefaultMode)
-		{
-			try
-			{
-				SmartDashboard::GetNumber(SmartName);
-			}
-			catch (...)
-			{
-				const double default_value = (double)DefaultMode;  //too bad they don't support integers yet
-				SmartDashboard::PutNumber(SmartName, default_value);
-			}
-		}
-		//luckily this should have the same changes between either camera
-		void SmartDashboardChanged(bool DestroyMasked)
-		{
-			switch (m_CurrentSelection) 
-			{
-				case 0: printf("mode NONE\n"); break;
-				case 1: printf("mode Find Hook\n"); break;
-				case 2: printf("mode Find Rock\n"); break;
-				case 3: printf("mode Find Beacon\n"); break;
-				case 4: printf("mode passthrough\n"); break;
-			}
-			if (DestroyMasked)
-				cv::destroyWindow("Masked");
-		}
-		void operator()()
-		{
-			const size_t IntervalCount = 60;   //give some time between reads
-			//Will be managing 3 variables... the current smart value, current selection, and last selection
-			//if there is a conflict between the current selection and current smart value where neither are the last... the smart dashboard has priority
-			int current_smart = m_LastMode;
-			if (m_IterationCount++ > IntervalCount)
-			{
-				//probe a new update
-				current_smart = (int)SmartDashboard::GetNumber(Variable_Name.c_str());
-				m_IterationCount = 0;
-			}
-			if ((current_smart != m_CurrentSelection) && (current_smart != m_LastMode))
-			{
-				m_CurrentSelection = current_smart;
-				const bool DestroyMasked = (m_LastMode == 2);  //only if we were finding the rock last time
-				assert((DestroyMasked && m_CurrentSelection != 2) || (!DestroyMasked));  //sanity check
-				m_LastMode = m_CurrentSelection;
-				SmartDashboardChanged(DestroyMasked);  //show change
-			}
-			else if (m_CurrentSelection != m_LastMode) //e.t. changed from keyboard
-			{
-				SmartDashboard::PutNumber(Variable_Name.c_str(), (double)m_CurrentSelection);
-				m_LastMode = m_CurrentSelection;
-			}
-		}
-};
 
 
 //main  function
@@ -289,7 +275,6 @@ int main(int argc, char **argv) {
 	if (!FrontCam.IsOpen && !StereoCam.IsOpen)
 	{
 		std::cout << "No Cameras!" << std::endl;
-		return -1;
 	}
 
 	size_t width = StereoCam.image_size.width;
@@ -302,29 +287,33 @@ int main(int argc, char **argv) {
 	sl::Mat point_cloud;
 	cv::Size displaySize((int)(SmallWindow ? width / 2 : width), (int)(SmallWindow ? height / 2 : height));
 
+	//create Opencv Window and mouse handler
+	cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
+	mouseStruct._resize = displaySize;
+	mouseStruct.low = low;
+	mouseStruct.high = high;
+	cv::setMouseCallback("VIEW", onMouseCallback, (void*)&mouseStruct);
+
+	// make a controls window
+	cv::namedWindow("Controls", cv::WINDOW_AUTOSIZE);
+	cv::createTrackbar("H Low", "Controls", &mouseStruct.low.x, 255, on_HLowChange, &mouseStruct);
+	cv::createTrackbar("H High", "Controls", &mouseStruct.high.x, 255, on_HHighChange, &mouseStruct);
+	cv::createTrackbar("S Low", "Controls", &mouseStruct.low.y, 255, on_SLowChange, &mouseStruct);
+	cv::createTrackbar("S High", "Controls", &mouseStruct.high.y, 255, on_SHighChange, &mouseStruct);
+	cv::createTrackbar("V Low", "Controls", &mouseStruct.low.z, 255, on_VLowChange, &mouseStruct);
+	cv::createTrackbar("V High", "Controls", &mouseStruct.high.z, 255, on_VHighChange, &mouseStruct);
+
 	if (StereoCam.IsOpen)
 	{
 		// Mouse callback initialization
 		StereoCam.GrabDepth();
-
-		//create Opencv Windows
-		cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
 		mouseStruct.image = StereoCam.frame;
-		mouseStruct._resize = displaySize;
-		mouseStruct.low = low;
-		mouseStruct.high = high;
-		cv::setMouseCallback("VIEW", onMouseCallback, (void*)&mouseStruct);
 	}
 	else
 	{
 		StereoCamEnabled = false;
 		if (FrontCam.IsOpen)
 			FrontCamEnabled = true;
-		else
-		{
-			std::cout << "No Cameras!" << std::endl;
-			return -1;
-		}
 	}
 
 	if (argc > 1)
@@ -396,6 +385,12 @@ int main(int argc, char **argv) {
 					if (mouseStruct.update)
 					{
 						ThresholdDet.setThreshold(mouseStruct.low, mouseStruct.high);
+						cv::setTrackbarPos("H Low", "Controls", mouseStruct.low.x);
+						cv::setTrackbarPos("H High", "Controls", mouseStruct.high.x);
+						cv::setTrackbarPos("S Low", "Controls", mouseStruct.low.y);
+						cv::setTrackbarPos("S High", "Controls", mouseStruct.high.y);
+						cv::setTrackbarPos("V Low", "Controls", mouseStruct.low.z);
+						cv::setTrackbarPos("V High", "Controls", mouseStruct.high.z);
 						mouseStruct.update = false;
 					}
 					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, SmallWindow);
@@ -466,6 +461,12 @@ int main(int argc, char **argv) {
 					std::pair<int3, int3> threshold = ThresholdDet.getThreshold();
 					mouseStruct.low = threshold.first;
 					mouseStruct.high = threshold.second;
+					cv::setTrackbarPos("H Low", "Controls", mouseStruct.low.x);
+					cv::setTrackbarPos("H High", "Controls", mouseStruct.high.x);
+					cv::setTrackbarPos("S Low", "Controls", mouseStruct.low.y);
+					cv::setTrackbarPos("S High", "Controls", mouseStruct.high.y);
+					cv::setTrackbarPos("V Low", "Controls", mouseStruct.low.z);
+					cv::setTrackbarPos("V High", "Controls", mouseStruct.high.z);
 				}
 				break;
 
