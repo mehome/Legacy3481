@@ -365,8 +365,9 @@ int main(int argc, char **argv) {
 						cv::setTrackbarPos("V High", "Controls", mouseStruct.high.z);
 						mouseStruct.update = false;
 					}
-				//	std::cout << "hit_x " << mouseStruct.hit_x << " hit_y " << mouseStruct.hit_y << std::endl;
-					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, SmallWindow);
+
+					cv::Size mhit(mouseStruct.hit_x, mouseStruct.hit_y);
+					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, mhit, SmallWindow);
 				}
 				else if (cam1_op_mode == FindBeacon)
 					detectBeacon(anaplyph, depth, point_cloud);
@@ -387,7 +388,10 @@ int main(int argc, char **argv) {
 			if (cam2_op_mode == FindHook)
 				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for front cam.
 			else if (cam2_op_mode == FindRock)
-				ThresholdDet.detectRockSample(frame, depth, point_cloud, SmallWindow);
+			{
+				cv::Size mhit(mouseStruct.hit_x, mouseStruct.hit_y);
+				ThresholdDet.detectRockSample(frame, depth, point_cloud, mhit, SmallWindow);
+			}
 			else if (cam2_op_mode == FindBeacon)
 				detectBeacon(frame, depth, point_cloud);
 

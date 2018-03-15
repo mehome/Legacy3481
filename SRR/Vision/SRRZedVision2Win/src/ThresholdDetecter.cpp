@@ -88,7 +88,7 @@ void ThresholdDetecter::printThreshold(void)
 	std::cout << "V: " << HSV_Range[V_Low] << " - " << HSV_Range[V_High] << std::endl;
 }
 
-void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, bool small_display)
+void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, cv::Size mhit, bool small_display)
 {
 	cv::Mat binary;
 	cv::Mat hsv, masked;
@@ -116,21 +116,17 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 	// mask and display   
 	frame.copyTo(masked, binary);
 
-	/// moments
-	std::vector<cv::Moments> mu(contours.size());
-	/// mass centers
-	std::vector<cv::Point2f> mc(contours.size());
 	/// rotated rectangles 
 	std::vector<cv::RotatedRect> minRect(contours.size());
 
 	for (int i = 0; i< contours.size(); i++)
 	{
-		/// Get the moments
-		mu[i] = moments(contours[i], false);
-		///  Get the mass centers:
-		mc[i] = cv::Point2f((float)(mu[i].m10 / mu[i].m00), (float)(mu[i].m01 / mu[i].m00));
 		/// Find the rotated rectangles for each contour
 		minRect[i] = cv::minAreaRect(cv::Mat(contours[i]));
+
+		// TODO: if mhit xy not -1, find the minRect that are a hit, store min/max;
+		// maybe countour area range too.
+		// this will make this loop modal, collect then detect.
 
 		if ((contourArea(contours[i]) > 250) &&
 			(minRect[i].size.width > 20) &&
@@ -139,7 +135,7 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 #ifdef USE_POINT_CLOUD 
 			sl::float4 point3D;
 			// Get the 3D point cloud values for pixel 
-			point_cloud.getValue((size_t)mc[i].x, (size_t)mc[i].y, &point3D);
+			point_cloud.getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &point3D);
 #if 1
 			if ((!isnan(point3D.x) && point3D.x != sl::TOO_CLOSE && point3D.x != sl::TOO_FAR) &&
 				(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
@@ -158,19 +154,19 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 			}
 #else
 			float Distance;
-			depth.getValue((size_t)mc[i].x, (size_t)mc[i].y, &Distance);
+			depth.getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &Distance);
 
 			if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
 			{
 				//std::cout << "rock found at " << mc[i].x << ", " << mc[i].y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-				SmartDashboard::PutNumber("X Position", mc[i].x);
-				SmartDashboard::PutNumber("Y Position", mc[i].y);
+				SmartDashboard::PutNumber("X Position", minRect[i].center.x);
+				SmartDashboard::PutNumber("Y Position", minRect[i].center.y);
 				SmartDashboard::PutNumber("Distance", Distance);
 			}
 #endif
 			/// Draw contours
 			cv::drawContours(frame, contours, i, passcolor, 2, 8, hierarchy, 0, cv::Point());
-			cv::circle(frame, mc[i], 4, passcolor, -1, 8, 0);
+			cv::circle(frame, minRect[i].center, 4, passcolor, -1, 8, 0);
 			// rotated rectangle
 			cv::Point2f rect_points[4]; minRect[i].points(rect_points);
 			for (int j = 0; j < 4; j++)
@@ -180,7 +176,7 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 		{
 			/// Draw contours
 			cv::drawContours(frame, contours, i, failcolor, 2, 8, hierarchy, 0, cv::Point());
-			cv::circle(frame, mc[i], 4, failcolor, -1, 8, 0);
+			cv::circle(frame, minRect[i].center, 4, failcolor, -1, 8, 0);
 			// rotated rectangle
 			cv::Point2f rect_points[4]; minRect[i].points(rect_points);
 			for (int j = 0; j < 4; j++)

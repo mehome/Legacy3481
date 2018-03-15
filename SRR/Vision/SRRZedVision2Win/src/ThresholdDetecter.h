@@ -9,7 +9,7 @@ public:
 	ThresholdDetecter(int3 lov, int3 high);
 	~ThresholdDetecter();
 
-	void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, bool small_display);
+	void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, cv::Size mhit, bool small_display);
 	void updateThresholdSettings(int key);
 	void switchThresholdSettings();
 	bool loadThreshold(std::string file);
@@ -47,4 +47,7 @@ private:
 	std::vector<std::vector<cv::Point> > contours;
 	std::vector<cv::Vec4i> hierarchy;
 
+	// max, min rect values
+	// this is to help with narrowing the valid targets
+	cv::RotatedRect objRectMax, objRectMin;
 };
