@@ -19,10 +19,10 @@ public:
 
 	bool IsOpen;
 
-private:
 	int width;
 	int height;
 
+private:
 	OVCcamFlip flip;
 
 	cv::VideoCapture capture;

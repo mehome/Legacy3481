@@ -7,8 +7,14 @@ OCVCamera::OCVCamera(const char *file, OVCcamFlip Flip)
 	capture.open(file);
 
 	IsOpen = capture.isOpened();
-	if (!IsOpen)
-		printf("Camera NOT opened.\n");
+	if (IsOpen)
+	{
+		capture >> frame;
+		width = frame.cols;
+		height = frame.rows;
+	}
+	else
+		printf("Front Camera NOT opened.\n");
 }
 
 OCVCamera::~OCVCamera() {}

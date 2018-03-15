@@ -203,6 +203,9 @@ bool SmallWindow = true;
 int cam1_op_mode = FindRock;
 int cam2_op_mode = PassThrough;
 size_t SmartDashboard_Mode = 0;
+size_t width = 1280;
+size_t height = 720;
+
 
 /** Cascade classifire data */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
@@ -262,15 +265,23 @@ int main(int argc, char **argv) {
 		std::cout << "No Cameras!" << std::endl;
 	}
 
-	size_t width = StereoCam.image_size.width;
-	size_t height = StereoCam.image_size.height;
+	if (StereoCam.IsOpen)
+	{
+		width = StereoCam.image_size.width;
+		height = StereoCam.image_size.height;
+	}
+	else if (FrontCam.IsOpen)
+	{
+		width = FrontCam.width;
+		height = FrontCam.height;
+	}
+	cv::Size displaySize((int)(SmallWindow ? width / 2 : width), (int)(SmallWindow ? height / 2 : height));
 
 	cv::Mat anaplyph((int)height, (int)width, CV_8UC4);
 	cv::Mat confidencemap((int)height, (int)width, CV_8UC4);
 
 	sl::Mat depth;
 	sl::Mat point_cloud;
-	cv::Size displaySize((int)(SmallWindow ? width / 2 : width), (int)(SmallWindow ? height / 2 : height));
 
 	//create Opencv Window and mouse handler
 	cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
@@ -395,7 +406,7 @@ int main(int argc, char **argv) {
 			else if (cam2_op_mode == FindBeacon)
 				detectBeacon(frame, depth, point_cloud);
 
-			if (cam1_op_mode != Idle)
+			if (cam1_op_mode != Idle && frame.rows > 0 && frame.cols > 0)
 			{
 				if (SmallWindow)
 					resize(frame, frame, displaySize);
