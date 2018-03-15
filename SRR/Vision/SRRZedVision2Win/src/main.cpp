@@ -201,8 +201,7 @@ bool FrontCamEnabled = false;
 bool StereoCamEnabled = true;
 bool SmallWindow = true;
 int cam1_op_mode = FindRock;
-int cam2_op_mode = FindRock;
-int frameCount = 0;
+int cam2_op_mode = PassThrough;
 size_t SmartDashboard_Mode = 0;
 
 /** Cascade classifire data */
@@ -379,8 +378,6 @@ int main(int argc, char **argv) {
 					imshow("VIEW", anaplyph);
 				}
 			}
-
-			frameCount++;
 		}
 
 		if (FrontCamEnabled)
@@ -394,7 +391,12 @@ int main(int argc, char **argv) {
 			else if (cam2_op_mode == FindBeacon)
 				detectBeacon(frame, depth, point_cloud);
 
-			cv::imshow("camera", frame);
+			if (cam1_op_mode != Idle)
+			{
+				if (SmallWindow)
+					resize(frame, frame, displaySize);
+				cv::imshow("camera", frame);
+			}
 		}
 
 		/** end of main video loop **/
@@ -500,7 +502,7 @@ int main(int argc, char **argv) {
 				if (StereoCam.IsOpen)
 					StereoCamEnabled = !StereoCamEnabled;
 				std::cout << "Stereo Camera " << (StereoCamEnabled ? "enabled" : "disabled") << std::endl;
-				if (!FrontCamEnabled)
+				if (!StereoCamEnabled)
 					cv::destroyWindow("VIEW");
 				break;
 
