@@ -14,58 +14,18 @@
 #include "../SmartDashboard/SmartDashboard_import.h"
 #include "SmartDashbrdMode.h"
 
-/**
-This function displays help
-**/
-void printHelp() {
-	std::cout << std::endl;
-	std::cout << "Camera controls hotkeys: " << std::endl;
-	std::cout << "  Increase camera settings value:            '+'" << std::endl;
-	std::cout << "  Decrease camera settings value:            '-'" << std::endl;
-	std::cout << "  Toggle camera settings:                    's'" << std::endl;
-	std::cout << "  Reset all parameters:                      'r'" << std::endl;
-	std::cout << "  Save camera values:            Function key F9" << std::endl;
-	std::cout << "  Load camera values:            Function key F10" << std::endl;
-	std::cout << std::endl;
-	std::cout << "HSV values adjustment: " << std::endl;
-	std::cout << "  Increase increment:                        'i'" << std::endl;
-	std::cout << "  Decrease increment:                        'I'" << std::endl;
-	std::cout << "  Increase HSV value:                        '>'" << std::endl;
-	std::cout << "  Decrease HSV value:                        '<'" << std::endl;
-	std::cout << "  Toggle HSV settings:                       'S'" << std::endl;
-	std::cout << "  Reset HSV to default:                      'R'" << std::endl;
-	std::cout << "  Reset HSV to full range:                   'Z'" << std::endl;
-	std::cout << "  Save HSV values:           Function keys F1-F4" << std::endl;
-	std::cout << "  Load HSV values:           Function keys F5-F8" << std::endl;
-	std::cout << std::endl;
-	std::cout << "Help (this):                                 'h'" << std::endl;
-	std::cout << "recalibrate camera:                          'a'" << std::endl;
-	std::cout << std::endl;
-	std::cout << "views:" << std::endl;
-	std::cout << "  left:                                      '0'" << std::endl;
-	std::cout << "  right:                                     '1'" << std::endl;
-	std::cout << "  left unrectified:                          '2'" << std::endl;
-	std::cout << "  right unrectified:                         '3'" << std::endl;
-	std::cout << "  depth:                                     '4'" << std::endl;
-	std::cout << "  confidence:                                '5'" << std::endl;
-	std::cout << "  normals:                                   '6'" << std::endl;
-	std::cout << std::endl;
-	std::cout << "window size:                                 'z'" << std::endl;
-	std::cout << "write png image:                             'w'" << std::endl;
-	std::cout << "sending mode standard:                       'd'" << std::endl;
-	std::cout << "sensing mode fill:                           'f'" << std::endl;
-	std::cout << std::endl;
-	std::cout << "toggle front camera:                         'c'" << std::endl;
-	std::cout << "toggle stereo camera:                        'C'" << std::endl;
-	std::cout << std::endl;
-	std::cout << "Mouse:" << std::endl;
-	std::cout << "hold both buttons to reset HSV values" << std::endl;
-	std::cout << "LButton - Additive selection for HSV" << std::endl;
-	std::cout << "RButton - show HSV value at pointer" << std::endl;
-	std::cout << "Exit : 'q'" << std::endl;
-	std::cout << std::endl;
-	std::cout << std::endl;
-}
+/** forward declarations **/
+void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
+void detectBeacon(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
+void printInfo(ThresholdDetecter &, ZEDCamera &);
+void printHelp();
+
+extern cv::CascadeClassifier hook_cascade;
+
+#define FRONT_CAM_URL ""
+//#define FRONT_CAM_URL "http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0"
+//#define FRONT_CAM_RUL "rtsp://root:root@192.168.0.90/axis-media/media.amp"
+
 
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
@@ -80,7 +40,13 @@ mouseOCV mouseStruct;
 
 static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, void * param) {
 
+	if (param == NULL) return;
+
 	mouseOCVStruct* data = (mouseOCVStruct*)param;
+
+	if ((data->_resize.width <= 0 || data->_resize.height <= 0) ||
+		(data->image.cols == 0 || data->image.rows == 0))
+		return;
 
 	int x_int = (x * data->image.cols / data->_resize.width);
 	int y_int = (y * data->image.rows / data->_resize.height);
@@ -229,7 +195,8 @@ float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 #define FindBeacon 3
 #define PassThrough 4
 
-std::string filename;
+std::string filename1;
+std::string filename2;
 bool FrontCamEnabled = false;
 bool StereoCamEnabled = true;
 bool SmallWindow = true;
@@ -238,21 +205,9 @@ int cam2_op_mode = FindRock;
 int frameCount = 0;
 size_t SmartDashboard_Mode = 0;
 
-/** Functions **/
-void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
-void detectBeacon(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
-void printInfo(ThresholdDetecter &, ZEDCamera &);
-
 /** Cascade classifire data */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
 std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_gpu.xml";
-
-#define FRONT_CAM_URL ""
-//#define FRONT_CAM_URL "http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0"
-//#define FRONT_CAM_RUL "rtsp://root:root@192.168.0.90/axis-media/media.amp"
-
-
-extern cv::CascadeClassifier hook_cascade;
 
 
 //main  function
@@ -283,16 +238,25 @@ int main(int argc, char **argv) {
 	int key = ' ';
 	int count = 0;
 
+	filename1 = "";
+	filename2 = FRONT_CAM_URL;
+
 	if (argc == 3)
-		filename = argv[2];
-	else
-		filename = "";
+	{
+		filename1 = argv[2];
+		// if this is not a Zed SVO file, use it for the other camera.
+		if (filename1.find(".svo") == std::string::npos)
+		{
+			filename2 = filename1;
+			filename1 = "";
+		}
+	}
 
 	std::cout << "Initializing OCV Camera." << std::endl;
-	OCVCamera FrontCam = OCVCamera(FRONT_CAM_URL);
+	OCVCamera FrontCam = OCVCamera(filename2.c_str());
 
 	std::cout << "Initializing ZED Camera." << std::endl;
-	ZEDCamera StereoCam = ZEDCamera(filename.c_str());
+	ZEDCamera StereoCam = ZEDCamera(filename1.c_str());
 
 	if (!FrontCam.IsOpen && !StereoCam.IsOpen)
 	{
@@ -366,20 +330,6 @@ int main(int argc, char **argv) {
     while (key != 'q') 
 	{
 		/***** main video loop *****/
-		if (FrontCamEnabled)
-		{
-			cv::Mat frame = FrontCam.GrabFrame();
-
-			if (cam2_op_mode == FindHook)
-				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for front cam.
-			else if (cam2_op_mode == FindRock)
-				ThresholdDet.detectRockSample(frame, depth, point_cloud, SmallWindow);
-			else if (cam2_op_mode == FindBeacon)
-				detectBeacon(frame, depth, point_cloud);
-
-			cv::imshow("camera", frame);
-		}
-
 		if (StereoCamEnabled)
 		{	
 			static SmartDashboard_ModeManager s_SmartDashboard_ModeManager(cam1_op_mode,"ZedMode",cam1_op_mode);
@@ -432,6 +382,21 @@ int main(int argc, char **argv) {
 
 			frameCount++;
 		}
+
+		if (FrontCamEnabled)
+		{
+			cv::Mat frame = FrontCam.GrabFrame();
+
+			if (cam2_op_mode == FindHook)
+				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for front cam.
+			else if (cam2_op_mode == FindRock)
+				ThresholdDet.detectRockSample(frame, depth, point_cloud, SmallWindow);
+			else if (cam2_op_mode == FindBeacon)
+				detectBeacon(frame, depth, point_cloud);
+
+			cv::imshow("camera", frame);
+		}
+
 		/** end of main video loop **/
 
         key = cv::waitKey(5);
@@ -590,7 +555,7 @@ void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
 		case FindRock: std::cout << "FindRock" << std::endl; break;
 		case FindBeacon: std::cout << "FindBeakon" << std::endl; break;
 		}
-		if (filename.size()) std::cout << "video from file: " << filename << std::endl;
+		if (filename1.size()) std::cout << "video from file: " << filename1 << std::endl;
 		std::cout << "Stereo cam view: ";
 		switch (StereoCam.ViewID) {
 		case sl::VIEW_LEFT: std::cout << "VIEW_LEFT" << std::endl; break;
@@ -627,3 +592,55 @@ void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
 	std::cout << std::endl;
 }
 
+/**
+This function displays help
+**/
+void printHelp() {
+	std::cout << std::endl;
+	std::cout << "Camera controls hotkeys: " << std::endl;
+	std::cout << "  Increase camera settings value:            '+'" << std::endl;
+	std::cout << "  Decrease camera settings value:            '-'" << std::endl;
+	std::cout << "  Toggle camera settings:                    's'" << std::endl;
+	std::cout << "  Reset all parameters:                      'r'" << std::endl;
+	std::cout << "  Save camera values:            Function key F9" << std::endl;
+	std::cout << "  Load camera values:            Function key F10" << std::endl;
+	std::cout << std::endl;
+	std::cout << "HSV values adjustment: " << std::endl;
+	std::cout << "  Increase increment:                        'i'" << std::endl;
+	std::cout << "  Decrease increment:                        'I'" << std::endl;
+	std::cout << "  Increase HSV value:                        '>'" << std::endl;
+	std::cout << "  Decrease HSV value:                        '<'" << std::endl;
+	std::cout << "  Toggle HSV settings:                       'S'" << std::endl;
+	std::cout << "  Reset HSV to default:                      'R'" << std::endl;
+	std::cout << "  Reset HSV to full range:                   'Z'" << std::endl;
+	std::cout << "  Save HSV values:           Function keys F1-F4" << std::endl;
+	std::cout << "  Load HSV values:           Function keys F5-F8" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Help (this):                                 'h'" << std::endl;
+	std::cout << "recalibrate camera:                          'a'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "views:" << std::endl;
+	std::cout << "  left:                                      '0'" << std::endl;
+	std::cout << "  right:                                     '1'" << std::endl;
+	std::cout << "  left unrectified:                          '2'" << std::endl;
+	std::cout << "  right unrectified:                         '3'" << std::endl;
+	std::cout << "  depth:                                     '4'" << std::endl;
+	std::cout << "  confidence:                                '5'" << std::endl;
+	std::cout << "  normals:                                   '6'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "window size:                                 'z'" << std::endl;
+	std::cout << "write png image:                             'w'" << std::endl;
+	std::cout << "sending mode standard:                       'd'" << std::endl;
+	std::cout << "sensing mode fill:                           'f'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "toggle front camera:                         'c'" << std::endl;
+	std::cout << "toggle stereo camera:                        'C'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Mouse:" << std::endl;
+	std::cout << "hold both buttons to reset HSV values" << std::endl;
+	std::cout << "LButton - Additive selection for HSV" << std::endl;
+	std::cout << "RButton - show HSV value at pointer" << std::endl;
+	std::cout << "Exit : 'q'" << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
+}
