@@ -377,7 +377,7 @@ int main(int argc, char **argv) {
 						mouseStruct.update = false;
 					}
 
-					cv::Size mhit(mouseStruct.hit_x, mouseStruct.hit_y);
+					cv::Point mhit(mouseStruct.hit_x, mouseStruct.hit_y);
 					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, mhit, SmallWindow);
 				}
 				else if (cam1_op_mode == FindBeacon)
@@ -400,7 +400,7 @@ int main(int argc, char **argv) {
 				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for front cam.
 			else if (cam2_op_mode == FindRock)
 			{
-				cv::Size mhit(mouseStruct.hit_x, mouseStruct.hit_y);
+				cv::Point mhit(mouseStruct.hit_x, mouseStruct.hit_y);
 				ThresholdDet.detectRockSample(frame, depth, point_cloud, mhit, SmallWindow);
 			}
 			else if (cam2_op_mode == FindBeacon)

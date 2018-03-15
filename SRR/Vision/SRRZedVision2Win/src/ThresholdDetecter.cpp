@@ -88,7 +88,7 @@ void ThresholdDetecter::printThreshold(void)
 	std::cout << "V: " << HSV_Range[V_Low] << " - " << HSV_Range[V_High] << std::endl;
 }
 
-void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, cv::Size mhit, bool small_display)
+void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, cv::Point mhit, bool small_display)
 {
 	cv::Mat binary;
 	cv::Mat hsv, masked;
@@ -127,6 +127,20 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 		// TODO: if mhit xy not -1, find the minRect that are a hit, store min/max;
 		// maybe countour area range too.
 		// this will make this loop modal, collect then detect.
+
+		// Is the middle Mouse button down?
+		if (mhit.x != -1 && mhit.y != -1)
+		{
+			// First, see if it's in the bounding box for this rect
+			cv::Rect bounds = minRect[i].boundingRect;
+			if ((mhit.x > bounds.x) && (mhit.x < (bounds.x + bounds.width)) &&
+				(mhit.y > bounds.y) && (mhit.y < (bounds.y + bounds.height)))
+			{
+				// now get value ranges
+				if (minRect[i].angle < objRectMin.angle) objRectMin.angle = minRect[i].angle;
+				if (minRect[i].angle > objRectMax.angle) objRectMax.angle = minRect[i].angle;
+			}
+		}
 
 		if ((contourArea(contours[i]) > 250) &&
 			(minRect[i].size.width > 20) &&
