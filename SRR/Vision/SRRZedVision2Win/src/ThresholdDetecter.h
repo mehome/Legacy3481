@@ -47,8 +47,10 @@ private:
 	std::vector<std::vector<cv::Point> > contours;
 	std::vector<cv::Vec4i> hierarchy;
 
-	// max, min rect values
+	// max, min values for object qaulifying
 	// this is to help with narrowing the valid targets
 	cv::RotatedRect objRectMax, objRectMin;
+	double AreaMax, AreaMin;
 	float DistMax, DistMin;
+	bool MouseDown;
 };

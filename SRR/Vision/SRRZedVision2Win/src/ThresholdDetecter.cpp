@@ -3,10 +3,15 @@
 #include "ThresholdDetecter.h"
 
 ThresholdDetecter::ThresholdDetecter()
-	:	thresh_inc(10),
-		threshold_setting(H_Low),
-		passcolor(0, 255, 0),
-		failcolor(0, 0, 255)
+	: thresh_inc(10),
+	threshold_setting(H_Low),
+	passcolor(0, 255, 0),
+	failcolor(0, 0, 255),
+	objRectMax(cv::Point2f(0, 0), cv::Size(1280, 720), 360),
+	objRectMin(cv::Point2f(0, 0), cv::Size(20, 20), 0),
+	AreaMax(1280*720), AreaMin(250),
+	DistMax(64), DistMin(0),
+	MouseDown(false)
 {
 }
 
@@ -14,7 +19,12 @@ ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
 	: thresh_inc(10),
 	threshold_setting(H_Low),
 	passcolor(0, 255, 0),
-	failcolor(0, 0, 255)
+	failcolor(0, 0, 255),
+	objRectMax(cv::Point2f(0, 0), cv::Size(1280, 720), 360),
+	objRectMin(cv::Point2f(0, 0), cv::Size(20, 20), 0),
+	AreaMax(1280 * 720), AreaMin(250),
+	DistMax(64), DistMin(0),
+	MouseDown(false)
 {
 	// original values
 	HSV_low = low;
@@ -124,39 +134,78 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 		/// Find the rotated rectangles for each contour
 		minRect[i] = cv::minAreaRect(cv::Mat(contours[i]));
 
-		// TODO: if mhit xy not -1, find the minRect that are a hit, store min/max;
-		// maybe countour area range too.
-		// this will make this loop modal, collect then detect.
-
 		// Is the middle Mouse button down?
 		if (mhit.x != -1 && mhit.y != -1)
 		{
+			if (!MouseDown)
+			{	// reset
+				objRectMax.center = cv::Point2f(0, 0);
+				objRectMax.size = cv::Size(1280, 720);
+				objRectMax.angle = 360;
+				objRectMin.center = cv::Point2f(0, 0);
+				objRectMin.size = cv::Size(20, 20);
+				objRectMin.angle = 0;
+				AreaMax = 1280 * 720;
+				AreaMin = 250;
+				DistMax = 64;
+				DistMin = 0;
+				MouseDown = true;
+			}
+
 			// First, see if it's in the bounding box for this rect
-			cv::Rect bounds = minRect[i].boundingRect;
+			cv::Rect bounds(minRect[i].boundingRect());
 			if ((mhit.x > bounds.x) && (mhit.x < (bounds.x + bounds.width)) &&
 				(mhit.y > bounds.y) && (mhit.y < (bounds.y + bounds.height)))
 			{
 				// now get value ranges
 				if (minRect[i].angle < objRectMin.angle) objRectMin.angle = minRect[i].angle;
 				if (minRect[i].angle > objRectMax.angle) objRectMax.angle = minRect[i].angle;
+				if (minRect[i].size.width < objRectMin.size.width) objRectMin.size.width = minRect[i].size.width;
+				if (minRect[i].size.width > objRectMax.size.width) objRectMax.size.width = minRect[i].size.width;
+				if (minRect[i].size.height < objRectMin.size.height) objRectMin.size.height = minRect[i].size.height;
+				if (minRect[i].size.height > objRectMax.size.height) objRectMax.size.height = minRect[i].size.height;
+				if (contourArea(contours[i]) < AreaMin) AreaMin = contourArea(contours[i]);
+				if (contourArea(contours[i]) > AreaMax) AreaMax = contourArea(contours[i]);
+#ifdef USE_POINT_CLOUD 
+				sl::float4 point3D;
+				// Get the 3D point cloud values for pixel 
+				point_cloud.getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &point3D);
+
+				if ((!isnan(point3D.x) && point3D.x != sl::TOO_CLOSE && point3D.x != sl::TOO_FAR) &&
+					(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
+					(!isnan(point3D.z) && point3D.z != sl::TOO_CLOSE && point3D.z != sl::TOO_FAR))
+				{
+					float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
+					if (Distance < DistMin) DistMin = Distance;
+					if (Distance > DistMax) DistMax = Distance;
+				}
+#else
+				float Distance;
+				depth.getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &Distance);
+
+				if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
+				{
+					if (Distance < DistMin) DistMin = Distance;
+					if (Distance > DistMax) DistMax = Distance;
+				}
+#endif
 			}
 		}
+		else
+			MouseDown = false;
 
-		if ((contourArea(contours[i]) > 250) &&
-			(minRect[i].size.width > 20) &&
-			(minRect[i].size.height > 20))
+		if ((contourArea(contours[i]) > AreaMin) &&
+			(minRect[i].size.width > objRectMin.size.width) &&
+			(minRect[i].size.height > objRectMin.size.height))
 		{
 #ifdef USE_POINT_CLOUD 
 			sl::float4 point3D;
 			// Get the 3D point cloud values for pixel 
 			point_cloud.getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &point3D);
-#if 1
+
 			if ((!isnan(point3D.x) && point3D.x != sl::TOO_CLOSE && point3D.x != sl::TOO_FAR) &&
 				(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
 				(!isnan(point3D.z) && point3D.z != sl::TOO_CLOSE && point3D.z != sl::TOO_FAR))
-#else
-			if (false)
-#endif
 			{
 				float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
 
