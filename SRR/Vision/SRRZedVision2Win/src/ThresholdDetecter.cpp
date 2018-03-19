@@ -7,10 +7,10 @@ ThresholdDetecter::ThresholdDetecter()
 	threshold_setting(H_Low),
 	passcolor(0, 255, 0),
 	failcolor(0, 0, 255),
-	objRectMax(cv::Point2f(0, 0), cv::Size(1280, 720), 360),
-	objRectMin(cv::Point2f(0, 0), cv::Size(20, 20), 0),
-	AreaMax(1280*720), AreaMin(250),
-	DistMax(64), DistMin(0),
+	objRectMin(cv::Point2f(0, 0), cv::Size(1280, 720), 180),
+	objRectMax(cv::Point2f(0, 0), cv::Size(20, 20), -180),
+	AreaMin(1280*720), AreaMax(0),
+	DistMin(64), DistMax(0),
 	MouseDown(false)
 {
 }
@@ -20,10 +20,10 @@ ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
 	threshold_setting(H_Low),
 	passcolor(0, 255, 0),
 	failcolor(0, 0, 255),
-	objRectMax(cv::Point2f(0, 0), cv::Size(1280, 720), 360),
-	objRectMin(cv::Point2f(0, 0), cv::Size(20, 20), 0),
-	AreaMax(1280 * 720), AreaMin(250),
-	DistMax(64), DistMin(0),
+	objRectMin(cv::Point2f(0, 0), cv::Size(1280, 720), 180),
+	objRectMax(cv::Point2f(0, 0), cv::Size(20, 20), -180),
+	AreaMin(1280 * 720), AreaMax(250),
+	DistMin(64), DistMax(0),
 	MouseDown(false)
 {
 	// original values
@@ -129,6 +129,9 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 	/// rotated rectangles 
 	std::vector<cv::RotatedRect> minRect(contours.size());
 
+	if (mhit.x != -1 && mhit.y != -1)
+		std::cout << "-------------- " << contours.size() << " countours ---------------------------------------------" << std::endl;
+
 	for (int i = 0; i< contours.size(); i++)
 	{
 		/// Find the rotated rectangles for each contour
@@ -140,17 +143,23 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 			if (!MouseDown)
 			{	// reset
 				objRectMax.center = cv::Point2f(0, 0);
-				objRectMax.size = cv::Size(1280, 720);
-				objRectMax.angle = 360;
+				objRectMax.size = cv::Size(0, 0);
+				objRectMax.angle = -180;
 				objRectMin.center = cv::Point2f(0, 0);
-				objRectMin.size = cv::Size(20, 20);
-				objRectMin.angle = 0;
-				AreaMax = 1280 * 720;
-				AreaMin = 250;
-				DistMax = 64;
-				DistMin = 0;
+				objRectMin.size = cv::Size(1280, 720);
+				objRectMin.angle = 180;
+				AreaMax = 0;
+				AreaMin = 1280 * 720;
+				DistMax = 0;
+				DistMin = 64;
 				MouseDown = true;
+				std::cout << "min max reset." << std::endl;
 			}
+
+			std::cout << "idx: " << i << " angle: " << minRect[i].angle << std::endl;
+			std::cout << "area: " << contourArea(contours[i]) << std::endl;
+			std::cout << "width: " << minRect[i].size.width << std::endl;
+			std::cout << "height: " << minRect[i].size.height << std::endl << std::endl;
 
 			// First, see if it's in the bounding box for this rect
 			cv::Rect bounds(minRect[i].boundingRect());
@@ -166,6 +175,12 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 				if (minRect[i].size.height > objRectMax.size.height) objRectMax.size.height = minRect[i].size.height;
 				if (contourArea(contours[i]) < AreaMin) AreaMin = contourArea(contours[i]);
 				if (contourArea(contours[i]) > AreaMax) AreaMax = contourArea(contours[i]);
+
+				std::cout << "HIT" << std::endl;
+				std::cout << "min angle: " << objRectMin.angle << " max angle: " << objRectMax.angle << std::endl;
+				std::cout << "min area: " << AreaMin << " max area: " << AreaMax << std::endl;
+				std::cout << "min width: " << objRectMin.size.width << " max width: " << objRectMax.size.width << std::endl;
+				std::cout << "min height: " << objRectMin.size.height << " max height: " << objRectMax.size.height << std::endl << std::endl;
 #ifdef USE_POINT_CLOUD 
 				sl::float4 point3D;
 				// Get the 3D point cloud values for pixel 
@@ -194,9 +209,16 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 		else
 			MouseDown = false;
 
-		if ((contourArea(contours[i]) > AreaMin) &&
-			(minRect[i].size.width > objRectMin.size.width) &&
-			(minRect[i].size.height > objRectMin.size.height))
+#if 0
+		if (/*(minRect[i].angle >= objRectMin.angle) && (minRect[i].angle <= objRectMax.angle) &&*/
+			(contourArea(contours[i]) >= AreaMin) && (contourArea(contours[i]) <= AreaMax) &&
+			(minRect[i].size.width >= objRectMin.size.width) && (minRect[i].size.width <= objRectMax.size.width) &&
+			(minRect[i].size.height >= objRectMin.size.height) && (minRect[i].size.height <= objRectMax.size.height))
+#else
+		if ((contourArea(contours[i]) > 250) &&
+			(minRect[i].size.width > 20) &&
+			(minRect[i].size.height > 20))
+#endif
 		{
 #ifdef USE_POINT_CLOUD 
 			sl::float4 point3D;
