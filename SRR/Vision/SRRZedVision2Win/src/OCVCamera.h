@@ -27,4 +27,6 @@ private:
 
 	cv::VideoCapture capture;
 	cv::Mat frame;
+
+	int frame_counter;
 };
