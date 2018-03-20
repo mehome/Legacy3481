@@ -216,7 +216,7 @@ size_t height = 720;
 
 /** Cascade classifire data */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
-std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_gpu.xml";
+std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_cpu.xml";
 
 
 //main  function
@@ -416,7 +416,10 @@ int main(int argc, char **argv) {
 
 		if (activeCamera == Front_Cam)
 		{
-			cv::Mat frame = FrontCam.GrabFrame();
+			cv::Mat frame;
+			if (cam2_op_mode != Idle)
+				frame = FrontCam.GrabFrame();
+
 			displaySize.height = (int)(SmallWindow ? height / 2 : height);
 			displaySize.width = (int)(SmallWindow ? width / 2 : width);
 			mouseStruct.image = frame;
@@ -613,7 +616,7 @@ int main(int argc, char **argv) {
 					if (cam1_op_mode > PassThrough)
 						cam1_op_mode = 0;
 					switch (cam1_op_mode) {
-					case 0: printf("mode NONE\n"); break;
+					case 0: printf("mode Idle\n"); break;
 					case 1: printf("mode Find Hook\n"); break;
 					case 2: printf("mode Find Rock\n"); break;
 					case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
@@ -626,7 +629,7 @@ int main(int argc, char **argv) {
 					if (cam2_op_mode > PassThrough)
 						cam2_op_mode = 0;
 					switch (cam2_op_mode) {
-					case 0: printf("mode NONE\n"); break;
+					case 0: printf("mode Idle\n"); break;
 					case 1: printf("mode Find Hook\n"); break;
 					case 2: printf("mode Find Rock\n"); break;
 					case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
