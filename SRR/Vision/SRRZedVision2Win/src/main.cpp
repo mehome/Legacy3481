@@ -468,12 +468,7 @@ int main(int argc, char **argv) {
  
         // Keyboard shortcuts
         switch (key) {
-			// ZED
-			//re-compute stereo alignment
-            case 'a':	
-				StereoCam.ResetCalibration();
-                break;
-
+			// common keys
 			case 'h':
 				printHelp();
 				break;
@@ -482,14 +477,33 @@ int main(int argc, char **argv) {
 				printInfo(ThresholdDet, StereoCam);
 				break;
 
-            //Change camera settings 
-			case 's':	// setting
-			case 'r':	// reset (all)
-			case '+':	// increase
-			case '-':	// decrease
-			case 0x00780000:
-			case 0x00790000:
-				StereoCam.updateCameraSettings(key);
+			case 'z':
+				SmallWindow = !SmallWindow;
+				break;
+
+			case 'c':
+				switch (activeCamera)
+				{
+				case No_Cam:
+					std::cout << "No camera enabled" << std::endl;
+					break;
+				case Stereo_Cam:
+					if (FrontCam.IsOpen)
+					{
+						activeCamera = Front_Cam;
+						std::cout << "Front camera enabled" << std::endl;
+					}
+					break;
+				case Front_Cam:
+					if (StereoCam.IsOpen)
+					{
+						activeCamera = Stereo_Cam;
+						std::cout << "Stereo camera enabled" << std::endl;
+					}
+					break;
+				default:
+					break;
+				}
 				break;
 
 			// threshold values
@@ -524,84 +538,100 @@ int main(int argc, char **argv) {
 				}
 				break;
 
-				// ______________  VIEW __________________
-            case '0':	StereoCam.ViewID = sl::VIEW_LEFT; break;
-            case '1':	StereoCam.ViewID = sl::VIEW_RIGHT; break;
-            case '2':	StereoCam.ViewID = sl::VIEW_LEFT_UNRECTIFIED; break;
-            case '3':	StereoCam.ViewID = sl::VIEW_RIGHT_UNRECTIFIED; break;
-            case '4':	StereoCam.ViewID = sl::VIEW_DEPTH; break;
-			case '5':	StereoCam.ViewID = sl::VIEW_CONFIDENCE;	break;
-			case '6':	StereoCam.ViewID = sl::VIEW_NORMALS; break;
+			// ZED
+			//re-compute stereo alignment
+			case 'a':
+				if( activeCamera == Stereo_Cam)
+					StereoCam.ResetCalibration();
+				break;
 
-			case 'z':
-				SmallWindow = !SmallWindow;
+				//Change camera settings 
+			case 's':	// setting
+			case 'r':	// reset (all)
+			case '+':	// increase
+			case '-':	// decrease
+			case 0x00780000:
+			case 0x00790000:
+				if (activeCamera == Stereo_Cam)
+					StereoCam.updateCameraSettings(key);
+				break;
+
+				// ______________  VIEW __________________
+            case '0':	
+				if (activeCamera == Stereo_Cam)
+					StereoCam.ViewID = sl::VIEW_LEFT; 
+				break;
+            case '1':
+				if (activeCamera == Stereo_Cam)
+					StereoCam.ViewID = sl::VIEW_RIGHT; 
+				break;
+            case '2':	
+				if (activeCamera == Stereo_Cam)
+					StereoCam.ViewID = sl::VIEW_LEFT_UNRECTIFIED; 
+				break;
+            case '3':	
+				if (activeCamera == Stereo_Cam)
+					StereoCam.ViewID = sl::VIEW_RIGHT_UNRECTIFIED; 
+				break;
+            case '4':	
+				if (activeCamera == Stereo_Cam)
+					StereoCam.ViewID = sl::VIEW_DEPTH; 
+				break;
+			case '5':	
+				if (activeCamera == Stereo_Cam)
+					StereoCam.ViewID = sl::VIEW_CONFIDENCE;	
+				break;
+			case '6':	
+				if (activeCamera == Stereo_Cam)
+					StereoCam.ViewID = sl::VIEW_NORMALS; 
 				break;
 
 				//______________ SAVE ______________
 			case 'w': // image
-				StereoCam.saveSbSimage(std::string("ZEDImage") + std::to_string(count) + std::string(".png"));
+				if (activeCamera == Stereo_Cam)
+					StereoCam.saveSbSimage(std::string("ZEDImage") + std::to_string(count) + std::string(".png"));
 				count++;
 				break;
 
 			case 'd':
-				StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
+				if (activeCamera == Stereo_Cam)
+					StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 				std::cout << "SENSING_MODE: Standard" << std::endl;
 				break;
 
 			case 'f':
-				StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_FILL;
+				if (activeCamera == Stereo_Cam)
+					StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_FILL;
 				std::cout << "SENSING_MODE: FILL" << std::endl;
-				break;
-
-			case 'c':
-				switch (activeCamera)
-				{
-				case No_Cam:
-					std::cout << "No camera enabled" << std::endl;
-					break;
-				case Stereo_Cam:
-					if (FrontCam.IsOpen)
-					{
-						activeCamera = Front_Cam;
-						std::cout << "Front camera enabled" << std::endl;
-					}
-					break;
-				case Front_Cam:
-					if (StereoCam.IsOpen)
-					{
-						activeCamera = Stereo_Cam;
-						std::cout << "Stereo camera enabled" << std::endl;
-					}
-					break;
-				default:
-					break;
-				}
 				break;
 
 				// ______________  Search mode _____________________________
 			case 'm':
-				cam1_op_mode++;
-				if (cam1_op_mode > PassThrough)
-					cam1_op_mode = 0;
-				switch (cam1_op_mode) {
+				if (activeCamera == Stereo_Cam)
+				{
+					cam1_op_mode++;
+					if (cam1_op_mode > PassThrough)
+						cam1_op_mode = 0;
+					switch (cam1_op_mode) {
 					case 0: printf("mode NONE\n"); break;
 					case 1: printf("mode Find Hook\n"); break;
 					case 2: printf("mode Find Rock\n"); break;
 					case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
 					case 4: printf("mode passthrough\n"); break;
+					}
 				}
-				break;
-
-			case 'M':
-				cam2_op_mode++;
-				if (cam2_op_mode > PassThrough)
-					cam2_op_mode = 0;
-				switch (cam2_op_mode) {
-				case 0: printf("mode NONE\n"); break;
-				case 1: printf("mode Find Hook\n"); break;
-				case 2: printf("mode Find Rock\n"); break;
-				case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
-				case 4: printf("mode passthrough\n"); break;
+				else if (activeCamera == Front_Cam)
+				{
+					cam2_op_mode++;
+					if (cam2_op_mode > PassThrough)
+						cam2_op_mode = 0;
+					switch (cam2_op_mode) {
+					case 0: printf("mode NONE\n"); break;
+					case 1: printf("mode Find Hook\n"); break;
+					case 2: printf("mode Find Rock\n"); break;
+					case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
+					case 4: printf("mode passthrough\n"); break;
+					}
 				}
 				break;
         }
@@ -670,13 +700,18 @@ This function displays help
 **/
 void printHelp() {
 	std::cout << std::endl;
-	std::cout << "Camera controls hotkeys: " << std::endl;
-	std::cout << "  Increase camera settings value:            '+'" << std::endl;
-	std::cout << "  Decrease camera settings value:            '-'" << std::endl;
-	std::cout << "  Toggle camera settings:                    's'" << std::endl;
-	std::cout << "  Reset all parameters:                      'r'" << std::endl;
-	std::cout << "  Save camera values:            Function key F9" << std::endl;
-	std::cout << "  Load camera values:            Function key F10" << std::endl;
+	std::cout << "Help (this):                                 'h'" << std::endl;
+	std::cout << "info:                                        '?'" << std::endl;
+	std::cout << "window size:                                 'z'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "switch cameras:                              'c'" << std::endl;
+	std::cout << "change cameera mode:                         'm'" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Mouse:" << std::endl;
+	std::cout << "hold both buttons to reset HSV values" << std::endl;
+	std::cout << "LButton - Additive selection for HSV" << std::endl;
+	std::cout << "RButton - show HSV value at pointer" << std::endl;
+	std::cout << "Exit : 'q'" << std::endl;
 	std::cout << std::endl;
 	std::cout << "HSV values adjustment: " << std::endl;
 	std::cout << "  Increase increment:                        'i'" << std::endl;
@@ -689,7 +724,16 @@ void printHelp() {
 	std::cout << "  Save HSV values:           Function keys F1-F4" << std::endl;
 	std::cout << "  Load HSV values:           Function keys F5-F8" << std::endl;
 	std::cout << std::endl;
-	std::cout << "Help (this):                                 'h'" << std::endl;
+	std::cout << "Zed camera only" << std::endl;
+	std::cout << std::endl;
+	std::cout << "Camera controls hotkeys: " << std::endl;
+	std::cout << "  Increase camera settings value:            '+'" << std::endl;
+	std::cout << "  Decrease camera settings value:            '-'" << std::endl;
+	std::cout << "  Toggle camera settings:                    's'" << std::endl;
+	std::cout << "  Reset all parameters:                      'r'" << std::endl;
+	std::cout << "  Save camera values:            Function key F9" << std::endl;
+	std::cout << "  Load camera values:            Function key F10" << std::endl;
+	std::cout << std::endl;
 	std::cout << "recalibrate camera:                          'a'" << std::endl;
 	std::cout << std::endl;
 	std::cout << "views:" << std::endl;
@@ -701,18 +745,9 @@ void printHelp() {
 	std::cout << "  confidence:                                '5'" << std::endl;
 	std::cout << "  normals:                                   '6'" << std::endl;
 	std::cout << std::endl;
-	std::cout << "window size:                                 'z'" << std::endl;
 	std::cout << "write png image:                             'w'" << std::endl;
 	std::cout << "sending mode standard:                       'd'" << std::endl;
 	std::cout << "sensing mode fill:                           'f'" << std::endl;
-	std::cout << std::endl;
-	std::cout << "switch cameras:                              'c'" << std::endl;
-	std::cout << std::endl;
-	std::cout << "Mouse:" << std::endl;
-	std::cout << "hold both buttons to reset HSV values" << std::endl;
-	std::cout << "LButton - Additive selection for HSV" << std::endl;
-	std::cout << "RButton - show HSV value at pointer" << std::endl;
-	std::cout << "Exit : 'q'" << std::endl;
 	std::cout << std::endl;
 	std::cout << std::endl;
 }
