@@ -10,7 +10,7 @@ enum histo_mode
 
 float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y);
 
-enum histo_mode mode = h_original;
+histo_mode mode = h_original;
 
 bool bShowImg = false;
 

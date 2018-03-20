@@ -189,16 +189,23 @@ float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 	return dist;
 }
 
-#define Idle 0
-#define FindHook 1
-#define FindRock 2
-#define FindBeacon 3
-#define PassThrough 4
+enum Camera_Mode{
+	Idle, 
+	FindHook,
+	FindRock,
+	FindBeacon,
+	PassThrough
+};
+
+enum ActiveCam {
+	No_Cam,
+	Stereo_Cam,
+	Front_Cam
+};
 
 std::string filename1;
 std::string filename2;
-bool FrontCamEnabled = false;
-bool StereoCamEnabled = true;
+ActiveCam activeCamera = No_Cam;
 bool SmallWindow = true;
 int cam1_op_mode = FindRock;
 int cam2_op_mode = PassThrough;
@@ -216,7 +223,7 @@ std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_gpu.
 //mode 0 = robot
 //mode 1 = simulation
 //mode 2 = stand alone (runs directly with SmartDashboard UI)
-//SRRZedVision.exe [mode=0] [run svo file]
+//SRRZedVision.exe [mode=0] [filename *.svo for stereo cam, *.mpg or other supported format for front cam.]
 int main(int argc, char **argv) {
 
     //-- 1. Load the cascades
@@ -263,7 +270,29 @@ int main(int argc, char **argv) {
 	if (!FrontCam.IsOpen && !StereoCam.IsOpen)
 	{
 		std::cout << "No Cameras!" << std::endl;
+		Sleep(5000);
+		return -1;
 	}
+
+	if (argc > 1)
+		SmartDashboard_Mode = atoi(argv[1]);
+	switch (SmartDashboard_Mode)
+	{
+	case 0:
+		SmartDashboard::SetClientMode();
+		SmartDashboard::SetIPAddress("10.34.81.99");  //robot
+		break;
+	case 1:
+		//But set as client if testing with a robot server (e.g. robot simulation)
+		SmartDashboard::SetClientMode();
+		SmartDashboard::SetIPAddress("127.0.0.1");   //localhost
+		break;
+	case 2:
+		//Run as a server to test directly to SmartDashboard UI locally
+		SmartDashboard::SetIPAddress("127.0.0.1");   //localhost
+		break;
+	}
+	SmartDashboard::init();
 
 	if (StereoCam.IsOpen)
 	{
@@ -277,9 +306,9 @@ int main(int argc, char **argv) {
 	}
 	cv::Size displaySize((int)(SmallWindow ? width / 2 : width), (int)(SmallWindow ? height / 2 : height));
 
+	// these are for stereo.
 	cv::Mat anaplyph((int)height, (int)width, CV_8UC4);
 	cv::Mat confidencemap((int)height, (int)width, CV_8UC4);
-
 	sl::Mat depth;
 	sl::Mat point_cloud;
 
@@ -303,35 +332,18 @@ int main(int argc, char **argv) {
 	if (StereoCam.IsOpen)
 	{
 		// Mouse callback initialization
+		activeCamera = Stereo_Cam;
 		StereoCam.GrabDepth();
 		mouseStruct.image = StereoCam.frame;
 	}
 	else
 	{
-		StereoCamEnabled = false;
 		if (FrontCam.IsOpen)
-			FrontCamEnabled = true;
+		{
+			mouseStruct.image = FrontCam.GrabFrame();
+			activeCamera = Front_Cam;
+		}
 	}
-
-	if (argc > 1)
-		SmartDashboard_Mode = atoi(argv[1]);
-	switch (SmartDashboard_Mode)
-	{
-	case 0:
-		SmartDashboard::SetClientMode();
-		SmartDashboard::SetIPAddress("10.34.81.99");  //robot
-		break;
-	case 1:
-		//But set as client if testing with a robot server (e.g. robot simulation)
-		SmartDashboard::SetClientMode();
-		SmartDashboard::SetIPAddress("127.0.0.1");   //localhost
-		break;
-	case 2:
-		//Run as a server to test directly to SmartDashboard UI locally
-		SmartDashboard::SetIPAddress("127.0.0.1");   //localhost
-		break;
-	}
-	SmartDashboard::init();
 
 	// Print help in console
 	printHelp();
@@ -340,11 +352,12 @@ int main(int argc, char **argv) {
     while (key != 'q') 
 	{
 		/***** main video loop *****/
-		if (StereoCamEnabled)
+		if (activeCamera == Stereo_Cam)
 		{	
 			static SmartDashboard_ModeManager s_SmartDashboard_ModeManager(cam1_op_mode,"ZedMode",cam1_op_mode);
 			s_SmartDashboard_ModeManager();  //update
-			// update
+
+  		    // update
 			if (cam1_op_mode != Idle)
 			{
 				StereoCam.GrabFrameAndDapth();
@@ -360,10 +373,13 @@ int main(int argc, char **argv) {
 			// Get frames and launch the computation
 			if (StereoCam.bHaveFrame)
 			{
-				/***************  DISPLAY:  ***************/
-				if (cam1_op_mode == FindHook)
+				/***************  PROCESS:  ***************/
+				switch (cam1_op_mode)
+				{
+				case FindHook:
 					detectHookSample(anaplyph, depth, point_cloud);
-				else if (cam1_op_mode == FindRock)
+					break;
+				case FindRock:
 				{
 					if (mouseStruct.update)
 					{
@@ -379,10 +395,16 @@ int main(int argc, char **argv) {
 
 					cv::Point mhit(mouseStruct.hit_x, mouseStruct.hit_y);
 					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, mhit, SmallWindow);
+					break;
 				}
-				else if (cam1_op_mode == FindBeacon)
+				case FindBeacon:
 					detectBeacon(anaplyph, depth, point_cloud);
+					break;
+				default:
+					break;
+				}
 
+				/***************  DISPLAY:  ***************/
 				if (cam1_op_mode != Idle)
 				{
 					if (SmallWindow)
@@ -392,25 +414,51 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		if (FrontCamEnabled)
+		if (activeCamera == Front_Cam)
 		{
 			cv::Mat frame = FrontCam.GrabFrame();
+			displaySize.height = (int)(SmallWindow ? height / 2 : height);
+			displaySize.width = (int)(SmallWindow ? width / 2 : width);
+			mouseStruct.image = frame;
+			mouseStruct._resize = displaySize;
 
-			if (cam2_op_mode == FindHook)
-				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for front cam.
-			else if (cam2_op_mode == FindRock)
+			/***************  PROCESS:  ***************/
+			switch (cam2_op_mode)
 			{
+			case FindHook:
+				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for front cam.
+				break;
+			case FindRock:
+			{
+				if (mouseStruct.update)
+				{
+					ThresholdDet.setThreshold(mouseStruct.low, mouseStruct.high);
+					cv::setTrackbarPos("H Low", "Controls", mouseStruct.low.x);
+					cv::setTrackbarPos("H High", "Controls", mouseStruct.high.x);
+					cv::setTrackbarPos("S Low", "Controls", mouseStruct.low.y);
+					cv::setTrackbarPos("S High", "Controls", mouseStruct.high.y);
+					cv::setTrackbarPos("V Low", "Controls", mouseStruct.low.z);
+					cv::setTrackbarPos("V High", "Controls", mouseStruct.high.z);
+					mouseStruct.update = false;
+				}
+
 				cv::Point mhit(mouseStruct.hit_x, mouseStruct.hit_y);
 				ThresholdDet.detectRockSample(frame, depth, point_cloud, mhit, SmallWindow);
+				break;
 			}
-			else if (cam2_op_mode == FindBeacon)
+			case FindBeacon:
 				detectBeacon(frame, depth, point_cloud);
+				break;
+			default:
+				break;
+			}
 
+			/***************  DISPLAY:  ***************/
 			if (cam1_op_mode != Idle && frame.rows > 0 && frame.cols > 0)
 			{
 				if (SmallWindow)
 					resize(frame, frame, displaySize);
-				cv::imshow("camera", frame);
+				cv::imshow("VIEW", frame);
 			}
 		}
 
@@ -506,19 +554,28 @@ int main(int argc, char **argv) {
 				break;
 
 			case 'c':
-				if (FrontCam.IsOpen)
-					FrontCamEnabled = !FrontCamEnabled;
-				std::cout << "Front Camera " << (FrontCamEnabled ? "enabled" : "disabled") << std::endl;
-				if (!FrontCamEnabled)
-					cv::destroyWindow("camera");
-				break;
-
-			case 'C':
-				if (StereoCam.IsOpen)
-					StereoCamEnabled = !StereoCamEnabled;
-				std::cout << "Stereo Camera " << (StereoCamEnabled ? "enabled" : "disabled") << std::endl;
-				if (!StereoCamEnabled)
-					cv::destroyWindow("VIEW");
+				switch (activeCamera)
+				{
+				case No_Cam:
+					std::cout << "No camera enabled" << std::endl;
+					break;
+				case Stereo_Cam:
+					if (FrontCam.IsOpen)
+					{
+						activeCamera = Front_Cam;
+						std::cout << "Front camera enabled" << std::endl;
+					}
+					break;
+				case Front_Cam:
+					if (StereoCam.IsOpen)
+					{
+						activeCamera = Stereo_Cam;
+						std::cout << "Stereo camera enabled" << std::endl;
+					}
+					break;
+				default:
+					break;
+				}
 				break;
 
 				// ______________  Search mode _____________________________
@@ -562,8 +619,8 @@ This function display current settings and values.
 void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
 {
 	std::cout << std::endl;
-	std::cout << "Stereo cam enabled: " << StereoCamEnabled << std::endl;
-	if (StereoCamEnabled)
+
+	if (activeCamera == Stereo_Cam)
 	{
 		std::cout << "Stereo cam mode: ";
 		switch (cam1_op_mode) {
@@ -591,8 +648,7 @@ void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
 		StereoCam.printCameraSettings();
 	}
 
-	std::cout << "Front cam enabled: " << FrontCamEnabled << std::endl;
-	if (FrontCamEnabled)
+	if (activeCamera == Front_Cam)
 	{
 		std::cout << "Front cam mode: ";
 		switch (cam2_op_mode) {
@@ -650,8 +706,7 @@ void printHelp() {
 	std::cout << "sending mode standard:                       'd'" << std::endl;
 	std::cout << "sensing mode fill:                           'f'" << std::endl;
 	std::cout << std::endl;
-	std::cout << "toggle front camera:                         'c'" << std::endl;
-	std::cout << "toggle stereo camera:                        'C'" << std::endl;
+	std::cout << "switch cameras:                              'c'" << std::endl;
 	std::cout << std::endl;
 	std::cout << "Mouse:" << std::endl;
 	std::cout << "hold both buttons to reset HSV values" << std::endl;
