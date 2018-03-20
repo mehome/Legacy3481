@@ -657,21 +657,21 @@ void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
 	{
 		std::cout << "Stereo cam mode: ";
 		switch (cam1_op_mode) {
-		case 0: std::cout << "None" << std::endl; break;
-		case FindHook: std::cout << "FindHook" << std::endl; break;
-		case FindRock: std::cout << "FindRock" << std::endl; break;
-		case FindBeacon: std::cout << "FindBeakon" << std::endl; break;
+			case Idle: std::cout << "Idle" << std::endl; break;
+			case FindHook: std::cout << "FindHook" << std::endl; break;
+			case FindRock: std::cout << "FindRock" << std::endl; break;
+			case FindBeacon: std::cout << "FindBeakon" << std::endl; break;
 		}
 		if (filename1.size()) std::cout << "video from file: " << filename1 << std::endl;
 		std::cout << "Stereo cam view: ";
 		switch (StereoCam.ViewID) {
-		case sl::VIEW_LEFT: std::cout << "VIEW_LEFT" << std::endl; break;
-		case sl::VIEW_RIGHT: std::cout << "VIEW_RIGHT" << std::endl; break;
-		case sl::VIEW_LEFT_UNRECTIFIED: std::cout << "VIEW_LEFT_UNRECTIFIED" << std::endl; break;
-		case sl::VIEW_RIGHT_UNRECTIFIED: std::cout << "VIEW_RIGHT_UNRECTIFIED" << std::endl; break;
-		case sl::VIEW_DEPTH: std::cout << "VIEW_DEPTH" << std::endl; break;
-		case sl::VIEW_CONFIDENCE: std::cout << "VIEW_CONFIDENCE" << std::endl;	break;
-		case sl::VIEW_NORMALS: std::cout << "VIEW_NORMALS" << std::endl; break;
+			case sl::VIEW_LEFT: std::cout << "VIEW_LEFT" << std::endl; break;
+			case sl::VIEW_RIGHT: std::cout << "VIEW_RIGHT" << std::endl; break;
+			case sl::VIEW_LEFT_UNRECTIFIED: std::cout << "VIEW_LEFT_UNRECTIFIED" << std::endl; break;
+			case sl::VIEW_RIGHT_UNRECTIFIED: std::cout << "VIEW_RIGHT_UNRECTIFIED" << std::endl; break;
+			case sl::VIEW_DEPTH: std::cout << "VIEW_DEPTH" << std::endl; break;
+			case sl::VIEW_CONFIDENCE: std::cout << "VIEW_CONFIDENCE" << std::endl;	break;
+			case sl::VIEW_NORMALS: std::cout << "VIEW_NORMALS" << std::endl; break;
 		}
 		std::cout << "Stereo cam sensing mode: ";
 		if (StereoCam.runtime_parameters.sensing_mode == sl::SENSING_MODE_STANDARD)
@@ -685,11 +685,12 @@ void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
 	{
 		std::cout << "Front cam mode: ";
 		switch (cam2_op_mode) {
-		case 0: std::cout << "None" << std::endl; break;
-		case FindHook: std::cout << "FindHook" << std::endl; break;
-		case FindRock: std::cout << "FindRock" << std::endl; break;
-		case FindBeacon: std::cout << "FindBeakon" << std::endl; break;
+			case Idle: std::cout << "Idle" << std::endl; break;
+			case FindHook: std::cout << "FindHook" << std::endl; break;
+			case FindRock: std::cout << "FindRock" << std::endl; break;
+			case FindBeacon: std::cout << "FindBeakon" << std::endl; break;
 		}
+		if (filename2.size()) std::cout << "video from file: " << filename2 << std::endl;
 	}
 	std::cout << "small display window: " << SmallWindow << std::endl;
 	std::cout << "SmartDashboard mode: " << SmartDashboard_Mode << std::endl;
