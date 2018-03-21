@@ -45,27 +45,7 @@ ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
 	str_threshold_setting[V_High] = "THRESHOLD VALUE HIGH";
 };
 
-
-
-ThresholdDetecter::~ThresholdDetecter()
-{	// original values (wide open)
-	HSV_low.x = HSV_low.y = HSV_low.z = 0;
-	HSV_high.x = HSV_high.y = HSV_high.z = 255;
-	// working values
-	HSV_Range[H_Low] = HSV_low.x;
-	HSV_Range[S_Low] = HSV_low.y;
-	HSV_Range[V_Low] = HSV_low.z;
-	HSV_Range[H_High] = HSV_high.x;
-	HSV_Range[S_High] = HSV_high.y;
-	HSV_Range[V_High] = HSV_high.z;
-
-	str_threshold_setting[H_Low] = "THRESHOLD HUE LOW";
-	str_threshold_setting[H_High] = "THRESHOLD HUE HIGH";
-	str_threshold_setting[S_Low] = "THRESHOLD SATURATION LOW";
-	str_threshold_setting[S_High] = "THRESHOLD SATURATION HIGH";
-	str_threshold_setting[V_Low] = "THRESHOLD VALUE LOW";
-	str_threshold_setting[V_High] = "THRESHOLD VALUE HIGH";
-}
+ThresholdDetecter::~ThresholdDetecter() {}
 
 void ThresholdDetecter::setThreshold(int3 low, int3 high)
 {

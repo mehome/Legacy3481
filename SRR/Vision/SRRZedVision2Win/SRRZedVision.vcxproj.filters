@@ -30,6 +30,9 @@
     <ClInclude Include="src\SmartDashbrdMode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ChessboardDetecter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\CascadeDetecter.cpp">

@@ -10,13 +10,13 @@
 #include "OCVCamera.h"
 #include "ZEDCamera.h"
 #include "ThresholdDetecter.h"
+#include "ChessboardDetecter.h"
 
 #include "../SmartDashboard/SmartDashboard_import.h"
 #include "SmartDashbrdMode.h"
 
 /** forward declarations **/
 void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
-void detectBeacon(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
 void printInfo(ThresholdDetecter &, ZEDCamera &);
 void printHelp();
 
@@ -250,6 +250,7 @@ int main(int argc, char **argv) {
 	HSV_low.x = 122; HSV_low.y = 50; HSV_low.z = 90;
 	HSV_high.x = 155; HSV_high.y = 255; HSV_high.z = 255;
 	ThresholdDetecter ThresholdDet(HSV_low, HSV_high);
+	ChessboardDetecter ChessboardDet;
 
 	int key = ' ';
 	int count = 0;
@@ -417,7 +418,11 @@ int main(int argc, char **argv) {
 					break;
 				}
 				case FindBeacon:
-					detectBeacon(anaplyph, depth, point_cloud);
+#ifdef USE_POINT_CLOUD 
+					ChessboardDet.detectBeacon(anaplyph, NULL, &point_cloud);
+#else
+					chessboardDet.detectBeacon(anaplyph, &depth, NULL);
+#endif
 					break;
 				default:
 					break;
@@ -469,7 +474,12 @@ int main(int argc, char **argv) {
 				break;
 			}
 			case FindBeacon:
-				detectBeacon(frame, depth, point_cloud);
+#ifdef USE_POINT_CLOUD 
+				ChessboardDet.detectBeacon(frame, NULL, NULL);
+#else
+				chessboardDet.detectBeacon(frame, NULL, NULL);
+#endif
+				//				detectBeacon(frame, depth, point_cloud);
 				break;
 			default:
 				break;

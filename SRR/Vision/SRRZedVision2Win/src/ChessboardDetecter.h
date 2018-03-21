@@ -5,11 +5,9 @@
 class ChessboardDetecter
 {
 public:
-	ChessboardDetecter()
-		: boardSize(9, 6)
-	{}
+	ChessboardDetecter();
+	~ChessboardDetecter();
 
-	~ChessboardDetecter() {}
 	void detectBeacon(cv::Mat& view, sl::Mat* depth, sl::Mat* point_cloud);
 
 private:
