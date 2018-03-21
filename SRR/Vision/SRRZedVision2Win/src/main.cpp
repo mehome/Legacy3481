@@ -11,6 +11,7 @@
 #include "ZEDCamera.h"
 #include "ThresholdDetecter.h"
 #include "ChessboardDetecter.h"
+#include "CascadeDetecter.h"
 
 #include "../SmartDashboard/SmartDashboard_import.h"
 #include "SmartDashbrdMode.h"
