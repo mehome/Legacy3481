@@ -98,7 +98,7 @@ void ThresholdDetecter::printThreshold(void)
 	std::cout << "V: " << HSV_Range[V_Low] << " - " << HSV_Range[V_High] << std::endl;
 }
 
-void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, cv::Point mhit, bool small_display)
+void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* point_cloud, cv::Point mhit, bool small_display)
 {
 	cv::Mat binary;
 	cv::Mat hsv, masked;
@@ -181,29 +181,32 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 				std::cout << "min area: " << AreaMin << " max area: " << AreaMax << std::endl;
 				std::cout << "min width: " << objRectMin.size.width << " max width: " << objRectMax.size.width << std::endl;
 				std::cout << "min height: " << objRectMin.size.height << " max height: " << objRectMax.size.height << std::endl << std::endl;
-#ifdef USE_POINT_CLOUD 
-				sl::float4 point3D;
-				// Get the 3D point cloud values for pixel 
-				point_cloud.getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &point3D);
-
-				if ((!isnan(point3D.x) && point3D.x != sl::TOO_CLOSE && point3D.x != sl::TOO_FAR) &&
-					(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
-					(!isnan(point3D.z) && point3D.z != sl::TOO_CLOSE && point3D.z != sl::TOO_FAR))
+				if (point_cloud != NULL)
 				{
-					float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
-					if (Distance < DistMin) DistMin = Distance;
-					if (Distance > DistMax) DistMax = Distance;
-				}
-#else
-				float Distance;
-				depth.getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &Distance);
+					sl::float4 point3D;
+					// Get the 3D point cloud values for pixel 
+					point_cloud->getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &point3D);
 
-				if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
-				{
-					if (Distance < DistMin) DistMin = Distance;
-					if (Distance > DistMax) DistMax = Distance;
+					if ((!isnan(point3D.x) && point3D.x != sl::TOO_CLOSE && point3D.x != sl::TOO_FAR) &&
+						(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
+						(!isnan(point3D.z) && point3D.z != sl::TOO_CLOSE && point3D.z != sl::TOO_FAR))
+					{
+						float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
+						if (Distance < DistMin) DistMin = Distance;
+						if (Distance > DistMax) DistMax = Distance;
+					}
 				}
-#endif
+				else if (depth != NULL)
+				{
+					float Distance;
+					depth->getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &Distance);
+
+					if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
+					{
+						if (Distance < DistMin) DistMin = Distance;
+						if (Distance > DistMax) DistMax = Distance;
+					}
+				}
 			}
 		}
 		else
@@ -220,35 +223,42 @@ void ThresholdDetecter::detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat p
 			(minRect[i].size.height > 20))
 #endif
 		{
-#ifdef USE_POINT_CLOUD 
-			sl::float4 point3D;
-			// Get the 3D point cloud values for pixel 
-			point_cloud.getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &point3D);
-
-			if ((!isnan(point3D.x) && point3D.x != sl::TOO_CLOSE && point3D.x != sl::TOO_FAR) &&
-				(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
-				(!isnan(point3D.z) && point3D.z != sl::TOO_CLOSE && point3D.z != sl::TOO_FAR))
+			if (point_cloud != NULL)
 			{
-				float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
+				sl::float4 point3D;
+				// Get the 3D point cloud values for pixel 
+				point_cloud->getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &point3D);
 
-				//std::cout << "rock found at: " << point3D.x << ", " << point3D.y << ", " << point3D.z << " Dist: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
-				SmartDashboard::PutNumber("X Position", point3D.x);
-				SmartDashboard::PutNumber("Y Position", point3D.y);
-				SmartDashboard::PutNumber("Z Position", point3D.z);
-				SmartDashboard::PutNumber("Distance", Distance);
+				if ((!isnan(point3D.x) && point3D.x != sl::TOO_CLOSE && point3D.x != sl::TOO_FAR) &&
+					(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
+					(!isnan(point3D.z) && point3D.z != sl::TOO_CLOSE && point3D.z != sl::TOO_FAR))
+				{
+					float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
+
+					SmartDashboard::PutNumber("X Position", point3D.x);
+					SmartDashboard::PutNumber("Y Position", point3D.y);
+					SmartDashboard::PutNumber("Z Position", point3D.z);
+					SmartDashboard::PutNumber("Distance", Distance);
+				}
 			}
-#else
-			float Distance;
-			depth.getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &Distance);
-
-			if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
+			else if (depth != NULL)
 			{
-				//std::cout << "rock found at " << mc[i].x << ", " << mc[i].y << " distance: " << Distance << " m " << Distance * 3.37 << " ft" << std::endl;
+				float Distance;
+				depth->getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &Distance);
+
+				if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
+				{
+					SmartDashboard::PutNumber("X Position", minRect[i].center.x);
+					SmartDashboard::PutNumber("Y Position", minRect[i].center.y);
+					SmartDashboard::PutNumber("Distance", Distance);
+				}
+			}
+			else
+			{
 				SmartDashboard::PutNumber("X Position", minRect[i].center.x);
 				SmartDashboard::PutNumber("Y Position", minRect[i].center.y);
-				SmartDashboard::PutNumber("Distance", Distance);
 			}
-#endif
+
 			/// Draw contours
 			cv::drawContours(frame, contours, i, passcolor, 2, 8, hierarchy, 0, cv::Point());
 			cv::circle(frame, minRect[i].center, 4, passcolor, -1, 8, 0);

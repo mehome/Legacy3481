@@ -32,6 +32,7 @@ cv::Mat OCVCamera::GrabFrame(void)
 		{
 			frame_counter = 0; //Or whatever as long as it is the same as next line
 			capture.set(cv::CAP_PROP_POS_FRAMES, 0);
+			capture >> frame;
 		}
 
 		switch (flip)

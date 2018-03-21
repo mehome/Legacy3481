@@ -189,6 +189,13 @@ float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
 	return dist;
 }
 
+unsigned __int64 elapsedUS(unsigned __int64 now, unsigned __int64 start, unsigned __int64 freq)
+{
+	unsigned __int64 elapsed = now >= start ? now - start : _UI64_MAX - start + now;
+	unsigned __int64 us = elapsed * 1000000ui64 / freq;
+	return us;
+}
+
 enum Camera_Mode{
 	Idle, 
 	FindHook,
@@ -348,6 +355,14 @@ int main(int argc, char **argv) {
 	// Print help in console
 	printHelp();
 
+#ifdef PERFTIMER
+	unsigned __int64 cnt = 0;
+	unsigned __int64 freq;
+	QueryPerformanceFrequency((PLARGE_INTEGER)&freq);
+	unsigned __int64 start;
+	QueryPerformanceCounter((PLARGE_INTEGER)&start);
+#endif
+
     //loop until 'q' is pressed
     while (key != 'q') 
 	{
@@ -394,7 +409,11 @@ int main(int argc, char **argv) {
 					}
 
 					cv::Point mhit(mouseStruct.hit_x, mouseStruct.hit_y);
-					ThresholdDet.detectRockSample(anaplyph, depth, point_cloud, mhit, SmallWindow);
+#ifdef USE_POINT_CLOUD 
+					ThresholdDet.detectRockSample(anaplyph, NULL, &point_cloud, mhit, SmallWindow);
+#else
+					ThresholdDet.detectRockSample(anaplyph, &depth, NULL, mhit, SmallWindow);
+#endif
 					break;
 				}
 				case FindBeacon:
@@ -446,7 +465,7 @@ int main(int argc, char **argv) {
 				}
 
 				cv::Point mhit(mouseStruct.hit_x, mouseStruct.hit_y);
-				ThresholdDet.detectRockSample(frame, depth, point_cloud, mhit, SmallWindow);
+				ThresholdDet.detectRockSample(frame, NULL, NULL, mhit, SmallWindow);
 				break;
 			}
 			case FindBeacon:
@@ -466,7 +485,19 @@ int main(int argc, char **argv) {
 		}
 
 		/** end of main video loop **/
+#ifdef PERFTIMER
+		++cnt;
 
+		if (cnt == 10)
+		{
+			unsigned __int64 now;
+			QueryPerformanceCounter((PLARGE_INTEGER)&now);
+			unsigned __int64 us = elapsedUS(now, start, freq);
+			std::cout << " fps = " << cnt * 1000000. / us << " ms per frame = " << us / (cnt * 1000.) << std::endl;
+			cnt = 0;
+			QueryPerformanceCounter((PLARGE_INTEGER)&start);
+		}
+#endif
         key = cv::waitKey(5);
  
         // Keyboard shortcuts

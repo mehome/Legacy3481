@@ -9,7 +9,7 @@ public:
 	ThresholdDetecter(int3 lov, int3 high);
 	~ThresholdDetecter();
 
-	void detectRockSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud, cv::Point mhit, bool small_display);
+	void detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* point_cloud, cv::Point mhit, bool small_display);
 	void updateThresholdSettings(int key);
 	void switchThresholdSettings();
 	bool loadThreshold(std::string file);
