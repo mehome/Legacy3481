@@ -17,16 +17,12 @@
 #include "SmartDashbrdMode.h"
 
 /** forward declarations **/
-void detectHookSample(cv::Mat frame, sl::Mat depth, sl::Mat point_cloud);
 void printInfo(ThresholdDetecter &, ZEDCamera &);
 void printHelp();
-
-extern cv::CascadeClassifier hook_cascade;
 
 #define FRONT_CAM_URL ""
 //#define FRONT_CAM_URL "http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0"
 //#define FRONT_CAM_RUL "rtsp://root:root@192.168.0.90/axis-media/media.amp"
-
 
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
@@ -183,13 +179,6 @@ static void on_VHighChange(int val, void* param)
 }
 
 
-float GetDistanceAtPoint(sl::Mat depth, size_t x, size_t y)
-{
-	sl::float1 dist;
-	depth.getValue(x, y, &dist);
-	return dist;
-}
-
 unsigned __int64 elapsedUS(unsigned __int64 now, unsigned __int64 start, unsigned __int64 freq)
 {
 	unsigned __int64 elapsed = now >= start ? now - start : _UI64_MAX - start + now;
@@ -222,23 +211,12 @@ size_t width = 1280;
 size_t height = 720;
 
 
-/** Cascade classifire data */
-//-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
-std::string hook_cascade_name = "bin/data/SRR Samples/cascades/hook_cascade_cpu.xml";
-
-
 //main  function
 //mode 0 = robot
 //mode 1 = simulation
 //mode 2 = stand alone (runs directly with SmartDashboard UI)
 //SRRZedVision.exe [mode=0] [filename *.svo for stereo cam, *.mpg or other supported format for front cam.]
 int main(int argc, char **argv) {
-
-    //-- 1. Load the cascades
-    if (!hook_cascade.load(hook_cascade_name)){	
-		std::cout << "--(!)Error loading cascade data" << std::endl; 
-		return -1; 
-    };
 
 	int3 low;
 	int3 high;
@@ -252,6 +230,12 @@ int main(int argc, char **argv) {
 	HSV_high.x = 155; HSV_high.y = 255; HSV_high.z = 255;
 	ThresholdDetecter ThresholdDet(HSV_low, HSV_high);
 	ChessboardDetecter ChessboardDet;
+	CascadeDetecter CascadeDet("bin/data/SRR Samples/cascades/hook_cascade_cpu.xml");
+
+	if (!CascadeDet.cascadeLoaded()){
+		std::cout << "--(!)Error loading cascade data" << std::endl;
+		return -1;
+	};
 
 	int key = ' ';
 	int count = 0;
@@ -394,7 +378,11 @@ int main(int argc, char **argv) {
 				switch (cam1_op_mode)
 				{
 				case FindHook:
-					detectHookSample(anaplyph, depth, point_cloud);
+#ifdef USE_POINT_CLOUD 
+					CascadeDet.detectHookSample(anaplyph, NULL, &point_cloud);
+#else
+					CascadeDet.detectHookSample(anaplyph, &depth, NULL);
+#endif
 					break;
 				case FindRock:
 				{
@@ -454,7 +442,7 @@ int main(int argc, char **argv) {
 			switch (cam2_op_mode)
 			{
 			case FindHook:
-				detectHookSample(frame, depth, point_cloud);	// TODO: no point cloud or depth for front cam.
+				CascadeDet.detectHookSample(anaplyph, NULL, NULL);
 				break;
 			case FindRock:
 			{
@@ -475,12 +463,7 @@ int main(int argc, char **argv) {
 				break;
 			}
 			case FindBeacon:
-#ifdef USE_POINT_CLOUD 
 				ChessboardDet.detectBeacon(frame, NULL, NULL);
-#else
-				chessboardDet.detectBeacon(frame, NULL, NULL);
-#endif
-				//				detectBeacon(frame, depth, point_cloud);
 				break;
 			default:
 				break;
