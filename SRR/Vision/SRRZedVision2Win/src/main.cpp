@@ -442,7 +442,7 @@ int main(int argc, char **argv) {
 			switch (cam2_op_mode)
 			{
 			case FindHook:
-				CascadeDet.detectHookSample(anaplyph, NULL, NULL);
+				CascadeDet.detectHookSample(frame, NULL, NULL);
 				break;
 			case FindRock:
 			{
@@ -519,6 +519,8 @@ int main(int argc, char **argv) {
 					if (FrontCam.IsOpen)
 					{
 						activeCamera = Front_Cam;
+						if (cam2_op_mode != FindRock)
+							cv::destroyWindow("Masked");
 						std::cout << "Front camera enabled" << std::endl;
 					}
 					break;
@@ -526,6 +528,8 @@ int main(int argc, char **argv) {
 					if (StereoCam.IsOpen)
 					{
 						activeCamera = Stereo_Cam;
+						if (cam1_op_mode != FindRock)
+							cv::destroyWindow("Masked");
 						std::cout << "Stereo camera enabled" << std::endl;
 					}
 					break;
@@ -639,26 +643,26 @@ int main(int argc, char **argv) {
 				{
 					cam1_op_mode++;
 					if (cam1_op_mode > PassThrough)
-						cam1_op_mode = 0;
+						cam1_op_mode = Idle;
 					switch (cam1_op_mode) {
-					case 0: printf("mode Idle\n"); break;
-					case 1: printf("mode Find Hook\n"); break;
-					case 2: printf("mode Find Rock\n"); break;
-					case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
-					case 4: printf("mode passthrough\n"); break;
+					case Idle: printf("mode Idle\n"); break;
+					case FindHook: printf("mode Find Hook\n"); break;
+					case FindRock: printf("mode Find Rock\n"); break;
+					case FindBeacon: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
+					case PassThrough: printf("mode passthrough\n"); break;
 					}
 				}
 				else if (activeCamera == Front_Cam)
 				{
 					cam2_op_mode++;
 					if (cam2_op_mode > PassThrough)
-						cam2_op_mode = 0;
+						cam2_op_mode = Idle;
 					switch (cam2_op_mode) {
-					case 0: printf("mode Idle\n"); break;
-					case 1: printf("mode Find Hook\n"); break;
-					case 2: printf("mode Find Rock\n"); break;
-					case 3: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
-					case 4: printf("mode passthrough\n"); break;
+					case Idle: printf("mode Idle\n"); break;
+					case FindHook: printf("mode Find Hook\n"); break;
+					case FindRock: printf("mode Find Rock\n"); break;
+					case FindBeacon: printf("mode Find Beacon\n"); cv::destroyWindow("Masked"); break;
+					case PassThrough: printf("mode passthrough\n"); break;
 					}
 				}
 				break;

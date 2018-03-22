@@ -158,6 +158,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\CascadeDetecter.h" />
     <ClInclude Include="src\ChessboardDetecter.h" />
     <ClInclude Include="src\OCVCamera.h" />
     <ClInclude Include="src\SmartDashbrdMode.h" />
