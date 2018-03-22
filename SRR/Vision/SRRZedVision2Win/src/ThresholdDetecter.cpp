@@ -117,6 +117,7 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 		/// Find the rotated rectangles for each contour
 		minRect[i] = cv::minAreaRect(cv::Mat(contours[i]));
 
+#ifdef BUTTON_TARGET_PICKER 
 		// Is the middle Mouse button down?
 		if (mhit.x != -1 && mhit.y != -1)
 		{
@@ -136,27 +137,28 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 				std::cout << "min max reset." << std::endl;
 			}
 
-			std::cout << "idx: " << i << " angle: " << minRect[i].angle << std::endl;
-			std::cout << "area: " << contourArea(contours[i]) << std::endl;
-			std::cout << "width: " << minRect[i].size.width << std::endl;
-			std::cout << "height: " << minRect[i].size.height << std::endl << std::endl;
-
 			// First, see if it's in the bounding box for this rect
 			cv::Rect bounds(minRect[i].boundingRect());
 			if ((mhit.x > bounds.x) && (mhit.x < (bounds.x + bounds.width)) &&
 				(mhit.y > bounds.y) && (mhit.y < (bounds.y + bounds.height)))
 			{
+				int margin = 10;
 				// now get value ranges
-				if (minRect[i].angle < objRectMin.angle) objRectMin.angle = minRect[i].angle;
-				if (minRect[i].angle > objRectMax.angle) objRectMax.angle = minRect[i].angle;
-				if (minRect[i].size.width < objRectMin.size.width) objRectMin.size.width = minRect[i].size.width;
-				if (minRect[i].size.width > objRectMax.size.width) objRectMax.size.width = minRect[i].size.width;
-				if (minRect[i].size.height < objRectMin.size.height) objRectMin.size.height = minRect[i].size.height;
-				if (minRect[i].size.height > objRectMax.size.height) objRectMax.size.height = minRect[i].size.height;
-				if (contourArea(contours[i]) < AreaMin) AreaMin = contourArea(contours[i]);
-				if (contourArea(contours[i]) > AreaMax) AreaMax = contourArea(contours[i]);
+				if (minRect[i].angle < objRectMin.angle) objRectMin.angle = minRect[i].angle - margin;
+				if (minRect[i].angle > objRectMax.angle) objRectMax.angle = minRect[i].angle + margin;
+				if (minRect[i].size.width < objRectMin.size.width) objRectMin.size.width = minRect[i].size.width - margin;
+				if (minRect[i].size.width > objRectMax.size.width) objRectMax.size.width = minRect[i].size.width + margin;
+				if (minRect[i].size.height < objRectMin.size.height) objRectMin.size.height = minRect[i].size.height - margin;
+				if (minRect[i].size.height > objRectMax.size.height) objRectMax.size.height = minRect[i].size.height + margin;
+				if (contourArea(contours[i]) < AreaMin) AreaMin = contourArea(contours[i]) - margin*10;
+				if (contourArea(contours[i]) > AreaMax) AreaMax = contourArea(contours[i]) + margin*10;
 
 				std::cout << "HIT" << std::endl;
+				std::cout << "idx: " << i << " angle: " << minRect[i].angle << std::endl;
+				std::cout << "area: " << contourArea(contours[i]) << std::endl;
+				std::cout << "width: " << minRect[i].size.width << std::endl;
+				std::cout << "height: " << minRect[i].size.height << std::endl << std::endl << std::endl;
+
 				std::cout << "min angle: " << objRectMin.angle << " max angle: " << objRectMax.angle << std::endl;
 				std::cout << "min area: " << AreaMin << " max area: " << AreaMax << std::endl;
 				std::cout << "min width: " << objRectMin.size.width << " max width: " << objRectMax.size.width << std::endl;
@@ -192,7 +194,6 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 		else
 			MouseDown = false;
 
-#if 0
 		if (/*(minRect[i].angle >= objRectMin.angle) && (minRect[i].angle <= objRectMax.angle) &&*/
 			(contourArea(contours[i]) >= AreaMin) && (contourArea(contours[i]) <= AreaMax) &&
 			(minRect[i].size.width >= objRectMin.size.width) && (minRect[i].size.width <= objRectMax.size.width) &&

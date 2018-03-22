@@ -51,9 +51,9 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 	if (flag == CV_EVENT_FLAG_MBUTTON)
 	{	// middle button sets hit location
 		if (x_int < 0) x_int = -1;
-		if (x_int > data->image.cols) x_int = -1; // data->image.cols;
+		if (x_int > data->image.cols) x_int = -1; 
 		if (y_int < 0) y_int = -1;
-		if (y_int > data->image.rows) y_int = -1; // data->image.rows;
+		if (y_int > data->image.rows) y_int = -1; 
 
 		data->hit_x = x_int;
 		data->hit_y = y_int;
@@ -104,10 +104,10 @@ static void onMouseCallback(int32_t event, int32_t x, int32_t y, int32_t flag, v
 			}
 		}
 
-		std::cout << "H: " << data->low.x << " - " << data->high.x << std::endl;
-		std::cout << "S: " << data->low.y << " - " << data->high.y << std::endl;
-		std::cout << "V: " << data->low.z << " - " << data->high.z << std::endl;
-		std::cout << std::endl;
+		//std::cout << "H: " << data->low.x << " - " << data->high.x << std::endl;
+		//std::cout << "S: " << data->low.y << " - " << data->high.y << std::endl;
+		//std::cout << "V: " << data->low.z << " - " << data->high.z << std::endl;
+		//std::cout << std::endl;
 		data->update = true;
 	}
 	else if (flag == CV_EVENT_FLAG_RBUTTON)
