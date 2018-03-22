@@ -690,6 +690,7 @@ void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
 			case FindHook: std::cout << "FindHook" << std::endl; break;
 			case FindRock: std::cout << "FindRock" << std::endl; break;
 			case FindBeacon: std::cout << "FindBeakon" << std::endl; break;
+			case PassThrough: std::cout << "Passthrough" << std::endl; break;
 		}
 		if (filename1.size()) std::cout << "video from file: " << filename1 << std::endl;
 		std::cout << "Stereo cam view: ";
@@ -718,6 +719,7 @@ void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
 			case FindHook: std::cout << "FindHook" << std::endl; break;
 			case FindRock: std::cout << "FindRock" << std::endl; break;
 			case FindBeacon: std::cout << "FindBeakon" << std::endl; break;
+			case PassThrough: std::cout << "Passthrough" << std::endl; break;
 		}
 		if (filename2.size()) std::cout << "video from file: " << filename2 << std::endl;
 	}
@@ -733,54 +735,53 @@ This function displays help
 **/
 void printHelp() {
 	std::cout << std::endl;
-	std::cout << "Help (this):                                 'h'" << std::endl;
-	std::cout << "info:                                        '?'" << std::endl;
-	std::cout << "window size:                                 'z'" << std::endl;
+
+	std::cout << "General:" << std::endl;
+	std::cout << "  Help (this):                               'h'" << std::endl;
+	std::cout << "  info:                                      '?'" << std::endl;
+	std::cout << "  Exit:                                      'q'" << std::endl;
 	std::cout << std::endl;
-	std::cout << "switch cameras:                              'c'" << std::endl;
-	std::cout << "change cameera mode:                         'm'" << std::endl;
+	std::cout << "  window size:                               'z'" << std::endl;
+	std::cout << "  switch cameras:                            'c'" << std::endl;
+	std::cout << "  change cameera mode:                       'm'" << std::endl;
 	std::cout << std::endl;
 	std::cout << "Mouse:" << std::endl;
-	std::cout << "hold both buttons to reset HSV values" << std::endl;
-	std::cout << "LButton - Additive selection for HSV" << std::endl;
-	std::cout << "RButton - show HSV value at pointer" << std::endl;
-	std::cout << "Exit : 'q'" << std::endl;
+	std::cout << "  hold both buttons to reset HSV values" << std::endl;
+	std::cout << "  LButton - Additive selection for HSV" << std::endl;
+	std::cout << "  RButton - show HSV value at pointer" << std::endl;
 	std::cout << std::endl;
 	std::cout << "HSV values adjustment: " << std::endl;
-	std::cout << "  Increase increment:                        'i'" << std::endl;
-	std::cout << "  Decrease increment:                        'I'" << std::endl;
-	std::cout << "  Increase HSV value:                        '>'" << std::endl;
-	std::cout << "  Decrease HSV value:                        '<'" << std::endl;
-	std::cout << "  Toggle HSV settings:                       'S'" << std::endl;
-	std::cout << "  Reset HSV to default:                      'R'" << std::endl;
-	std::cout << "  Reset HSV to full range:                   'Z'" << std::endl;
-	std::cout << "  Save HSV values:           Function keys F1-F4" << std::endl;
-	std::cout << "  Load HSV values:           Function keys F5-F8" << std::endl;
+	std::cout << "  Decrease/Increase increment:             'I'/'i'" << std::endl;
+	std::cout << "  Decrease/Increase HSV value:             '<'/'>'" << std::endl;
+	std::cout << "  Toggle HSV settings:                         'S'" << std::endl;
+	std::cout << "  Reset HSV to default:                        'R'" << std::endl;
+	std::cout << "  Reset HSV to full range:                     'Z'" << std::endl;
+	std::cout << "  Save HSV values:             Function keys F1-F4" << std::endl;
+	std::cout << "  Load HSV values:             Function keys F5-F8" << std::endl;
 	std::cout << std::endl;
-	std::cout << "Zed camera only" << std::endl;
+	std::cout << "Zed camera only:" << std::endl;
 	std::cout << std::endl;
 	std::cout << "Camera controls hotkeys: " << std::endl;
-	std::cout << "  Increase camera settings value:            '+'" << std::endl;
-	std::cout << "  Decrease camera settings value:            '-'" << std::endl;
-	std::cout << "  Toggle camera settings:                    's'" << std::endl;
-	std::cout << "  Reset all parameters:                      'r'" << std::endl;
-	std::cout << "  Save camera values:            Function key F9" << std::endl;
-	std::cout << "  Load camera values:            Function key F10" << std::endl;
+	std::cout << "  Decrease/Increase camera settings value: '-'/'+'" << std::endl;
+	std::cout << "  Toggle camera settings:                      's'" << std::endl;
+	std::cout << "  Reset all parameters:                        'r'" << std::endl;
+	std::cout << "  Save camera values:              Function key F9" << std::endl;
+	std::cout << "  Load camera values:              Function key F10" << std::endl;
 	std::cout << std::endl;
-	std::cout << "recalibrate camera:                          'a'" << std::endl;
+	std::cout << "recalibrate camera:                            'a'" << std::endl;
 	std::cout << std::endl;
 	std::cout << "views:" << std::endl;
-	std::cout << "  left:                                      '0'" << std::endl;
-	std::cout << "  right:                                     '1'" << std::endl;
-	std::cout << "  left unrectified:                          '2'" << std::endl;
-	std::cout << "  right unrectified:                         '3'" << std::endl;
-	std::cout << "  depth:                                     '4'" << std::endl;
-	std::cout << "  confidence:                                '5'" << std::endl;
-	std::cout << "  normals:                                   '6'" << std::endl;
+	std::cout << "  left:                                        '0'" << std::endl;
+	std::cout << "  right:                                       '1'" << std::endl;
+	std::cout << "  left unrectified:                            '2'" << std::endl;
+	std::cout << "  right unrectified:                           '3'" << std::endl;
+	std::cout << "  depth:                                       '4'" << std::endl;
+	std::cout << "  confidence:                                  '5'" << std::endl;
+	std::cout << "  normals:                                     '6'" << std::endl;
 	std::cout << std::endl;
-	std::cout << "write png image:                             'w'" << std::endl;
-	std::cout << "sending mode standard:                       'd'" << std::endl;
-	std::cout << "sensing mode fill:                           'f'" << std::endl;
+	std::cout << "write png image:                               'w'" << std::endl;
+	std::cout << "sending mode standard:                         'd'" << std::endl;
+	std::cout << "sensing mode fill:                             'f'" << std::endl;
 	std::cout << std::endl;
 	std::cout << std::endl;
 }
