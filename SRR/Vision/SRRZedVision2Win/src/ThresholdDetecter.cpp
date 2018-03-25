@@ -86,7 +86,6 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 	//convert the img from color to hsv
 	cv::cvtColor(frame, hsv, CV_BGR2HSV);
 
-	//cv::blur(hsv, hsv, cv::Size(3,3));
 	cv::GaussianBlur(hsv, hsv, cv::Size(5, 5), 0, 0);
 
 	//process the image - threshold

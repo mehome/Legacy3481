@@ -200,13 +200,14 @@ enum ActiveCam {
 	Front_Cam
 };
 
-std::string filename1;
-std::string filename2;
+std::string filename1 = "";
+std::string filename2 = FRONT_CAM_URL;
 ActiveCam activeCamera = No_Cam;
 bool SmallWindow = true;
 int cam1_op_mode = FindRock;
 int cam2_op_mode = PassThrough;
 size_t SmartDashboard_Mode = 0;
+bool show_timing = false;
 size_t width = 1280;
 size_t height = 720;
 
@@ -215,7 +216,7 @@ size_t height = 720;
 //mode 0 = robot
 //mode 1 = simulation
 //mode 2 = stand alone (runs directly with SmartDashboard UI)
-//SRRZedVision.exe [mode=0] [filename *.svo for stereo cam, *.mpg or other supported format for front cam.]
+//SRRZedVision.exe -sdmode [mode=0] -f1 [filename *.svo for stereo cam] -f2 [*.mpg or other supported format for front cam.] -timing
 int main(int argc, char **argv) {
 
 	int3 low;
@@ -240,17 +241,29 @@ int main(int argc, char **argv) {
 	int key = ' ';
 	int count = 0;
 
-	filename1 = "";
-	filename2 = FRONT_CAM_URL;
-
-	if (argc == 3)
+	// parse args
+	for (int i = 1; i < argc; i++)
 	{
-		filename1 = argv[2];
-		// if this is not a Zed SVO file, use it for the other camera.
-		if (filename1.find(".svo") == std::string::npos)
+		std::string arg = argv[i];
+		if (arg.compare("-f1") == 0)
 		{
-			filename2 = filename1;
-			filename1 = "";
+			filename1 = argv[++i];
+			continue;
+		}
+		if (arg.compare("-f2") == 0)
+		{
+			filename2 = argv[++i];
+			continue;
+		}
+		if (arg.compare("-sdmode") == 0)
+		{
+			SmartDashboard_Mode = atoi(argv[++i]);
+			continue;
+		}
+		if (arg.compare("-timing") == 0)
+		{
+			show_timing = true;
+			continue;
 		}
 	}
 
@@ -267,8 +280,6 @@ int main(int argc, char **argv) {
 		return -1;
 	}
 
-	if (argc > 1)
-		SmartDashboard_Mode = atoi(argv[1]);
 	switch (SmartDashboard_Mode)
 	{
 	case 0:
@@ -341,13 +352,15 @@ int main(int argc, char **argv) {
 	// Print help in console
 	printHelp();
 
-#ifdef PERFTIMER
 	unsigned __int64 cnt = 0;
 	unsigned __int64 freq;
-	QueryPerformanceFrequency((PLARGE_INTEGER)&freq);
 	unsigned __int64 start;
-	QueryPerformanceCounter((PLARGE_INTEGER)&start);
-#endif
+
+	if (show_timing)
+	{
+		QueryPerformanceFrequency((PLARGE_INTEGER)&freq);
+		QueryPerformanceCounter((PLARGE_INTEGER)&start);
+	}
 
     //loop until 'q' is pressed
     while (key != 'q') 
@@ -479,19 +492,21 @@ int main(int argc, char **argv) {
 		}
 
 		/** end of main video loop **/
-#ifdef PERFTIMER
-		++cnt;
-
-		if (cnt == 10)
+		if (show_timing)
 		{
-			unsigned __int64 now;
-			QueryPerformanceCounter((PLARGE_INTEGER)&now);
-			unsigned __int64 us = elapsedUS(now, start, freq);
-			std::cout << " fps = " << cnt * 1000000. / us << " ms per frame = " << us / (cnt * 1000.) << std::endl;
-			cnt = 0;
-			QueryPerformanceCounter((PLARGE_INTEGER)&start);
+			++cnt;
+
+			if (cnt == 10)
+			{
+				unsigned __int64 now;
+				QueryPerformanceCounter((PLARGE_INTEGER)&now);
+				unsigned __int64 us = elapsedUS(now, start, freq);
+				std::cout << " fps = " << cnt * 1000000. / us << " ms per frame = " << us / (cnt * 1000.) << std::endl;
+				cnt = 0;
+				QueryPerformanceCounter((PLARGE_INTEGER)&start);
+			}
 		}
-#endif
+
         key = cv::waitKey(5);
  
         // Keyboard shortcuts
