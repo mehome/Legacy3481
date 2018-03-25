@@ -359,9 +359,9 @@ MainRobot = {
 			voltage_multiply=-1.0,			--May be reversed
 			--this may be 184: 84 * 36 : 20... using 180 as the ring is 3.8571428571428571428571428571429
 			encoder_to_wheel_ratio=1.0,
-			--center around 2125
-			pot_min_limit=500,  --45 forward   0
-			pot_max_limit=3500,  -- 45 counter clockwise  962  +1250
+			--center around 2125--- changed to 2322
+			pot_min_limit=2322-1500,  --45 forward   0
+			pot_max_limit=2322+1500,  -- 45 counter clockwise  962  +1250
 			pot_limit_tolerance=100,  --add extra padding to avoid accidental trigger of the safety
 			pot_range_flipped='n',
 			--Arm_SetPotentiometerSafety=true,	
