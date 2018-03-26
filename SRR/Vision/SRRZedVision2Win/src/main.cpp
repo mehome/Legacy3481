@@ -213,9 +213,13 @@ size_t height = 720;
 
 
 //main  function
+//-sdmode
 //mode 0 = robot
 //mode 1 = simulation
 //mode 2 = stand alone (runs directly with SmartDashboard UI)
+//-f1 filename for Zed
+//-f2 filename for other camera
+//-timing - enable framerate times in console
 //SRRZedVision.exe -sdmode [mode=0] -f1 [filename *.svo for stereo cam] -f2 [*.mpg or other supported format for front cam.] -timing
 int main(int argc, char **argv) {
 
