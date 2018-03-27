@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
 	HSV_high.x = 155; HSV_high.y = 255; HSV_high.z = 255;
 	ThresholdDetecter ThresholdDet(HSV_low, HSV_high);
 	ChessboardDetecter ChessboardDet;
-	CascadeDetecter CascadeDet("bin/data/SRR Samples/cascades/hook_cascade_cpu.xml");
+	CascadeDetecter CascadeDet("bin/data/SRR Samples/cascades/hook_cascade_gpu.xml");
 
 	if (!CascadeDet.cascadeLoaded()){
 		std::cout << "--(!)Error loading cascade data" << std::endl;
@@ -375,7 +375,7 @@ int main(int argc, char **argv) {
 			static SmartDashboard_ModeManager s_SmartDashboard_ModeManager(cam1_op_mode,"ZedMode",cam1_op_mode);
 			s_SmartDashboard_ModeManager();  //update
 
-  		    // update
+			// update
 			if (cam1_op_mode != Idle)
 			{
 				StereoCam.GrabFrameAndDapth();
