@@ -19,3 +19,6 @@ ZED_LIBRARIES_64 = sl_core64.lib;sl_input64.lib;sl_zed64.lib
 Other build considerations:
 The bin directory contains a folder called dependencies which has the last 2 versions of the zed sdk, 
 and has lib folders for opencv 3.1.0 for use with VS 2013.
+
+great post on how to build opencv 3.4 with cuda support
+https://jamesbowley.co.uk/build-compile-opencv-3-4-in-windows-with-cuda-9-0-and-intel-mkl-tbb/
