@@ -179,6 +179,13 @@ static void on_VHighChange(int val, void* param)
 }
 
 
+unsigned __int64 elapsedUS(unsigned __int64 now, unsigned __int64 start, unsigned __int64 freq)
+{
+	unsigned __int64 elapsed = now >= start ? now - start : _UI64_MAX - start + now;
+	unsigned __int64 us = elapsed * 1000000ui64 / freq;
+	return us;
+}
+
 enum Camera_Mode{
 	Idle, 
 	FindHook,
@@ -351,12 +358,21 @@ int main(int argc, char **argv) {
 	// Print help in console
 	printHelp();
 
-	int cnt = 0;
+	unsigned __int64 cnt = 0;
+	unsigned __int64 freq;
+	unsigned __int64 start;
+#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4)
 	cv::TickMeter tm;
+#endif
 
 	if (show_timing)
 	{
+#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4)
 		tm.start();
+#else
+		QueryPerformanceFrequency((PLARGE_INTEGER)&freq);
+		QueryPerformanceCounter((PLARGE_INTEGER)&start);
+#endif
 	}
 
     //loop until 'q' is pressed
@@ -491,17 +507,26 @@ int main(int argc, char **argv) {
 		/** end of main video loop **/
 		if (show_timing)
 		{
+#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4)
 			tm.stop();
 			double detectionTime = tm.getTimeMilli();
 			double fps = 1000 / detectionTime;
 			tm.reset();
 			tm.start();
-
+#endif
 			++cnt;
 
 			if (cnt == 10)
 			{
+#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4)
 				std::cout << " fps = " << fps << " ms per frame = " << detectionTime << std::endl;
+#else
+				unsigned __int64 now;
+				QueryPerformanceCounter((PLARGE_INTEGER)&now);
+				unsigned __int64 us = elapsedUS(now, start, freq);
+				std::cout << " fps = " << cnt * 1000000. / us << " ms per frame = " << us / (cnt * 1000.) << std::endl;
+				QueryPerformanceCounter((PLARGE_INTEGER)&start);
+#endif
 				cnt = 0;
 			}
 		}
