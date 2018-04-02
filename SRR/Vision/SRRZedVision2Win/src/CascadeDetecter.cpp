@@ -31,9 +31,9 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 	cv::cuda::cvtColor(frame_gpu, gray_gpu, cv::COLOR_BGR2GRAY);
 
 	cascade_gpu->setFindLargestObject(true);
-	cascade_gpu->setScaleFactor(1.2);
+	cascade_gpu->setScaleFactor(1.3);
 	cascade_gpu->setMinNeighbors(4);
-
+	
 	cascade_gpu->detectMultiScale(gray_gpu, hooksBuf_gpu);
 	cascade_gpu->convert(hooksBuf_gpu, hooks);
 
