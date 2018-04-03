@@ -24,7 +24,7 @@ private:
 	histo_mode mode;
 	bool bShowImg;
 	bool cascade_loaded;
-#if defined(HAVE_CUDA)
+#if defined(HAVE_CUDA) && !defined(OLDSCHOOL)
 	cv::Ptr<cv::cuda::CascadeClassifier> cascade_gpu;
 #endif
 	cv::CascadeClassifier hook_cascade;

@@ -6,7 +6,7 @@ CascadeDetecter::CascadeDetecter(const char* cascade_name)
 	:	mode(h_original),
 		bShowImg(false)
 {
-#if defined(HAVE_CUDA)
+#if defined(HAVE_CUDA) && !defined(OLDSCHOOL)
 	cascade_gpu = cv::cuda::CascadeClassifier::create(cascade_name);
 #else
 	loadCascade(cascade_name);
@@ -25,14 +25,14 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 {
 	cv::Mat frame_gray;
 
-#if defined(HAVE_CUDA)
+#if defined(HAVE_CUDA) && !defined(OLDSCHOOL)
 	cv::cuda::GpuMat frame_gpu, gray_gpu, hooksBuf_gpu;
 	frame_gpu.upload(frame);
 	cv::cuda::cvtColor(frame_gpu, gray_gpu, cv::COLOR_BGR2GRAY);
 
 	cascade_gpu->setFindLargestObject(true);
 	cascade_gpu->setScaleFactor(1.3);
-	cascade_gpu->setMinNeighbors(4);
+	cascade_gpu->setMinNeighbors(0);
 	
 	cascade_gpu->detectMultiScale(gray_gpu, hooksBuf_gpu);
 	cascade_gpu->convert(hooksBuf_gpu, hooks);
@@ -60,14 +60,17 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 	}
 
 	//-- detect hook sample
-	hook_cascade.detectMultiScale(frame_gray, hooks, 1.3, 4, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, cv::Size(20, 30));
+	hook_cascade.detectMultiScale(frame_gray, hooks, 1.3, 0, CV_HAAR_FIND_BIGGEST_OBJECT | CV_HAAR_SCALE_IMAGE, cv::Size(20, 30));
 #endif
 
-	for (size_t i = 0; i < hooks.size(); i++)
+//	for (size_t i = 0; i < hooks.size(); i++)
+	if (!hooks.empty())
 	{
+		size_t i = hooks.size() - 1;
 		// draw a rect around the detected object
 		cv::Point p1(hooks[i].x, hooks[i].y);
 		cv::Point p2(hooks[i].x + hooks[i].width, hooks[i].y + hooks[i].height);
+
 		rectangle(frame, p1, p2, cv::Scalar(255, 0, 255), 2, 8, 0);
 
 		// get our pixel target center

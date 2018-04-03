@@ -237,7 +237,7 @@ int main(int argc, char **argv) {
 	ChessboardDetecter ChessboardDet;
 	CascadeDetecter CascadeDet("bin/data/SRR Samples/cascades/hook_cascade_gpu.xml");
 
-#if !defined(HAVE_CUDA)
+#if !defined(HAVE_CUDA) || defined(OLDSCHOOL)
 	if (!CascadeDet.cascadeLoaded()){
 		std::cout << "--(!)Error loading cascade data" << std::endl;
 		return -1;
@@ -361,13 +361,13 @@ int main(int argc, char **argv) {
 	unsigned __int64 cnt = 0;
 	unsigned __int64 freq;
 	unsigned __int64 start;
-#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4)
+#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4) && !defined(OLDSCHOOL_TIMER)
 	cv::TickMeter tm;
 #endif
 
 	if (show_timing)
 	{
-#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4)
+#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4) && !defined(OLDSCHOOL_TIMER)
 		tm.start();
 #else
 		QueryPerformanceFrequency((PLARGE_INTEGER)&freq);
@@ -507,7 +507,7 @@ int main(int argc, char **argv) {
 		/** end of main video loop **/
 		if (show_timing)
 		{
-#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4)
+#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4) && !defined(OLDSCHOOL_TIMER)
 			tm.stop();
 			double detectionTime = tm.getTimeMilli();
 			double fps = 1000 / detectionTime;
@@ -518,7 +518,7 @@ int main(int argc, char **argv) {
 
 			if (cnt == 10)
 			{
-#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4)
+#if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4) && !defined(OLDSCHOOL_TIMER)
 				std::cout << " fps = " << fps << " ms per frame = " << detectionTime << std::endl;
 #else
 				unsigned __int64 now;
