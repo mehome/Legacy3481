@@ -22,3 +22,5 @@ and has opencv 3.1.0 (including a version for vs 2013) which is the same as the 
 
 great post on how to build opencv 3.4 with cuda support
 https://jamesbowley.co.uk/build-compile-opencv-3-4-in-windows-with-cuda-9-0-and-intel-mkl-tbb/
+
+GPUImageHarrisCornerDetectionFilter - for findcorners replacement?
