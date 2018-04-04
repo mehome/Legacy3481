@@ -26,6 +26,7 @@ private:
 	bool cascade_loaded;
 #if defined(HAVE_CUDA) && !defined(OLDSCHOOL)
 	cv::Ptr<cv::cuda::CascadeClassifier> cascade_gpu;
+	cv::cuda::GpuMat frame_gpu, gray_gpu, hooksBuf_gpu;
 #endif
 	cv::CascadeClassifier hook_cascade;
 	std::vector<cv::Rect> hooks;

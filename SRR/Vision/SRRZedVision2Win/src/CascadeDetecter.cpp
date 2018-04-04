@@ -26,9 +26,18 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 	cv::Mat frame_gray;
 
 #if defined(HAVE_CUDA) && !defined(OLDSCHOOL)
-	cv::cuda::GpuMat frame_gpu, gray_gpu, hooksBuf_gpu;
+	
 	frame_gpu.upload(frame);
-	cv::cuda::cvtColor(frame_gpu, gray_gpu, cv::COLOR_BGR2GRAY);
+
+	switch (frame_gpu.channels())
+	{
+	case 3:	// from ocv capture or file
+		cv::cuda::cvtColor(frame_gpu, gray_gpu, cv::COLOR_BGR2GRAY);
+		break;
+	case 4: // from Zed
+		cv::cuda::cvtColor(frame_gpu, gray_gpu, cv::COLOR_BGRA2GRAY);
+		break;
+	}
 
 	cascade_gpu->setFindLargestObject(true);
 	cascade_gpu->setScaleFactor(1.3);
@@ -38,7 +47,7 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 	cascade_gpu->convert(hooksBuf_gpu, hooks);
 
 #else
-	cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);	// cpu version must be forgiving
 	if (mode == h_original && bShowImg)
 		cv::imshow("original gray", frame_gray);
 

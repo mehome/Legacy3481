@@ -531,7 +531,10 @@ int main(int argc, char **argv) {
 			}
 		}
 
-        key = cv::waitKey(5);
+		// ugly, but this shows how to get non blocking keyboard input in Windows. will be useful for non-interactive mode.
+		// need an alternative to cv::waitkey, becuause that requires a cv window.
+		// https://stackoverflow.com/questions/2654504/trying-to-read-keyboard-input-without-blocking-windows-c/
+        key = cv::waitKey(1);
  
         // Keyboard shortcuts
         switch (key) {
