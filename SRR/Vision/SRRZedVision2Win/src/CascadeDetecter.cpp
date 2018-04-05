@@ -118,6 +118,8 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 		}
 		else
 		{
+			if (!interactive_mode)
+				std::cout << "X Position " << x_target << "  Y Position " << y_target << std::endl;
 			SmartDashboard::PutNumber("X Position", (double)x_target);
 			SmartDashboard::PutNumber("Y Position", (double)y_target);
 		}

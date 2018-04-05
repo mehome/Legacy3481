@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctime>
 #include <chrono>
+#include <windows.h>
 
 //opencv includes
 #include <opencv2\cvconfig.h>

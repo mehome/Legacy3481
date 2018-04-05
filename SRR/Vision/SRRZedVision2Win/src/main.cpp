@@ -205,7 +205,7 @@ std::string filename2 = FRONT_CAM_URL;
 ActiveCam activeCamera = No_Cam;
 bool SmallWindow = true;
 int cam1_op_mode = FindRock;
-int cam2_op_mode = PassThrough;
+int cam2_op_mode = FindHook;
 size_t SmartDashboard_Mode = 0;
 
 
@@ -378,7 +378,10 @@ int main(int argc, char **argv) {
 	}
 
 	// Print help in console
-	printHelp();
+	if (interactive_mode)
+		printHelp();
+	else
+		printInfo(ThresholdDet, StereoCam);
 
 	unsigned __int64 cnt = 0;
 	unsigned __int64 freq;
@@ -749,6 +752,58 @@ int main(int argc, char **argv) {
 	SmartDashboard::shutdown();
 
 	return 0;
+}
+
+int getConsoleKey(void)
+{
+	int ret = -1;
+
+	HANDLE hStdin;
+	DWORD fdwSaveOldMode;
+	DWORD cNumRead, fdwMode, i;
+	DWORD numEvents;
+	INPUT_RECORD irInBuf[128];
+
+	// Get the standard input handle. 
+	hStdin = GetStdHandle(STD_INPUT_HANDLE);
+	if (hStdin == INVALID_HANDLE_VALUE)
+		return ret;
+
+	// Save the current input mode, to be restored on exit. 
+	if (!GetConsoleMode(hStdin, &fdwSaveOldMode))
+		return ret;
+
+	// Enable the window and mouse input events. 
+	fdwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
+	if (!SetConsoleMode(hStdin, fdwMode))
+		return ret;
+
+	// Wait for the events. 
+	if (!GetNumberOfConsoleInputEvents(hStdin, &numEvents))
+		return ret;
+
+	// read events
+	if (!ReadConsoleInput(
+		hStdin,      // input buffer handle 
+		irInBuf,     // buffer to read into 
+		128,         // size of read buffer 
+		&cNumRead)) // number of records read 
+		return ret;
+
+	// Dispatch the events to the appropriate handler. 
+	for (i = 0; i < cNumRead; i++)
+	{
+		if (irInBuf[i].EventType == KEY_EVENT)
+		{
+			if (irInBuf[i].Event.KeyEvent.bKeyDown)
+				ret = irInBuf[i].Event.KeyEvent.uChar.AsciiChar;	
+		}
+	}
+
+	// Restore input mode on exit.
+	SetConsoleMode(hStdin, fdwSaveOldMode);
+
+	return ret;
 }
 
 /**
