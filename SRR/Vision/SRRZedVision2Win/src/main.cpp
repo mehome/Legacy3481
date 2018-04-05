@@ -29,7 +29,7 @@ typedef struct mouseOCVStruct {
 	cv::Mat image;
 	cv::Size _resize;
 	int3 low, high;
-	int hit_x, hit_y;
+	int hit_x = -1, hit_y = -1;
 	bool update = false;
 } mouseOCV;
 
@@ -207,21 +207,27 @@ bool SmallWindow = true;
 int cam1_op_mode = FindRock;
 int cam2_op_mode = PassThrough;
 size_t SmartDashboard_Mode = 0;
-bool show_timing = false;
-size_t width = 1280;
-size_t height = 720;
 
 
 //main  function
-//-sdmode
+//-sdmode (default = 0)
 //mode 0 = robot
 //mode 1 = simulation
 //mode 2 = stand alone (runs directly with SmartDashboard UI)
+//-ip "address" - ip for robot 
 //-f1 filename for Zed
 //-f2 filename for other camera
 //-timing - enable framerate times in console
-//SRRZedVision.exe -sdmode [mode=0] -f1 [filename *.svo for stereo cam] -f2 [*.mpg or other supported format for front cam.] -timing
+//-interactive - enable UI
+//SRRZedVision.exe -sdmode [mode=0] -ip "10.34.81.99" -f1 [filename *.svo for stereo cam] -f2 [*.mpg or other supported format for front cam.] -timing -interactive
 int main(int argc, char **argv) {
+
+	bool show_timing = false;
+	bool interactive_mode = false;
+
+	std::string RobotIP = "10.34.81.99";
+	size_t width = 1280;
+	size_t height = 720;
 
 	int3 low;
 	int3 high;
@@ -233,16 +239,6 @@ int main(int argc, char **argv) {
 	int3 HSV_high;
 	HSV_low.x = 122; HSV_low.y = 50; HSV_low.z = 90;
 	HSV_high.x = 155; HSV_high.y = 255; HSV_high.z = 255;
-	ThresholdDetecter ThresholdDet(HSV_low, HSV_high);
-	ChessboardDetecter ChessboardDet;
-	CascadeDetecter CascadeDet("bin/data/SRR Samples/cascades/hook_cascade_gpu.xml");
-
-#if !defined(HAVE_CUDA) || defined(OLDSCHOOL)
-	if (!CascadeDet.cascadeLoaded()){
-		std::cout << "--(!)Error loading cascade data" << std::endl;
-		return -1;
-	};
-#endif
 
 	int key = ' ';
 	int count = 0;
@@ -266,12 +262,33 @@ int main(int argc, char **argv) {
 			SmartDashboard_Mode = atoi(argv[++i]);
 			continue;
 		}
+		if (arg.compare("-ip") == 0)
+		{
+			RobotIP = argv[++i];
+			continue;
+		}
 		if (arg.compare("-timing") == 0)
 		{
 			show_timing = true;
 			continue;
 		}
+		if (arg.compare("-interactive") == 0)
+		{
+			interactive_mode = true;
+			continue;
+		}
 	}
+
+	ThresholdDetecter ThresholdDet(HSV_low, HSV_high, interactive_mode);
+	ChessboardDetecter ChessboardDet(interactive_mode);
+	CascadeDetecter CascadeDet("bin/data/SRR Samples/cascades/hook_cascade_gpu.xml", interactive_mode);
+
+#if !defined(HAVE_CUDA) || defined(OLDSCHOOL)
+	if (!CascadeDet.cascadeLoaded()) {
+		std::cout << "--(!)Error loading cascade data" << std::endl;
+		return -1;
+	};
+#endif
 
 	std::cout << "Initializing OCV Camera." << std::endl;
 	OCVCamera FrontCam = OCVCamera(filename2.c_str());
@@ -290,7 +307,7 @@ int main(int argc, char **argv) {
 	{
 	case 0:
 		SmartDashboard::SetClientMode();
-		SmartDashboard::SetIPAddress("10.34.81.99");  //robot
+		SmartDashboard::SetIPAddress(RobotIP.c_str());  //robot
 		break;
 	case 1:
 		//But set as client if testing with a robot server (e.g. robot simulation)
@@ -322,35 +339,40 @@ int main(int argc, char **argv) {
 	sl::Mat depth;
 	sl::Mat point_cloud;
 
-	//create Opencv Window and mouse handler
-	cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
-	mouseStruct._resize = displaySize;
-	mouseStruct.low = low;
-	mouseStruct.high = high;
-	mouseStruct.hit_x = mouseStruct.hit_y = -1;
-	cv::setMouseCallback("VIEW", onMouseCallback, (void*)&mouseStruct);
+	if (interactive_mode)
+	{
+		//create Opencv Window and mouse handler
+		cv::namedWindow("VIEW", cv::WINDOW_AUTOSIZE);
+		mouseStruct._resize = displaySize;
+		mouseStruct.low = low;
+		mouseStruct.high = high;
+		mouseStruct.hit_x = mouseStruct.hit_y = -1;
+		cv::setMouseCallback("VIEW", onMouseCallback, (void*)&mouseStruct);
 
-	// make a controls window
-	cv::namedWindow("Controls", cv::WINDOW_AUTOSIZE);
-	cv::createTrackbar("H Low", "Controls", &mouseStruct.low.x, 255, on_HLowChange, &mouseStruct);
-	cv::createTrackbar("H High", "Controls", &mouseStruct.high.x, 255, on_HHighChange, &mouseStruct);
-	cv::createTrackbar("S Low", "Controls", &mouseStruct.low.y, 255, on_SLowChange, &mouseStruct);
-	cv::createTrackbar("S High", "Controls", &mouseStruct.high.y, 255, on_SHighChange, &mouseStruct);
-	cv::createTrackbar("V Low", "Controls", &mouseStruct.low.z, 255, on_VLowChange, &mouseStruct);
-	cv::createTrackbar("V High", "Controls", &mouseStruct.high.z, 255, on_VHighChange, &mouseStruct);
+		// make a controls window
+		cv::namedWindow("Controls", cv::WINDOW_AUTOSIZE);
+		cv::createTrackbar("H Low", "Controls", &mouseStruct.low.x, 255, on_HLowChange, &mouseStruct);
+		cv::createTrackbar("H High", "Controls", &mouseStruct.high.x, 255, on_HHighChange, &mouseStruct);
+		cv::createTrackbar("S Low", "Controls", &mouseStruct.low.y, 255, on_SLowChange, &mouseStruct);
+		cv::createTrackbar("S High", "Controls", &mouseStruct.high.y, 255, on_SHighChange, &mouseStruct);
+		cv::createTrackbar("V Low", "Controls", &mouseStruct.low.z, 255, on_VLowChange, &mouseStruct);
+		cv::createTrackbar("V High", "Controls", &mouseStruct.high.z, 255, on_VHighChange, &mouseStruct);
+	}
 
 	if (StereoCam.IsOpen)
 	{
 		// Mouse callback initialization
 		activeCamera = Stereo_Cam;
 		StereoCam.GrabDepth();
-		mouseStruct.image = StereoCam.frame;
+		if(interactive_mode)
+			mouseStruct.image = StereoCam.frame;
 	}
 	else
 	{
 		if (FrontCam.IsOpen)
 		{
-			mouseStruct.image = FrontCam.GrabFrame();
+			if(interactive_mode)
+				mouseStruct.image = FrontCam.GrabFrame();
 			activeCamera = Front_Cam;
 		}
 	}
@@ -392,10 +414,13 @@ int main(int argc, char **argv) {
 				depth = StereoCam.depth;
 				point_cloud = StereoCam.point_cloud;
 			}
-			displaySize.height = (int)(SmallWindow ? height / 2 : height);
-			displaySize.width = (int)(SmallWindow ? width / 2 : width);
-			mouseStruct.image = anaplyph;
-			mouseStruct._resize = displaySize;
+			if (interactive_mode)
+			{
+				displaySize.height = (int)(SmallWindow ? height / 2 : height);
+				displaySize.width = (int)(SmallWindow ? width / 2 : width);
+				mouseStruct.image = anaplyph;
+				mouseStruct._resize = displaySize;
+			}
 
 			// Get frames and launch the computation
 			if (StereoCam.bHaveFrame)
@@ -444,7 +469,7 @@ int main(int argc, char **argv) {
 				}
 
 				/***************  DISPLAY:  ***************/
-				if (cam1_op_mode != Idle)
+				if (interactive_mode && cam1_op_mode != Idle)
 				{
 					if (SmallWindow)
 						resize(anaplyph, anaplyph, displaySize);
@@ -459,10 +484,13 @@ int main(int argc, char **argv) {
 			if (cam2_op_mode != Idle)
 				frame = FrontCam.GrabFrame();
 
-			displaySize.height = (int)(SmallWindow ? height / 2 : height);
-			displaySize.width = (int)(SmallWindow ? width / 2 : width);
-			mouseStruct.image = frame;
-			mouseStruct._resize = displaySize;
+			if (interactive_mode)
+			{
+				displaySize.height = (int)(SmallWindow ? height / 2 : height);
+				displaySize.width = (int)(SmallWindow ? width / 2 : width);
+				mouseStruct.image = frame;
+				mouseStruct._resize = displaySize;
+			}
 
 			/***************  PROCESS:  ***************/
 			switch (cam2_op_mode)
@@ -496,7 +524,7 @@ int main(int argc, char **argv) {
 			}
 
 			/***************  DISPLAY:  ***************/
-			if (cam1_op_mode != Idle && frame.rows > 0 && frame.cols > 0)
+			if (interactive_mode && cam1_op_mode != Idle && frame.rows > 0 && frame.cols > 0)
 			{
 				if (SmallWindow)
 					resize(frame, frame, displaySize);
@@ -531,14 +559,13 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		// ugly, but this shows how to get non blocking keyboard input in Windows. will be useful for non-interactive mode.
-		// need an alternative to cv::waitkey, becuause that requires a cv window.
-		// https://stackoverflow.com/questions/2654504/trying-to-read-keyboard-input-without-blocking-windows-c/
-        key = cv::waitKey(1);
- 
-        // Keyboard shortcuts
-        switch (key) {
-			// common keys
+		if (interactive_mode)
+		{
+			key = cv::waitKey(1);
+
+			// Keyboard shortcuts
+			switch (key) {
+				// common keys
 			case 'h':
 				printHelp();
 				break;
@@ -580,7 +607,7 @@ int main(int argc, char **argv) {
 				}
 				break;
 
-			// threshold values
+				// threshold values
 			case 'i':	// increase increment
 			case 'I':	// decrease increment
 			case 'S':	// setting
@@ -612,10 +639,10 @@ int main(int argc, char **argv) {
 				}
 				break;
 
-			// ZED
-			//re-compute stereo alignment
+				// ZED
+				//re-compute stereo alignment
 			case 'a':
-				if( activeCamera == Stereo_Cam)
+				if (activeCamera == Stereo_Cam)
 					StereoCam.ResetCalibration();
 				break;
 
@@ -631,33 +658,33 @@ int main(int argc, char **argv) {
 				break;
 
 				// ______________  VIEW __________________
-            case '0':	
+			case '0':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_LEFT; 
+					StereoCam.ViewID = sl::VIEW_LEFT;
 				break;
-            case '1':
+			case '1':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_RIGHT; 
+					StereoCam.ViewID = sl::VIEW_RIGHT;
 				break;
-            case '2':	
+			case '2':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_LEFT_UNRECTIFIED; 
+					StereoCam.ViewID = sl::VIEW_LEFT_UNRECTIFIED;
 				break;
-            case '3':	
+			case '3':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_RIGHT_UNRECTIFIED; 
+					StereoCam.ViewID = sl::VIEW_RIGHT_UNRECTIFIED;
 				break;
-            case '4':	
+			case '4':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_DEPTH; 
+					StereoCam.ViewID = sl::VIEW_DEPTH;
 				break;
-			case '5':	
+			case '5':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_CONFIDENCE;	
+					StereoCam.ViewID = sl::VIEW_CONFIDENCE;
 				break;
-			case '6':	
+			case '6':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_NORMALS; 
+					StereoCam.ViewID = sl::VIEW_NORMALS;
 				break;
 
 				//______________ SAVE ______________
@@ -708,7 +735,14 @@ int main(int argc, char **argv) {
 					}
 				}
 				break;
-        }
+			}
+		}
+		else
+			::Sleep(1);
+			// ugly, but this shows how to get non blocking keyboard input in Windows. will be useful for non-interactive mode.
+			// need an alternative to cv::waitkey, becuause that requires a cv window.
+			// https://stackoverflow.com/questions/2654504/trying-to-read-keyboard-input-without-blocking-windows-c/
+
     }
 
 	std::cout << "shutting down SmartDashboard..." << std::endl;

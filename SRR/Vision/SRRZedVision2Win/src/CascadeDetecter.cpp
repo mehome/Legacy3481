@@ -2,8 +2,9 @@
 #include "../SmartDashboard/SmartDashboard_import.h"
 #include "CascadeDetecter.h"
 
-CascadeDetecter::CascadeDetecter(const char* cascade_name)
+CascadeDetecter::CascadeDetecter(const char* cascade_name, bool interactive)
 	:	mode(h_original),
+		interactive_mode(interactive),
 		bShowImg(false)
 {
 #if defined(HAVE_CUDA) && !defined(OLDSCHOOL)
@@ -80,7 +81,8 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 		cv::Point p1(hooks[i].x, hooks[i].y);
 		cv::Point p2(hooks[i].x + hooks[i].width, hooks[i].y + hooks[i].height);
 
-		rectangle(frame, p1, p2, cv::Scalar(255, 0, 255), 2, 8, 0);
+		if(interactive_mode)
+			rectangle(frame, p1, p2, cv::Scalar(255, 0, 255), 2, 8, 0);
 
 		// get our pixel target center
 		size_t x_target = hooks[i].x + hooks[i].width / 2;

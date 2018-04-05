@@ -5,12 +5,13 @@
 class ChessboardDetecter
 {
 public:
-	ChessboardDetecter();
+	ChessboardDetecter(bool interactive);
 	~ChessboardDetecter();
 
 	void detectBeacon(cv::Mat& view, sl::Mat* depth, sl::Mat* point_cloud);
 
 private:
+	bool interactive_mode;
 	std::vector<cv::Point2f> pointBuf;
 	cv::Size boardSize;            // The size of the board -> Number of items by width and height
 	cv::Mat cameraMatrix, distCoeffs;

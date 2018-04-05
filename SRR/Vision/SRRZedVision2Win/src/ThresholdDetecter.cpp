@@ -2,7 +2,7 @@
 #include "../SmartDashboard/SmartDashboard_import.h"
 #include "ThresholdDetecter.h"
 
-ThresholdDetecter::ThresholdDetecter()
+ThresholdDetecter::ThresholdDetecter(bool interactive)
 	: thresh_inc(10),
 	threshold_setting(H_Low),
 	passcolor(0, 255, 0),
@@ -11,11 +11,12 @@ ThresholdDetecter::ThresholdDetecter()
 	objRectMax(cv::Point2f(0, 0), cv::Size(20, 20), -180),
 	AreaMin(1280*720), AreaMax(0),
 	DistMin(64), DistMax(0),
-	MouseDown(false)
+	MouseDown(false),
+	interactive_mode(interactive)
 {
 }
 
-ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
+ThresholdDetecter::ThresholdDetecter(int3 low, int3 high, bool interactive)
 	: thresh_inc(10),
 	threshold_setting(H_Low),
 	passcolor(0, 255, 0),
@@ -24,7 +25,8 @@ ThresholdDetecter::ThresholdDetecter(int3 low, int3 high)
 	objRectMax(cv::Point2f(0, 0), cv::Size(20, 20), -180),
 	AreaMin(1280 * 720), AreaMax(250),
 	DistMin(64), DistMax(0),
-	MouseDown(false)
+	MouseDown(false),
+	interactive_mode(interactive)
 {
 	// original values
 	HSV_low = low;
@@ -103,7 +105,8 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 	cv::findContours(binary, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
 	// mask and display   
-	frame.copyTo(masked, binary);
+	if(interactive_mode)
+		frame.copyTo(masked, binary);
 
 	/// rotated rectangles 
 	std::vector<cv::RotatedRect> minRect(contours.size());
@@ -239,30 +242,38 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 				SmartDashboard::PutNumber("Y Position", minRect[i].center.y);
 			}
 
-			/// Draw contours
-			cv::drawContours(frame, contours, i, passcolor, 2, 8, hierarchy, 0, cv::Point());
-			cv::circle(frame, minRect[i].center, 4, passcolor, -1, 8, 0);
-			// rotated rectangle
-			cv::Point2f rect_points[4]; minRect[i].points(rect_points);
-			for (int j = 0; j < 4; j++)
-				cv::line(frame, rect_points[j], rect_points[(j + 1) % 4], passcolor, 1, 8);
+			if (interactive_mode)
+			{
+				/// Draw contours
+				cv::drawContours(frame, contours, i, passcolor, 2, 8, hierarchy, 0, cv::Point());
+				cv::circle(frame, minRect[i].center, 4, passcolor, -1, 8, 0);
+				// rotated rectangle
+				cv::Point2f rect_points[4]; minRect[i].points(rect_points);
+				for (int j = 0; j < 4; j++)
+					cv::line(frame, rect_points[j], rect_points[(j + 1) % 4], passcolor, 1, 8);
+			}
 		}
 		else
 		{
-			/// Draw contours
-			cv::drawContours(frame, contours, i, failcolor, 2, 8, hierarchy, 0, cv::Point());
-			cv::circle(frame, minRect[i].center, 4, failcolor, -1, 8, 0);
-			// rotated rectangle
-			cv::Point2f rect_points[4]; minRect[i].points(rect_points);
-			for (int j = 0; j < 4; j++)
-				cv::line(frame, rect_points[j], rect_points[(j + 1) % 4], failcolor, 1, 8);
+			if (interactive_mode)
+			{
+				/// Draw contours
+				cv::drawContours(frame, contours, i, failcolor, 2, 8, hierarchy, 0, cv::Point());
+				cv::circle(frame, minRect[i].center, 4, failcolor, -1, 8, 0);
+				// rotated rectangle
+				cv::Point2f rect_points[4]; minRect[i].points(rect_points);
+				for (int j = 0; j < 4; j++)
+					cv::line(frame, rect_points[j], rect_points[(j + 1) % 4], failcolor, 1, 8);
+			}
 		}
 	}
 
-	if (small_display)
-		resize(masked, masked, cv::Size((int)masked.cols / 2, (int)masked.rows / 2));
-
-	cv::imshow("Masked", masked);
+	if (interactive_mode)
+	{
+		if (small_display)
+			resize(masked, masked, cv::Size((int)masked.cols / 2, (int)masked.rows / 2));
+		cv::imshow("Masked", masked);
+	}
 }
 
 /**

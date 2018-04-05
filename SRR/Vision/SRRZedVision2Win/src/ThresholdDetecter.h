@@ -5,8 +5,8 @@
 class ThresholdDetecter
 {
 public:
-	ThresholdDetecter();
-	ThresholdDetecter(int3 lov, int3 high);
+	ThresholdDetecter(bool interactive);
+	ThresholdDetecter(int3 lov, int3 high, bool interactive);
 	~ThresholdDetecter();
 
 	void detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* point_cloud, cv::Point mhit, bool small_display);
@@ -53,4 +53,5 @@ private:
 	double AreaMax, AreaMin;
 	float DistMax, DistMin;
 	bool MouseDown;
+	bool interactive_mode;
 };

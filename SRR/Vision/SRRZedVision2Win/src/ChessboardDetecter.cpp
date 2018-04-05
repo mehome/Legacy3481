@@ -2,8 +2,9 @@
 #include "../SmartDashboard/SmartDashboard_import.h"
 #include "ChessboardDetecter.h"
 
-ChessboardDetecter::ChessboardDetecter()
-	: boardSize(9, 6)
+ChessboardDetecter::ChessboardDetecter(bool interactive)
+	:	boardSize(9, 6),
+		interactive_mode(interactive)
 {}
 
 ChessboardDetecter::~ChessboardDetecter() {}
@@ -43,7 +44,8 @@ void ChessboardDetecter::detectBeacon(cv::Mat& view, sl::Mat* depth, sl::Mat* po
 		center.y = minp.y + (maxp.y - minp.y) / 2;
 
 		// Draw the corners.
-		cv::drawChessboardCorners(view, boardSize, cv::Mat(pointBuf), found);
+		if(interactive_mode)
+			cv::drawChessboardCorners(view, boardSize, cv::Mat(pointBuf), found);
 
 		if (point_cloud != NULL)
 		{

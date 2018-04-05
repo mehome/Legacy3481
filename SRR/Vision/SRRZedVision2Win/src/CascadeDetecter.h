@@ -13,7 +13,7 @@ enum histo_mode
 class CascadeDetecter
 {
 public:
-	CascadeDetecter(const char* cascade_name);
+	CascadeDetecter(const char* cascade_name, bool interactive);
 	~CascadeDetecter();
 
 	void detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* point_cloud);
@@ -23,6 +23,7 @@ public:
 private:
 	histo_mode mode;
 	bool bShowImg;
+	bool interactive_mode;
 	bool cascade_loaded;
 #if defined(HAVE_CUDA) && !defined(OLDSCHOOL)
 	cv::Ptr<cv::cuda::CascadeClassifier> cascade_gpu;
