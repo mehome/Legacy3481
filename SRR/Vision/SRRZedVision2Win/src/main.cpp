@@ -19,6 +19,7 @@
 /** forward declarations **/
 void printInfo(ThresholdDetecter &, ZEDCamera &);
 void printHelp();
+int getConsoleKey(void);
 
 #define FRONT_CAM_URL ""
 //#define FRONT_CAM_URL "http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0"
@@ -741,10 +742,13 @@ int main(int argc, char **argv) {
 			}
 		}
 		else
+		{
+			key = getConsoleKey();
 			::Sleep(1);
 			// ugly, but this shows how to get non blocking keyboard input in Windows. will be useful for non-interactive mode.
 			// need an alternative to cv::waitkey, becuause that requires a cv window.
 			// https://stackoverflow.com/questions/2654504/trying-to-read-keyboard-input-without-blocking-windows-c/
+		}
 
     }
 
@@ -763,24 +767,24 @@ int getConsoleKey(void)
 	DWORD cNumRead, fdwMode, i;
 	DWORD numEvents;
 	INPUT_RECORD irInBuf[128];
+	memset(irInBuf, 0, sizeof(INPUT_RECORD) * 128);
 
 	// Get the standard input handle. 
 	hStdin = GetStdHandle(STD_INPUT_HANDLE);
 	if (hStdin == INVALID_HANDLE_VALUE)
-		return ret;
+		goto Exit;
 
 	// Save the current input mode, to be restored on exit. 
 	if (!GetConsoleMode(hStdin, &fdwSaveOldMode))
-		return ret;
+		goto Exit;
 
-	// Enable the window and mouse input events. 
-	fdwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
+	fdwMode = 0; // ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
 	if (!SetConsoleMode(hStdin, fdwMode))
-		return ret;
+		goto Exit;
 
 	// Wait for the events. 
-	if (!GetNumberOfConsoleInputEvents(hStdin, &numEvents))
-		return ret;
+	if (!GetNumberOfConsoleInputEvents(hStdin, &numEvents) || numEvents == 0)
+		goto Exit;
 
 	// read events
 	if (!ReadConsoleInput(
@@ -788,7 +792,7 @@ int getConsoleKey(void)
 		irInBuf,     // buffer to read into 
 		128,         // size of read buffer 
 		&cNumRead)) // number of records read 
-		return ret;
+		goto Exit;
 
 	// Dispatch the events to the appropriate handler. 
 	for (i = 0; i < cNumRead; i++)
@@ -800,6 +804,7 @@ int getConsoleKey(void)
 		}
 	}
 
+Exit:
 	// Restore input mode on exit.
 	SetConsoleMode(hStdin, fdwSaveOldMode);
 
