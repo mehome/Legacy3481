@@ -21,9 +21,9 @@ void printInfo(ThresholdDetecter &, ZEDCamera &);
 void printHelp();
 int getConsoleKey(void);
 
-#define FRONT_CAM_URL ""
+//#define FRONT_CAM_URL ""
 //#define FRONT_CAM_URL "http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0"
-//#define FRONT_CAM_RUL "rtsp://root:root@192.168.0.90/axis-media/media.amp"
+#define FRONT_CAM_URL "rtsp://root:root@10.28.1.23/axis-media/media.amp"
 
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
@@ -226,6 +226,8 @@ int main(int argc, char **argv) {
 	bool show_timing = false;
 	bool interactive_mode = false;
 
+	OVCcamFlip flip = NONE;
+
 	std::string RobotIP = "10.34.81.99";
 	size_t width = 1280;
 	size_t height = 720;
@@ -278,6 +280,13 @@ int main(int argc, char **argv) {
 			interactive_mode = true;
 			continue;
 		}
+		if (arg.compare("-flip") == 0)
+		{
+			std::string fl = argv[++i];
+			if (fl.compare("NONE") == 0) flip = NONE;
+			if (fl.compare("CW") == 0) flip = CW;
+			if (fl.compare("CCW") == 0) flip = CCW;
+		}
 	}
 
 	ThresholdDetecter ThresholdDet(HSV_low, HSV_high, interactive_mode);
@@ -292,7 +301,7 @@ int main(int argc, char **argv) {
 #endif
 
 	std::cout << "Initializing OCV Camera." << std::endl;
-	OCVCamera FrontCam = OCVCamera(filename2.c_str());
+	OCVCamera FrontCam = OCVCamera(filename2.c_str(), flip);
 
 	std::cout << "Initializing ZED Camera." << std::endl;
 	ZEDCamera StereoCam = ZEDCamera(filename1.c_str());
@@ -322,12 +331,12 @@ int main(int argc, char **argv) {
 	}
 	SmartDashboard::init();
 
-	if (StereoCam.IsOpen)
+	if (StereoCam.IsOpen && activeCamera == Stereo_Cam)
 	{
 		width = StereoCam.image_size.width;
 		height = StereoCam.image_size.height;
 	}
-	else if (FrontCam.IsOpen)
+	else if (FrontCam.IsOpen && activeCamera == Front_Cam)
 	{
 		width = FrontCam.width;
 		height = FrontCam.height;
@@ -420,8 +429,8 @@ int main(int argc, char **argv) {
 			}
 			if (interactive_mode)
 			{
-				displaySize.height = (int)(SmallWindow ? height / 2 : height);
-				displaySize.width = (int)(SmallWindow ? width / 2 : width);
+				displaySize.height = (int)(SmallWindow ? anaplyph.rows / 2 : anaplyph.rows);
+				displaySize.width = (int)(SmallWindow ? anaplyph.cols / 2 : anaplyph.cols);
 				mouseStruct.image = anaplyph;
 				mouseStruct._resize = displaySize;
 			}
@@ -490,8 +499,8 @@ int main(int argc, char **argv) {
 
 			if (interactive_mode)
 			{
-				displaySize.height = (int)(SmallWindow ? height / 2 : height);
-				displaySize.width = (int)(SmallWindow ? width / 2 : width);
+				displaySize.height = (int)(SmallWindow ? frame.rows / 2 : frame.rows);
+				displaySize.width = (int)(SmallWindow ? frame.cols / 2 : frame.cols);
 				mouseStruct.image = frame;
 				mouseStruct._resize = displaySize;
 			}
