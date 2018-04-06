@@ -283,6 +283,7 @@ int main(int argc, char **argv) {
 		if (arg.compare("-flip") == 0)
 		{
 			std::string fl = argv[++i];
+			std::transform(fl.begin(), fl.end(), fl.begin(), toupper);
 			if (fl.compare("NONE") == 0) flip = NONE;
 			if (fl.compare("CW") == 0) flip = CW;
 			if (fl.compare("CCW") == 0) flip = CCW;
