@@ -414,10 +414,14 @@ int main(int argc, char **argv) {
     //loop until 'q' is pressed
     while (key != 'q') 
 	{
+		int *pActiveCamera =(int *) &activeCamera;
+		static SmartDashboard_ModeManager s_SmartDashboard_ActiveCameraManager(*pActiveCamera, "CameraSelection", *pActiveCamera);
+		s_SmartDashboard_ActiveCameraManager();  //update
+
 		/***** main video loop *****/
 		if (activeCamera == Stereo_Cam)
 		{	
-			static SmartDashboard_ModeManager s_SmartDashboard_ModeManager(cam1_op_mode,"ZedMode",cam1_op_mode);
+			static SmartDashboard_ModeManager_CameraMode s_SmartDashboard_ModeManager(cam1_op_mode, "ZedMode", cam1_op_mode);
 			s_SmartDashboard_ModeManager();  //update
 
 			// update
@@ -494,6 +498,9 @@ int main(int argc, char **argv) {
 
 		if (activeCamera == Front_Cam)
 		{
+			static SmartDashboard_ModeManager_CameraMode s_SmartDashboard_AxisModeManager(cam2_op_mode, "AxisMode", cam2_op_mode);
+			s_SmartDashboard_AxisModeManager();  //update
+
 			cv::Mat frame;
 			if (cam2_op_mode != Idle)
 				frame = FrontCam.GrabFrame();
