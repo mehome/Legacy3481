@@ -238,8 +238,13 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 			}
 			else
 			{
-				SmartDashboard::PutNumber("X Position", minRect[i].center.x);
-				SmartDashboard::PutNumber("Y Position", minRect[i].center.y);
+				float x_pos = (minRect[i].center.x - frame.cols / 2) / (frame.cols / 2);
+				float y_pos = (minRect[i].center.y - frame.rows / 2) / (frame.rows / 2);
+				cv::Rect bounds(minRect[i].boundingRect());
+				float ht = (float)bounds.height / frame.rows;
+				SmartDashboard::PutNumber("X Position", x_pos);
+				SmartDashboard::PutNumber("Y Position", y_pos);
+				SmartDashboard::PutNumber("Height", ht);
 			}
 
 			if (interactive_mode)

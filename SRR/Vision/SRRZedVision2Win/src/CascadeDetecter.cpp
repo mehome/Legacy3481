@@ -87,6 +87,7 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 		// get our pixel target center
 		size_t x_target = hooks[i].x + hooks[i].width / 2;
 		size_t y_target = hooks[i].y + hooks[i].height / 2;
+		size_t height = hooks[i].height;
 
 		if (point_cloud != NULL)
 		{
@@ -118,10 +119,12 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 		}
 		else
 		{
-			if (!interactive_mode)
-				std::cout << "X Position " << x_target << "  Y Position " << y_target << std::endl;
-			SmartDashboard::PutNumber("X Position", (double)x_target);
-			SmartDashboard::PutNumber("Y Position", (double)y_target);
+			float x_pos = ((float)x_target - frame.cols / 2) / (frame.cols / 2);
+			float y_pos = ((float)y_target - frame.rows / 2) / (frame.rows / 2);
+			float ht = (float)height / frame.rows;
+			SmartDashboard::PutNumber("X Position", x_pos);
+			SmartDashboard::PutNumber("Y Position", y_pos);
+			SmartDashboard::PutNumber("Height", ht);
 		}
 	}
 }

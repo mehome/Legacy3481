@@ -77,8 +77,12 @@ void ChessboardDetecter::detectBeacon(cv::Mat& view, sl::Mat* depth, sl::Mat* po
 		}
 		else
 		{
-			SmartDashboard::PutNumber("X Position", center.x);
-			SmartDashboard::PutNumber("Y Position", center.y);
+			float x_pos = (center.x - view.cols / 2) / (view.cols / 2);
+			float y_pos = (center.y - view.rows / 2) / (view.rows / 2);
+			float ht = (float)(maxp.y - minp.y) / view.rows;
+			SmartDashboard::PutNumber("X Position", x_pos);
+			SmartDashboard::PutNumber("Y Position", y_pos);
+			SmartDashboard::PutNumber("Height", ht);
 		}
 	}
 }
