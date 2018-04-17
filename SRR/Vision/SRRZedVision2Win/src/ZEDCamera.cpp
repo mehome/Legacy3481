@@ -1,12 +1,23 @@
 #include "stdafx.h"
 #include "ZEDCamera.h"
 
+ZEDCamera::ZEDCamera()
+	: old_self_calibration_state(sl::SELF_CALIBRATION_STATE_NOT_STARTED),
+	confidenceLevel(100),
+	ViewID(0),
+	bHaveFrame(false),
+	IsOpen(false),
+	zed(NULL)
+{
+}
+
 ZEDCamera::ZEDCamera(const char *file)
 	: old_self_calibration_state (sl::SELF_CALIBRATION_STATE_NOT_STARTED),
 	  confidenceLevel(100),
 	  ViewID(0),
 	  bHaveFrame(true),
-	  IsOpen(false)
+	  IsOpen(false),
+	  zed(NULL)
 {
 	zed = new sl::Camera();
 
@@ -320,14 +331,17 @@ void ZEDCamera::switchCameraSettings(void) {
 
 void ZEDCamera::printCameraSettings(void)
 {
-	std::cout << std::endl;
-	std::cout << "Camera settings: " << std::endl;
-	std::cout << "BRIGHTNESS " << zed->getCameraSettings(sl::CAMERA_SETTINGS_BRIGHTNESS) << std::endl;
-	std::cout << "CONTRAST " << zed->getCameraSettings(sl::CAMERA_SETTINGS_CONTRAST) << std::endl;
-	std::cout << "HUE " << zed->getCameraSettings(sl::CAMERA_SETTINGS_HUE) << std::endl;
-	std::cout << "SATURATION " << zed->getCameraSettings(sl::CAMERA_SETTINGS_SATURATION) << std::endl;
-	std::cout << "GAIN " << zed->getCameraSettings(sl::CAMERA_SETTINGS_GAIN) << std::endl;
-	std::cout << "EXPOSURE " << zed->getCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE) << std::endl;
-	std::cout << "WHITEBALANCE " << zed->getCameraSettings(sl::CAMERA_SETTINGS_WHITEBALANCE) << std::endl;
-	std::cout << std::endl;
+	if (IsOpen)
+	{
+		std::cout << std::endl;
+		std::cout << "Camera settings: " << std::endl;
+		std::cout << "BRIGHTNESS " << zed->getCameraSettings(sl::CAMERA_SETTINGS_BRIGHTNESS) << std::endl;
+		std::cout << "CONTRAST " << zed->getCameraSettings(sl::CAMERA_SETTINGS_CONTRAST) << std::endl;
+		std::cout << "HUE " << zed->getCameraSettings(sl::CAMERA_SETTINGS_HUE) << std::endl;
+		std::cout << "SATURATION " << zed->getCameraSettings(sl::CAMERA_SETTINGS_SATURATION) << std::endl;
+		std::cout << "GAIN " << zed->getCameraSettings(sl::CAMERA_SETTINGS_GAIN) << std::endl;
+		std::cout << "EXPOSURE " << zed->getCameraSettings(sl::CAMERA_SETTINGS_EXPOSURE) << std::endl;
+		std::cout << "WHITEBALANCE " << zed->getCameraSettings(sl::CAMERA_SETTINGS_WHITEBALANCE) << std::endl;
+		std::cout << std::endl;
+	}
 }

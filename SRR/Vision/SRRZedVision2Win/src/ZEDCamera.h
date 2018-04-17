@@ -5,6 +5,7 @@
 class ZEDCamera 
 {
 public:
+	ZEDCamera();
 	ZEDCamera(const char* file);
 	~ZEDCamera();
 

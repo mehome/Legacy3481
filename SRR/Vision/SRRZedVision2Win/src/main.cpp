@@ -225,6 +225,7 @@ int main(int argc, char **argv) {
 
 	bool show_timing = false;
 	bool interactive_mode = false;
+	bool no_zed = false;
 
 	OVCcamFlip flip = NONE;
 
@@ -253,40 +254,38 @@ int main(int argc, char **argv) {
 		if (arg.compare("-f1") == 0)
 		{
 			filename1 = argv[++i];
-			continue;
 		}
-		if (arg.compare("-f2") == 0)
+		else if (arg.compare("-f2") == 0)
 		{
 			filename2 = argv[++i];
-			continue;
 		}
-		if (arg.compare("-sdmode") == 0)
+		else if (arg.compare("-sdmode") == 0)
 		{
 			SmartDashboard_Mode = atoi(argv[++i]);
-			continue;
 		}
-		if (arg.compare("-ip") == 0)
+		else if (arg.compare("-ip") == 0)
 		{
 			RobotIP = argv[++i];
-			continue;
 		}
-		if (arg.compare("-timing") == 0)
+		else if (arg.compare("-timing") == 0)
 		{
 			show_timing = true;
-			continue;
 		}
-		if (arg.compare("-interactive") == 0)
+		else if (arg.compare("-interactive") == 0)
 		{
 			interactive_mode = true;
-			continue;
 		}
-		if (arg.compare("-flip") == 0)
+		else if (arg.compare("-flip") == 0)
 		{
 			std::string fl = argv[++i];
 			std::transform(fl.begin(), fl.end(), fl.begin(), toupper);
 			if (fl.compare("NONE") == 0) flip = NONE;
 			if (fl.compare("CW") == 0) flip = CW;
 			if (fl.compare("CCW") == 0) flip = CCW;
+		}
+		else if (arg.compare("-nz") == 0)
+		{
+			no_zed = true;
 		}
 	}
 
@@ -304,8 +303,16 @@ int main(int argc, char **argv) {
 	std::cout << "Initializing OCV Camera." << std::endl;
 	OCVCamera FrontCam = OCVCamera(filename2.c_str(), flip);
 
-	std::cout << "Initializing ZED Camera." << std::endl;
-	ZEDCamera StereoCam = ZEDCamera(filename1.c_str());
+	ZEDCamera StereoCam;
+	if (no_zed)
+	{	// need a dummy instance.
+		StereoCam = ZEDCamera();
+	}
+	else
+	{
+		std::cout << "Initializing ZED Camera." << std::endl;
+		StereoCam = ZEDCamera(filename1.c_str());
+	}
 
 	if (!FrontCam.IsOpen && !StereoCam.IsOpen)
 	{
