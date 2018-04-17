@@ -303,18 +303,18 @@ int main(int argc, char **argv) {
 	std::cout << "Initializing OCV Camera." << std::endl;
 	OCVCamera FrontCam = OCVCamera(filename2.c_str(), flip);
 
-	ZEDCamera StereoCam;
+	ZEDCamera *StereoCam=NULL;
 	if (no_zed)
 	{	// need a dummy instance.
-		StereoCam = ZEDCamera();
+		StereoCam = new ZEDCamera();
 	}
 	else
 	{
 		std::cout << "Initializing ZED Camera." << std::endl;
-		StereoCam = ZEDCamera(filename1.c_str());
+		StereoCam = new ZEDCamera(filename1.c_str());
 	}
 
-	if (!FrontCam.IsOpen && !StereoCam.IsOpen)
+	if (!FrontCam.IsOpen && !StereoCam->IsOpen)
 	{
 		std::cout << "No Cameras!" << std::endl;
 		Sleep(5000);
@@ -339,10 +339,10 @@ int main(int argc, char **argv) {
 	}
 	SmartDashboard::init();
 
-	if (StereoCam.IsOpen && activeCamera == Stereo_Cam)
+	if (StereoCam->IsOpen && activeCamera == Stereo_Cam)
 	{
-		width = StereoCam.image_size.width;
-		height = StereoCam.image_size.height;
+		width = StereoCam->image_size.width;
+		height = StereoCam->image_size.height;
 	}
 	else if (FrontCam.IsOpen && activeCamera == Front_Cam)
 	{
@@ -377,13 +377,13 @@ int main(int argc, char **argv) {
 		cv::createTrackbar("V High", "Controls", &mouseStruct.high.z, 255, on_VHighChange, &mouseStruct);
 	}
 
-	if (StereoCam.IsOpen)
+	if (StereoCam->IsOpen)
 	{
 		// Mouse callback initialization
 		activeCamera = Stereo_Cam;
-		StereoCam.GrabDepth();
+		StereoCam->GrabDepth();
 		if(interactive_mode)
-			mouseStruct.image = StereoCam.frame;
+			mouseStruct.image = StereoCam->frame;
 	}
 	else
 	{
@@ -399,7 +399,7 @@ int main(int argc, char **argv) {
 	if (interactive_mode)
 		printHelp();
 	else
-		printInfo(ThresholdDet, StereoCam);
+		printInfo(ThresholdDet, *StereoCam);
 
 	unsigned __int64 cnt = 0;
 	unsigned __int64 freq;
@@ -434,10 +434,10 @@ int main(int argc, char **argv) {
 			// update
 			if (cam1_op_mode != Idle)
 			{
-				StereoCam.GrabFrameAndDapth();
-				anaplyph = StereoCam.frame;
-				depth = StereoCam.depth;
-				point_cloud = StereoCam.point_cloud;
+				StereoCam->GrabFrameAndDapth();
+				anaplyph = StereoCam->frame;
+				depth = StereoCam->depth;
+				point_cloud = StereoCam->point_cloud;
 			}
 			if (interactive_mode)
 			{
@@ -448,7 +448,7 @@ int main(int argc, char **argv) {
 			}
 
 			// Get frames and launch the computation
-			if (StereoCam.bHaveFrame)
+			if (StereoCam->bHaveFrame)
 			{
 				/***************  PROCESS:  ***************/
 				switch (cam1_op_mode)
@@ -599,7 +599,7 @@ int main(int argc, char **argv) {
 				break;
 
 			case '?':
-				printInfo(ThresholdDet, StereoCam);
+				printInfo(ThresholdDet, *StereoCam);
 				break;
 
 			case 'z':
@@ -622,7 +622,7 @@ int main(int argc, char **argv) {
 					}
 					break;
 				case Front_Cam:
-					if (StereoCam.IsOpen)
+					if (StereoCam->IsOpen)
 					{
 						activeCamera = Stereo_Cam;
 						if (cam1_op_mode != FindRock)
@@ -671,7 +671,7 @@ int main(int argc, char **argv) {
 				//re-compute stereo alignment
 			case 'a':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ResetCalibration();
+					StereoCam->ResetCalibration();
 				break;
 
 				//Change camera settings 
@@ -682,55 +682,55 @@ int main(int argc, char **argv) {
 			case 0x00780000:
 			case 0x00790000:
 				if (activeCamera == Stereo_Cam)
-					StereoCam.updateCameraSettings(key);
+					StereoCam->updateCameraSettings(key);
 				break;
 
 				// ______________  VIEW __________________
 			case '0':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_LEFT;
+					StereoCam->ViewID = sl::VIEW_LEFT;
 				break;
 			case '1':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_RIGHT;
+					StereoCam->ViewID = sl::VIEW_RIGHT;
 				break;
 			case '2':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_LEFT_UNRECTIFIED;
+					StereoCam->ViewID = sl::VIEW_LEFT_UNRECTIFIED;
 				break;
 			case '3':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_RIGHT_UNRECTIFIED;
+					StereoCam->ViewID = sl::VIEW_RIGHT_UNRECTIFIED;
 				break;
 			case '4':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_DEPTH;
+					StereoCam->ViewID = sl::VIEW_DEPTH;
 				break;
 			case '5':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_CONFIDENCE;
+					StereoCam->ViewID = sl::VIEW_CONFIDENCE;
 				break;
 			case '6':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.ViewID = sl::VIEW_NORMALS;
+					StereoCam->ViewID = sl::VIEW_NORMALS;
 				break;
 
 				//______________ SAVE ______________
 			case 'w': // image
 				if (activeCamera == Stereo_Cam)
-					StereoCam.saveSbSimage(std::string("ZEDImage") + std::to_string(count) + std::string(".png"));
+					StereoCam->saveSbSimage(std::string("ZEDImage") + std::to_string(count) + std::string(".png"));
 				count++;
 				break;
 
 			case 'd':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
+					StereoCam->runtime_parameters.sensing_mode = sl::SENSING_MODE_STANDARD;
 				std::cout << "SENSING_MODE: Standard" << std::endl;
 				break;
 
 			case 'f':
 				if (activeCamera == Stereo_Cam)
-					StereoCam.runtime_parameters.sensing_mode = sl::SENSING_MODE_FILL;
+					StereoCam->runtime_parameters.sensing_mode = sl::SENSING_MODE_FILL;
 				std::cout << "SENSING_MODE: FILL" << std::endl;
 				break;
 
@@ -775,6 +775,9 @@ int main(int argc, char **argv) {
 		}
 
     }
+
+	delete StereoCam;
+	StereoCam = NULL;
 
 	std::cout << "shutting down SmartDashboard..." << std::endl;
 	SmartDashboard::shutdown();
