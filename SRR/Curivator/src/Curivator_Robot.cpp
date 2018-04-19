@@ -509,7 +509,8 @@ Curivator_Robot::Curivator_Robot(const char EntityName[],Curivator_Control_Inter
 		m_CenterLeftWheel(csz_Curivator_Robot_SpeedControllerDevices_Enum[eWheel_CL],robot_control,eWheel_CL),
 		m_CenterRightWheel(csz_Curivator_Robot_SpeedControllerDevices_Enum[eWheel_CR],robot_control,eWheel_CR),
 		m_YawErrorCorrection(1.0),m_PowerErrorCorrection(1.0),m_AutonPresetIndex(0),
-		m_FreezeArm(false),m_LockPosition(false),m_SmartDashboard_AutonTest_Valve(false)
+		m_FreezeArm(false),m_LockPosition(false),
+		m_SmartDashboard_AutonTest_Valve(false),m_SmartDashboard_FreezeArm_Valve(false)//,m_SmartDashboard_LockArmPosition_Valve(false)
 {
 	mp_Arm[eTurret]=&m_Turret;
 	mp_Arm[eArm]=&m_Arm;
@@ -634,7 +635,12 @@ void Curivator_Robot::TimeChange(double dTime_s)
 	{
 		//check if it's turned off now
 		if (!SmartDashboard::GetBoolean("Test_Auton"))
-			StopAuton(false);   //I do not care about the freeze arm (we have other checkboxes now)
+		{
+			//Fire as event so that other people can listen to this event
+			//I do not care about the freeze arm 
+			//We have other check boxes now, and each goal can control how it wants to work without needing to modify robot code
+			GetEventMap()->EventOnOff_Map["StopAuton"].Fire(false);
+		}
 	}
 	else
 	{
@@ -642,6 +648,37 @@ void Curivator_Robot::TimeChange(double dTime_s)
 		if (SmartDashboard::GetBoolean("Test_Auton"))
 			TestAutonomous();
 	}
+
+	//monitor the FreezeArm CheckBox
+	if (m_SmartDashboard_FreezeArm_Valve)
+	{
+		//check if it's turned off now
+		if (!SmartDashboard::GetBoolean("Freeze_Arm"))
+			FreezeArm(false);
+	}
+	else
+	{
+		//check if it is now on
+		if (SmartDashboard::GetBoolean("Freeze_Arm"))
+			FreezeArm(true);
+	}
+	
+	//This shouldn't be needed but keep around just in case this should change
+	#if 0
+	//monitor the Lock Position CheckBox
+	if (m_SmartDashboard_LockArmPosition_Valve)
+	{
+		//check if it's turned off now
+		if (!SmartDashboard::GetBoolean("Lock_Arm_Position"))
+			LockPosition(false);
+	}
+	else
+	{
+		//check if it is now on
+		if (SmartDashboard::GetBoolean("Lock_Arm_Position"))
+			LockPosition(true);
+	}
+	#endif
 
 	//const Curivator_Robot_Props &robot_props=m_RobotProps.GetCurivatorRobotProps();
 
@@ -941,7 +978,7 @@ void Curivator_Robot::GoalFailed()
 	if (m_controller->GetUIController()->GetAutoPilot())
 	{
 		printf("Goals failed!\n");
-		//ensure everthing is disabled!
+		//ensure everything is disabled!
 		SmartDashboard::PutBoolean("SafetyLock_Arm",true);
 		SmartDashboard::PutBoolean("SafetyLock_Drive",true);
 		//TODO see about having some way to dump a log or stack trace of where the failure occurred 
@@ -954,6 +991,18 @@ double Curivator_Robot::GetBucketAngleContinuity()
 	double testLimits_deg=fabs(m_BucketAngle.AsEntity1D().GetPos_m()-RAD_2_DEG( m_Bucket.GetBucketAngle()));
 	return testLimits_deg;
 }
+void Curivator_Robot::FreezeArm(bool isOn) 
+{
+	m_SmartDashboard_FreezeArm_Valve=isOn;
+	SmartDashboard::PutBoolean("Freeze_Arm",isOn);
+	m_FreezeArm=isOn;
+}
+void Curivator_Robot::LockPosition(bool isOn) 
+{
+	//m_SmartDashboard_LockArmPosition_Valve=isOn;
+	//SmartDashboard::PutBoolean("Lock_Arm_Position",isOn);
+	m_LockPosition=isOn;
+}
 
 void Curivator_Robot::StopAuton(bool isOn)
 {
@@ -961,6 +1010,7 @@ void Curivator_Robot::StopAuton(bool isOn)
 	SmartDashboard::PutBoolean("Test_Auton",false);
 	FreezeArm(isOn);
 	m_controller->GetUIController_RW()->SetAutoPilot(false);
+	GetEventMap()->Event_Map["StopAutonAbort"].Fire();
 	ClearGoal();
 	LockPosition(false);
 }
@@ -1455,6 +1505,8 @@ void Curivator_Robot_Control::Initialize(const Entity_Properties *props)
 		SmartDashboard::PutBoolean("SafetyLock_Arm",true);
 		#endif
 		SmartDashboard::PutBoolean("Test_Auton",false);
+		SmartDashboard::PutBoolean("Freeze_Arm",false);
+		//SmartDashboard::PutBoolean("Lock_Arm_Position",false);
 		//This one one must also be called for the lists that are specific to the robot
 		RobotControlCommon_Initialize(robot_props->Get_ControlAssignmentProps());
 		//This may return NULL for systems that do not support it

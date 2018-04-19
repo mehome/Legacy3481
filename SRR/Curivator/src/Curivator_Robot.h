@@ -156,8 +156,8 @@ class Curivator_Robot : public Swerve_Robot
 		virtual void Initialize(Entity2D_Kind::EventMap& em, const Entity_Properties *props=NULL);
 		virtual void ResetPos();
 		virtual void TimeChange(double dTime_s);
-		void FreezeArm(bool isOn) {m_FreezeArm=isOn;}
-		void LockPosition(bool isOn) {m_LockPosition=isOn;}
+		void FreezeArm(bool isOn);
+		void LockPosition(bool isOn);
 		void StopAuton(bool isOn);  //just like freeze arm but puts things back in teleop
 		//simple computation between the target angle against the actual angle measured
 		double GetBucketAngleContinuity();
@@ -363,6 +363,8 @@ class Curivator_Robot : public Swerve_Robot
 		bool m_FreezeArm;  //used mostly during calibration to have ability to stop movement, also to freeze to a way point in auton
 		bool m_LockPosition; //used to allow a position to remain locked to allow arm to catch up and stabilize
 		bool m_SmartDashboard_AutonTest_Valve; //Value used to detect change of AutonTest CheckBox
+		bool m_SmartDashboard_FreezeArm_Valve; //Value for Freeze Arm CheckBox
+		//bool m_SmartDashboard_LockArmPosition_Valve; //Value for LockPosition CheckBox
 
 		void TestAutonomous();
 		void GoalComplete();

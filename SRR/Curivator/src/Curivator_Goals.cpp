@@ -605,6 +605,25 @@ class Curivator_Goals_Impl : public AtomicGoal
 				  m_clasp_Angle_deg(clasp_Angle_deg),m_clasp_Angle_deg_speed(clasp_Angle_deg_speed)
 			  {		Activate();  //we can set it up ahead of time
 			  }
+			  SetArmWaypoint(Curivator_Goals_Impl *Parent) : SetUpProps(Parent)
+			  {
+				  //activate is deferred when constructed this way
+				  m_Status=eInactive;
+			  }
+
+			 void SetUp (double length_in,double height_in,double bucket_Angle_deg,double clasp_Angle_deg,
+				  double length_in_speed=1.0,double height_in_speed=1.0,double bucket_Angle_deg_speed=1.0,double clasp_Angle_deg_speed=1.0) 
+			 {
+				 m_length_in=length_in;
+				 m_length_in_speed=length_in_speed;
+				 m_height_in=height_in;
+				 m_height_in_speed=height_in_speed;
+				 m_bucket_Angle_deg=bucket_Angle_deg;
+				 m_bucket_Angle_deg_speed=bucket_Angle_deg_speed;
+				 m_clasp_Angle_deg=clasp_Angle_deg;
+				 m_clasp_Angle_deg_speed=clasp_Angle_deg_speed;
+			 }
+
 			virtual void Activate()
 			{
 				if (m_Status==eActive) return;  //allow for multiple calls
@@ -620,11 +639,12 @@ class Curivator_Goals_Impl : public AtomicGoal
 				#endif
 				m_Status=eActive;
 			}
+
 		private:
-			const double m_length_in,m_length_in_speed;
-			const double m_height_in,m_height_in_speed;
-			const double m_bucket_Angle_deg,m_bucket_Angle_deg_speed;
-			const double m_clasp_Angle_deg,m_clasp_Angle_deg_speed;
+			double m_length_in,m_length_in_speed;
+			double m_height_in,m_height_in_speed;
+			double m_bucket_Angle_deg,m_bucket_Angle_deg_speed;
+			double m_clasp_Angle_deg,m_clasp_Angle_deg_speed;
 		};
 		class SetTurretWaypoint : public Generic_CompositeGoal, public SetUpProps
 		{
@@ -644,6 +664,8 @@ class Curivator_Goals_Impl : public AtomicGoal
 		private:
 			const double m_Turret_Angle_deg;
 		};
+		
+		#if 0
 		static Goal * TestArmMove(Curivator_Goals_Impl *Parent)
 		{
 			double length_in=25.0;
@@ -655,6 +677,74 @@ class Curivator_Goals_Impl : public AtomicGoal
 			Auton_Smart_GetMultiValue(4,SmartNames,SmartVariables);
 			return new SetArmWaypoint(Parent,length_in,height_in,bucket_Angle_deg,clasp_Angle_deg);
 		}
+		#endif
+
+		class ArmMoveToPosition : public SetArmWaypoint
+		{
+		private:
+			#ifndef Robot_TesterCode
+			typedef SetArmWaypoint __super;
+			#endif
+
+		public:
+			ArmMoveToPosition(Curivator_Goals_Impl *Parent) : SetArmWaypoint(Parent) 
+			{
+				double length_in=25.0;
+				double height_in=-7.0;
+				double bucket_Angle_deg=78.0;
+				double clasp_Angle_deg=13.0;
+				const char * const SmartNames[]={"target_arm_xpos","target_arm_ypos","target_bucket_angle","target_clasp_angle"};
+				double * const SmartVariables[]={&length_in,&height_in,&bucket_Angle_deg,&clasp_Angle_deg};
+				Auton_Smart_GetMultiValue(4,SmartNames,SmartVariables);
+				SetUp(length_in,height_in,bucket_Angle_deg,clasp_Angle_deg);
+				//all is good... activate
+				Activate();
+			}
+
+			void StopAuton()
+			{
+				//if stopping abruptly call the freeze
+				m_EventMap.EventOnOff_Map["Robot_LockPosition"].Fire(true);
+				m_EventMap.EventOnOff_Map["Robot_FreezeArm"].Fire(true);
+			}
+
+			virtual void Activate()
+			{
+				if (m_Status==eInactive)
+					m_EventMap.Event_Map["StopAutonAbort"].Subscribe(m_Robot.ehl,*this, &Curivator_Goals_Impl::ArmMoveToPosition::StopAuton);
+				__super::Activate();
+			}
+			virtual Goal_Status Process(double dTime_s)
+			{
+				if (m_Status==eActive)
+				{
+					const char * const SmartVar="EnableTurret";
+					bool EnableTurret=Auton_Smart_GetSingleValue_Bool(SmartVar,false);
+					if (EnableTurret)
+					{
+						const char * const SmartVar_YawAngle="YawAngle";
+						double YawAngle=Auton_Smart_GetSingleValue(SmartVar_YawAngle,0.0);
+						Curivator_Robot::Robot_Arm &Arm=m_Robot.GetTurret();
+						const double YawAngleRad=DEG_2_RAD(YawAngle);
+						const double Position=Arm.GetActualPos()+YawAngleRad;  //set out new position
+						Arm.SetIntendedPosition(Position);
+					}
+					__super::Process(dTime_s);
+					if (EnableTurret)
+						m_Status=eActive;  //override the status of the subgoals as long as the enable turret is checked
+				}
+				return m_Status;   //Just pass through m_Status
+			}
+			virtual void Terminate() 
+			{
+				//pacify the set point on the turret
+				Curivator_Robot::Robot_Arm &Arm=m_Robot.GetTurret();
+				Arm.SetIntendedPosition(Arm.GetActualPos());
+				m_EventMap.Event_Map["StopAutonAbort"].Remove(*this, &Curivator_Goals_Impl::ArmMoveToPosition::StopAuton);
+				__super::Terminate();
+			}
+		};
+
 		static Goal * TestTurretMove(Curivator_Goals_Impl *Parent)
 		{
 			const char * const SmartName="Test_TurretAngle";
@@ -1122,7 +1212,7 @@ class Curivator_Goals_Impl : public AtomicGoal
 				m_Primer.AddGoal(GiveRobotSquareWayPointGoal(this));
 				break;
 			case eTestArm:
-				m_Primer.AddGoal(TestArmMove(this));
+				m_Primer.AddGoal(new ArmMoveToPosition(this));
 				break;
 			case eArmGrabSequence:
 				m_Primer.AddGoal(TestArmMove2(this));
