@@ -1,5 +1,24 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="target_clasp_angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="3" y="611"/>
+		<width>131</width>
+	</widget>
+	<widget field="target_bucket_angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="585"/>
+		<width>130</width>
+	</widget>
+	<widget field="target_arm_ypos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="4" y="559"/>
+		<width>128</width>
+	</widget>
+	<widget field="target_arm_xpos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="4" y="532"/>
+		<width>124</width>
+	</widget>
+	<widget field="Freeze_Arm" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="117" y="296"/>
+	</widget>
 	<widget field="DriveTolerance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="653" y="585"/>
 	</widget>
@@ -131,7 +150,7 @@
 		<property name="Minimum" value="-9.0"/>
 	</widget>
 	<widget field="Disable_Setpoints" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
-		<location x="127" y="297"/>
+		<location x="227" y="297"/>
 	</widget>
 	<widget field="SafetyLock_Arm" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="10" y="296"/>
@@ -172,23 +191,23 @@
 		<property name="Maximum" value="1.0"/>
 	</widget>
 	<widget field="clasp_angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="131" y="629"/>
+		<location x="143" y="611"/>
 		<width>108</width>
 	</widget>
 	<widget field="bucket_angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="72" y="596"/>
+		<location x="137" y="584"/>
 		<width>115</width>
 	</widget>
 	<widget field="arm_ypos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="80" y="560"/>
+		<location x="140" y="559"/>
 		<width>103</width>
 	</widget>
 	<widget field="arm_xpos" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="75" y="529"/>
+		<location x="130" y="532"/>
 		<width>106</width>
 	</widget>
 	<widget field="Clasp_angleVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="365" y="625"/>
+		<location x="398" y="640"/>
 		<width>104</width>
 		<height>30</height>
 		<property name="Foreground" value="102.0.153.255"/>
@@ -197,7 +216,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Bucket_angleVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="365" y="592"/>
+		<location x="395" y="599"/>
 		<width>104</width>
 		<height>30</height>
 		<property name="Foreground" value="102.0.153.255"/>
@@ -206,7 +225,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Arm_yposVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="365" y="560"/>
+		<location x="397" y="563"/>
 		<width>104</width>
 		<height>30</height>
 		<property name="Foreground" value="102.0.153.255"/>
@@ -215,7 +234,7 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="Arm_xposVoltage" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.ProgressBar">
-		<location x="365" y="532"/>
+		<location x="399" y="528"/>
 		<width>104</width>
 		<height>30</height>
 		<property name="Foreground" value="102.0.153.255"/>
@@ -224,15 +243,15 @@
 		<property name="Minimum" value="-1.0"/>
 	</widget>
 	<widget field="BucketAngle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="203" y="596"/>
+		<location x="264" y="586"/>
 		<width>116</width>
 	</widget>
 	<widget field="BucketHeight" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="206" y="559"/>
+		<location x="257" y="559"/>
 		<width>116</width>
 	</widget>
 	<widget field="BucketDistance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="197" y="530"/>
+		<location x="245" y="532"/>
 		<width>123</width>
 	</widget>
 	<widget field="clasp_Raw" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
