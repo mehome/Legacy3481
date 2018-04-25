@@ -23,7 +23,7 @@ int getConsoleKey(void);
 
 //#define FRONT_CAM_URL ""
 //#define FRONT_CAM_URL "http://ctetrick.no-ip.org/videostream.cgi?user=guest&pwd=watchme&resolution=32&rate=0"
-#define FRONT_CAM_URL "rtsp://root:admin@10.28.1.23/axis-media/media.amp"
+#define FRONT_CAM_URL "rtsp://root:admin@10.34.81.23/axis-media/media.amp"
 
 //Define the structure and callback for mouse event
 typedef struct mouseOCVStruct {
