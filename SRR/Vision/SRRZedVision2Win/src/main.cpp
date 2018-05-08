@@ -293,7 +293,7 @@ int main(int argc, char **argv) {
 	ChessboardDetecter ChessboardDet(interactive_mode);
 	CascadeDetecter CascadeDet("bin/data/SRR Samples/cascades/hook_cascade_gpu.xml", interactive_mode);
 
-#if !defined(HAVE_CUDA) || defined(OLDSCHOOL)
+#if !defined(HAVE_CUDA) || !defined(USE_CUDA)
 	if (!CascadeDet.cascadeLoaded()) {
 		std::cout << "--(!)Error loading cascade data" << std::endl;
 		return -1;

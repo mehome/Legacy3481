@@ -25,7 +25,7 @@ private:
 	bool bShowImg;
 	bool interactive_mode;
 	bool cascade_loaded;
-#if defined(HAVE_CUDA) && !defined(OLDSCHOOL)
+#if defined(HAVE_CUDA) && defined(USE_CUDA)
 	cv::Ptr<cv::cuda::CascadeClassifier> cascade_gpu;
 	cv::cuda::GpuMat frame_gpu, gray_gpu, hooksBuf_gpu;
 #endif

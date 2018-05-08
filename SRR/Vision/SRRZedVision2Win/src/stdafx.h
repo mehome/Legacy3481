@@ -28,5 +28,4 @@
 #include <sl/Camera.hpp>
 
 #define USE_POINT_CLOUD
-//#define OLDSCHOOL
 #define OLDSCHOOL_TIMER
