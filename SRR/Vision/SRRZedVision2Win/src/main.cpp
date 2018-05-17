@@ -589,7 +589,7 @@ int main(int argc, char **argv) {
 
 		if (interactive_mode)
 		{
-			key = cv::waitKey(1);
+			key = cv::waitKeyEx(1);
 
 			// Keyboard shortcuts
 			switch (key) {
