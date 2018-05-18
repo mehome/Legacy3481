@@ -12,8 +12,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SmartDashboard", "SmartDash
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SmartDashboardTester", "SmartDashboardTester\SmartDashboardTester.vcxproj", "{A473B9B5-F0B8-449C-828A-54FE6046645D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestServerZed", "TestServerZed\TestServerZed.vcxproj", "{C16FAE74-7739-4366-86DC-3AECE8E94FFF}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -144,42 +142,6 @@ Global
 		{A473B9B5-F0B8-449C-828A-54FE6046645D}.ReleaseCuda|Win32.Build.0 = ReleaseCuda|Win32
 		{A473B9B5-F0B8-449C-828A-54FE6046645D}.ReleaseCuda|x64.ActiveCfg = ReleaseCuda|x64
 		{A473B9B5-F0B8-449C-828A-54FE6046645D}.ReleaseCuda|x64.Build.0 = ReleaseCuda|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Debug|Win32.ActiveCfg = Debug|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Debug|Win32.Build.0 = Debug|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Debug|x64.ActiveCfg = Debug|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Debug|x64.Build.0 = Debug|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda_Mkl_Tbb|Mixed Platforms.ActiveCfg = DebugCuda_Mkl_Tbb|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda_Mkl_Tbb|Mixed Platforms.Build.0 = DebugCuda_Mkl_Tbb|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda_Mkl_Tbb|Win32.ActiveCfg = DebugCuda_Mkl_Tbb|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda_Mkl_Tbb|Win32.Build.0 = DebugCuda_Mkl_Tbb|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda_Mkl_Tbb|x64.ActiveCfg = DebugCuda_Mkl_Tbb|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda_Mkl_Tbb|x64.Build.0 = DebugCuda_Mkl_Tbb|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda|Mixed Platforms.ActiveCfg = DebugCuda|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda|Mixed Platforms.Build.0 = DebugCuda|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda|Win32.ActiveCfg = DebugCuda|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda|Win32.Build.0 = DebugCuda|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda|x64.ActiveCfg = DebugCuda|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.DebugCuda|x64.Build.0 = DebugCuda|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Release|Win32.ActiveCfg = Release|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Release|Win32.Build.0 = Release|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Release|x64.ActiveCfg = Release|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.Release|x64.Build.0 = Release|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda_Mkl_Tbb|Mixed Platforms.ActiveCfg = ReleaseCuda_Mkl_Tbb|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda_Mkl_Tbb|Mixed Platforms.Build.0 = ReleaseCuda_Mkl_Tbb|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda_Mkl_Tbb|Win32.ActiveCfg = ReleaseCuda_Mkl_Tbb|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda_Mkl_Tbb|Win32.Build.0 = ReleaseCuda_Mkl_Tbb|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda_Mkl_Tbb|x64.ActiveCfg = ReleaseCuda_Mkl_Tbb|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda_Mkl_Tbb|x64.Build.0 = ReleaseCuda_Mkl_Tbb|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda|Mixed Platforms.ActiveCfg = ReleaseCuda|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda|Mixed Platforms.Build.0 = ReleaseCuda|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda|Win32.ActiveCfg = ReleaseCuda|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda|Win32.Build.0 = ReleaseCuda|Win32
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda|x64.ActiveCfg = ReleaseCuda|x64
-		{C16FAE74-7739-4366-86DC-3AECE8E94FFF}.ReleaseCuda|x64.Build.0 = ReleaseCuda|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
