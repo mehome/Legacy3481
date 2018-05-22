@@ -299,6 +299,9 @@
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15\lib</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "E:\Vision\SRRZedVision2\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda|x64'">
     <ClCompile>
@@ -319,6 +322,9 @@
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda\lib</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "E:\Vision\SRRZedVision2\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda_Mkl_Tbb|x64'">
     <ClCompile>
@@ -339,6 +345,9 @@
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda_mkl_tbb\lib</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "E:\Vision\SRRZedVision2\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -414,6 +423,9 @@
       <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "E:\Vision\SRRZedVision2\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda|x64'">
     <ClCompile>
@@ -436,7 +448,7 @@
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "E:\Vision\SRRZedVision2\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y /D "E:\Vision\SRRZedVision2\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda_Mkl_Tbb|x64'">
@@ -459,6 +471,9 @@
       <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda_mkl_tbb\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "E:\Vision\SRRZedVision2\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\CascadeDetecter.h" />
