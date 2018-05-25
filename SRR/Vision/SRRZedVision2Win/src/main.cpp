@@ -291,7 +291,7 @@ int main(int argc, char **argv) {
 
 	ThresholdDetecter ThresholdDet(HSV_low, HSV_high, interactive_mode);
 	ChessboardDetecter ChessboardDet(interactive_mode);
-	CascadeDetecter CascadeDet("bin/data/SRR Samples/cascades/hook_cascade_gpu.xml", interactive_mode);
+	CascadeDetecter CascadeDet("data/SRR Samples/cascades/hook_cascade_gpu.xml", interactive_mode);
 
 #if !defined(HAVE_CUDA) || !defined(USE_CUDA)
 	if (!CascadeDet.cascadeLoaded()) {

@@ -195,17 +195,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)bin\build\</OutDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)bin\build\</OutDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda_Mkl_Tbb|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)bin\build\</OutDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -222,18 +222,18 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)bin\build\</OutDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)bin\build\</OutDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda_Mkl_Tbb|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <OutDir>$(SolutionDir)bin\build\</OutDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -250,7 +250,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda|Win32'">
@@ -268,7 +268,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda_Mkl_Tbb|Win32'">
@@ -286,7 +286,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -309,7 +309,7 @@
       <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda|x64'">
@@ -332,7 +332,7 @@
       <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda_Mkl_Tbb|x64'">
@@ -355,7 +355,7 @@
       <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda_mkl_tbb\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -376,7 +376,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda|Win32'">
@@ -397,7 +397,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda_Mkl_Tbb|Win32'">
@@ -418,7 +418,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -442,7 +442,7 @@
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda|x64'">
@@ -466,7 +466,7 @@
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda_Mkl_Tbb|x64'">
@@ -490,7 +490,7 @@
       <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
