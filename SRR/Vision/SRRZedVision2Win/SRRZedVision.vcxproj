@@ -297,7 +297,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include;$(ZED_INCLUDE_DIRS);$(CUDA_PATH)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include;$(ZED_SDK_ROOT_DIR)\include;$(CUDA_PATH)\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -305,8 +305,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <Version>
       </Version>
-      <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sl_core64.lib;sl_input64.lib;sl_zed64.lib;opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ZED_SDK_ROOT_DIR)\lib;$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
@@ -320,7 +320,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>USE_CUDA;WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include_cuda;$(ZED_INCLUDE_DIRS);$(CUDA_PATH)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include_cuda;$(ZED_SDK_ROOT_DIR)\include;$(CUDA_PATH)\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -328,8 +328,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <Version>
       </Version>
-      <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sl_core64.lib;sl_input64.lib;sl_zed64.lib;opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ZED_SDK_ROOT_DIR)\lib;$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
@@ -343,7 +343,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>USE_CUDA;WIN32;_DEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include_cuda_mkl_tbb;$(ZED_INCLUDE_DIRS);$(CUDA_PATH)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include_cuda_mkl_tbb;$(ZED_SDK_ROOT_DIR)\include;$(CUDA_PATH)\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -351,8 +351,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <Version>
       </Version>
-      <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda_mkl_tbb\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sl_core64.lib;sl_input64.lib;sl_zed64.lib;opencv_world340d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ZED_SDK_ROOT_DIR)\lib;$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda_mkl_tbb\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
@@ -431,15 +431,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include;$(ZED_INCLUDE_DIRS);$(CUDA_PATH)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include;$(ZED_SDK_ROOT_DIR)\include;$(CUDA_PATH)\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ZED_SDK_ROOT_DIR)\lib;$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sl_core64.lib;sl_input64.lib;sl_zed64.lib;opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
@@ -455,15 +455,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>USE_CUDA;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include_cuda;$(ZED_INCLUDE_DIRS);$(CUDA_PATH)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include_cuda;$(ZED_SDK_ROOT_DIR)\include;$(CUDA_PATH)\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ZED_SDK_ROOT_DIR)\lib;$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sl_core64.lib;sl_input64.lib;sl_zed64.lib;opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
@@ -479,15 +479,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>USE_CUDA;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include_cuda_mkl_tbb;$(ZED_INCLUDE_DIRS);$(CUDA_PATH)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\bin\deps\opencv_3_4_0\build\include_cuda_mkl_tbb;$(ZED_SDK_ROOT_DIR)\include;$(CUDA_PATH)\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(ZED_LIBRARY_DIR);$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda_mkl_tbb\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(ZED_LIBRARIES_64);opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ZED_SDK_ROOT_DIR)\lib;$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda_mkl_tbb\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sl_core64.lib;sl_input64.lib;sl_zed64.lib;opencv_world340.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
