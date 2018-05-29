@@ -79,7 +79,7 @@ sl::ERROR_CODE ZEDCamera::GrabFrameAndDapth(void)
 	if (bHaveFrame) {
 		// Estimated rotation :
 		if (old_self_calibration_state != zed->getSelfCalibrationState()) {
-			std::cout << "Self Calibration Status : " << sl::statusCode2str(zed->getSelfCalibrationState()) << std::endl;
+			std::cout << "Self Calibration Status : " << sl::toString(zed->getSelfCalibrationState()) << std::endl;
 			old_self_calibration_state = zed->getSelfCalibrationState();
 		}
 

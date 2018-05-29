@@ -289,6 +289,14 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	const size_t DirSize = 1024;
+	wchar_t execPath[DirSize];
+	int bytes = GetModuleFileName(NULL, execPath, DirSize);
+	std::wstring rootPath = std::wstring(execPath);
+	int idx = rootPath.find_last_of('\\');
+	rootPath = rootPath.substr(0, idx);
+	SetCurrentDirectory(rootPath.c_str());
+
 	ThresholdDetecter ThresholdDet(HSV_low, HSV_high, interactive_mode);
 	ChessboardDetecter ChessboardDet(interactive_mode);
 	CascadeDetecter CascadeDet("data/SRR Samples/cascades/hook_cascade_gpu.xml", interactive_mode);
