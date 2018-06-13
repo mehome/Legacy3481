@@ -309,8 +309,11 @@
       <AdditionalLibraryDirectories>$(ZED_SDK_ROOT_DIR)\lib;$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin\debug" $(OutputPath)</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /Q "$(OutputPath)opencv*"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda|x64'">
     <ClCompile>
@@ -332,8 +335,11 @@
       <AdditionalLibraryDirectories>$(ZED_SDK_ROOT_DIR)\lib;$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin\debug" $(OutputPath)</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /Q "$(OutputPath)opencv*"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugCuda_Mkl_Tbb|x64'">
     <ClCompile>
@@ -355,8 +361,11 @@
       <AdditionalLibraryDirectories>$(ZED_SDK_ROOT_DIR)\lib;$(SolutionDir)\bin\deps\opencv_3_4_0\build\\x64\vc15_cuda_mkl_tbb\lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
+      <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin\debug" $(OutputPath)</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /Q "$(OutputPath)opencv*"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -444,6 +453,9 @@
     <PostBuildEvent>
       <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15\bin" $(OutputPath)</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /Q "$(OutputPath)opencv*"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda|x64'">
     <ClCompile>
@@ -468,6 +480,9 @@
     <PostBuildEvent>
       <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda\bin" $(OutputPath)</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /Q "$(OutputPath)opencv*"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseCuda_Mkl_Tbb|x64'">
     <ClCompile>
@@ -492,6 +507,9 @@
     <PostBuildEvent>
       <Command>xcopy /Y "$(SolutionDir)\bin\deps\opencv_3_4_0\build\x64\vc15_cuda_mkl_tbb\bin" $(OutputPath)</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>del /Q "$(OutputPath)opencv*"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\CascadeDetecter.h" />
