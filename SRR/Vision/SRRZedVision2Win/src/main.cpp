@@ -293,7 +293,7 @@ int main(int argc, char **argv) {
 	wchar_t execPath[DirSize];
 	int bytes = GetModuleFileName(NULL, execPath, DirSize);
 	std::wstring rootPath = std::wstring(execPath);
-	int idx = rootPath.find_last_of('\\');
+	size_t idx = rootPath.find_last_of('\\');
 	rootPath = rootPath.substr(0, idx);
 	SetCurrentDirectory(rootPath.c_str());
 
@@ -783,9 +783,6 @@ int main(int argc, char **argv) {
 		}
 
     }
-
-	delete StereoCam;
-	StereoCam = NULL;
 
 	std::cout << "shutting down SmartDashboard..." << std::endl;
 	SmartDashboard::shutdown();

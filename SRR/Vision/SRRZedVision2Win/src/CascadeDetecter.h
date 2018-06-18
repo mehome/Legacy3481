@@ -26,8 +26,8 @@ private:
 	bool interactive_mode;
 	bool cascade_loaded;
 #if defined(HAVE_CUDA) && defined(USE_CUDA)
-	cv::Ptr<cv::cuda::CascadeClassifier> cascade_gpu;
 	cv::cuda::GpuMat frame_gpu, gray_gpu, hooksBuf_gpu;
+	cv::Ptr<cv::cuda::CascadeClassifier> cascade_gpu;
 #endif
 	cv::CascadeClassifier hook_cascade;
 	std::vector<cv::Rect> hooks;
