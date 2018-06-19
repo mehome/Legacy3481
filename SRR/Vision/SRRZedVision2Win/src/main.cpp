@@ -410,10 +410,12 @@ int main(int argc, char **argv) {
 		printInfo(ThresholdDet, *StereoCam);
 
 	unsigned __int64 cnt = 0;
-	unsigned __int64 freq;
-	unsigned __int64 start;
 #if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4) && !defined(OLDSCHOOL_TIMER)
 	cv::TickMeter tm;
+	cv::TickMeter tm2;
+#else
+	unsigned __int64 freq;
+	unsigned __int64 start;
 #endif
 
 	if (show_timing)
@@ -529,10 +531,16 @@ int main(int argc, char **argv) {
 			}
 
 			/***************  PROCESS:  ***************/
+			//double detectionTime2;
 			switch (cam2_op_mode)
 			{
 			case FindHook:
+				//tm2.start();
 				CascadeDet.detectHookSample(frame, NULL, NULL);
+				//tm2.stop();
+				//detectionTime2 = tm2.getTimeMilli();
+				//std::cout << " ms per frame = " << detectionTime2 << std::endl;
+				//tm2.reset();
 				break;
 			case FindRock:
 			{

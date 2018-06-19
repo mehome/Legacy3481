@@ -74,6 +74,7 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 #endif
 
 //	for (size_t i = 0; i < hooks.size(); i++)
+	//std::cout << "hooks size: " << hooks.size() << std::endl;
 	if (!hooks.empty())
 	{
 		size_t i = hooks.size() - 1;
