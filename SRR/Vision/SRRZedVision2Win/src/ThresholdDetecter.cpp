@@ -14,6 +14,17 @@ ThresholdDetecter::ThresholdDetecter(bool interactive)
 	MouseDown(false),
 	interactive_mode(interactive)
 {
+#if defined(HAVE_CUDA) && defined(USE_CUDA)
+	int morph_size = 3;
+
+	cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT,
+		cv::Size(2 * morph_size + 1, 2 * morph_size + 1),
+		cv::Point(morph_size, morph_size));
+
+	blurFilter_ = cv::cuda::createGaussianFilter(CV_8UC1, -1, cv::Size(5, 5), 0, 0, cv::BORDER_REFLECT_101);
+	erodeFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE, CV_8UC1, element);
+	dilateFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE, CV_8UC1, element);
+#endif
 }
 
 ThresholdDetecter::ThresholdDetecter(int3 low, int3 high, bool interactive)
@@ -45,6 +56,18 @@ ThresholdDetecter::ThresholdDetecter(int3 low, int3 high, bool interactive)
 	str_threshold_setting[S_High] = "THRESHOLD SATURATION HIGH";
 	str_threshold_setting[V_Low] = "THRESHOLD VALUE LOW";
 	str_threshold_setting[V_High] = "THRESHOLD VALUE HIGH";
+
+#if defined(HAVE_CUDA) && defined(USE_CUDA)
+	int morph_size = 3;
+
+	cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT,
+		cv::Size(2 * morph_size + 1, 2 * morph_size + 1),
+		cv::Point(morph_size, morph_size));
+
+	blurFilter_ = cv::cuda::createGaussianFilter(CV_8UC1, -1, cv::Size(5, 5), 0, 0, cv::BORDER_REFLECT_101);
+	erodeFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE, CV_8UC1, element);
+	dilateFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE, CV_8UC1, element);
+#endif
 };
 
 ThresholdDetecter::~ThresholdDetecter() {}
@@ -82,9 +105,47 @@ void ThresholdDetecter::printThreshold(void)
 
 void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* point_cloud, cv::Point mhit, bool small_display)
 {
-	cv::Mat binary;
-	cv::Mat hsv, masked;
+//#define FUBAR
+#if defined(HAVE_CUDA) && defined(USE_CUDA) && defined(FUBAR)
+	frame_gpu.upload(frame);
 
+	switch (frame_gpu.channels())
+	{
+	case 3:	// from ocv capture or file
+		cv::cuda::cvtColor(frame_gpu, hsv_gpu, CV_BGR2HSV);
+		break;
+	case 4: // from Zed
+		cv::cuda::cvtColor(frame_gpu, hsv_gpu, CV_BGR2HSV);
+		break;
+	}
+
+	blurFilter_->apply(hsv_gpu, hsv_gpu, stream);
+
+	cv::cuda::GpuMat shsv[3];
+	cv::cuda::GpuMat thresc[3];
+	cv::cuda::GpuMat temp;
+
+	//Split HSV 3 channels
+	cv::cuda::split(hsv, shsv);
+
+	//Threshold HSV channels
+	cv::cuda::threshold(shsv[0], thresc[0], HSV_Range[H_Low], HSV_Range[H_High], cv::THRESH_BINARY, stream);
+	cv::cuda::threshold(shsv[1], thresc[1], HSV_Range[S_Low], HSV_Range[S_High], cv::THRESH_BINARY, stream);
+	cv::cuda::threshold(shsv[2], thresc[2], HSV_Range[V_Low], HSV_Range[V_High], cv::THRESH_BINARY, stream);
+
+	//Bitwise AND the channels	// look into how to use the mask.
+	cv::cuda::bitwise_and(thresc[0], thresc[1], temp, NULL, stream);
+	cv::cuda::bitwise_and(temp, thresc[2], binary_gpu, NULL, stream);
+
+	// erode, dilate
+	erodeFilter_->apply(binary_gpu, binary_gpu, stream);
+	dilateFilter_->apply(binary_gpu, binary_gpu, stream);
+
+	stream.waitForCompletion();
+
+	binary_gpu.download(binary);
+
+#else
 	//convert the img from color to hsv
 	cv::cvtColor(frame, hsv, CV_BGR2HSV);
 
@@ -100,6 +161,7 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 	// this eliminates small artifacts.
 	cv::erode(binary, binary, element);
 	cv::dilate(binary, binary, element);
+#endif
 
 	/// Find contours
 	cv::findContours(binary, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));

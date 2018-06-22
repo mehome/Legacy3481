@@ -41,7 +41,15 @@ private:
 
 	cv::Scalar passcolor;
 	cv::Scalar failcolor;
-	cv::Mat hsv, masked;
+	cv::Mat hsv, masked, binary;
+
+#if defined(HAVE_CUDA) && defined(USE_CUDA)
+	cv::cuda::GpuMat frame_gpu, hsv_gpu, masked_gpu, binary_gpu;
+	cv::Ptr<cv::cuda::Filter> blurFilter_; 
+	cv::Ptr<cv::cuda::Filter> erodeFilter_;
+	cv::Ptr<cv::cuda::Filter> dilateFilter_;
+	cv::cuda::Stream stream;
+#endif
 
 	// countours
 	std::vector<std::vector<cv::Point> > contours;
