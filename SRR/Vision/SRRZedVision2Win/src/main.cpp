@@ -297,19 +297,19 @@ int main(int argc, char **argv) {
 	rootPath = rootPath.substr(0, idx);
 	SetCurrentDirectory(rootPath.c_str());
 
-	ThresholdDetecter ThresholdDet(HSV_low, HSV_high, interactive_mode);
-	ChessboardDetecter ChessboardDet(interactive_mode);
-	CascadeDetecter CascadeDet("data/SRR Samples/cascades/hook_cascade_gpu.xml", interactive_mode);
+	ThresholdDetecter *ThresholdDet = new ThresholdDetecter(HSV_low, HSV_high, interactive_mode);
+	ChessboardDetecter *ChessboardDet = new ChessboardDetecter(interactive_mode);
+	CascadeDetecter *CascadeDet = new CascadeDetecter("data/SRR Samples/cascades/hook_cascade_gpu.xml", interactive_mode);
 
 #if !defined(HAVE_CUDA) || !defined(USE_CUDA)
-	if (!CascadeDet.cascadeLoaded()) {
+	if (!CascadeDet->cascadeLoaded()) {
 		std::cout << "--(!)Error loading cascade data" << std::endl;
 		return -1;
 	};
 #endif
 
 	std::cout << "Initializing OCV Camera." << std::endl;
-	OCVCamera FrontCam = OCVCamera(filename2.c_str(), flip);
+	OCVCamera *FrontCam = new OCVCamera(filename2.c_str(), flip);
 
 	ZEDCamera *StereoCam=NULL;
 	if (no_zed)
@@ -322,7 +322,7 @@ int main(int argc, char **argv) {
 		StereoCam = new ZEDCamera(filename1.c_str());
 	}
 
-	if (!FrontCam.IsOpen && !StereoCam->IsOpen)
+	if (!FrontCam->IsOpen && !StereoCam->IsOpen)
 	{
 		std::cout << "No Cameras!" << std::endl;
 		Sleep(5000);
@@ -352,10 +352,10 @@ int main(int argc, char **argv) {
 		width = StereoCam->image_size.width;
 		height = StereoCam->image_size.height;
 	}
-	else if (FrontCam.IsOpen && activeCamera == Front_Cam)
+	else if (FrontCam->IsOpen && activeCamera == Front_Cam)
 	{
-		width = FrontCam.width;
-		height = FrontCam.height;
+		width = FrontCam->width;
+		height = FrontCam->height;
 	}
 	cv::Size displaySize((int)(SmallWindow ? width / 2 : width), (int)(SmallWindow ? height / 2 : height));
 
@@ -395,10 +395,10 @@ int main(int argc, char **argv) {
 	}
 	else
 	{
-		if (FrontCam.IsOpen)
+		if (FrontCam->IsOpen)
 		{
 			if(interactive_mode)
-				mouseStruct.image = FrontCam.GrabFrame();
+				mouseStruct.image = FrontCam->GrabFrame();
 			activeCamera = Front_Cam;
 		}
 	}
@@ -407,7 +407,7 @@ int main(int argc, char **argv) {
 	if (interactive_mode)
 		printHelp();
 	else
-		printInfo(ThresholdDet, *StereoCam);
+		printInfo(*ThresholdDet, *StereoCam);
 
 	unsigned __int64 cnt = 0;
 #if (CV_VERSION_MAJOR == 3 && CV_VERSION_MINOR == 4) && !defined(OLDSCHOOL_TIMER)
@@ -465,16 +465,16 @@ int main(int argc, char **argv) {
 				{
 				case FindHook:
 #ifdef USE_POINT_CLOUD 
-					CascadeDet.detectHookSample(anaplyph, NULL, &point_cloud);
+					CascadeDet->detectHookSample(anaplyph, NULL, &point_cloud);
 #else
-					CascadeDet.detectHookSample(anaplyph, &depth, NULL);
+					CascadeDet->detectHookSample(anaplyph, &depth, NULL);
 #endif
 					break;
 				case FindRock:
 				{
 					if (mouseStruct.update)
 					{
-						ThresholdDet.setThreshold(mouseStruct.low, mouseStruct.high);
+						ThresholdDet->setThreshold(mouseStruct.low, mouseStruct.high);
 						cv::setTrackbarPos("H Low", "Controls", mouseStruct.low.x);
 						cv::setTrackbarPos("H High", "Controls", mouseStruct.high.x);
 						cv::setTrackbarPos("S Low", "Controls", mouseStruct.low.y);
@@ -486,17 +486,17 @@ int main(int argc, char **argv) {
 
 					cv::Point mhit(mouseStruct.hit_x, mouseStruct.hit_y);
 #ifdef USE_POINT_CLOUD 
-					ThresholdDet.detectRockSample(anaplyph, NULL, &point_cloud, mhit, SmallWindow);
+					ThresholdDet->detectRockSample(anaplyph, NULL, &point_cloud, mhit, SmallWindow);
 #else
-					ThresholdDet.detectRockSample(anaplyph, &depth, NULL, mhit, SmallWindow);
+					ThresholdDet->detectRockSample(anaplyph, &depth, NULL, mhit, SmallWindow);
 #endif
 					break;
 				}
 				case FindBeacon:
 #ifdef USE_POINT_CLOUD 
-					ChessboardDet.detectBeacon(anaplyph, NULL, &point_cloud);
+					ChessboardDet->detectBeacon(anaplyph, NULL, &point_cloud);
 #else
-					chessboardDet.detectBeacon(anaplyph, &depth, NULL);
+					chessboardDet->detectBeacon(anaplyph, &depth, NULL);
 #endif
 					break;
 				default:
@@ -520,7 +520,7 @@ int main(int argc, char **argv) {
 
 			cv::Mat frame;
 			if (cam2_op_mode != Idle)
-				frame = FrontCam.GrabFrame();
+				frame = FrontCam->GrabFrame();
 
 			if (interactive_mode)
 			{
@@ -536,7 +536,7 @@ int main(int argc, char **argv) {
 			{
 			case FindHook:
 				//tm2.start();
-				CascadeDet.detectHookSample(frame, NULL, NULL);
+				CascadeDet->detectHookSample(frame, NULL, NULL);
 				//tm2.stop();
 				//detectionTime2 = tm2.getTimeMilli();
 				//std::cout << " ms per frame = " << detectionTime2 << std::endl;
@@ -546,7 +546,7 @@ int main(int argc, char **argv) {
 			{
 				if (mouseStruct.update)
 				{
-					ThresholdDet.setThreshold(mouseStruct.low, mouseStruct.high);
+					ThresholdDet->setThreshold(mouseStruct.low, mouseStruct.high);
 					cv::setTrackbarPos("H Low", "Controls", mouseStruct.low.x);
 					cv::setTrackbarPos("H High", "Controls", mouseStruct.high.x);
 					cv::setTrackbarPos("S Low", "Controls", mouseStruct.low.y);
@@ -557,11 +557,11 @@ int main(int argc, char **argv) {
 				}
 
 				cv::Point mhit(mouseStruct.hit_x, mouseStruct.hit_y);
-				ThresholdDet.detectRockSample(frame, NULL, NULL, mhit, SmallWindow);
+				ThresholdDet->detectRockSample(frame, NULL, NULL, mhit, SmallWindow);
 				break;
 			}
 			case FindBeacon:
-				ChessboardDet.detectBeacon(frame, NULL, NULL);
+				ChessboardDet->detectBeacon(frame, NULL, NULL);
 				break;
 			default:
 				break;
@@ -615,7 +615,7 @@ int main(int argc, char **argv) {
 				break;
 
 			case '?':
-				printInfo(ThresholdDet, *StereoCam);
+				printInfo(*ThresholdDet, *StereoCam);
 				break;
 
 			case 'z':
@@ -629,7 +629,7 @@ int main(int argc, char **argv) {
 					std::cout << "No camera enabled" << std::endl;
 					break;
 				case Stereo_Cam:
-					if (FrontCam.IsOpen)
+					if (FrontCam->IsOpen)
 					{
 						activeCamera = Front_Cam;
 						if (cam2_op_mode != FindRock)
@@ -670,8 +670,8 @@ int main(int argc, char **argv) {
 				// only change values if we are in that mode.
 				if (cam1_op_mode == FindRock || cam2_op_mode == FindRock)
 				{
-					ThresholdDet.updateThresholdSettings(key);
-					std::pair<int3, int3> threshold = ThresholdDet.getThreshold();
+					ThresholdDet->updateThresholdSettings(key);
+					std::pair<int3, int3> threshold = ThresholdDet->getThreshold();
 					mouseStruct.low = threshold.first;
 					mouseStruct.high = threshold.second;
 					cv::setTrackbarPos("H Low", "Controls", mouseStruct.low.x);
@@ -794,6 +794,13 @@ int main(int argc, char **argv) {
 
 	std::cout << "shutting down SmartDashboard..." << std::endl;
 	SmartDashboard::shutdown();
+
+	delete ThresholdDet;
+	delete ChessboardDet;
+	delete CascadeDet;
+
+	delete StereoCam;
+	delete FrontCam;
 
 	return 0;
 }
