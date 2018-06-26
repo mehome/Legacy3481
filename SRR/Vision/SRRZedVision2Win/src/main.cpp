@@ -299,9 +299,11 @@ int main(int argc, char **argv) {
 
 	ThresholdDetecter *ThresholdDet = new ThresholdDetecter(HSV_low, HSV_high, interactive_mode);
 	ChessboardDetecter *ChessboardDet = new ChessboardDetecter(interactive_mode);
+#if defined(HAVE_CUDA) && defined(USE_CUDA)
 	CascadeDetecter *CascadeDet = new CascadeDetecter("data/SRR Samples/cascades/hook_cascade_gpu.xml", interactive_mode);
+#else
+	CascadeDetecter *CascadeDet = new CascadeDetecter("data/SRR Samples/cascades/hook_cascade_cpu.xml", interactive_mode);
 
-#if !defined(HAVE_CUDA) || !defined(USE_CUDA)
 	if (!CascadeDet->cascadeLoaded()) {
 		std::cout << "--(!)Error loading cascade data" << std::endl;
 		return -1;
