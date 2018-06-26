@@ -21,6 +21,7 @@ public:
 	void saveSettings(void);
 	void saveSbSimage(std::string);
 	cv::Mat slMat2cvMat(sl::Mat& input);
+	void close(void);
 
 	bool IsOpen;
 

@@ -64,8 +64,14 @@ ZEDCamera::~ZEDCamera()
 	if (zed)
 	{
 		zed->close();
+		IsOpen = false;
 		delete zed;
 	}
+}
+
+void ZEDCamera::close(void)
+{
+	zed->close();
 }
 
 sl::ERROR_CODE ZEDCamera::GrabFrameAndDapth(void)

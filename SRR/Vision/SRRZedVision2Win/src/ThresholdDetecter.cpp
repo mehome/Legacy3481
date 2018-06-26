@@ -64,7 +64,7 @@ ThresholdDetecter::ThresholdDetecter(int3 low, int3 high, bool interactive)
 		cv::Size(2 * morph_size + 1, 2 * morph_size + 1),
 		cv::Point(morph_size, morph_size));
 
-	blurFilter_ = cv::cuda::createGaussianFilter(CV_8UC1, -1, cv::Size(5, 5), 0, 0, cv::BORDER_REFLECT_101);
+	blurFilter_ = cv::cuda::createGaussianFilter(CV_8UC4, -1, cv::Size(5, 5), 0, 0, cv::BORDER_REFLECT_101);
 	erodeFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE, CV_8UC1, element);
 	dilateFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE, CV_8UC1, element);
 #endif
@@ -126,7 +126,7 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 	cv::cuda::GpuMat temp;
 
 	//Split HSV 3 channels
-	cv::cuda::split(hsv, shsv);
+	cv::cuda::split(hsv_gpu, shsv);
 
 	//Threshold HSV channels
 	cv::cuda::threshold(shsv[0], thresc[0], HSV_Range[H_Low], HSV_Range[H_High], cv::THRESH_BINARY, stream);
