@@ -928,7 +928,7 @@ void printHelp() {
 	std::cout << std::endl;
 	std::cout << "  window size:                               'z'" << std::endl;
 	std::cout << "  switch cameras:                            'c'" << std::endl;
-	std::cout << "  change cameera mode:                       'm'" << std::endl;
+	std::cout << "  change camera mode:                        'm'" << std::endl;
 	std::cout << std::endl;
 	std::cout << "Mouse:" << std::endl;
 	std::cout << "  hold both buttons to reset HSV values" << std::endl;
