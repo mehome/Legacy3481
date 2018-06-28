@@ -965,7 +965,7 @@ void printHelp() {
 	std::cout << "  normals:                                     '6'" << std::endl;
 	std::cout << std::endl;
 	std::cout << "write png image:                               'w'" << std::endl;
-	std::cout << "sending mode standard:                         'd'" << std::endl;
+	std::cout << "sensing mode standard:                         'd'" << std::endl;
 	std::cout << "sensing mode fill:                             'f'" << std::endl;
 	std::cout << std::endl;
 	std::cout << std::endl;
