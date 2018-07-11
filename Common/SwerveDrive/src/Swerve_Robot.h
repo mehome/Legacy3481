@@ -287,7 +287,7 @@ class DRIVE_API Swerve_Robot_Control : public RobotControlCommon, public Swerve_
 		virtual void Reset_Encoders();
 
 	public:  //allow this conversion public in case a robot needs to add more wheels with encoders
-		double RPS_To_LinearVelocity(double RPS);
+		double RPS_To_LinearVelocity(double RPS,size_t index) const;
 		//virtual void DisplayVoltage();  //allow to override
 	protected:
 		double m_RobotMaxSpeed;  //cache this to covert velocity to motor setting

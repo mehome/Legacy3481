@@ -882,7 +882,7 @@ double Swerve_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				EncRate=m_Averager[index].GetAverage(EncRate);
 				EncRate=IsZero(EncRate)?0.0:EncRate;
 
-				const double EncVelocity=RPS_To_LinearVelocity(EncRate);
+				const double EncVelocity=RPS_To_LinearVelocity(EncRate,index);
 				//Dout(m_TankRobotProps.Feedback_DiplayRow,"l=%.1f r=%.1f", EncVelocity,RightVelocity);
 				#ifdef Robot_TesterCode
 				result=m_Encoders[index].GetEncoderVelocity();
@@ -1027,8 +1027,9 @@ void Swerve_Robot_Control::UpdateRotaryVoltage(size_t index,double Voltage)
 	Victor_UpdateVoltage(index,Voltage);
 }
 
-double Swerve_Robot_Control::RPS_To_LinearVelocity(double RPS)
+double Swerve_Robot_Control::RPS_To_LinearVelocity(double RPS,size_t index) const
 {
+	const double MotorToWheelGearRatio=m_SwerveRobotProps.GetRotaryProps(index).GetRotaryProps().EncoderToRS_Ratio;
 	const Swerve_Robot_Props &SwerveRobotProps=m_SwerveRobotProps.GetSwerveRobotProps();
-	return RPS * SwerveRobotProps.MotorToWheelGearRatio * M_PI * SwerveRobotProps.WheelDiameter; 
+	return RPS * MotorToWheelGearRatio * M_PI * SwerveRobotProps.WheelDiameter;
 }
