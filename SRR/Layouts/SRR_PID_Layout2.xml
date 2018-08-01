@@ -1,5 +1,36 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="EncodersLoop_IsClosed" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="660" y="696"/>
+	</widget>
+	<widget field="AutonTest" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="850" y="59"/>
+		<width>117</width>
+	</widget>
+	<widget field="SafetyLock_Arm" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="354" y="257"/>
+	</widget>
+	<widget field="Freeze_Arm" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="476" y="259"/>
+	</widget>
+	<widget field="Test_Auton" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="990" y="56"/>
+	</widget>
+	<widget field="WheelRight" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="970" y="700"/>
+	</widget>
+	<widget field="PayloadRight" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="968" y="727"/>
+	</widget>
+	<widget field="WheelLeft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="809" y="702"/>
+	</widget>
+	<widget field="PayloadLeft" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="809" y="726"/>
+	</widget>
+	<widget field="Z Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="454" y="65"/>
+	</widget>
 	<widget field="ManualInDegrees" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="735" y="308"/>
 	</widget>
@@ -373,7 +404,7 @@
 		<property name="Font Size" value="20"/>
 	</widget>
 	<widget field="Edit Position Main" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="877" y="63"/>
+		<location x="326" y="77"/>
 	</widget>
 	<widget field="AutoPilot" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="367" y="20"/>
@@ -592,6 +623,24 @@
 	</widget>
 	<widget field="ClaspDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
 		<location x="85" y="491"/>
+	</widget>
+	<widget field="Wheel_rlDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="182" y="221"/>
+	</widget>
+	<widget field="Wheel_frDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="480" y="154"/>
+	</widget>
+	<widget field="Wheel_flDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="181" y="150"/>
+	</widget>
+	<widget field="Wheel_crDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="475" y="187"/>
+	</widget>
+	<widget field="Wheel_clDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="183" y="186"/>
+	</widget>
+	<widget field="Wheel_rrDisable" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.CheckBox">
+		<location x="479" y="224"/>
 	</widget>
 </dashboard>
 <live-window>
