@@ -2,8 +2,13 @@
 
 #include "pch.h"
 #include "GCodeTools.h"
-
-
+namespace DirectSound
+{
+	namespace Output
+	{
+#include "DS_Output.h"
+	}
+}
 std::vector<std::string>& split(const std::string& s,
 	char delim,
 	std::vector<std::string>& elems) {
@@ -25,6 +30,8 @@ std::vector<std::string> split(const std::string& s, char delim) {
 class GCodeTools_Internal
 {
 private:
+	DirectSound::Output::DirectSound_Initializer m_ds_init;
+	DirectSound::Output::DS_Output m_DS;
 public:
 	GCodeTools_Internal()
 	{
@@ -33,6 +40,8 @@ public:
 	{
 		printf("Connecting");
 	}
+	void TestSound_Start() { m_DS.StartStreaming(); }
+	void TestSound_Stop() { m_DS.StopStreaming(); }
 };
 
   /*******************************************************************************************************/
@@ -47,4 +56,13 @@ void GCodeTools::GCodeTools_init(void)
 void GCodeTools::GCodeTools_connect()
 {
 	m_p_GCodeTools->connect();
+}
+
+void GCodeTools::TestSound_Start() 
+{
+	m_p_GCodeTools->TestSound_Start();
+}
+void GCodeTools::TestSound_Stop() 
+{
+	m_p_GCodeTools->TestSound_Stop();
 }

@@ -151,10 +151,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="DS_Output.h" />
     <ClInclude Include="GCodeTools.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="ThreadLib.h" />
+    <ClInclude Include="Time_Type.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DS_Output.cpp" />
     <ClCompile Include="GCodeTools.cpp" />
     <ClCompile Include="GCode_Tools_Internal.cpp" />
     <ClCompile Include="pch.cpp">
@@ -163,6 +167,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ThreadLib.cpp" />
+    <ClCompile Include="Time_Type.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
