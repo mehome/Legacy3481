@@ -106,83 +106,6 @@ class DS_Output_Internal
 		size_t m_AudioOutput;
 
 	private:
-		//typedef FrameWork::Audio2::buffer_s32 buffer_s32;
-		//typedef FrameWork::Audio2::buffer_f32 buffer_f32;
-		//typedef PFXLib::audio::resampler resampler;
-
-		/////This class works with a pointer to frame as input and pointer to buffer for output.
-		//class AudioMessageConverter
-		//{
-		//	public:
-		//		AudioMessageConverter(DS_Output_Internal * _m_pParent, size_t _NoChannels, AudioFormatEnum _Format, size_t _SampleRate, size_t _BlockSize);
-		//		~AudioMessageConverter();
-
-		//		///This will store a copy in an intermediate queue
-		//		void AddInput(const FC3::audio::message *Message);
-		//		struct SourcePacket 
-		//		{
-		//			SourcePacket(const FC3::audio::message *_Message,const buffer_f32 *_BufferToProcess) :
-		//				Message(_Message),BufferToProcess(_BufferToProcess) {}
-		//			const FC3::audio::message *Message;  //Keep this bundled so we can use it to call displayed
-		//			const buffer_f32 *BufferToProcess;  //This will be the resampled buffer to process
-		//		};
-
-		//		///This will grab the next frame to process (and will pop from queue) the buffer gets deleted in FillOutput()
-		//		/// \ret this will return a packet either empty (NULL) or filled with the current pointers in the queue
-		//		SourcePacket GetNextFrame();
-		//		/// \param Source if this is null it will fill with silence
-		//		void FillOutput(const buffer_f32 *Source,size_t SampleStart,PBYTE Dest,size_t SampleSize);
-		//		/// This keeps the creation and destruction within the same class client code call this when finished with the frame
-		//		/// This will tidy up the pointers in the packet structure properly
-		//		void ClosePacket(SourcePacket &pkt);
-
-		//		///These pertain to the output size
-		//		size_t size(void) const; // no samples
-		//		size_t size_in_bytes(void) const; // no samples * sizeof(sample_type)
-		//	private:
-		//		template<typename sample_type>
-		//		void ConvertBitrate(const buffer_f32 &Source,size_t SampleStart,PBYTE Dest,size_t SampleSize);
-
-		//		struct AudioMessageData
-		//		{
-		//			size_t NoChannels;
-		//			AudioFormatEnum Format;
-		//			size_t SampleRate;
-		//			size_t BlockSize;
-		//		} m_AudioMessageData;
-
-		//		DWORD BytesRead;	//A sacred count of what was read into this buffer
-		//		DS_Output_Internal * const m_pParent;
-		//		const FC3::audio::message *m_AudioFrame;
-		//		union BufferTypes
-		//		{
-		//			BYTE *p_u8;
-		//			short *p_s16;
-		//			long *p_s32;
-		//			float *p_f32;
-		//		};
-
-		//		std::queue<SourcePacket> m_Queue;
-		//		FrameWork::Threads::critical_section m_BlockQueue;  //protect the incoming buffer queue
-
-		//		size_t m_ByteDepthSize; //cache the byte depth size
-		//		std::vector<PFXLib::audio::resampler *> m_Resampler; //this handles the resampling
-		//		HD::Base::FloodControl_DebugOut m_OverflowDump;
-
-		//		#ifdef __UseTestSineWave__
-		//		void SWfreq(BufferTypes DestBuffer,size_t NoSamples,const int NoChannels,double freq_hz=1000.0,double SampleRate=48000.0,double amplitude=1.0);
-		//		double m_rho;
-		//		double m_rho2;
-		//		#endif
-
-		//} m_AudioMessageConverter;
-
-		//The extra thread is primarily for non-displayed clients which gives more tolerance for scheduling
-		//void operator() ( const void* );
-		//FrameWork::Threads::thread<DS_Output_Internal>	*m_pThread;
-		//friend FrameWork::Threads::thread<DS_Output_Internal>;
-		//FrameWork::Threads::event m_Event;
-
 		critical_section	m_BlockDirectSound;
 		critical_section m_BlockStreamingCalls;
 
@@ -266,292 +189,6 @@ class DirectSound_Globals
 
 using namespace DirectSound::Output;
 
-  /***********************************************************************************************************/
- /*									 DS_Output_Internal::AudioMessageConverter								*/
-/***********************************************************************************************************/
-#if 0
-const size_t cDS_Output_Internal_ThresholdBlockCount=2;
-
-DS_Output_Internal::AudioMessageConverter::AudioMessageConverter(DS_Output_Internal * _m_pParent, size_t _NoChannels, AudioFormatEnum _Format, size_t _SampleRate, size_t _BlockSize)
-: m_pParent(_m_pParent), m_OverflowDump(60.0)
-{
-	AudioMessageData &_=m_AudioMessageData;
-	_.NoChannels = _NoChannels;
-	_.Format = _Format;
-	_.BlockSize = _BlockSize;
-	_.SampleRate = _SampleRate;
-	switch (m_AudioMessageData.Format)
-	{
-		case eU8:			m_ByteDepthSize=sizeof(BYTE);			break;
-		case eS16:			m_ByteDepthSize=sizeof(short);			break;
-		case eS32:			m_ByteDepthSize=sizeof(long);			break;
-		case eF32:			m_ByteDepthSize=sizeof(float);			break;
-	}
-	#ifdef __UseTestSineWave__
-	m_rho=m_rho2=0;
-	#endif
-
-	#ifndef __DisableResampling__
-	//Instantiate the resampler one per channel
-	assert ((m_Resampler.size()==0)||(m_Resampler.size()==_NoChannels));
-	for (size_t i=0;i<_NoChannels;i++)
-	{
-		if (m_Resampler.size()<=i)
-		{
-			//Set up new one
-			m_Resampler.push_back(new resampler((float)_SampleRate,(float)_SampleRate));
-		}
-		else
-			m_Resampler[i]->set_sample_rates((float)_SampleRate,(float)_SampleRate); //ensure these are updated in case rate has changed
-	}
-	#endif 
-}
-
-void DS_Output_Internal::AudioMessageConverter::ClosePacket(SourcePacket &pkt)
-{
-	delete pkt.BufferToProcess;
-	if (pkt.Message)
-		pkt.Message->release();
-}
-
-DS_Output_Internal::AudioMessageConverter::~AudioMessageConverter()
-{
-	while(!m_Queue.empty())
-	{
-		SourcePacket &pkt=m_Queue.front();
-		ClosePacket(pkt);
-		m_Queue.pop();
-	}
-	for (size_t i=0;i<m_Resampler.size();i++)
-	{
-		//This is just a idiot check if the resampler is disabled
-		#ifdef __DisableResampling__
-		assert (false);
-		#endif
-		assert(m_Resampler[i]);
-		delete m_Resampler[i];
-		m_Resampler[i]=NULL;
-	}
-	m_Resampler.clear();
-
-}
-
-#ifdef __UseTestSineWave__
-void DS_Output_Internal::AudioMessageConverter::SWfreq(BufferTypes DestBuffer,size_t NoSamples,const int NoChannels,double freq_hz,double SampleRate,double amplitude)
-{
-	double			 theta,theta2;
-	size_t index=0; //array index of buffer
-
-	const double pi2 = 3.1415926 * 2.0;
-	//Compute the angle ratio unit we are going to use
-	//Multiply times pi 2 to Convert the angle ratio unit into radians
-	theta = (freq_hz / SampleRate) * pi2;
-	theta2 = ((freq_hz*0.5) / SampleRate) * pi2;
-
-
-	//set our scale... this is also the size of the radius 
-	const double scale = amplitude;
-
-	{
-		size_t				 siz=NoSamples;
-		double				 Sample,Sample2;
-
-
-		while( siz-- )
-		{
-			//Find Y given the hypotenuse (scale) and the angle (rho)
-			//Note: using sin will solve for Y, and give us an initial 0 size
-			Sample = sin( m_rho ) * scale;
-			Sample2 = sin (m_rho2) * scale;
-			//increase our angular measurement
-			m_rho += theta;
-			m_rho2 += theta2;
-			//bring back the angular measurement by the length of the circle when it has completed a revolution
-			if ( m_rho > pi2 )
-				m_rho -= pi2;
-			if ( m_rho2 > pi2 )
-				m_rho2 -= pi2;
-
-			for (size_t j=0;j<NoChannels;j++)
-			{
-				double s=(j&1)?Sample2:Sample;  //odd channels use sample2
-				switch (m_AudioMessageData.Format)
-				{
-				case eU8:
-					*(((DestBuffer.p_u8))+(index++))=(BYTE)((s*(double)0x7f)+0x80);
-					break;
-				case eS16:
-					*(((DestBuffer.p_s16))+(index++))=(short)(s*(double)0x7fff);
-					break;
-				case eS32:
-					*(((DestBuffer.p_s32))+(index++))=(long)(s*(double)0x7fffffff);
-					break;
-				case eF32:
-					*(((DestBuffer.p_f32))+(index++))=(float)s;
-					break;
-				}
-			}
-		}
-	}
-}
-#endif
-
-template<typename sample_type>
-void DS_Output_Internal::AudioMessageConverter::ConvertBitrate(const buffer_f32 &Source,size_t SampleStart,PBYTE Dest,size_t SampleSize)
-{
-	using namespace FrameWork::Audio2;
-	size_t NoChannels=m_AudioMessageData.NoChannels;
-
-	//Now to convert the Frame to our Hardware format
-	buffer<sample_type> DeInterleaved((int)NoChannels,(int)SampleSize,16);  //align for best SSE2 conversions
-	for (int i=0;i<(int)NoChannels;i++)
-	{
-		//Now we have an de-interleaved s32 converted format with compatible number of channels
-		if (i<Source.no_channels())
-		{
-			buffer<sample_type>(DeInterleaved(i),1,(int)SampleSize)=buffer_f32(&Source(i,(int)SampleStart),1,(int)SampleSize);
-		}
-		else
-			FrameWork::Bitmaps::memset(DeInterleaved(i),0,DeInterleaved.no_samples_in_bytes()); //fill with silence
-	}
-	//Now to interleave it
-	utils::convert_to_interleaved<sample_type>(DeInterleaved,(sample_type *)Dest);
-}
-
-void DS_Output_Internal::AudioMessageConverter::AddInput(const FC3::audio::message *Message)
-{
-	//apply sample rate conversion
-	#ifndef __DisableResampling__
-
-	m_Resampler[0]->set_sample_rates((float)Message->sample_rate(),(float)m_AudioMessageData.SampleRate);
-	size_t NoSamples=(size_t)m_Resampler[0]->get_max_buffer_length_in_samples(Message->audio().no_samples());
-
-	//determine number of channels that we will have (this way we can pre-allocate how many sample converters to create)
-	int no_channels=min(Message->audio().no_channels(),(int)m_AudioMessageData.NoChannels);
-	//I had better use the heap since I can have large buffers :(
-	buffer_f32 *ResampledSource=NULL;
-	buffer_f32 ResampledChannel(1,(int)NoSamples,16);
-
-	size_t ActualSampleSize;
-	for (int i=0;i<no_channels;i++)
-	{
-			//Now to setup the resampler
-			PFXLib::audio::resampler::dst_data_desc dest;
-			PFXLib::audio::resampler::src_data_desc src;
-			src.first=Message->audio()(i);
-			src.second=src.first + Message->audio().no_samples();
-			dest.first=ResampledChannel();
-			dest.second=dest.first + NoSamples;
-			//Dynamically set the source rate
-			m_Resampler[i]->set_sample_rates((float)Message->sample_rate(),(float)m_AudioMessageData.SampleRate);
-			//Invoke the resampler operation
-			PFXLib::audio::resampler::e_reason result=(*m_Resampler[i])(src,dest);
-			assert(result == PFXLib::audio::resampler::e_source_empty);
-
-			//keep track of the actual size
-			ActualSampleSize=dest.first-ResampledChannel();
-
-			//Note: in the past I'd monitor how often the channels will be different sizes from each other
-			//but after years of testing with positive result I'm going to skip this 
-			//(see HD_Output_Internal::AudioBuffer::AudioMessageConverter::SetInput())
-
-			//Now that we have the actual sample size we can create the buffer (this is typically a few samples smaller, and never larger)
-			if (i==0)
-				ResampledSource=new buffer_f32(no_channels,(int)ActualSampleSize,16);
-			buffer_f32((*ResampledSource)(i),1,(int)ActualSampleSize)=buffer_f32(ResampledChannel(),1,(int)ActualSampleSize);
-	}
-	#else
-	size_t ActualSampleSize=Message->audio().no_samples();
-	buffer_f32 *ResampledSource=new buffer_f32(Message->audio());
-	#endif
-
-	//While this is needed for our hardware... it apparently does not apply to direct sound 
-	//const_cast<buffer_f32 &>(Message->audio()) *= c_output_reference_scale_factor;
-
-	//Add to queue here
-	auto_lock Threadsafe(m_BlockQueue);
-	Message->addref();  //hold on to message for displayed
-	m_Queue.push(SourcePacket(Message,ResampledSource));
-	//Overflow management... note: this should only happen in threaded mode and there is another check for the fc3 messages in DS_Output::deliver_audio()
-	while (m_Queue.size() > cDS_Output_Internal_ThresholdBlockCount)
-	{
-		if (m_pParent->m_IsClocking)
-			m_OverflowDump.DebugOut_TimedCompare(p_debug_category,L"AudioMessageConverter::AddInput overflow %d.. discarding\n",m_Queue.size());
-		else
-			m_OverflowDump.DebugOut_TimedCompare(p_debug_category, L"AudioMessageConverter::AddInput Audio device Not Clocking.. discarding\n");
-		SourcePacket &pkt=m_Queue.front();
-		ClosePacket(pkt);
-		m_Queue.pop();
-	}
-}
-
-DS_Output_Internal::AudioMessageConverter::SourcePacket DS_Output_Internal::AudioMessageConverter::GetNextFrame()
-{
-	auto_lock Threadsafe(m_BlockQueue);
-	SourcePacket ret(NULL,NULL);
-	if (!m_Queue.empty())
-	{
-		ret=m_Queue.front();  //copy the contents (these are all pointer not owned by this structure)
-		m_Queue.pop();
-	}
-	return ret;
-}
-
-void DS_Output_Internal::AudioMessageConverter::FillOutput(const buffer_f32 *Source,size_t SampleStart,PBYTE Dest,size_t SampleSize)
-{
-	const size_t BlockSize=m_AudioMessageData.BlockSize;
-	size_t NoChannels=m_AudioMessageData.NoChannels;
-	//Sanity check
-	assert(Dest);
-
-	if (Source)  //underflow check
-	{
-		//apply bit rate conversion
-		switch (m_AudioMessageData.Format)
-		{
-		case eU8:
-			ConvertBitrate<unsigned char>(*Source,SampleStart,Dest,SampleSize);
-			break;
-		case eS16:
-			ConvertBitrate<short>(*Source,SampleStart,Dest,SampleSize);
-			break;
-		case eS32:
-			ConvertBitrate<int>(*Source,SampleStart,Dest,SampleSize);
-			break;
-		case eF32:
-			ConvertBitrate<float>(*Source,SampleStart,Dest,SampleSize);
-			break;
-		}
-	}
-	else
-	{
-		//debug_output(p_debug_category,L"AudioMessageConverter::FillOutput underflow, filling in with silence\n");
-		if (m_AudioMessageData.Format!=eU8)
-			memset(Dest,0,SampleSize*m_ByteDepthSize * m_AudioMessageData.NoChannels);
-		else
-			memset(Dest,128,SampleSize*m_ByteDepthSize * m_AudioMessageData.NoChannels);
-	}
-
-	#ifdef __UseTestSineWave__
-	{
-		BufferTypes btDest;
-		btDest.p_u8=Dest;
-		SWfreq(btDest,SampleSize,(int)NoChannels,1000.0,(int)m_AudioMessageData.SampleRate,0.5);
-	}
-	#endif
-}
-
-
-size_t DS_Output_Internal::AudioMessageConverter::size(void) const
-{
-	return m_AudioMessageData.BlockSize;
-}
-size_t DS_Output_Internal::AudioMessageConverter::size_in_bytes(void) const
-{
-	return m_AudioMessageData.BlockSize * m_ByteDepthSize * m_AudioMessageData.NoChannels;	
-}
-#endif
-
   /*************************************************************************/
  /*							 DS_Output_Internal							  */			
 /*************************************************************************/
@@ -581,21 +218,13 @@ DS_Output_Internal::AudioFormatEnum DS_Output_Internal::GetFormat(WAVEFORMATEX *
 
 DS_Output_Internal::DS_Output_Internal() : 
 	m_IsStreaming(false),m_AudioOutput(),
-	//m_AudioMessageConverter(this,
-	//DS_Output_Core::GetDS_Output_Core().GetNoChannels(),
-	//GetFormat(DS_Output_Core::GetDS_Output_Core().GetWaveFormatToUse()),
-	//DS_Output_Core::GetDS_Output_Core().GetSampleRate(),
-	//DS_Output_Core::GetDS_Output_Core().GetBufferSampleSize()),
-	//m_pThread(NULL), 
 	m_lpdsb(NULL), m_BufferSizeInBytes(0), m_FillPosition(0), m_PreviousFillPosition(0), m_ClockPhaseOffset(0),
 	m_GTE_LastCalled(0), 
-	//m_UseDisplayedCallbacks(UseDisplayedCallbacks), 
 	m_UseThreading(false)
 { 
 	#ifdef __AlwaysUseThreading__
 	m_UseThreading=true;
 	#else
-	//m_UseThreading=!UseDisplayedCallbacks;
 	m_UseThreading = false;
 	#endif
 
@@ -671,10 +300,6 @@ void DS_Output_Internal::StopStreaming(void)
 	if (m_IsStreaming)
 	{
 		m_IsStreaming = false;
-		//I may or may not have a thread
-		//delete m_pThread;
-		//m_pThread=NULL;
-
 		m_lpdsb->Stop();
 	}
 }
@@ -685,12 +310,6 @@ void DS_Output_Internal::StartStreaming(void)
 	{
 		m_lpdsb->Play(0,0,DSBPLAY_LOOPING);
 		m_IsStreaming=true;
-		//if (m_UseThreading)
-		//{
-		//	m_pThread = new thread<DS_Output_Internal>(this);
-		//	m_pThread->priority_above_normal();
-		//	m_pThread->set_thread_name( "Module.DirectSound.Output Main Thread" );
-		//}
 		//now to set up the initial clock phase with the audio clock
 
 		{
@@ -737,11 +356,7 @@ void DS_Output_Internal::deliver_audio(const audio_frame *p_frame)
 {
 	if (m_IsStreaming)
 	{
-		//m_AudioMessageConverter.AddInput(Message);
-		//if (m_UseThreading)
-		//	m_Event.set();
-		//else
-			FillBuffer();
+		FillBuffer();
 	}
 }
 
@@ -1054,13 +669,6 @@ double DS_Output_Internal::FillBuffer()
 	return ret;
 }
 
-//void DS_Output_Internal::operator() ( const void* )
-//{
-//	double TimeOut=FillBuffer(); //notify our stream to update
-//	//printf("%f\n",TimeOut*1000.0);
-//	if ((TimeOut>0.0) && (TimeOut<2.0))
-//		m_Event.wait((DWORD)(TimeOut * 500.0));  //only wait half the time available (give it enough time to fill too)
-//}
 
   /************************************************************************/
  /*							  DS_Output_Core							 */
@@ -1560,49 +1168,10 @@ DS_Output::~DS_Output()
 	StopStreaming();
 }
 
-#if 0
-void DS_Output::SetAudioOutputChannel(size_t AudioOutput)
-{
-	m_AudioOutput=AudioOutput;
-}
-size_t DS_Output::GetAudioOutputChannel() const
-{
-	return m_AudioOutput;
-}
-
-void DS_Output::AddOutputChannel(size_t AudioOutput)
-{
-		assert(false);
-}
-void DS_Output::add_thru_dest(const wchar_t *audio_destination_name)
-{
-	DestThru NewEntry;
-	if (audio_destination_name)	
-		NewEntry.Audio=audio_destination_name;
-	m_Dest_Thru.push_back(NewEntry);
-	//	assert(false);
-}
-
-void DS_Output::StartServer()
-{
-	if (!m_ServerStarted)
-	{
-		m_ServerStarted=true;
-		//create an audio server
-		m_QueueDepthLevel=1;
-		m_Server_Audio.reset(new audio::receive(m_AudioName.c_str(),this));
-	}
-}
-#endif
 void DS_Output::StartStreaming(void)
 {
-	//StartServer();
 	m_IsStreaming=true;
 	m_DS->StartStreaming();
-	//if (m_DS->GetUsingThreading())
-	//	m_Server_Audio->priority_normal();
-	//else
-	//	m_Server_Audio->priority_time_critical();
 }
 
 void DS_Output::StopStreaming(void)
@@ -1612,27 +1181,6 @@ void DS_Output::StopStreaming(void)
 }
 
 
-#if 0
-void DS_Output::deliver_audio(	const FC3::audio::message* p_aud_msg )
-{
-	//auto_lock ThreadSafe(m_BlockDelivery);
-	if ( ( m_Server_Audio ) && ( m_Server_Audio->queue_depth() > 1 ) ) //ask james about this one right here, still unsure
-	{	//assert(false);
-		debug_output( p_debug_category, L"deliver_audio Frame dropped on output.\n" );
-		return;
-	}
-
-	m_DS->deliver_audio(p_aud_msg);
-	//static size_t Test=0;
-	//printf("\r%d     ",Test++);
-}
-
-
-void DS_Output::SetUseDisplayedCallbacks(bool UseDisplayedCallbacks) 
-{
-	m_DS->SetUseDisplayedCallbacks(UseDisplayedCallbacks);
-}
-#endif
   /************************************************************************/
  /*						  DirectSound_Initializer					     */
 /************************************************************************/
