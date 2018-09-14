@@ -101,13 +101,19 @@ class DS_Output_Internal
 		void SetUseDisplayedCallbacks(bool UseDisplayedCallbacks);
 		bool GetUsingThreading() const {return m_UseThreading;}
 
+		bool GetIsStreaming() const { return m_IsStreaming; }
 	protected:
 		bool m_IsStreaming;
 		size_t m_AudioOutput;
 
+	public:
+		void operator() (const void*); //TODO work out how to call this directly
 	private:
+		//The extra thread is primarily for non-displayed clients which gives more tolerance for scheduling
+		std::future<void> m_TaskState;
 		critical_section	m_BlockDirectSound;
 		critical_section m_BlockStreamingCalls;
+		event m_Event;
 
 		LPDIRECTSOUNDBUFFER m_lpdsb;
 		DWORD m_BufferSizeInBytes;
@@ -115,11 +121,13 @@ class DS_Output_Internal
 		DWORD m_PreviousFillPosition;
 		__int64 m_ClockPhaseOffset;  //This tunes the phase of the clock with the audio clock
 
+		std::function<void (size_t,short *,size_t)>	m_FillBufferCallback;
+
 		//This is for GetTimeElapsed
 		long m_GTE_LastCalled;
 		bool m_UseDisplayedCallbacks;
 		//This helps manage whether or not to use threading
-		bool m_UseThreading;
+		bool m_UseThreading=true;
 		//Some "digital" audio devices do not clock until they are active, this keeps a track on them via GetCursorPosition()
 		bool m_IsClocking = false;
 };
@@ -215,19 +223,20 @@ DS_Output_Internal::AudioFormatEnum DS_Output_Internal::GetFormat(WAVEFORMATEX *
 	return ret;
 }
 
+//we'll callback to a function like this to fill in the buffer
+void client_fillbuffer_default(size_t no_channels, short *dst_buffer, size_t no_samples)
+{
+	//static size_t count = 0;
+	//printf("Test %d", count++);
+	//TODO put a sine wave test in here
+}
 
 DS_Output_Internal::DS_Output_Internal() : 
 	m_IsStreaming(false),m_AudioOutput(),
 	m_lpdsb(NULL), m_BufferSizeInBytes(0), m_FillPosition(0), m_PreviousFillPosition(0), m_ClockPhaseOffset(0),
-	m_GTE_LastCalled(0), 
-	m_UseThreading(false)
+	m_GTE_LastCalled(0)
 { 
-	#ifdef __AlwaysUseThreading__
-	m_UseThreading=true;
-	#else
-	m_UseThreading = false;
-	#endif
-
+	m_FillBufferCallback = client_fillbuffer_default;
 	DS_Output_Core &DSOC=DS_Output_Core::GetDS_Output_Core();
 	//We shouldn't make this range the same value
 	m_FillPosition=0;
@@ -300,8 +309,40 @@ void DS_Output_Internal::StopStreaming(void)
 	if (m_IsStreaming)
 	{
 		m_IsStreaming = false;
+		//join... wait for thread to close:
+		size_t TimeOut = 0;
+		while (m_TaskState.wait_for(std::chrono::milliseconds(500)) != std::future_status::ready)
+		{
+			printf("waiting %d\n", TimeOut++);  //put else where so I can monitor both
+		}
 		m_lpdsb->Stop();
 	}
+}
+
+template<typename F, typename... Ts>
+inline std::future<typename std::result_of<F(Ts...)>::type> reallyAsync(F&& f, Ts&&... params) // return future for asynchronous call to f(params...)
+{
+	return std::async(std::launch::async,
+		std::forward<F>(f),
+		std::forward<Ts>(params)...);
+}
+
+__inline void MySleep(double Seconds)
+{
+	const int time_ms = (int)(Seconds*1000.0);
+	std::this_thread::sleep_for(std::chrono::milliseconds(time_ms));
+}
+
+void task_proc(DS_Output_Internal *instance)
+{
+	printf("starting task_proc()\n");
+	void *dummy_ptr=nullptr;
+	while (instance->GetIsStreaming())
+	{
+		//no spin management here:... delegate to client
+		(*instance)(dummy_ptr);
+	}
+	printf("ending task_proc()\n");
 }
 
 void DS_Output_Internal::StartStreaming(void)
@@ -310,8 +351,15 @@ void DS_Output_Internal::StartStreaming(void)
 	{
 		m_lpdsb->Play(0,0,DSBPLAY_LOOPING);
 		m_IsStreaming=true;
-		//now to set up the initial clock phase with the audio clock
+		if (m_UseThreading)
+		{
+			//m_pThread = new thread<DS_Output_Internal>(this);
+			//m_pThread->priority_above_normal();
+			//m_pThread->set_thread_name("Module.DirectSound.Output Main Thread");
+			m_TaskState=reallyAsync(task_proc,this);
+		}
 
+		//now to set up the initial clock phase with the audio clock
 		{
 			DS_Output_Core &DSOC=DS_Output_Core::GetDS_Output_Core();
 			DWORD BlockAlign=DSOC.GetWaveFormatToUse()->nBlockAlign;
@@ -354,10 +402,10 @@ void DS_Output_Internal::SetUseDisplayedCallbacks(bool UseDisplayedCallbacks)
 
 void DS_Output_Internal::deliver_audio(const audio_frame *p_frame)
 {
-	if (m_IsStreaming)
-	{
+	if (m_UseThreading)
+		m_Event.set();
+	else
 		FillBuffer();
-	}
 }
 
 double DS_Output_Internal::FillBuffer()
@@ -643,9 +691,11 @@ double DS_Output_Internal::FillBuffer()
 			size_t Sample1Length=dsbuflen1/BlockAlign;
 			assert(dsbuf1); //sanity check, should always have this if the lock was successful
 			//m_AudioMessageConverter.FillOutput(Source,0,(PBYTE)dsbuf1,Sample1Length);
+			m_FillBufferCallback(2, (short *)dsbuf1, Sample1Length);  //TODO cache number of channels
 
 			//May have a the wrap around case buffer, so we fill it accordingly
-			//if (dsbuf2)
+			if (dsbuf2)
+				m_FillBufferCallback(2, (short *)dsbuf2, dsbuflen2 / BlockAlign);
 			//	m_AudioMessageConverter.FillOutput(Source,Sample1Length,(PBYTE)dsbuf2,dsbuflen2/BlockAlign);
 			if FAILED(m_lpdsb->Unlock(dsbuf1,dsbuflen1,dsbuf2,dsbuflen2))
 				printf("Unable to unlock DS buffer\n");
@@ -669,7 +719,18 @@ double DS_Output_Internal::FillBuffer()
 	return ret;
 }
 
-
+void DS_Output_Internal::operator() (const void*)
+{
+	double TimeOut = FillBuffer(); //notify our stream to update
+	//printf("%f\n",TimeOut*1000.0);
+	if ((TimeOut > 0.0) && (TimeOut < 2.0))
+		m_Event.wait((DWORD)(TimeOut * 500.0));  //only wait half the time available (give it enough time to fill too)
+	else
+	{
+		printf("Unexpected return time from FillBuffer\n");
+		m_Event.wait(1000);
+	}
+}
   /************************************************************************/
  /*							  DS_Output_Core							 */
 /************************************************************************/

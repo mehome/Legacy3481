@@ -60,3 +60,32 @@ private:	// Internal data
 	critical_section	*m_pCritSec;
 	//mutex				*m_pMutex;
 };
+
+///	This class creates an event which can optionally trigger when it is waited upon.
+///	By default it's state is "Off"
+struct event
+{			// Constructor
+	event(const bool auto_reset = true);
+
+	// Destructor
+	~event(void);
+
+	// Wait for the event. If the time is exceeded, it will return false;
+	bool wait(const DWORD Time = INFINITE) const;
+
+	/// Set (and reset) the object
+	void set(const bool Flag = true /* false for reset */);
+
+	/// Reset the object. Same as calling Set(false)
+	void reset(void);
+
+	// Assign
+	void operator= (const bool value);
+	operator bool(void) const;
+
+	/// This is useful for cases where you need to work directly in win32 (e.g. overlapped io) where they need the handle
+	operator HANDLE (void) const;
+
+private:	/// The event handle
+	HANDLE m_event_handle;
+};

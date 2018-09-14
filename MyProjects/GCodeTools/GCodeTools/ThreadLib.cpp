@@ -122,3 +122,56 @@ auto_unlock::~auto_unlock(void)
 	if (m_pCritSec) m_pCritSec->lock();
 	//else if (m_pMutex) m_pMutex->lock();
 }
+
+
+
+// Constructor
+event::event(const bool auto_reset)
+	: m_event_handle(::CreateEvent(nullptr, auto_reset ? FALSE : TRUE, FALSE, nullptr))
+{
+	assert(m_event_handle);
+}
+
+// Destructor
+event::~event(void)
+{	// Kill the event
+	assert(m_event_handle);
+	::CloseHandle(m_event_handle);
+}
+
+bool event::wait(const DWORD Time) const
+{
+	assert(m_event_handle);
+	return (::WaitForSingleObject(m_event_handle, Time) == WAIT_OBJECT_0) ? true : false;
+}
+
+// Set (and reset) the object
+void event::set(const bool Flag /* false for reset */)
+{
+	assert(m_event_handle);
+	if (Flag)
+		::SetEvent(m_event_handle);
+	else	::ResetEvent(m_event_handle);
+}
+
+// Reset the object. Same as calling Set(false)
+void event::reset(void)
+{
+	set(false);
+}
+
+event::operator HANDLE (void) const
+{
+	return m_event_handle;
+}
+
+// Assign
+void event::operator= (const bool value)
+{
+	set(value);
+}
+
+event::operator bool(void) const
+{
+	return wait(0);
+}
