@@ -229,9 +229,14 @@ void client_fillbuffer_default(size_t no_channels, short *dst_buffer, size_t no_
 {
 	//static size_t count = 0;
 	//printf("Test %d", count++);
-	//static generator sine_wave_test;
-	//sine_wave_test.gen_sw_short(0, dst_buffer, no_samples);
-	//sine_wave_test.gen_sw_short(1, dst_buffer, no_samples);
+
+	//internal testing
+	#if 0
+	static generator sine_wave_test;
+	sine_wave_test.gen_sw_short(0, dst_buffer, no_samples);
+	sine_wave_test.frequency(1, 500.0);
+	sine_wave_test.gen_sw_short(1, dst_buffer+1, no_samples);
+	#endif
 }
 
 DS_Output_Internal::DS_Output_Internal() : 
@@ -698,7 +703,10 @@ double DS_Output_Internal::FillBuffer()
 
 			//May have a the wrap around case buffer, so we fill it accordingly
 			if (dsbuf2)
+			{
 				m_FillBufferCallback(2, (short *)dsbuf2, dsbuflen2 / BlockAlign);
+				//printf("test\n");
+			}
 			//	m_AudioMessageConverter.FillOutput(Source,Sample1Length,(PBYTE)dsbuf2,dsbuflen2/BlockAlign);
 			if FAILED(m_lpdsb->Unlock(dsbuf1,dsbuflen1,dsbuf2,dsbuflen2))
 				printf("Unable to unlock DS buffer\n");
@@ -727,7 +735,7 @@ void DS_Output_Internal::operator() (const void*)
 	double TimeOut = FillBuffer(); //notify our stream to update
 	//printf("%f\n",TimeOut*1000.0);
 	if ((TimeOut > 0.0) && (TimeOut < 2.0))
-		m_Event.wait((DWORD)(TimeOut * 500.0));  //only wait half the time available (give it enough time to fill too)
+		m_Event.wait((DWORD)(TimeOut * 0.90 * 1000.0));  //only a small percentage before to get enough time to fill
 	else
 	{
 		printf("Unexpected return time from FillBuffer\n");

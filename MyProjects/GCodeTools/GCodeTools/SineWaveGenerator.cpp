@@ -6,25 +6,24 @@
 generator::generator(size_t no_channels) :	m_waves(0),m_no_channels((int)no_channels),	m_sample_rate ( 48000 )
 {
 	for (signed i = 0; i < m_no_channels; i++)
-		m_waves[i] = new wave_descriptor;
+	{
+		wave_descriptor new_element;
+		m_waves.push_back(new_element);
+	}
 }
 
 generator::~generator()
 {
-	for( signed i=0; i < m_no_channels; i++ )
-		delete m_waves[i];
-
-	delete [] m_waves;
 }
 
 void generator::gen_sw_freq( size_t channel, float *dst_buffer, size_t no_samples )
 {
-	double			 freq_hz = m_waves[channel]->m_freq_hz;
-	double			 amplitude = m_waves[channel]->m_amplitude;
+	double			 freq_hz = m_waves[channel].m_freq_hz;
+	double			 amplitude = m_waves[channel].m_amplitude;
 	double			 rho, theta, scale, pi2;
 	size_t index=0; //array index of buffer
 
-	rho = m_waves[channel]->m_rho;
+	rho = m_waves[channel].m_rho;
 
 	pi2 = 3.1415926;
 	//Compute the angle ratio unit we are going to use
@@ -57,17 +56,17 @@ void generator::gen_sw_freq( size_t channel, float *dst_buffer, size_t no_sample
 		}
 	}
 	//save the sine wave state
-	m_waves[channel]->m_rho = rho;
+	m_waves[channel].m_rho = rho;
 }
 
 void generator::gen_sw_short(size_t channel, short *dst_buffer, size_t no_samples)
 {
-	double			 freq_hz = m_waves[channel]->m_freq_hz;
-	double			 amplitude = m_waves[channel]->m_amplitude;
+	double			 freq_hz = m_waves[channel].m_freq_hz;
+	double			 amplitude = m_waves[channel].m_amplitude;
 	double			 rho, theta, scale, pi2;
 	size_t index = 0; //array index of buffer
 
-	rho = m_waves[channel]->m_rho;
+	rho = m_waves[channel].m_rho;
 
 	pi2 = 3.1415926;
 	//Compute the angle ratio unit we are going to use
@@ -101,7 +100,7 @@ void generator::gen_sw_short(size_t channel, short *dst_buffer, size_t no_sample
 		}
 	}
 	//save the sine wave state
-	m_waves[channel]->m_rho = rho;
+	m_waves[channel].m_rho = rho;
 }
 
 

@@ -15,15 +15,12 @@ struct generator
 		//This one works with a fixed rate and keeps track of where the wave leaves off from a previous buffer packet.
 		void gen_sw_freq(size_t channel, float *dst_buffer, size_t no_samples);
 		void gen_sw_short(size_t channel, short *dst_buffer, size_t no_samples);
-protected:
 		//sets the buffer fill list's set frequency		
-	void frequency(size_t channel, double Frequency) { m_waves[channel]->m_freq_hz = Frequency; }
+		void frequency(size_t channel, double Frequency) { m_waves[channel].m_freq_hz = Frequency; }
 		
 		//sets the buffer fill list's set amplitude
-	void amplitude(size_t channel, double Amplitude) { m_waves[channel]->m_amplitude = Amplitude; }
-	//TODO set number of channels (currently hard coded to 2)
-
-
+		void amplitude(size_t channel, double Amplitude) { m_waves[channel].m_amplitude = Amplitude; }
+		protected:
 		//sample rate to generate at
 		int m_sample_rate;
 
@@ -50,6 +47,6 @@ protected:
 		};
 		
 		//ptr to array of wave descriptors to be used in generating individual waves for each channel
-		wave_descriptor **m_waves;
+		std::vector<wave_descriptor> m_waves;
 };
 
