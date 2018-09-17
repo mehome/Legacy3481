@@ -83,12 +83,6 @@ DirectSound_Globals *g_DirectSoundInitializer=NULL;
 class DS_Output_Internal
 {
 	public:
-		enum AudioFormatEnum
-		{
-			eU8, eS16, eS32, eF32
-		};
-		AudioFormatEnum GetFormat(WAVEFORMATEX *wfm);
-
 		DS_Output_Internal();
 		~DS_Output_Internal();
 
@@ -201,28 +195,6 @@ using namespace DirectSound::Output;
   /*************************************************************************/
  /*							 DS_Output_Internal							  */			
 /*************************************************************************/
-
-DS_Output_Internal::AudioFormatEnum DS_Output_Internal::GetFormat(WAVEFORMATEX *wfm)
-{
-	AudioFormatEnum ret=eS16;  //give default value for failure to init case
-	size_t BitDepth=DS_Output_Core::GetDS_Output_Core().GetBitsPerSample();
-	switch (BitDepth)
-	{
-		case 8:		ret=eU8;	break;
-		case 16:	ret=eS16;	break;
-		case 32:
-			WORD wfm_tag=wfm->wFormatTag;
-			if (wfm_tag==WAVE_FORMAT_IEEE_FLOAT)
-				ret=eF32;
-			else
-			{
-				assert(wfm_tag==WAVE_FORMAT_PCM);  //sanity check
-				ret=eS32;
-			}
-			break;
-	}
-	return ret;
-}
 
 //we'll callback to a function like this to fill in the buffer
 void client_fillbuffer_default(size_t no_channels, short *dst_buffer, size_t no_samples)
@@ -735,7 +707,7 @@ void DS_Output_Internal::operator() (const void*)
 	double TimeOut = FillBuffer(); //notify our stream to update
 	//printf("%f\n",TimeOut*1000.0);
 	if ((TimeOut > 0.0) && (TimeOut < 2.0))
-		m_Event.wait((DWORD)(TimeOut * 0.90 * 1000.0));  //only a small percentage before to get enough time to fill
+		m_Event.wait((DWORD)(TimeOut * 0.50 * 1000.0));  //only a small percentage before to get enough time to fill
 	else
 	{
 		printf("Unexpected return time from FillBuffer\n");
