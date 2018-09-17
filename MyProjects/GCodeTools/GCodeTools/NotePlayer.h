@@ -9,7 +9,8 @@ class NotePlayer
 {
 public:
 	NotePlayer();
-	bool LoadSequence(const char *filename);
+	//compact text format NULL will use default song, returns true if successful
+	bool LoadSequence_CT(const char *filename);
 	void Play();
 	void Stop();
 	void Seek(size_t position);
