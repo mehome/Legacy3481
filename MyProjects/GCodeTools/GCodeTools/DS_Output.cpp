@@ -10,6 +10,7 @@ namespace DirectSound
 	}
 }
 #include "ThreadLib.h"
+#include "SineWaveGenerator.h"   //for internal testing
 
 #include <algorithm>
 #include <dsound.h>
@@ -228,7 +229,9 @@ void client_fillbuffer_default(size_t no_channels, short *dst_buffer, size_t no_
 {
 	//static size_t count = 0;
 	//printf("Test %d", count++);
-	//TODO put a sine wave test in here
+	//static generator sine_wave_test;
+	//sine_wave_test.gen_sw_short(0, dst_buffer, no_samples);
+	//sine_wave_test.gen_sw_short(1, dst_buffer, no_samples);
 }
 
 DS_Output_Internal::DS_Output_Internal() : 

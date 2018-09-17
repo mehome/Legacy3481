@@ -3,7 +3,7 @@
 #include "SineWaveGenerator.h"
 
 
-generator::generator() :	m_waves(0),m_no_channels(2),	m_sample_rate ( 48000 )
+generator::generator(size_t no_channels) :	m_waves(0),m_no_channels((int)no_channels),	m_sample_rate ( 48000 )
 {
 	for (signed i = 0; i < m_no_channels; i++)
 		m_waves[i] = new wave_descriptor;
@@ -59,6 +59,51 @@ void generator::gen_sw_freq( size_t channel, float *dst_buffer, size_t no_sample
 	//save the sine wave state
 	m_waves[channel]->m_rho = rho;
 }
+
+void generator::gen_sw_short(size_t channel, short *dst_buffer, size_t no_samples)
+{
+	double			 freq_hz = m_waves[channel]->m_freq_hz;
+	double			 amplitude = m_waves[channel]->m_amplitude;
+	double			 rho, theta, scale, pi2;
+	size_t index = 0; //array index of buffer
+
+	rho = m_waves[channel]->m_rho;
+
+	pi2 = 3.1415926;
+	//Compute the angle ratio unit we are going to use
+	theta = freq_hz / m_sample_rate;
+	pi2 *= 2.0;
+	//Convert the angle ratio unit into radians
+	theta *= pi2;
+
+	//set our scale... this is also the size of the radius 
+	scale = amplitude;
+
+	{
+		size_t				 siz = no_samples;
+		double				 sample;
+
+
+		while (siz--)
+		{
+			//Find Y given the hypotenuse (scale) and the angle (rho)
+			//Note: using sin will solve for Y, and give us an initial 0 size
+			sample = sin(rho) * scale;
+			//increase our angular measurement
+			rho += theta;
+			//bring back the angular measurement by the length of the circle when it has completed a revolution
+			if (rho > pi2)
+				rho -= pi2;
+
+			//*(((float *)(dst_buffer)) + (index++)) = (float)sample;
+			*(((short *)(dst_buffer)) + (index+= m_no_channels)) = (short)(sample*(double)0x7fff);
+
+		}
+	}
+	//save the sine wave state
+	m_waves[channel]->m_rho = rho;
+}
+
 
 #if 0
 void generator::process_xml( const FrameWork::Communication2::message::xml *p_msg )
