@@ -2,13 +2,6 @@
 
 #include "pch.h"
 #include "GCodeTools.h"
-namespace DirectSound
-{
-	namespace Output
-	{
-#include "DS_Output.h"
-	}
-}
 #include "NotePlayer.h"
 
 std::vector<std::string>& split(const std::string& s,
@@ -38,6 +31,7 @@ private:
 public:
 	GCodeTools_Internal()
 	{
+		m_NotePlayer.Link_DSound(std::make_shared<DirectSound::Output::DS_Output>(m_DS));
 	}
 	void connect()
 	{
@@ -47,6 +41,8 @@ public:
 	void TestSound_Stop() { m_DS.StopStreaming(); }
 
 	bool LoadSequence_CT(const char *filename) { return m_NotePlayer.LoadSequence_CT(filename); }
+	void PlayBlock(size_t block_number) { m_NotePlayer.PlayBlock(block_number); }
+	void Stop_NotePlayer() { m_NotePlayer.Stop(); }
 };
 
   /*******************************************************************************************************/
@@ -74,4 +70,12 @@ void GCodeTools::TestSound_Stop()
 bool GCodeTools::LoadSequence_CT(const char *filename)
 {
 	return m_p_GCodeTools->LoadSequence_CT(filename);
+}
+void GCodeTools::PlayBlock(size_t block_number)
+{
+	m_p_GCodeTools->PlayBlock(block_number);
+}
+void GCodeTools::Stop_NotePlayer()
+{
+	m_p_GCodeTools->Stop_NotePlayer();
 }

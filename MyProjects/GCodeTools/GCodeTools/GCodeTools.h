@@ -11,6 +11,8 @@ public:
 	void TestSound_Start();
 	void TestSound_Stop();
 	bool LoadSequence_CT(const char *filename);
+	void PlayBlock(size_t block_number);
+	void Stop_NotePlayer();
 private:
 	std::shared_ptr<GCodeTools_Internal> m_p_GCodeTools; //a pimpl idiom (using shared_ptr allows declaration to be hidden from destructor)
 };

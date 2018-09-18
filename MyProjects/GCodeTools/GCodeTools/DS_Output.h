@@ -17,7 +17,7 @@ class  DS_Output
 
 		virtual void StartStreaming(void);
 		virtual void StopStreaming(void);
-
+		void SetCallbackFillBuffer(std::function<void(size_t, short *, size_t)> callback);
 
 	protected:
 

@@ -86,6 +86,7 @@ class DS_Output_Internal
 		DS_Output_Internal();
 		~DS_Output_Internal();
 
+		void SetCallbackFillBuffer(std::function<void(size_t, short *, size_t)> callback) { m_FillBufferCallback = callback; }
 		void deliver_audio(const audio_frame *p_frame);
 
 		virtual void StartStreaming(void);
@@ -1203,6 +1204,11 @@ DS_Output::DS_Output()
 	m_DS = std::make_shared<DS_Output_Internal>();
 }
 
+void DS_Output::SetCallbackFillBuffer(std::function<void(size_t, short *, size_t)> callback)
+{
+	m_DS->SetCallbackFillBuffer(callback);
+}
+
 DS_Output::~DS_Output()
 {
 	#if 0
@@ -1266,3 +1272,4 @@ void DirectSound_Initializer::ShutDown_DirectSound(void)
 	}
 }
 
+void SetCallbackFillBuffer(std::function<void(size_t, short *, size_t)> callback);

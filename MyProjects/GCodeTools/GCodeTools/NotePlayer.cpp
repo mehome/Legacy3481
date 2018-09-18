@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Time_Type.h"
 #include "NotePlayer.h"
-
+#include "SineWaveGenerator.h"
 //For now using a similar type of data structure as that used in OctaMed
 struct Song
 {
@@ -15,8 +15,17 @@ struct Song
 		double FreqInHertz; //zero indicates rest
 		double Duration;
 	};
-	using Track = std::map<double, Note>; //a list of notes for one track with PTS (in seconds) in a map form where zero point of origin is per block
-	using Block= std::map<size_t,Track>;  //we'll just map out the voices as well
+	struct Track
+	{
+		std::map<double, Note> notes; //a list of notes for one track with PTS (in seconds) in a map form where zero point of origin is per block
+		double current_time=0.0;  //maintain last time for this track (for append, and for duration count)
+	};
+	struct Block
+	{
+		std::map<size_t, Track> tracks;  //we'll just map out the voices as well
+		using block_iter = std::map<size_t, Track>::iterator;
+		double block_duration=0.0;
+	};
 	using Sequence = std::map<size_t, Block>;
 
 	double BeatPerMinute = 120;  //a master clock for playback... default to an easy divisible number for debugging
@@ -27,6 +36,7 @@ class NotePlayer_Internal
 {
 private:
 	Song m_Song;
+
 	//--- is rest, G-4, G#4, G$4, shows note, accidental, and octave respectively, returns zero if its a rest
 	__inline double GetFrequency(const char *Note)
 	{
@@ -90,17 +100,17 @@ private:
 		}
 		using Block = Song::Block;
 		using Track = Song::Track;
-		Block::iterator iter = block.find(TrackNumber);
-		if (iter == block.end())
+		Block::block_iter iter = block.tracks.find(TrackNumber);
+		if (iter == block.tracks.end())
 		{
-			block[TrackNumber] = Track();
-			iter = block.find(TrackNumber);
+			block.tracks[TrackNumber] = Track();
+			iter = block.tracks.find(TrackNumber);
 		}
-		if (iter != block.end())
+		if (iter != block.tracks.end())
 		{
 			Track &track = iter->second;
 			//add notes here:
-			double current_time = 0;  //TODO find last element's time to append
+			double current_time = track.current_time; //the easy way to find where we are
 			const char *index_ptr = &CTM[0];
 			size_t Octave = 4;  // a good default, but the content should override this
 			char accidental = '-';  //either - #, or $
@@ -188,12 +198,13 @@ private:
 					const double duration = WPS * DurationScaleFactor;
 					//populate the note
 					Song::Note note(frequency, duration);
-					track[current_time] = note;
+					track.notes[current_time] = note;
 					//reset accidental for next note
 					accidental = '-';
 					//reset dotted
 					Dotted = false;
 					current_time += duration; //advance the time
+					track.current_time = current_time;  //update the length of the track
 					break;
 				}
 				default:
@@ -249,7 +260,12 @@ private:
 					while ((*index_ptr != 'v') && (*index_ptr != 'V') && (*index_ptr != 0))
 						TrackSegment += *index_ptr++;
 					//Note: for now BPM is global, can make per block later
-					ret=AppendTrack_CT(TrackSegment.c_str(), iter->second, track_no, m_Song.BeatPerMinute);
+					Block &block = iter->second;
+					ret=AppendTrack_CT(TrackSegment.c_str(), block, track_no, m_Song.BeatPerMinute);
+					//augment the block duration to the track with the greatest amount of time
+					//we can leave it this simple as I do not intend to make blocks shorter using this kind of parser
+					if (block.tracks[track_no].current_time > block.block_duration)
+						block.block_duration = block.tracks[track_no].current_time;
 					if (!ret)
 					{
 						assert(false);
@@ -264,10 +280,104 @@ private:
 			assert(false);
 		return ret;
 	}
+
+	//This will play the song by populating callback buffers from dsound
+	class WavePlayer
+	{
+	private:
+		std::shared_ptr<DirectSound::Output::DS_Output> m_DSound;
+		generator sine_wave;
+		size_t m_block_number = 0;
+		double m_current_block_time = 0.0;
+		bool m_IsStreaming=false;
+
+		//Not sure yet if I need to cache the track positions like this, but I will need to get the actual block
+#if 0
+		struct Song_Cache
+		{
+			struct Track
+			{
+				size_t note_index=0;
+				double current_time = 0.0;  //how much time into this note we are
+			};
+			struct Block
+			{
+				std::map<size_t, Track> tracks;  //we'll just map out the voices as well
+				using block_iter = std::map<size_t, Track>::iterator;
+				//double current_time = 0.0;  not sure yet if I need this
+			};
+			using Sequence = std::map<size_t, Block>;
+
+			double BeatPerMinute = 120;  //a master clock for playback... default to an easy divisible number for debugging
+			Sequence Music_Cache;  //A container to store the song
+		} m_cache;
+		Song_Cache::Block &FindBlock()
+		{
+			using Sequence = Song_Cache::Sequence;
+			using Block = Song_Cache::Block;
+			Sequence &music = m_cache.Music_Cache;
+			Sequence::iterator iter = music.find(m_block_number);
+			if (iter == music.end())
+			{
+				music[m_block_number] = Block();
+				iter = music.find(m_block_number);
+			}
+			if (iter != music.end())
+			{
+				return iter->second;
+			}
+			else
+			{
+				assert(false);
+				Block *block = nullptr;
+				return *block;  //not going to make this recoverable
+			}
+		}
+#endif
+		void client_fillbuffer(size_t no_channels, short *dst_buffer, size_t no_samples)
+		{
+			printf("time=%.2f %d\n",m_current_block_time,no_samples);
+			//Use cache to determine which note to play
+			//using Block = Song_Cache::Block;
+			//Block block = FindBlock();
+			//advance time
+			m_current_block_time += no_samples / 48000.0;  //TODO: I shouldn't hard code the samplerate
+		}
+	public:
+		void Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> &instance)
+		{
+			m_DSound = instance;
+			//Use a lambda technique to provide a standard function to callback to a method
+			std::function<void(size_t ,short *,size_t )> Callback = [this](size_t no_channels,short *dst_buffer,size_t no_samples)
+			{ this->client_fillbuffer(no_channels,dst_buffer,no_samples); };
+			m_DSound->SetCallbackFillBuffer(Callback);
+		}
+		void StartStreaming()
+		{
+			if (!m_IsStreaming)
+			{
+				m_IsStreaming = true;
+				m_DSound->StartStreaming();
+			}
+		}
+		void StopStreaming()
+		{
+			if (m_IsStreaming)
+			{
+				m_IsStreaming = false;
+				m_DSound->StopStreaming();
+			}
+		}
+		void SetBlockNumber(size_t block_no) { m_block_number = block_no; }
+		void SetBlockTime(double time) { m_current_block_time = time; }
+	} m_WavePlayer;
 public:
 	NotePlayer_Internal()
 	{
-
+	}
+	void Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> &instance)
+	{
+		m_WavePlayer.Link_DSound(instance);
 	}
 	bool LoadSequence_CT(const char *filename)
 	{
@@ -277,14 +387,24 @@ public:
 			const char *const ctm = "v1o4sreao5co4bebo5diceo4#go5e";
 			ret =PopulateBlock_CT(ctm,0);
 		}
+		//TODO load a file and populate it per line per block
 		return ret;
 	}
-	void Play()
-	{}
+	void PlayBlock(size_t block_number)
+	{
+		m_WavePlayer.StopStreaming();  //stop it if it was playing
+		//setup the play cursor
+		m_WavePlayer.SetBlockNumber(block_number);
+		m_WavePlayer.SetBlockTime(0.0);
+		m_WavePlayer.StartStreaming();
+	}
 	void Stop()
-	{}
-	void Seek(size_t position)
-	{}
+	{
+		m_WavePlayer.StopStreaming();
+	}
+	void SeekBlock(double position)
+	{
+	}
 	bool ExportGCode(const char *filename)
 	{}
 };
@@ -302,4 +422,23 @@ NotePlayer::NotePlayer()
 bool NotePlayer::LoadSequence_CT(const char *filename)
 {
 	return m_Player->LoadSequence_CT(filename);
+}
+
+void NotePlayer::Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> &instance) 
+{
+	m_Player->Link_DSound(instance);
+}
+
+void NotePlayer::PlayBlock(size_t block_number)
+{
+	m_Player->PlayBlock(block_number);
+}
+
+void NotePlayer::Stop()
+{
+	m_Player->Stop();
+}
+
+void NotePlayer::SeekBlock(double position)
+{
 }
