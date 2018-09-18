@@ -386,10 +386,16 @@ private:
 		void Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> &instance)
 		{
 			m_DSound = instance;
+			#if 0
 			//Use a lambda technique to provide a standard function to callback to a method
-			std::function<void(size_t ,short *,size_t )> Callback = [this](size_t no_channels,short *dst_buffer,size_t no_samples)
-			{ this->client_fillbuffer(no_channels,dst_buffer,no_samples); };
+			auto Callback = [this](size_t no_channels,short *dst_buffer,size_t no_samples) 	
+				{ 	this->client_fillbuffer(no_channels,dst_buffer,no_samples); 
+				};
 			m_DSound->SetCallbackFillBuffer(Callback);
+			#else
+			//Using std::bind also works making it a bit more streamlined
+			m_DSound->SetCallbackFillBuffer(std::bind(&WavePlayer::client_fillbuffer,this,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
+			#endif	
 		}
 		void StartStreaming()
 		{
