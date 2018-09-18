@@ -14,7 +14,7 @@ struct generator
 		
 		//This one works with a fixed rate and keeps track of where the wave leaves off from a previous buffer packet.
 		void gen_sw_freq(size_t channel, float *dst_buffer, size_t no_samples);
-		void gen_sw_short(size_t channel, short *dst_buffer, size_t no_samples);
+		void gen_sw_short(size_t channel, short *dst_buffer, size_t no_samples, bool addsample = false);
 		//sets the buffer fill list's set frequency		
 		void frequency(size_t channel, double Frequency) { m_waves[channel].m_freq_hz = Frequency; }
 		

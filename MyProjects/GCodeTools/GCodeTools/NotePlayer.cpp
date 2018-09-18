@@ -28,6 +28,9 @@ struct Song
 		using const_block_iter = std::map<size_t, Track>::const_iterator;
 		double block_duration=0.0;
 	};
+	//Actually there would be another layer where the sequence represented block numbers, but I'm not going that far yet
+	//for now its one block list that goes from start to finish... no repeats, as long as the song technique is method driven to advance
+	//it should be seamless to add later
 	using Sequence = std::map<size_t, Block>;
 
 	double BeatPerMinute = 120;  //a master clock for playback... default to an easy divisible number for debugging
@@ -304,10 +307,16 @@ private:
 				{
 				}
 				const Song::Track *track_ptr=nullptr;  //the actual track
-				double m_LastPositionTime=0.0;  //last time of this note
+				//double m_LastPositionTime=0.0;  //last time of this note  <---we may be able to work without this
 				Song::Track::const_track_iter m_NoteIndex;  //keep index on note
 			};
 			std::vector<Track_Cache> m_tracks;
+			void flush()
+			{
+				m_tracks.clear();
+				m_LastBlock_ptr = nullptr;
+				m_LastBlock_Number = -1;
+			}
 		} m_cache;
 
 		const Song::Block *FindBlock()
@@ -350,9 +359,11 @@ private:
 				assert(a_begin == b_begin);   //This better be true... we may have to deal with precision issues later
 				ret = true;
 			}
+			return ret;
 		}
 		void client_fillbuffer(size_t no_channels, short *dst_buffer, size_t no_samples)
 		{
+			assert(no_channels == 2);  //always work with 2 channels
 			const double sample_rate = 48000.0; //TODO: I shouldn't hard code the samplerate
 			const double duration= no_samples / sample_rate;
 			//printf("time=%.2f %d\n",m_current_block_time,no_samples);
@@ -372,9 +383,78 @@ private:
 						m_cache.m_tracks.push_back(Song_Cache::Track_Cache(&i.second));
 				}
 				const double end_time = m_current_block_time + duration;  //handy to have this for range
+				size_t voice = 0;  //keep track of the track count to work out how to add on the sine wave
+				short *dst_buffer_index = dst_buffer;
+				short *dst_buffer_end = dst_buffer + (no_samples * no_channels);  //must never pass this point
+				double current_time_index = m_current_block_time;
 				for (auto &i : m_cache.m_tracks)
 				{
-					//Now we have a track determine our note index and time
+					const size_t channel = voice & 1;  //all odd's on one side, all evens on the other
+					const bool add_samples = voice > 1;  //all voice past the first two need to be added 
+					voice++;  //done reading voice... increment for next iteration
+
+					while ((dst_buffer_index < dst_buffer_end)&&(i.m_NoteIndex!=i.track_ptr->notes.end()))
+					{
+						//Now we have a track determine our note index and time
+						const double note_start = i.m_NoteIndex->first;
+						const double note_duration = i.m_NoteIndex->second.Duration;
+						const double note_end = note_start + note_duration;
+						//TODO find way to pick note if it isn't in range
+						if (NoteInRange(note_start, note_end, current_time_index, end_time))
+						{
+							if (note_start > current_time_index)
+							{
+								assert(note_start != 0.0); //this should not be possible!
+								//grab previous note
+								Song::Track::const_track_iter prev_note = i.m_NoteIndex;
+								prev_note--;
+								if (prev_note->first > current_time_index)
+								{
+									assert(false);
+									//todo else.. seeking using find assign to prev_note
+								}
+								size_t pre_no_samples = (size_t)((note_start - current_time_index) * sample_rate);
+								//sanity check... todo this may be possible if we have spaces, but since we have rests, it shouldn't be an issue
+								assert(pre_no_samples <= (size_t)(prev_note->second.Duration * sample_rate));
+								//populate this range with this note's frequency... todo may need to do multiple notes here
+								sine_wave.frequency(channel, prev_note->second.FreqInHertz);
+								sine_wave.gen_sw_short(channel, dst_buffer_index + channel, pre_no_samples);
+								//advance the dest buffer index
+								dst_buffer_index += (pre_no_samples* no_channels);
+								current_time_index = note_start;
+							}
+							//Now the current time and the note time are either aligned, or the note already has played from a previous fill buffer
+							double adjusted_duration = note_end - current_time_index;
+							size_t adj_no_samples = (size_t)(adjusted_duration * sample_rate);  //start with the maximum amount of samples to populate
+							const size_t samples_remain = (dst_buffer_end - dst_buffer_index) / no_channels;
+							bool advance_note = true;
+							if (adj_no_samples > samples_remain)
+							{
+								adj_no_samples = samples_remain;
+								adjusted_duration = adj_no_samples / sample_rate;
+								advance_note = false;
+							}
+							sine_wave.frequency(channel, i.m_NoteIndex->second.FreqInHertz);
+							sine_wave.gen_sw_short(channel, dst_buffer_index + channel, adj_no_samples);
+							//advance the dest buffer index
+							dst_buffer_index += (adj_no_samples* no_channels);
+							current_time_index += adjusted_duration;
+							//advance to the next note:
+							if (advance_note)
+								i.m_NoteIndex++;
+						}
+					}
+					//I'll leave this in for now for play block, but once we can distinguish between play song I'll need to advance the block
+					#if 1
+					if (dst_buffer_index < dst_buffer_end)
+					{
+						//this will happen when we reach the end of the block... for now we simply fill with silence, but we may loop as well
+						const size_t samples_remain = (dst_buffer_end - dst_buffer_index) / no_channels;
+						sine_wave.frequency(channel, 0.0);
+						sine_wave.gen_sw_short(channel, dst_buffer_index + channel, samples_remain);
+						//nothing to advance here
+					}
+					#endif		
 				}
 			}
 			//advance time
@@ -386,7 +466,8 @@ private:
 		void Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> &instance)
 		{
 			m_DSound = instance;
-			#if 0
+			//I'll keep both techniques for reference, but lambda technique is more efficent
+			#if 1
 			//Use a lambda technique to provide a standard function to callback to a method
 			auto Callback = [this](size_t no_channels,short *dst_buffer,size_t no_samples) 	
 				{ 	this->client_fillbuffer(no_channels,dst_buffer,no_samples); 
@@ -411,6 +492,8 @@ private:
 			{
 				m_IsStreaming = false;
 				m_DSound->StopStreaming();
+				m_current_block_time = 0.0;
+				m_cache.flush();
 			}
 		}
 		void SetBlockNumber(size_t block_no) { m_block_number = block_no; }

@@ -59,7 +59,7 @@ void generator::gen_sw_freq( size_t channel, float *dst_buffer, size_t no_sample
 	m_waves[channel].m_rho = rho;
 }
 
-void generator::gen_sw_short(size_t channel, short *dst_buffer, size_t no_samples)
+void generator::gen_sw_short(size_t channel, short *dst_buffer, size_t no_samples, bool addsample)
 {
 	double			 freq_hz = m_waves[channel].m_freq_hz;
 	double			 amplitude = m_waves[channel].m_amplitude;
@@ -95,8 +95,10 @@ void generator::gen_sw_short(size_t channel, short *dst_buffer, size_t no_sample
 				rho -= pi2;
 
 			//*(((float *)(dst_buffer)) + (index++)) = (float)sample;
-			*(((short *)(dst_buffer)) + (index+= m_no_channels)) = (short)(sample*(double)0x7fff);
-
+			if (!addsample)
+				*(((short *)(dst_buffer)) + (index+= m_no_channels)) = (short)(sample*(double)0x7fff);
+			else
+				*(((short *)(dst_buffer)) + (index += m_no_channels)) += (short)(sample*(double)0x7fff);
 		}
 	}
 	//save the sine wave state
