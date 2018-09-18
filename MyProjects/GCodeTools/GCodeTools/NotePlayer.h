@@ -25,7 +25,7 @@ public:
 	void PlayBlock(size_t block_number);
 	void Stop();
 	void SeekBlock(double position);  // in seconds
-	//bool ExportGCode(const char *filename);
+	bool ExportGCode(const char *filename);
 private:
 	std::shared_ptr<NotePlayer_Internal>  m_Player; //encapsulate SDK specifics from public
 };

@@ -500,6 +500,16 @@ private:
 		void SetBlockNumber(size_t block_no) { m_block_number = block_no; }
 		void SetBlockTime(double time) { m_current_block_time = time; }
 	} m_WavePlayer;
+	class GCode_Writer
+	{
+	private:
+		std::string m_BlockWrite;
+	public:
+		const char *WriteBlock()
+		{
+			return m_BlockWrite.c_str();
+		}
+	} m_GCode_Writer;
 public:
 	NotePlayer_Internal() : m_WavePlayer(m_Song)
 	{
@@ -541,7 +551,13 @@ public:
 	{
 	}
 	bool ExportGCode(const char *filename)
-	{}
+	{
+		//for now do one block
+		const char *block=m_GCode_Writer.WriteBlock();
+		if (!filename)
+			printf("test->%s\n",block);
+		return (block != nullptr);
+	}
 };
 
 
@@ -576,4 +592,9 @@ void NotePlayer::Stop()
 
 void NotePlayer::SeekBlock(double position)
 {
+}
+
+bool NotePlayer::ExportGCode(const char *filename)
+{
+	return m_Player->ExportGCode(filename);
 }
