@@ -10,6 +10,8 @@ struct Song
 		Note(double _FreqInHertz, double _Duration) : FreqInHertz(_FreqInHertz), Duration(_Duration)
 		{
 		}
+		Note() : FreqInHertz(1000.0),Duration(1.0)
+		{}
 		double FreqInHertz; //zero indicates rest
 		double Duration;
 	};
@@ -28,6 +30,8 @@ private:
 	//--- is rest, G-4, G#4, G$4, shows note, accidental, and octave respectively, returns zero if its a rest
 	__inline double GetFrequency(const char *Note)
 	{
+		if (Note[0] == '-')
+			return 0.0;
 		//using equal temperment the formula is
 		//https://pages.mtu.edu/~suits/NoteFreqCalcs.html
 		//fn = f0 *(a)^(1/12)
@@ -46,12 +50,12 @@ private:
 		{
 		//A already set
 		//case 'A': break;
-		case 'B':		halfstep_count = 2;		break;
-		case 'C':		halfstep_count = 3;		Octave--;	break;
-		case 'D':		halfstep_count = 5;		Octave--;	break;
-		case 'E':		halfstep_count = 7;		Octave--;	break;
-		case 'F':		halfstep_count = 8;		Octave--;	break;
-		case 'G':		halfstep_count = 10;	Octave--;	break;
+		case 'b':case 'B':		halfstep_count = 2;		break;
+		case 'c':case 'C':		halfstep_count = 3;		Octave--;	break;
+		case 'd':case 'D':		halfstep_count = 5;		Octave--;	break;
+		case 'e':case 'E':		halfstep_count = 7;		Octave--;	break;
+		case 'f':case 'F':		halfstep_count = 8;		Octave--;	break;
+		case 'g':case 'G':		halfstep_count = 10;	Octave--;	break;
 		}
 		if (Note[1] == '#')
 			halfstep_count++;
@@ -64,8 +68,8 @@ private:
 		}
 		//Not going to optimize this... trusting the compiler to do so
 		double frequency = 27.5;  //start with A0 fixed frequency... doubling it per octave set
-		for (size_t i = 0; i < halfstep_count; i++)
-			Octave *= 2;
+		for (size_t i = 0; i < Octave; i++)
+			frequency *= 2;
 		//using this fixed frequency multiply a for each half step
 		double halfstep_powered=1.0;
 		for (size_t i = 0; i < halfstep_count; i++)
@@ -120,6 +124,7 @@ private:
 						assert(false);
 						break;
 					}
+					break;
 				case '$':
 				case '#':
 					accidental = *index_ptr;
@@ -166,30 +171,44 @@ private:
 				case 'F':
 				case 'g':
 				case 'G':
+				case 'r':
+				case 'R':
+				{
 					//form the note:
-					std::string Note;
-					Note[0] = *index_ptr;
-					Note[1] = accidental;
-					Note[2] = (char)Octave + '0';
+					std::string Note="---"; //default to a rest
+					//if it is not a rest put in the note
+					if ((*index_ptr != 'r') && (*index_ptr != 'R'))
+					{
+						Note[0] = *index_ptr;
+						Note[1] = accidental;
+						Note[2] = (char)Octave + '0';
+					}
 					double frequency = GetFrequency(Note.c_str());
 					//now to compute duration
 					const double duration = WPS * DurationScaleFactor;
 					//populate the note
 					Song::Note note(frequency, duration);
-					//track[current_time] = note;
+					track[current_time] = note;
 					//reset accidental for next note
 					accidental = '-';
 					//reset dotted
 					Dotted = false;
+					current_time += duration; //advance the time
 					break;
 				}
+				default:
+					assert(false);  //what do we have
+				}
+				index_ptr++;  //all cases should advance... we can make exceptions if necessary
 			}
+			ret = *index_ptr == 0;
 		}
 		return ret;
 	}
 	//Block starting with 0... block may be appended on multiple calls
 	bool PopulateBlock_CT(const char *CompactTextMusic,size_t BlockNumber)
 	{
+		bool ret = false;
 		const char * const CTM = CompactTextMusic; //shorthand
 		//preconditions, must be valid and should start with a voice and number and have some data in it
 		if ((!CTM) || strlen(CTM) < 3)
@@ -230,7 +249,8 @@ private:
 					while ((*index_ptr != 'v') && (*index_ptr != 'V') && (*index_ptr != 0))
 						TrackSegment += *index_ptr++;
 					//Note: for now BPM is global, can make per block later
-					if (!AppendTrack_CT(TrackSegment.c_str(),iter->second, track_no, m_Song.BeatPerMinute))
+					ret=AppendTrack_CT(TrackSegment.c_str(), iter->second, track_no, m_Song.BeatPerMinute);
+					if (!ret)
 					{
 						assert(false);
 						break;
@@ -242,7 +262,6 @@ private:
 		}
 		else
 			assert(false);
-		bool ret = false;
 		return ret;
 	}
 public:
@@ -255,7 +274,7 @@ public:
 		bool ret = false;
 		if (!filename || filename[0]==0)
 		{
-			const char *const ctm = "v1o4eao5co4bebo5diceo4#go5e";
+			const char *const ctm = "v1o4sreao5co4bebo5diceo4#go5e";
 			ret =PopulateBlock_CT(ctm,0);
 		}
 		return ret;
