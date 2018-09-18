@@ -18,7 +18,7 @@ class NotePlayer
 {
 public:
 	NotePlayer();
-	void Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> &instance);
+	void Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> instance);
 
 	//compact text format NULL will use default song, returns true if successful
 	bool LoadSequence_CT(const char *filename);

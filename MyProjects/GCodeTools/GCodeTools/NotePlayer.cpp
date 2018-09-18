@@ -18,12 +18,14 @@ struct Song
 	struct Track
 	{
 		std::map<double, Note> notes; //a list of notes for one track with PTS (in seconds) in a map form where zero point of origin is per block
+		using const_track_iter = std::map<double, Note>::const_iterator;
 		double current_time=0.0;  //maintain last time for this track (for append, and for duration count)
 	};
 	struct Block
 	{
 		std::map<size_t, Track> tracks;  //we'll just map out the voices as well
 		using block_iter = std::map<size_t, Track>::iterator;
+		using const_block_iter = std::map<size_t, Track>::const_iterator;
 		double block_duration=0.0;
 	};
 	using Sequence = std::map<size_t, Block>;
@@ -290,60 +292,97 @@ private:
 		size_t m_block_number = 0;
 		double m_current_block_time = 0.0;
 		bool m_IsStreaming=false;
-
+		const Song &m_Song; //<-- read only!
 		//Not sure yet if I need to cache the track positions like this, but I will need to get the actual block
-#if 0
 		struct Song_Cache
 		{
-			struct Track
+			size_t m_LastBlock_Number=-1;
+			const Song::Block *m_LastBlock_ptr=nullptr;
+			struct Track_Cache
 			{
-				size_t note_index=0;
-				double current_time = 0.0;  //how much time into this note we are
+				Track_Cache(const Song::Track *_track_ptr) : track_ptr(_track_ptr),m_NoteIndex(_track_ptr->notes.begin())
+				{
+				}
+				const Song::Track *track_ptr=nullptr;  //the actual track
+				double m_LastPositionTime=0.0;  //last time of this note
+				Song::Track::const_track_iter m_NoteIndex;  //keep index on note
 			};
-			struct Block
-			{
-				std::map<size_t, Track> tracks;  //we'll just map out the voices as well
-				using block_iter = std::map<size_t, Track>::iterator;
-				//double current_time = 0.0;  not sure yet if I need this
-			};
-			using Sequence = std::map<size_t, Block>;
-
-			double BeatPerMinute = 120;  //a master clock for playback... default to an easy divisible number for debugging
-			Sequence Music_Cache;  //A container to store the song
+			std::vector<Track_Cache> m_tracks;
 		} m_cache;
-		Song_Cache::Block &FindBlock()
+
+		const Song::Block *FindBlock()
 		{
-			using Sequence = Song_Cache::Sequence;
-			using Block = Song_Cache::Block;
-			Sequence &music = m_cache.Music_Cache;
-			Sequence::iterator iter = music.find(m_block_number);
-			if (iter == music.end())
-			{
-				music[m_block_number] = Block();
-				iter = music.find(m_block_number);
-			}
+			using Sequence = Song::Sequence;
+			using Block = Song::Block;
+			const Sequence &music = m_Song.Music;
+			Sequence::const_iterator iter = music.find(m_block_number);
 			if (iter != music.end())
 			{
-				return iter->second;
+				return &iter->second;
 			}
 			else
 			{
-				assert(false);
+				//No block exists... was it loaded
+				//assert(false);
 				Block *block = nullptr;
-				return *block;  //not going to make this recoverable
+				return block;  //not going to make this recoverable
 			}
 		}
-#endif
+
+		//TODO add helper varaibles for offsets
+		__inline bool NoteInRange(double a_begin,double a_end,double b_begin,double b_end)
+		{
+			bool ret = false;
+			//this is similar logic to Rick's timeline region code
+			//establish where B is... in relation to A range... either before in or after
+			if (b_begin > a_begin)
+			{
+				//not before
+				ret = b_begin < a_end;  //it is in some where after A start
+			}
+			else if (b_begin < a_begin)
+			{
+				//before... check B end if it overlaps
+				ret = (b_end > a_begin);  //has to be greater... if it's equal its not really in range
+			}
+			else
+			{
+				assert(a_begin == b_begin);   //This better be true... we may have to deal with precision issues later
+				ret = true;
+			}
+		}
 		void client_fillbuffer(size_t no_channels, short *dst_buffer, size_t no_samples)
 		{
-			printf("time=%.2f %d\n",m_current_block_time,no_samples);
+			const double sample_rate = 48000.0; //TODO: I shouldn't hard code the samplerate
+			const double duration= no_samples / sample_rate;
+			//printf("time=%.2f %d\n",m_current_block_time,no_samples);
 			//Use cache to determine which note to play
-			//using Block = Song_Cache::Block;
-			//Block block = FindBlock();
+			using Block = Song::Block;
+			using const_block_iter = Block::const_block_iter;
+			const Block *block = m_cache.m_LastBlock_ptr;
+			if (m_cache.m_LastBlock_Number != m_block_number)
+				block = FindBlock();
+			if (block)
+			{
+				//Now we have a block... get the tracks
+				if (m_cache.m_tracks.empty())
+				{
+					//grab all the tracks
+					for (auto &i : block->tracks)
+						m_cache.m_tracks.push_back(Song_Cache::Track_Cache(&i.second));
+				}
+				const double end_time = m_current_block_time + duration;  //handy to have this for range
+				for (auto &i : m_cache.m_tracks)
+				{
+					//Now we have a track determine our note index and time
+				}
+			}
 			//advance time
-			m_current_block_time += no_samples / 48000.0;  //TODO: I shouldn't hard code the samplerate
+			m_current_block_time += duration;
 		}
 	public:
+		WavePlayer(const Song &song) : m_Song(song)
+		{}
 		void Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> &instance)
 		{
 			m_DSound = instance;
@@ -372,10 +411,10 @@ private:
 		void SetBlockTime(double time) { m_current_block_time = time; }
 	} m_WavePlayer;
 public:
-	NotePlayer_Internal()
+	NotePlayer_Internal() : m_WavePlayer(m_Song)
 	{
 	}
-	void Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> &instance)
+	void Link_DSound (std::shared_ptr<DirectSound::Output::DS_Output> &instance)
 	{
 		m_WavePlayer.Link_DSound(instance);
 	}
@@ -424,7 +463,7 @@ bool NotePlayer::LoadSequence_CT(const char *filename)
 	return m_Player->LoadSequence_CT(filename);
 }
 
-void NotePlayer::Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> &instance) 
+void NotePlayer::Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> instance) 
 {
 	m_Player->Link_DSound(instance);
 }
