@@ -33,7 +33,8 @@ struct Song
 	//it should be seamless to add later
 	using Sequence = std::map<size_t, Block>;
 
-	double BeatPerMinute = 120;  //a master clock for playback... default to an easy divisible number for debugging
+	//double BeatPerMinute = 120;  //a master clock for playback... default to an easy divisible number for debugging
+	double BeatPerMinute = 80; //TODO make this programable
 	Sequence Music;  //A container to store the song
 };
 
@@ -384,11 +385,11 @@ private:
 				}
 				const double end_time = m_current_block_time + duration;  //handy to have this for range
 				size_t voice = 0;  //keep track of the track count to work out how to add on the sine wave
-				short *dst_buffer_index = dst_buffer;
 				short *dst_buffer_end = dst_buffer + (no_samples * no_channels);  //must never pass this point
-				double current_time_index = m_current_block_time;
 				for (auto &i : m_cache.m_tracks)
 				{
+					short *dst_buffer_index = dst_buffer;  //reset the buffer as we are on the next channel
+					double current_time_index = m_current_block_time;  //reset this time as well
 					const size_t channel = voice & 1;  //all odd's on one side, all evens on the other
 					const bool add_samples = voice > 1;  //all voice past the first two need to be added 
 					voice++;  //done reading voice... increment for next iteration
@@ -514,6 +515,12 @@ public:
 		{
 			const char *const ctm = "v1o4sreao5co4bebo5diceo4#go5e";
 			ret =PopulateBlock_CT(ctm,0);
+			if (ret)
+			{
+				//const char *const ctm_v2 = "v2o4sreao5co4bebo5diceo4#go5e";
+				const char *const ctm_v2 = "v2o2iao3a#grsaeao4co3bebo4d";
+				ret = PopulateBlock_CT(ctm_v2, 0);
+			}
 		}
 		//TODO load a file and populate it per line per block
 		return ret;
