@@ -533,14 +533,18 @@ private:
 								current_block++; //we are advanced... now to reset the block time
 								if (current_block != m_Song.Music.end())
 								{
-									AbleToAdvance = true;  //short lived but here for completion
 									AdvancedTracks = true;
 									current_time_index = 0.0;
 									end_time = m_current_block_time + duration;
-									//advance the track
-									i.track_ptr = &(current_block->second.tracks.find(i.track_number)->second);
-									i.m_NoteIndex = i.track_ptr->notes.begin();
-									goto PlayTrack;
+									//advance the track (if possible)
+									Block::const_block_iter track_iter = current_block->second.tracks.find(i.track_number);
+									if (track_iter != current_block->second.tracks.end())
+									{
+										AbleToAdvance = true;  //short lived but here for completion
+										i.track_ptr = &(track_iter->second);
+										i.m_NoteIndex = i.track_ptr->notes.begin();
+										goto PlayTrack;
+									}
 								}
 							}
 						}
@@ -785,6 +789,8 @@ public:
 	}
 	bool LoadSequence_CT(const char *filename)
 	{
+		m_WavePlayer.StopStreaming(); //avoid crash
+		m_Song.Music.clear();
 		bool ret = false;
 		if (!filename || filename[0]==0)
 		{
