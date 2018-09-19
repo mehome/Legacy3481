@@ -2,6 +2,7 @@
 #include "Time_Type.h"
 #include "NotePlayer.h"
 #include "SineWaveGenerator.h"
+#include"VectorMath.h"
 //For now using a similar type of data structure as that used in OctaMed
 struct Song
 {
@@ -506,6 +507,9 @@ private:
 		std::string m_BlockWrite;
 		struct Interleaved_element
 		{
+			Interleaved_element() : x(0.0),y(0.0),z(0.0),duration(0.0) {}
+			Interleaved_element(double _x, double _y, double _z) : x(_x), y(_y), z(_z), duration(0.0) {}
+			Interleaved_element(const Vec3d &vec3) : x(vec3.x()), y(vec3.y()), z(vec3.z()) {}
 			double x, y, z; //frequency in hertz
 			double duration; //in seconds
 		};
@@ -588,12 +592,56 @@ private:
 			}
 			return result;
 		}
+		//This will return positive deltas of each vector along with the feed speed
+		//the return can use the same struct replacing duration for the feed speed
+		Interleaved_element GetPositionDeltas(const Interleaved_element &source)
+		{
+			const double scale_tune = 0.059; //this came from feed of 25.97 producing 440.5 tone
+			Vec3d vector(source.x, source.y, source.z);
+			vector *= scale_tune;
+			//I have a vector with correct direction, but will need to work out the magnitude
+			double magnitude = vector.length(); //this becomes the feedrate:
+			//one way to check the math
+			//we know that F6.5 is 77.7 when x and y are at a 45 degree angle
+			//when 6.5 is 110 when only one dimension is used
+			//this is because sin(45) = rouphly .70 * 110 = 77.7
+			//when using the magnitude the feedrate boosts from 6.5 to 9.192388155425117
+			//which gives a rate of 155.80 (instead of 110... using same 0.059 scale tune)
+			//now when testing sin(45) * 155.8 brings it back down to 110
+
+			//currently when the magnitude is equal to the feedrate the time equals one minute
+			vector *= 1.0 / 60.0;
+			//now time is one second... same units as the duration
+			vector *= source.duration;
+			//Now we scale vector to equal the duration
+			Interleaved_element ret(vector);
+			ret.duration = magnitude;
+			return ret;
+		}
+		double m_last_x = 0.0;
+		double m_last_y = 0.0;
+		double m_last_z = 0.0;
 	public:
 		GCode_Writer(const Song&song) : m_Song(song)
 		{}
 		const char *WriteBlock(size_t block_number)
 		{
+			//get the interleaved list
 			populate_block_list(block_number);
+			//iterate through each element
+			for (auto &i : m_block_list)
+			{
+				Interleaved_element vector_feed=GetPositionDeltas(i);
+				//printf("x%.3f y%.3f z%.1f f%.1f\n",vector_feed.x,vector_feed.y,vector_feed.z,vector_feed.duration);
+				//TODO determine direction
+				//use absolute positioning so we can monitor the edge cases
+				m_last_x += vector_feed.x;
+				m_last_y += vector_feed.y;
+				m_last_z += vector_feed.z;
+				char Buffer[70];  //we have 70 on CNC machine, but really I never plan to go this far
+				sprintf(Buffer,"X%.4f Y%.4f Z%.4f F%.1f\n", m_last_x, m_last_y, m_last_z, vector_feed.duration);
+				m_BlockWrite += Buffer;
+			}
 			return m_BlockWrite.c_str();
 		}
 	} m_GCode_Writer;
@@ -612,12 +660,14 @@ public:
 		{
 			const char *const ctm = "v1o4sreao5co4bebo5diceo4#go5e";
 			ret =PopulateBlock_CT(ctm,0);
+			#if 1
 			if (ret)
 			{
 				//const char *const ctm_v2 = "v2o4sreao5co4bebo5diceo4#go5e";
 				const char *const ctm_v2 = "v2o2iao3a#grsaeao4co3bebo4d";
 				ret = PopulateBlock_CT(ctm_v2, 0);
 			}
+			#endif
 		}
 		//TODO load a file and populate it per line per block
 		return ret;
