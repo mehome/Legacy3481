@@ -1,8 +1,7 @@
 //TODO
-//get multiple blocks playing and exporting
 //get file reading and writing to work
-//support tg command for beats per minute
-//seek (low priority), playing from position
+//low priority support tg command for beats per minute per block
+//seek and playing from position
 
 #include "pch.h"
 #include "Time_Type.h"
@@ -40,8 +39,7 @@ struct Song
 	//it should be seamless to add later
 	using Sequence = std::map<size_t, Block>;
 
-	//double BeatPerMinute = 120;  //a master clock for playback... default to an easy divisible number for debugging
-	double BeatPerMinute = 80; //TODO make this programable
+	double BeatPerMinute = 120;  //a master clock for playback... default to an easy divisible number for debugging
 	Sequence Music;  //A container to store the song
 };
 
@@ -101,6 +99,41 @@ private:
 		return frequency;
 	}
 	//track starting with 0... each time this is called it will append to the track so voices may be interleaved
+	static __inline bool IsNumber(char value)
+	{
+		return (value >= '0') && (value <= '9');
+	}
+	static __inline size_t GetNumber(const char *&read_cursor)
+	{
+		size_t ret=0;
+
+		//expect a number
+		while (IsNumber(read_cursor[0]))
+		{
+			ret += read_cursor[0] - '0';
+			if (IsNumber(read_cursor[1]))
+				ret *= 10;
+			read_cursor++; //advance
+		}
+		return ret;
+	}
+
+	static __inline void SkipGarbage(const char *&read_cursor)
+	{
+		bool Advance = true;
+		while (Advance)
+		switch (read_cursor[0])
+		{
+		case ' ':
+		case '\t':
+		case '\r':
+		case '\n':
+			read_cursor++;
+			break;
+		default:
+			Advance = false;
+		}
+	}
 	bool AppendTrack_CT(const char *CompactTextMusic,Song::Block &block, size_t TrackNumber,double BPM)
 	{
 		bool ret = false;
@@ -220,6 +253,21 @@ private:
 					track.current_time = current_time;  //update the length of the track
 					break;
 				}
+				//time setting per block... todo
+				//case 'T':
+				//case 't':
+				//{
+				//	index_ptr++;
+				//	size_t bpm = GetNumber(index_ptr);
+				//	index_ptr--;
+				//	break;
+				//}
+				case ' ':
+				case '\t':
+				case '\r':
+				case '\n':
+					//just ignore white space
+					break;
 				default:
 					assert(false);  //what do we have
 				}
@@ -256,13 +304,26 @@ private:
 			{
 				// key exists, do something with iter->second (the value)
 				size_t track_no = -1;
+				SkipGarbage(index_ptr);
+				if (index_ptr[0] == 't' || index_ptr[0] == 'T')
+				{
+					index_ptr++;
+					if ((index_ptr[0] == 'g') || (index_ptr[0] == 'G'))
+						index_ptr++;
+					size_t bpm = GetNumber(index_ptr);
+					m_Song.BeatPerMinute = (double)bpm;
+					int x = 3;
+				}
+				SkipGarbage(index_ptr);
+				if (index_ptr[0] == 0)
+					break;
 				if (index_ptr[0] == 'v' || index_ptr[0] == 'V')
 				{
 					index_ptr++;
 					//For now we only have up to 1-9 voices starting with 1
 					if ((index_ptr[0] >= '1') && (index_ptr[0] <= '9'))
 					{
-						track_no = CTM[1] - '1';  //will convert cardinal string to ordinal index here
+						track_no = index_ptr[0] - '1';  //will convert cardinal string to ordinal index here
 						assert(track_no != -1);
 					}
 					else
@@ -750,7 +811,27 @@ public:
 				}
 			}
 		}
-		//TODO load a file and populate it per line per block
+		else
+		{
+			//since this is going to a small file I should be able to stream it out
+			std::ifstream in(filename);
+			if (in.is_open())
+			{
+				size_t BlockCount=0;
+				bool success=true;
+				while (!in.eof())
+				{
+					char Buffer[1024];
+					in.getline(Buffer, 1024);
+					if (strlen(Buffer)>=3)
+						success = PopulateBlock_CT(Buffer, BlockCount);  //we'll keep block sizes the same as the lines
+					if (success)
+						BlockCount++;
+				}
+				ret = success;
+				in.close();
+			}
+		}
 		return ret;
 	}
 	void PlayBlock(size_t block_number)

@@ -175,6 +175,9 @@
     <ClCompile Include="ThreadLib.cpp" />
     <ClCompile Include="Time_Type.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="TestSong.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
