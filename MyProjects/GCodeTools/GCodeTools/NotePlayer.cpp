@@ -1,5 +1,4 @@
 //TODO
-//fix vector to flip when it reaches the edge (add command line ability to specify the range)
 //low priority support tg command for beats per minute per block
 //seek and playing from position
 
@@ -638,6 +637,10 @@ private:
 			Interleaved_element() : x(0.0),y(0.0),z(0.0),duration(0.0) {}
 			Interleaved_element(double _x, double _y, double _z) : x(_x), y(_y), z(_z), duration(0.0) {}
 			Interleaved_element(const Vec3d &vec3) : x(vec3.x()), y(vec3.y()), z(vec3.z()) {}
+			Vec3d AsVec3()
+			{
+				return Vec3d(x, y, z);
+			}
 			double x, y, z; //frequency in hertz
 			double duration; //in seconds
 		};
@@ -746,9 +749,9 @@ private:
 			ret.duration = magnitude;
 			return ret;
 		}
-		double m_last_x = 0.0;
-		double m_last_y = 0.0;
-		double m_last_z = 0.0;
+		Vec3d m_CurrentPos;
+		Vec3d m_AxisBounds    = Vec3d(2.0, 2.0, 1.0);
+		Vec3d m_FlipDirection = Vec3d(1.0, 1.0, 1.0);  //either 1 or -1 per component
 	public:
 		GCode_Writer(const Song&song) : m_Song(song)
 		{}
@@ -766,18 +769,34 @@ private:
 				{
 					Interleaved_element vector_feed = GetPositionDeltas(i);
 					//printf("x%.3f y%.3f z%.1f f%.1f\n",vector_feed.x,vector_feed.y,vector_feed.z,vector_feed.duration);
-					//TODO determine direction
+					//Check bounds for each component
+					if ((m_FlipDirection.x() == 1.0) && (m_CurrentPos.x() > m_AxisBounds.x()))
+						m_FlipDirection.x() = -1.0;
+					else if ((m_FlipDirection.x() == -1.0) && (m_CurrentPos.x() < -m_AxisBounds.x()))
+						m_FlipDirection.x() = 1.0;
+
+					if ((m_FlipDirection.y() == 1.0) && (m_CurrentPos.y() > m_AxisBounds.y()))
+						m_FlipDirection.y() = -1.0;
+					else if ((m_FlipDirection.y() == -1.0) && (m_CurrentPos.y() < -m_AxisBounds.y()))
+						m_FlipDirection.y() = 1.0;
+
+					if ((m_FlipDirection.z() == 1.0) && (m_CurrentPos.z() > m_AxisBounds.z()))
+						m_FlipDirection.z() = -1.0;
+					else if ((m_FlipDirection.z() == -1.0) && (m_CurrentPos.z() < -m_AxisBounds.z()))
+						m_FlipDirection.z() = 1.0;
+
+					//kick in the current direction of each vector
+					Vec3d vector_feed_adj = vector_feed.AsVec3().VecMult(m_FlipDirection);
 					//use absolute positioning so we can monitor the edge cases
-					m_last_x += vector_feed.x;
-					m_last_y += vector_feed.y;
-					m_last_z += vector_feed.z;
+					m_CurrentPos += vector_feed_adj;
 					char Buffer[70];  //we have 70 on CNC machine, but really I never plan to go this far
-					sprintf(Buffer, "X%.4f Y%.4f Z%.4f F%.1f\n", m_last_x, m_last_y, m_last_z, vector_feed.duration);
+					sprintf(Buffer, "X%.4f Y%.4f Z%.4f F%.1f\n", m_CurrentPos.x(), m_CurrentPos.y(), m_CurrentPos.z(), vector_feed.duration);
 					m_BlockWrite += Buffer;
 				}
 			}
 			return success? m_BlockWrite.c_str() : NULL;
 		}
+		void SetBounds(Vec3d Bounds) { m_AxisBounds = Bounds; }
 	} m_GCode_Writer;
 public:
 	NotePlayer_Internal() : m_WavePlayer(m_Song),m_GCode_Writer(m_Song)
@@ -876,6 +895,7 @@ public:
 		}
 		return true;
 	}
+	void SetBounds(Vec3d Bounds) { m_GCode_Writer.SetBounds(Bounds); }
 };
 
 
@@ -920,4 +940,9 @@ void NotePlayer::SeekBlock(double position)
 bool NotePlayer::ExportGCode(const char *filename)
 {
 	return m_Player->ExportGCode(filename);
+}
+
+void NotePlayer::SetBounds(double x, double y, double z)
+{
+	m_Player->SetBounds(Vec3d(x, y, z));
 }

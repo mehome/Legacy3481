@@ -45,6 +45,7 @@ public:
 	void PlaySong(double position) { m_NotePlayer.PlaySong(position); }
 	void Stop_NotePlayer() { m_NotePlayer.Stop(); }
 	bool ExportGCode(const char *filename) { return m_NotePlayer.ExportGCode(filename); }
+	void SetBounds(double x, double y, double z) {m_NotePlayer.SetBounds(x, y, z); }
 };
 
   /*******************************************************************************************************/
@@ -89,4 +90,8 @@ void GCodeTools::Stop_NotePlayer()
 bool GCodeTools::ExportGCode(const char *filename)
 {
 	return m_p_GCodeTools->ExportGCode(filename);
+}
+void GCodeTools::SetBounds(double x, double y, double z) 
+{ 
+	m_p_GCodeTools->SetBounds(x, y, z);
 }

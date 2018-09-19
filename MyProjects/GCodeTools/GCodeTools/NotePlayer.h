@@ -27,6 +27,7 @@ public:
 	void Stop();
 	void SeekBlock(double position);  // in seconds
 	bool ExportGCode(const char *filename);
+	void SetBounds(double x, double y, double z);  //specify different size dimensions of when to flip
 private:
 	std::shared_ptr<NotePlayer_Internal>  m_Player; //encapsulate SDK specifics from public
 };

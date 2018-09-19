@@ -15,6 +15,7 @@ public:
 	void PlaySong(double position);
 	void Stop_NotePlayer();
 	bool ExportGCode(const char *filename);
+	void SetBounds(double x, double y, double z);  //specify different size dimensions of when to flip
 private:
 	std::shared_ptr<GCodeTools_Internal> m_p_GCodeTools; //a pimpl idiom (using shared_ptr allows declaration to be hidden from destructor)
 };

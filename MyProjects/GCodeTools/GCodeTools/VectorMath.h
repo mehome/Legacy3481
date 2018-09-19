@@ -86,6 +86,11 @@ public:
 		return Vec3d(_v[0] * rhs, _v[1] * rhs, _v[2] * rhs);
 	}
 
+	inline const Vec3d VecMult(const Vec3d& rhs) const
+	{
+		return Vec3d(_v[0] * rhs._v[0], _v[1] * rhs._v[1], _v[2] * rhs._v[2]);
+	}
+
 	/** Unary multiply by scalar. */
 	inline Vec3d& operator *= (value_type rhs)
 	{
