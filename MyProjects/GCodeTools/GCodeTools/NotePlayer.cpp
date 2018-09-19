@@ -1,3 +1,9 @@
+//TODO
+//get multiple blocks playing and exporting
+//get file reading and writing to work
+//support tg command for beats per minute
+//seek (low priority), playing from position
+
 #include "pch.h"
 #include "Time_Type.h"
 #include "NotePlayer.h"
@@ -319,18 +325,22 @@ private:
 		size_t m_block_number = 0;
 		double m_current_block_time = 0.0;
 		bool m_IsStreaming=false;
+		bool m_AutoAdvanceBlock = false;  //this is really the difference between playing the song and a block
 		const Song &m_Song; //<-- read only!
 		//Not sure yet if I need to cache the track positions like this, but I will need to get the actual block
 		struct Song_Cache
 		{
 			size_t m_LastBlock_Number=-1;
+			Song::Sequence::const_iterator m_CurrentBlockNumber;  //used by play song to quickly advance to the next block
 			const Song::Block *m_LastBlock_ptr=nullptr;
 			struct Track_Cache
 			{
-				Track_Cache(const Song::Track *_track_ptr) : track_ptr(_track_ptr),m_NoteIndex(_track_ptr->notes.begin())
+				Track_Cache(const Song::Track *_track_ptr,size_t _track_number) : track_ptr(_track_ptr), track_number(_track_number),
+					m_NoteIndex(_track_ptr->notes.begin())
 				{
 				}
 				const Song::Track *track_ptr=nullptr;  //the actual track
+				const size_t track_number;  //keep track number when advancing to next track
 				//double m_LastPositionTime=0.0;  //last time of this note  <---we may be able to work without this
 				Song::Track::const_track_iter m_NoteIndex;  //keep index on note
 			};
@@ -348,7 +358,8 @@ private:
 			using Sequence = Song::Sequence;
 			using Block = Song::Block;
 			const Sequence &music = m_Song.Music;
-			Sequence::const_iterator iter = music.find(m_block_number);
+			m_cache.m_CurrentBlockNumber = music.find(m_block_number);
+			const Sequence::const_iterator &iter = m_cache.m_CurrentBlockNumber;
 			if (iter != music.end())
 			{
 				return &iter->second;
@@ -381,11 +392,12 @@ private:
 				{
 					//grab all the tracks
 					for (auto &i : block->tracks)
-						m_cache.m_tracks.push_back(Song_Cache::Track_Cache(&i.second));
+						m_cache.m_tracks.push_back(Song_Cache::Track_Cache(&i.second,i.first));
 				}
-				const double end_time = m_current_block_time + duration;  //handy to have this for range
+				double end_time = m_current_block_time + duration;  //handy to have this for range
 				size_t voice = 0;  //keep track of the track count to work out how to add on the sine wave
 				short *dst_buffer_end = dst_buffer + (no_samples * no_channels);  //must never pass this point
+				bool AdvancedTracks = false;  //if any track advances this will be true
 				for (auto &i : m_cache.m_tracks)
 				{
 					short *dst_buffer_index = dst_buffer;  //reset the buffer as we are on the next channel
@@ -393,12 +405,13 @@ private:
 					const size_t channel = voice & 1;  //all odd's on one side, all evens on the other
 					const bool add_samples = voice > 1;  //all voice past the first two need to be added 
 					voice++;  //done reading voice... increment for next iteration
-
-					while ((dst_buffer_index < dst_buffer_end)&&(i.m_NoteIndex!=i.track_ptr->notes.end()))
+					Song_Cache::Track_Cache *track = &i;  //grab the track in case it advances to next block
+				PlayTrack:
+					while ((dst_buffer_index < dst_buffer_end)&&(track->m_NoteIndex!=track->track_ptr->notes.end()))
 					{
 						//Now we have a track determine our note index and time
-						const double note_start = i.m_NoteIndex->first;
-						const double note_duration = i.m_NoteIndex->second.Duration;
+						const double note_start = track->m_NoteIndex->first;
+						const double note_duration = track->m_NoteIndex->second.Duration;
 						const double note_end = note_start + note_duration;
 						//TODO find way to pick note if it isn't in range
 						if (NoteInRange(note_start, note_end, current_time_index, end_time))
@@ -407,7 +420,7 @@ private:
 							{
 								assert(note_start != 0.0); //this should not be possible!
 								//grab previous note
-								Song::Track::const_track_iter prev_note = i.m_NoteIndex;
+								Song::Track::const_track_iter prev_note = track->m_NoteIndex;
 								prev_note--;
 								if (prev_note->first > current_time_index)
 								{
@@ -435,27 +448,61 @@ private:
 								adjusted_duration = adj_no_samples / sample_rate;
 								advance_note = false;
 							}
-							sine_wave.frequency(channel, i.m_NoteIndex->second.FreqInHertz);
+							sine_wave.frequency(channel, track->m_NoteIndex->second.FreqInHertz);
 							sine_wave.gen_sw_short(channel, dst_buffer_index + channel, adj_no_samples);
 							//advance the dest buffer index
 							dst_buffer_index += (adj_no_samples* no_channels);
 							current_time_index += adjusted_duration;
 							//advance to the next note:
 							if (advance_note)
-								i.m_NoteIndex++;
+								track->m_NoteIndex++;
 						}
 					}
-					//I'll leave this in for now for play block, but once we can distinguish between play song I'll need to advance the block
-					#if 1
 					if (dst_buffer_index < dst_buffer_end)
 					{
-						//this will happen when we reach the end of the block... for now we simply fill with silence, but we may loop as well
-						const size_t samples_remain = (dst_buffer_end - dst_buffer_index) / no_channels;
-						sine_wave.frequency(channel, 0.0);
-						sine_wave.gen_sw_short(channel, dst_buffer_index + channel, samples_remain);
-						//nothing to advance here
+						//This bool is redundant because I have a goto for success but I can make an assertion to make it clear
+						bool AbleToAdvance = m_AutoAdvanceBlock;
+						if (m_AutoAdvanceBlock)
+						{
+							AbleToAdvance = false;
+							Song::Sequence::const_iterator current_block = m_cache.m_CurrentBlockNumber;
+							//make sure we are not already at the end
+							if (current_block != m_Song.Music.end())
+							{
+								current_block++; //we are advanced... now to reset the block time
+								if (current_block != m_Song.Music.end())
+								{
+									AbleToAdvance = true;  //short lived but here for completion
+									AdvancedTracks = true;
+									current_time_index = 0.0;
+									end_time = m_current_block_time + duration;
+									//advance the track
+									i.track_ptr = &(current_block->second.tracks.find(i.track_number)->second);
+									i.m_NoteIndex = i.track_ptr->notes.begin();
+									goto PlayTrack;
+								}
+							}
+						}
+						assert(!AbleToAdvance);  //if it has made it this far it's because it can't advance
+						if (!AbleToAdvance)
+						{
+							//this will happen when we reach the end of the block... for now we simply fill with silence, but we may loop as well
+							const size_t samples_remain = (dst_buffer_end - dst_buffer_index) / no_channels;
+							sine_wave.frequency(channel, 0.0);
+							sine_wave.gen_sw_short(channel, dst_buffer_index + channel, samples_remain);
+							//nothing to advance here
+						}
 					}
-					#endif		
+				}
+				if (AdvancedTracks)
+				{
+					//advance the block... all voices should be in sync... as this will be triggered if any have advanced
+					m_cache.m_CurrentBlockNumber++;
+					m_cache.m_LastBlock_ptr = &m_cache.m_CurrentBlockNumber->second;
+					block = m_cache.m_LastBlock_ptr;
+					m_current_block_time = 0.0;
+					m_block_number++;
+					m_cache.m_LastBlock_Number = m_block_number;
 				}
 			}
 			//advance time
@@ -493,12 +540,28 @@ private:
 			{
 				m_IsStreaming = false;
 				m_DSound->StopStreaming();
-				m_current_block_time = 0.0;
-				m_cache.flush();
 			}
 		}
-		void SetBlockNumber(size_t block_no) { m_block_number = block_no; }
-		void SetBlockTime(double time) { m_current_block_time = time; }
+		void PlayBlock(size_t block_number)
+		{
+			StopStreaming();  //stop it if it was playing
+			m_cache.flush();
+			//setup the play cursor
+			m_block_number = block_number;
+			m_current_block_time = 0.0;
+			m_AutoAdvanceBlock = false;
+			StartStreaming();
+		}
+		void PlaySong(double position)
+		{
+			StopStreaming();
+			m_cache.flush();
+			//TODO set position here for now always at the beginning
+			m_current_block_time = 0.0;
+			m_block_number = 0;
+			m_AutoAdvanceBlock = true;
+			StartStreaming();
+		}
 	} m_WavePlayer;
 	class GCode_Writer
 	{
@@ -658,27 +721,39 @@ public:
 		bool ret = false;
 		if (!filename || filename[0]==0)
 		{
+			//simple test song
+			const bool test2voices = true;
+			const bool test2blocks = true;
 			const char *const ctm = "v1o4sreao5co4bebo5diceo4#go5e";
 			ret =PopulateBlock_CT(ctm,0);
-			#if 1
-			if (ret)
+			
+			if (test2voices && ret)
 			{
 				//const char *const ctm_v2 = "v2o4sreao5co4bebo5diceo4#go5e";
 				const char *const ctm_v2 = "v2o2iao3a#grsaeao4co3bebo4d";
 				ret = PopulateBlock_CT(ctm_v2, 0);
 			}
-			#endif
+			if (test2blocks && ret)
+			{
+				const char *const ctm = "v1o4saeao5co4bebo5dico4aqr";
+				ret = PopulateBlock_CT(ctm, 1);
+				if (test2voices && ret)
+				{
+					const char *const ctm_v2 = "v2o4ico3a#gesaeao4co3bebo4d";
+					ret = PopulateBlock_CT(ctm_v2, 1);
+				}
+			}
 		}
 		//TODO load a file and populate it per line per block
 		return ret;
 	}
 	void PlayBlock(size_t block_number)
 	{
-		m_WavePlayer.StopStreaming();  //stop it if it was playing
-		//setup the play cursor
-		m_WavePlayer.SetBlockNumber(block_number);
-		m_WavePlayer.SetBlockTime(0.0);
-		m_WavePlayer.StartStreaming();
+		m_WavePlayer.PlayBlock(block_number);
+	}
+	void PlaySong(double position)
+	{
+		m_WavePlayer.PlaySong(position);
 	}
 	void Stop()
 	{
@@ -720,6 +795,11 @@ void NotePlayer::Link_DSound(std::shared_ptr<DirectSound::Output::DS_Output> ins
 void NotePlayer::PlayBlock(size_t block_number)
 {
 	m_Player->PlayBlock(block_number);
+}
+
+void NotePlayer::PlaySong(double position)
+{
+	m_Player->PlaySong(position);
 }
 
 void NotePlayer::Stop()

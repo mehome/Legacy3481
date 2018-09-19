@@ -12,6 +12,7 @@ public:
 	void TestSound_Stop();
 	bool LoadSequence_CT(const char *filename);
 	void PlayBlock(size_t block_number);
+	void PlaySong(double position);
 	void Stop_NotePlayer();
 	bool ExportGCode(const char *filename);
 private:

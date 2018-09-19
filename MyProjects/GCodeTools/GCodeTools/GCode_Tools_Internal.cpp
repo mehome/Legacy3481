@@ -42,6 +42,7 @@ public:
 
 	bool LoadSequence_CT(const char *filename) { return m_NotePlayer.LoadSequence_CT(filename); }
 	void PlayBlock(size_t block_number) { m_NotePlayer.PlayBlock(block_number); }
+	void PlaySong(double position) { m_NotePlayer.PlaySong(position); }
 	void Stop_NotePlayer() { m_NotePlayer.Stop(); }
 	bool ExportGCode(const char *filename) { return m_NotePlayer.ExportGCode(filename); }
 };
@@ -75,6 +76,10 @@ bool GCodeTools::LoadSequence_CT(const char *filename)
 void GCodeTools::PlayBlock(size_t block_number)
 {
 	m_p_GCodeTools->PlayBlock(block_number);
+}
+void GCodeTools::PlaySong(double position)
+{
+	m_p_GCodeTools->PlaySong(position);
 }
 void GCodeTools::Stop_NotePlayer()
 {

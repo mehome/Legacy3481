@@ -23,6 +23,7 @@ public:
 	//compact text format NULL will use default song, returns true if successful
 	bool LoadSequence_CT(const char *filename);
 	void PlayBlock(size_t block_number);
+	void PlaySong(double position);
 	void Stop();
 	void SeekBlock(double position);  // in seconds
 	bool ExportGCode(const char *filename);
