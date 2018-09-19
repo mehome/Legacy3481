@@ -286,6 +286,28 @@ private:
 			assert(false);
 		return ret;
 	}
+	static __inline bool NoteInRange(double a_begin, double a_end, double b_begin, double b_end)
+	{
+		bool ret = false;
+		//this is similar logic to Rick's timeline region code
+		//establish where B is... in relation to A range... either before in or after
+		if (b_begin > a_begin)
+		{
+			//not before
+			ret = b_begin < a_end;  //it is in some where after A start
+		}
+		else if (b_begin < a_begin)
+		{
+			//before... check B end if it overlaps
+			ret = (b_end > a_begin);  //has to be greater... if it's equal its not really in range
+		}
+		else
+		{
+			assert(a_begin == b_begin);   //This better be true... we may have to deal with precision issues later
+			ret = true;
+		}
+		return ret;
+	}
 
 	//This will play the song by populating callback buffers from dsound
 	class WavePlayer
@@ -339,29 +361,6 @@ private:
 			}
 		}
 
-		//TODO add helper varaibles for offsets
-		__inline bool NoteInRange(double a_begin,double a_end,double b_begin,double b_end)
-		{
-			bool ret = false;
-			//this is similar logic to Rick's timeline region code
-			//establish where B is... in relation to A range... either before in or after
-			if (b_begin > a_begin)
-			{
-				//not before
-				ret = b_begin < a_end;  //it is in some where after A start
-			}
-			else if (b_begin < a_begin)
-			{
-				//before... check B end if it overlaps
-				ret = (b_end > a_begin);  //has to be greater... if it's equal its not really in range
-			}
-			else
-			{
-				assert(a_begin == b_begin);   //This better be true... we may have to deal with precision issues later
-				ret = true;
-			}
-			return ret;
-		}
 		void client_fillbuffer(size_t no_channels, short *dst_buffer, size_t no_samples)
 		{
 			assert(no_channels == 2);  //always work with 2 channels
@@ -503,15 +502,103 @@ private:
 	class GCode_Writer
 	{
 	private:
+		const Song &m_Song; //<-- read only!
 		std::string m_BlockWrite;
-	public:
-		const char *WriteBlock()
+		struct Interleaved_element
 		{
+			double x, y, z; //frequency in hertz
+			double duration; //in seconds
+		};
+		std::vector<Interleaved_element> m_block_list;
+		//this will step through the first 3 tracks and segment out each interleaved entry
+		bool populate_block_list(size_t block_number)
+		{
+			using Sequence = Song::Sequence;
+			using Block = Song::Block;
+			using Track = Song::Track;
+			const Sequence &music = m_Song.Music;
+			Sequence::const_iterator seq_iter = music.find(block_number);
+			bool result = false;
+
+			if (seq_iter != music.end())
+			{
+				const Block &block = seq_iter->second;
+				Block::const_block_iter block1_iter = block.tracks.find(0);
+				assert(block1_iter != block.tracks.end()); //we must have at least one voice!
+				const Track &track1 = block1_iter->second;
+				Track::const_track_iter voice1 = block1_iter->second.notes.begin();
+				Block::const_block_iter block_iter = block.tracks.find(1);
+				//See if we have a track 2
+				const Track *track2 = (block_iter != block.tracks.end()) ? &block_iter->second: nullptr;
+				//We set the iterator to the beginning of its track if it exists to the end of track1 otherwise
+				Track::const_track_iter voice2 = (block_iter != block.tracks.end())? 
+					track2->notes.begin() :	block1_iter->second.notes.end();
+				block_iter = block.tracks.find(2);
+				//the same for voice3
+				const Track *track3 = (block_iter != block.tracks.end()) ? &block_iter->second : nullptr;
+				Track::const_track_iter voice3 = (block_iter != block.tracks.end()) ?
+					track3->notes.begin() : block1_iter->second.notes.end();
+				double current_time_index = 0.0;
+				//iterate through all the notes for all 3 voices
+				while ((voice1!=track1.notes.end()) &&
+					(!track2 || voice2!=track2->notes.end()) &&
+					(!track3 || voice3!=track3->notes.end()))
+				{
+					//sanity check... we should never prematurely advance past the timer... this holds true as long as we do not have
+					//any extra spacing between notes and/or rests
+					assert((voice1->first <= current_time_index) &&
+						(!track2 || voice2->first <= current_time_index) &&
+						(!track3 || voice3->first <= current_time_index));
+					Interleaved_element element;  //go ahead and populate this entry
+					element.x = voice1->second.FreqInHertz;
+					element.y = track2 ? voice2->second.FreqInHertz : 0.0;
+					element.z = track3 ? voice3->second.FreqInHertz : 0.0;
+					//negotiate a duration which is a min operation of each
+					double NoteOffset = current_time_index - voice1->first;
+					const double voice1_duration = voice1->second.Duration - ((NoteOffset>0.0) ? NoteOffset : 0.0);
+					double duration = voice1_duration;
+					if (track2)
+					{
+						NoteOffset = current_time_index - voice2->first;
+						const double voice2_duration = voice2->second.Duration - ((NoteOffset>0.0) ? NoteOffset : 0.0);
+						duration = min(duration, voice2_duration);
+					}
+					if (track3)
+					{
+						NoteOffset = current_time_index - voice3->first;
+						const double voice3_duration = voice3->second.Duration - ((NoteOffset>0.0) ? NoteOffset : 0.0);
+						duration = min(duration, voice3_duration);
+					}
+					element.duration = duration;
+					m_block_list.push_back(element);
+					//advance the time
+					current_time_index += duration;
+					//test each voice advance only if the end note < or = the current time
+					if (voice1->first + voice1->second.Duration <= current_time_index)
+						voice1++;
+					if ((track2)&&(voice2->first + voice2->second.Duration <= current_time_index))
+						voice2++;
+					if ((track3) && (voice3->first + voice3->second.Duration <= current_time_index))
+						voice3++;
+				}
+				//all three voices should have reached the end
+				result = (voice1 == track1.notes.end() &&
+					(!track2 || voice2 == track2->notes.end()) &&
+					(!track3 || voice3 == track3->notes.end()));
+			}
+			return result;
+		}
+	public:
+		GCode_Writer(const Song&song) : m_Song(song)
+		{}
+		const char *WriteBlock(size_t block_number)
+		{
+			populate_block_list(block_number);
 			return m_BlockWrite.c_str();
 		}
 	} m_GCode_Writer;
 public:
-	NotePlayer_Internal() : m_WavePlayer(m_Song)
+	NotePlayer_Internal() : m_WavePlayer(m_Song),m_GCode_Writer(m_Song)
 	{
 	}
 	void Link_DSound (std::shared_ptr<DirectSound::Output::DS_Output> &instance)
@@ -553,7 +640,7 @@ public:
 	bool ExportGCode(const char *filename)
 	{
 		//for now do one block
-		const char *block=m_GCode_Writer.WriteBlock();
+		const char *block=m_GCode_Writer.WriteBlock(0);
 		if (!filename)
 			printf("test->%s\n",block);
 		return (block != nullptr);
