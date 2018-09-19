@@ -1,5 +1,5 @@
 //TODO
-//get file reading and writing to work
+//fix vector to flip when it reaches the edge (add command line ability to specify the range)
 //low priority support tg command for beats per minute per block
 //seek and playing from position
 
@@ -851,14 +851,24 @@ public:
 	}
 	bool ExportGCode(const char *filename)
 	{
-		const char *block;
+		const char *block=nullptr;
 		size_t blockindex = 0;
-		while ((block = m_GCode_Writer.WriteBlock(blockindex++))!=nullptr)
+		if (filename)
 		{
-			if (!filename)
-				printf("test->%s\n", block);
+			std::ofstream out = std::ofstream(filename, std::ios::out);
+			const char *header = "G1 G20 G90 (cut speed absolute inches)\n";
+			out.write(header, strlen(header));
+			while ((block = m_GCode_Writer.WriteBlock(blockindex++))!=nullptr)
+				out.write(block, strlen(block));
+			out.close();
 		}
-		return (block != nullptr);
+		else
+		{
+			while ((block = m_GCode_Writer.WriteBlock(blockindex++)) != nullptr)
+				printf("%s\n", block);
+
+		}
+		return true;
 	}
 };
 
