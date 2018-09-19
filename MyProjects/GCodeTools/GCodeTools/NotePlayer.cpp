@@ -689,23 +689,29 @@ private:
 		{}
 		const char *WriteBlock(size_t block_number)
 		{
+			bool success=false;
+			m_BlockWrite.clear();
+			m_block_list.clear();
 			//get the interleaved list
-			populate_block_list(block_number);
-			//iterate through each element
-			for (auto &i : m_block_list)
+			if (populate_block_list(block_number))
 			{
-				Interleaved_element vector_feed=GetPositionDeltas(i);
-				//printf("x%.3f y%.3f z%.1f f%.1f\n",vector_feed.x,vector_feed.y,vector_feed.z,vector_feed.duration);
-				//TODO determine direction
-				//use absolute positioning so we can monitor the edge cases
-				m_last_x += vector_feed.x;
-				m_last_y += vector_feed.y;
-				m_last_z += vector_feed.z;
-				char Buffer[70];  //we have 70 on CNC machine, but really I never plan to go this far
-				sprintf(Buffer,"X%.4f Y%.4f Z%.4f F%.1f\n", m_last_x, m_last_y, m_last_z, vector_feed.duration);
-				m_BlockWrite += Buffer;
+				success = true;
+				//iterate through each element
+				for (auto &i : m_block_list)
+				{
+					Interleaved_element vector_feed = GetPositionDeltas(i);
+					//printf("x%.3f y%.3f z%.1f f%.1f\n",vector_feed.x,vector_feed.y,vector_feed.z,vector_feed.duration);
+					//TODO determine direction
+					//use absolute positioning so we can monitor the edge cases
+					m_last_x += vector_feed.x;
+					m_last_y += vector_feed.y;
+					m_last_z += vector_feed.z;
+					char Buffer[70];  //we have 70 on CNC machine, but really I never plan to go this far
+					sprintf(Buffer, "X%.4f Y%.4f Z%.4f F%.1f\n", m_last_x, m_last_y, m_last_z, vector_feed.duration);
+					m_BlockWrite += Buffer;
+				}
 			}
-			return m_BlockWrite.c_str();
+			return success? m_BlockWrite.c_str() : NULL;
 		}
 	} m_GCode_Writer;
 public:
@@ -764,10 +770,13 @@ public:
 	}
 	bool ExportGCode(const char *filename)
 	{
-		//for now do one block
-		const char *block=m_GCode_Writer.WriteBlock(0);
-		if (!filename)
-			printf("test->%s\n",block);
+		const char *block;
+		size_t blockindex = 0;
+		while ((block = m_GCode_Writer.WriteBlock(blockindex++))!=nullptr)
+		{
+			if (!filename)
+				printf("test->%s\n", block);
+		}
 		return (block != nullptr);
 	}
 };
