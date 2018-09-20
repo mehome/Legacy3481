@@ -115,6 +115,7 @@ class DS_Output_Internal
 		DWORD m_BufferSizeInBytes;
 		DWORD m_FillPosition; //keeps track of where the buffer has been filled
 		DWORD m_PreviousFillPosition;
+		size_t m_IsClocking_Counter=0;  //avoid false positive by checking for consecutive zero positions
 		__int64 m_ClockPhaseOffset;  //This tunes the phase of the clock with the audio clock
 
 		std::function<void (size_t,short *,size_t)>	m_FillBufferCallback;
@@ -200,10 +201,11 @@ using namespace DirectSound::Output;
 //we'll callback to a function like this to fill in the buffer
 void client_fillbuffer_default(size_t no_channels, short *dst_buffer, size_t no_samples)
 {
-	//static size_t count = 0;
-	//printf("Test %d", count++);
-
 	//internal testing
+	#if 0
+	static size_t count = 0;
+	printf("Test %d\n", count++);
+	#endif
 	#if 0
 	static generator sine_wave_test;
 	sine_wave_test.gen_sw_short(0, dst_buffer, no_samples);
@@ -394,8 +396,8 @@ double DS_Output_Internal::FillBuffer()
 	class Internal
 	{
 		public:
-			Internal(LPDIRECTSOUNDBUFFER lpdsb, __int64 &ClockPhaseOffset, const  bool &IsStreaming, bool &IsClocking) : m_lpdsb(lpdsb),
-				m_ClockPhaseOffset(ClockPhaseOffset), m_IsStreaming(IsStreaming), m_IsClocking(IsClocking)
+			Internal(LPDIRECTSOUNDBUFFER lpdsb, __int64 &ClockPhaseOffset, const  bool &IsStreaming, bool &IsClocking, size_t &IsClocking_Counter) : m_lpdsb(lpdsb),
+				m_ClockPhaseOffset(ClockPhaseOffset), m_IsStreaming(IsStreaming), m_IsClocking(IsClocking),m_IsClocking_Counter(IsClocking_Counter)
 			{
 				DS_Output_Core &DSOC=DS_Output_Core::GetDS_Output_Core();
 				m_BlockAlign=DSOC.GetWaveFormatToUse()->nBlockAlign;
@@ -418,7 +420,20 @@ double DS_Output_Internal::FillBuffer()
 				//size_t SampleOffset=0;
 				size_t SampleOffset=(size_t)(0.038 * m_SampleRate);
 				m_lpdsb->GetCurrentPosition(&playpos,NULL);
-				m_IsClocking = playpos != 0;  //keep the logic simple, if this is a false positive it will resolve itself the next cycle
+				const size_t Clocking_Counter_Threshold = 3;
+				m_IsClocking = playpos != 0 || m_IsClocking_Counter++<Clocking_Counter_Threshold;  //keep the logic simple, if this is a false positive it will resolve itself the next cycle
+				if (m_IsClocking)
+					m_IsClocking_Counter = 0;  //reset the counter each successful test of an advanced cursor
+				//Testing for false positive
+				#if 0
+				if (playpos==0)
+					printf("%d->%d|\n",playpos, m_IsClocking_Counter);
+				if (!m_IsClocking)
+				{
+					printf("Failed--\n");
+					m_IsClocking = true;
+				}
+				#endif			
 				playpos/=m_BlockAlign; //convert to samples
 
 				//Note: This design assumes the buffer size (of our secondary buffer) is the same size as the sample rate.  This is fine for now, but at some
@@ -612,12 +627,13 @@ double DS_Output_Internal::FillBuffer()
 			LPDIRECTSOUNDBUFFER m_lpdsb;
 			DWORD m_BlockAlign;
 			size_t m_BufferSampleSize;
+			size_t &m_IsClocking_Counter;
 			double m_SampleRate;
 			__int64 &m_ClockPhaseOffset;
 			double m_ClockScalar;
 			const bool &m_IsStreaming;
 			bool &m_IsClocking;
-	} _(m_lpdsb,m_ClockPhaseOffset,m_IsStreaming,m_IsClocking);
+	} _(m_lpdsb,m_ClockPhaseOffset,m_IsStreaming,m_IsClocking, m_IsClocking_Counter);
 
 	double ret=0.0;  //if we are not streaming this value will not really matter
 	DS_Output_Core &DSOC=DS_Output_Core::GetDS_Output_Core();
