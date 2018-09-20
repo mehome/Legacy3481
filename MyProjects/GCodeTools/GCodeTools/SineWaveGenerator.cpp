@@ -87,7 +87,8 @@ void generator::gen_sw_short(size_t channel, short *dst_buffer, size_t no_sample
 		{
 			//Find Y given the hypotenuse (scale) and the angle (rho)
 			//Note: using sin will solve for Y, and give us an initial 0 size
-			sample = sin(rho) * scale;
+			//if frequency is zero we'll keep silent
+			sample = (freq_hz != 0.0)? sin(rho) * scale : 0.0;
 			//increase our angular measurement
 			rho += theta;
 			//bring back the angular measurement by the length of the circle when it has completed a revolution
