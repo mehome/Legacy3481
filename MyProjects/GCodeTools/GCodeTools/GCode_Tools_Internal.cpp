@@ -3,6 +3,7 @@
 #include "pch.h"
 #include "GCodeTools.h"
 #include "NotePlayer.h"
+#include"VectorMath.h"
 
 std::vector<std::string>& split(const std::string& s,
 	char delim,
@@ -21,6 +22,226 @@ std::vector<std::string> split(const std::string& s, char delim) {
 	return elems;
 }
 
+//This class can insert tabs in the GCode by providing a line number as the point of origin, offset, and size.  
+//It traces in the same direction of the cut lifting the zaxis
+class Tab_Generator
+{
+private:
+	//Can be in inches or mm, depending on the units the gcode is working in
+	struct Tabsize
+	{
+		Tabsize(double height,double width) : m_width(width),m_height(height) 
+		{}
+		double m_width;
+		double m_height;
+	};
+	Tabsize m_GlobalSize=Tabsize(0.02, 0.25);  //We can have a global size for all, but keep ability to change individual ones
+	struct TabLocation
+	{
+		TabLocation(size_t LineNumber, double Offset) : m_LineNumber(LineNumber), m_Offset(Offset)
+		{}
+		Vec2d m_origin;
+		//The line number is used to compute the origin
+		size_t m_LineNumber;
+		double m_Offset;
+	};
+	using text_line = std::string;
+	using GCode = std::vector<text_line>;
+	struct Tab
+	{
+		//User can contruct tab with custom size per tab
+		Tab(Tabsize properties, TabLocation position) : m_properties(properties), m_position(position) 
+		{}
+		//Or using a global size reference
+		Tab(Tab_Generator *parent,TabLocation position) : m_properties(parent->m_GlobalSize), m_position(position)
+		{}
+		Tabsize m_properties;
+		TabLocation m_position;
+		GCode m_PatchCode; //this keeps a record of the changes made for the tab from beginning to end (may embed existing gcode)
+		size_t m_PatchLinesToReplace;  //A count of how many lines to replace with the patch code
+	};
+	using Tabs = std::vector<Tab>;
+	Tabs m_Tabs; //add ability to batch process all the tabs in one setting
+
+	GCode m_GCode;  //A container for the GCode
+	std::string m_OutFileName;  //provide a different name to compare
+	static __inline bool IsNumber(char value)
+	{
+		return (value >= '0') && (value <= '9');
+	}
+
+	static __inline int GetNumber(const char *&read_cursor)
+	{
+		int ret = 0;
+		bool IsNegative = read_cursor[0] == '-';
+		if (IsNegative)
+			read_cursor++; //advance past negative sign
+		//expect a number
+		while (IsNumber(read_cursor[0]))
+		{
+			ret += read_cursor[0] - '0';
+			if (IsNumber(read_cursor[1]))
+				ret *= 10;
+			read_cursor++; //advance
+		}
+
+		return IsNegative ? -ret : ret;
+	}
+
+	static __inline double GetNumber_Float(const char *&read_cursor)
+	{
+		double ret = 0;
+		bool IsNegative = read_cursor[0] == '-';
+		if (IsNegative)
+			read_cursor++; //advance past negative sign
+		//expect a number
+		while (IsNumber(read_cursor[0]))
+		{
+			ret += (double)read_cursor[0] - '0';
+			if (IsNumber(read_cursor[1]))
+				ret *= 10.0;
+			read_cursor++; //advance
+		}
+		//Do we have a decimal here?
+		if (read_cursor[0] == '.')
+		{
+			read_cursor++; //advance past decimal
+			double scaler = 0.1;
+			while (IsNumber(read_cursor[0]))
+			{
+				const double digit = (double)read_cursor[0] - '0';
+				ret += (digit * scaler);
+				read_cursor++; //advance
+				scaler *= .1; //move to next precision unit digit
+			}
+		}
+		return IsNegative ? -ret : ret;
+	}
+
+	static void ParseLine(const text_line &line,Tab &tab,bool &XProcessed,bool &YProcessed)
+	{
+		const char *read_cursor = line.c_str();
+		const char *read_cursor_end = read_cursor + line.size();
+		while (read_cursor<read_cursor_end)
+		{
+			switch (*read_cursor)
+			{
+			case 'G':
+			{
+				read_cursor++;
+				int result = GetNumber(read_cursor);
+				assert(result == 1 || result == 2);  //sanity check
+				break;
+			}
+			case 'X':
+			{
+				read_cursor++;
+				double result = GetNumber_Float(read_cursor);
+				tab.m_position.m_origin[0] = result;
+				XProcessed = true;
+				break;
+			}
+			case 'Y':
+			{
+				read_cursor++;
+				double result = GetNumber_Float(read_cursor);
+				tab.m_position.m_origin[1] = result;
+				YProcessed = true;
+				break;
+			}
+			case ' ':
+			case '\t':
+			case '\r':
+			case '\n':
+				read_cursor++;
+				break;
+			}
+		}
+	}
+	bool ObtainPosition(Tab &tab)
+	{
+		size_t line_index = tab.m_position.m_LineNumber-1;  //line numbers are cardinal... this becomes ordinal
+		const text_line &line = m_GCode[line_index];
+		bool XProcessed = false;
+		bool YProcessed = false;
+		ParseLine(line, tab, XProcessed, YProcessed);
+		//TODO make this more robust... currently the line we pick has to have both coordinates on it
+		assert(XProcessed && YProcessed);
+		return true;
+	}
+public:
+	bool Load_GCode(const char *filename)
+	{
+		bool ret = false;
+		std::ifstream in(filename);
+		if (in.is_open())
+		{
+			bool success = true;
+			const size_t MaxBufferSize = 70;  //We know GCode is set for 70
+			const size_t Padding = 30;  //this is really arbitrary
+			while (!in.eof())
+			{
+				char Buffer[MaxBufferSize+ Padding];
+				in.getline(Buffer, MaxBufferSize+ Padding);
+				m_GCode.push_back(text_line(Buffer));
+				if (strlen(Buffer) > MaxBufferSize)
+				{
+					printf("line count exceeds %d, aborting", MaxBufferSize);
+					success = false;
+					break;
+				}
+			}
+			ret = success;
+			in.close();
+		}
+		return ret;
+	}
+	void ProcessTab(Tab tab)
+	{
+		//Obtain position from GCode
+		bool result=ObtainPosition(tab);
+		assert(result);  //I intend to make this more robust
+
+	}
+	//Here is the simplest form to solve tabs
+	void ProcessTab(size_t line_number, double offset = 0.0)
+	{
+		ProcessTab(Tab(this, TabLocation(line_number, offset)));
+	}
+	void Test()
+	{
+		Load_GCode("TabTest.nc");
+		ProcessTab(42);
+	}
+	#if 0
+	void SetOutFilename(const char *filename)
+	{
+		m_OutFileName = filename;
+	}
+	void AddTab(size_t line_number, double offset = 0.0)
+	{
+		m_Tabs.push_back(Tab(this, TabLocation(line_number, offset)));
+	}
+
+	bool Process()
+	{
+		for (auto &iter : m_Tabs)
+		{
+
+		}
+		if (m_OutFileName[0] != 0)
+		{
+			std::ofstream out = std::ofstream(m_OutFileName.c_str(), std::ios::out);
+			for (auto &iter : m_GCode)
+			{
+				const text_line &element = iter;
+				out.write(element.c_str(), strlen(element.c_str()));
+			}
+			out.close();
+		}
+	}
+	#endif
+};
 
 class GCodeTools_Internal
 {
@@ -28,6 +249,7 @@ private:
 	DirectSound::Output::DirectSound_Initializer m_ds_init;
 	DirectSound::Output::DS_Output m_DS;
 	NotePlayer m_NotePlayer;
+	Tab_Generator m_TabGenerator;
 public:
 	GCodeTools_Internal()
 	{
@@ -46,6 +268,7 @@ public:
 	void Stop_NotePlayer() { m_NotePlayer.Stop(); }
 	bool ExportGCode(const char *filename) { return m_NotePlayer.ExportGCode(filename); }
 	void SetBounds(double x, double y, double z) {m_NotePlayer.SetBounds(x, y, z); }
+	void Test() { m_TabGenerator.Test();}
 };
 
   /*******************************************************************************************************/
@@ -94,4 +317,8 @@ bool GCodeTools::ExportGCode(const char *filename)
 void GCodeTools::SetBounds(double x, double y, double z) 
 { 
 	m_p_GCodeTools->SetBounds(x, y, z);
+}
+void GCodeTools::Test()
+{
+	m_p_GCodeTools->Test();
 }

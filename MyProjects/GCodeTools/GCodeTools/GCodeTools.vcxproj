@@ -178,6 +178,9 @@
   <ItemGroup>
     <Text Include="TestSong.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="TabTest.nc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
