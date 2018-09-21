@@ -40,10 +40,11 @@ private:
 	{
 		TabLocation(size_t LineNumber, double Offset) : m_LineNumber(LineNumber), m_Offset(Offset)
 		{}
-		Vec2d m_origin;
+		Vec2d m_origin,m_prev_end,m_end_point;
 		//The line number is used to compute the origin
 		size_t m_LineNumber;
 		double m_Offset;
+		size_t m_NoLinesForEndPoint;  //Used to compute lines to replace
 	};
 	using text_line = std::string;
 	using GCode = std::vector<text_line>;
@@ -118,11 +119,13 @@ private:
 		return IsNegative ? -ret : ret;
 	}
 
-	static void ParseLine(const text_line &line,Tab &tab,bool &XProcessed,bool &YProcessed)
+	static bool ParseLine_XY(const text_line &line, double &XValue, double &YValue)
 	{
+		bool XProcessed = false;
+		bool YProcessed = false;
 		const char *read_cursor = line.c_str();
 		const char *read_cursor_end = read_cursor + line.size();
-		while (read_cursor<read_cursor_end)
+		while ((read_cursor<read_cursor_end)&&((!XProcessed)||(!YProcessed)))
 		{
 			switch (*read_cursor)
 			{
@@ -137,7 +140,7 @@ private:
 			{
 				read_cursor++;
 				double result = GetNumber_Float(read_cursor);
-				tab.m_position.m_origin[0] = result;
+				XValue = result;
 				XProcessed = true;
 				break;
 			}
@@ -145,7 +148,7 @@ private:
 			{
 				read_cursor++;
 				double result = GetNumber_Float(read_cursor);
-				tab.m_position.m_origin[1] = result;
+				YValue = result;
 				YProcessed = true;
 				break;
 			}
@@ -157,16 +160,32 @@ private:
 				break;
 			}
 		}
+		return XProcessed&&YProcessed;
 	}
 	bool ObtainPosition(Tab &tab)
 	{
 		size_t line_index = tab.m_position.m_LineNumber-1;  //line numbers are cardinal... this becomes ordinal
-		const text_line &line = m_GCode[line_index];
-		bool XProcessed = false;
-		bool YProcessed = false;
-		ParseLine(line, tab, XProcessed, YProcessed);
+		double XValue;
+		double YValue;
+		bool result=ParseLine_XY(m_GCode[line_index], XValue, YValue);
 		//TODO make this more robust... currently the line we pick has to have both coordinates on it
-		assert(XProcessed && YProcessed);
+		assert(result);
+		tab.m_position.m_origin = Vec2d(XValue, YValue);
+		double distance_of_points = 0.0;
+		Vec2d TestEndPoint = tab.m_position.m_origin;
+		tab.m_position.m_prev_end = tab.m_position.m_origin;
+		while (distance_of_points<tab.m_properties.m_width)
+		{
+			line_index++;
+			result = ParseLine_XY(m_GCode[line_index], XValue, YValue);
+			assert(result);  //same here... this will need to iterate until both are complete
+			TestEndPoint=Vec2d(XValue, YValue);
+			distance_of_points = tab.m_position.m_origin.length(TestEndPoint);
+			if (distance_of_points < tab.m_properties.m_width)
+				tab.m_position.m_prev_end = TestEndPoint;  //need to keep track of previous point to inject a new point
+		}
+		tab.m_position.m_end_point = TestEndPoint;
+		tab.m_position.m_NoLinesForEndPoint = line_index - (tab.m_position.m_LineNumber - 1);
 		return true;
 	}
 public:
