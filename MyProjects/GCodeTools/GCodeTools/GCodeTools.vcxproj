@@ -176,6 +176,7 @@
     <ClCompile Include="Time_Type.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="FugaVIII_tc.txt" />
     <Text Include="TestSong.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -212,6 +212,10 @@ private:
 				case 'W':
 					DurationScaleFactor = !Dotted? 1.0 : 1.5;
 					break;
+				case '.':
+					Dotted = true;
+					DurationScaleFactor += (DurationScaleFactor*0.5);
+					break;
 				case 'a':
 				case 'A':
 				case 'b':
@@ -491,8 +495,8 @@ private:
 								//sanity check... todo this may be possible if we have spaces, but since we have rests, it shouldn't be an issue
 								assert(pre_no_samples <= (size_t)(prev_note->second.Duration * sample_rate));
 								//populate this range with this note's frequency... todo may need to do multiple notes here
-								sine_wave.frequency(channel, prev_note->second.FreqInHertz);
-								sine_wave.gen_sw_short(channel, dst_buffer_index + channel, pre_no_samples);
+								sine_wave.frequency(voice, prev_note->second.FreqInHertz);
+								sine_wave.gen_sw_short(voice, dst_buffer_index + channel, pre_no_samples, add_samples);
 								//advance the dest buffer index
 								dst_buffer_index += (pre_no_samples* no_channels);
 								current_time_index = note_start;
@@ -508,8 +512,8 @@ private:
 								adjusted_duration = adj_no_samples / sample_rate;
 								advance_note = false;
 							}
-							sine_wave.frequency(channel, track->m_NoteIndex->second.FreqInHertz);
-							sine_wave.gen_sw_short(channel, dst_buffer_index + channel, adj_no_samples);
+							sine_wave.frequency(voice, track->m_NoteIndex->second.FreqInHertz);
+							sine_wave.gen_sw_short(voice, dst_buffer_index + channel, adj_no_samples, add_samples);
 							//advance the dest buffer index
 							dst_buffer_index += (adj_no_samples* no_channels);
 							current_time_index += adjusted_duration;
@@ -552,8 +556,8 @@ private:
 						{
 							//this will happen when we reach the end of the block... for now we simply fill with silence, but we may loop as well
 							const size_t samples_remain = (dst_buffer_end - dst_buffer_index) / no_channels;
-							sine_wave.frequency(channel, 0.0);
-							sine_wave.gen_sw_short(channel, dst_buffer_index + channel, samples_remain);
+							sine_wave.frequency(voice, 0.0);
+							sine_wave.gen_sw_short(voice, dst_buffer_index + channel, samples_remain);
 							//nothing to advance here
 						}
 					}
@@ -567,6 +571,7 @@ private:
 					m_current_block_time = 0.0;
 					m_block_number++;
 					m_cache.m_LastBlock_Number = m_block_number;
+					m_cache.m_tracks.clear();  //flush the tracks... as they may change from block to block
 				}
 			}
 			//advance time

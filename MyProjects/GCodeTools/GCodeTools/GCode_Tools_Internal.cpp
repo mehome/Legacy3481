@@ -287,7 +287,12 @@ public:
 	void Stop_NotePlayer() { m_NotePlayer.Stop(); }
 	bool ExportGCode(const char *filename) { return m_NotePlayer.ExportGCode(filename); }
 	void SetBounds(double x, double y, double z) {m_NotePlayer.SetBounds(x, y, z); }
-	void Test() { m_TabGenerator.Test();}
+	void Test() 
+	{ 
+		//m_TabGenerator.Test();
+		LoadSequence_CT("FugaVIII_tc.txt");
+		printf("Loaded FugaVIII\n");
+	}
 };
 
   /*******************************************************************************************************/

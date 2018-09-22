@@ -5,7 +5,9 @@
 
 generator::generator(size_t no_channels) :	m_waves(0),m_no_channels((int)no_channels),	m_sample_rate ( 48000 )
 {
-	for (signed i = 0; i < m_no_channels; i++)
+	//Note: for this version having the ability to add samples... we'll provide more descriptors for the other channesl, but
+	//keep the number of channels to 2
+	for (signed i = 0; i < 10; i++)
 	{
 		wave_descriptor new_element;
 		m_waves.push_back(new_element);
@@ -99,7 +101,13 @@ void generator::gen_sw_short(size_t channel, short *dst_buffer, size_t no_sample
 			if (!addsample)
 				*(((short *)(dst_buffer)) + (index+= m_no_channels)) = (short)(sample*(double)0x7fff);
 			else
-				*(((short *)(dst_buffer)) + (index += m_no_channels)) += (short)(sample*(double)0x7fff);
+			{
+				short OldSample = dst_buffer[index+ m_no_channels];
+				const double stbm = (double)0x7fff;  //16 bit max
+				double AddedSample_f = (sample + (OldSample / stbm))*0.5;
+				short AddedSample=(short)(AddedSample_f * stbm);
+				*(((short *)(dst_buffer)) + (index += m_no_channels))= AddedSample;
+			}
 		}
 	}
 	//save the sine wave state
