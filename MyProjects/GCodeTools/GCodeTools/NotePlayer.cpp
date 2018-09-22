@@ -739,7 +739,8 @@ private:
 			//when using the magnitude the feedrate boosts from 6.5 to 9.192388155425117
 			//which gives a rate of 155.80 (instead of 110... using same 0.059 scale tune)
 			//now when testing sin(45) * 155.8 brings it back down to 110
-
+			if (magnitude == 0.0)
+				magnitude = 1.0;  //I can't really rest so give a low frequency
 			//currently when the magnitude is equal to the feedrate the time equals one minute
 			vector *= 1.0 / 60.0;
 			//now time is one second... same units as the duration
@@ -797,6 +798,10 @@ private:
 			return success? m_BlockWrite.c_str() : NULL;
 		}
 		void SetBounds(Vec3d Bounds) { m_AxisBounds = Bounds; }
+		void Flush() 
+		{ 
+			m_CurrentPos = Vec3d(0.0, 0.0, 0.0); 
+		}
 	} m_GCode_Writer;
 public:
 	NotePlayer_Internal() : m_WavePlayer(m_Song),m_GCode_Writer(m_Song)
@@ -878,13 +883,20 @@ public:
 	{
 		const char *block=nullptr;
 		size_t blockindex = 0;
+		m_GCode_Writer.Flush();  //ensure everything is reset incase we do multiple tries
 		if (filename)
 		{
 			std::ofstream out = std::ofstream(filename, std::ios::out);
-			const char *header = "G1 G20 G90 (cut speed absolute inches)\n";
+			const char *header =
+				"%\nG90 G94\nG17\nG20\nG28 G91 Z0\nG90\n"
+				"M9\nT0\n(Music Song Below)\nS19666 M3\nG54\n"
+				"G0 X0.0 Y0.0\nG1 Z0.00 F30\n";
 			out.write(header, strlen(header));
 			while ((block = m_GCode_Writer.WriteBlock(blockindex++))!=nullptr)
 				out.write(block, strlen(block));
+			const char *footer =
+				"G0 Z0.6\nG28 G91 Z0\nG90\nG28 G91 X0 Y0\nG90\nM30\n%\n";
+			out.write(footer, strlen(footer));
 			out.close();
 		}
 		else
