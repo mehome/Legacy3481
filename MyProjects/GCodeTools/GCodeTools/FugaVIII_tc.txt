@@ -1,4 +1,6 @@
 tg90 v2o4 q#d .#a ib #a #g #f #g q#a #d .#g
 	v2o4i#f qf .#d if q#f #g .#a i#g  v1 .qr qo4#a o5.#d i#f f #d #c #d qf
 v1o4 q#a o5.#d i#c qc io4#a o5c q.#c q#c io4b q#a  v2o4 i#f f #f sf #d if q#a ia .q#a i#g g #d .q#g i#f
-	v1o5 .q#d id #d f q#f if #f #g f #f #g	v2o4 if #d qf i#f #g #a o5c d #d f d #d f  v3 .hr o3q#d .#a ib #a #g
+	v1o5 .q#d id #d f q#f if #f #g f #f #g	    v2o4 if  #d qf i#f #g #a o5c d #d f d #d f  v3 .hr o3q#d .#a ib #a #g
+v1o5i #a #g #f f q#f if #d d q#d id #d #c o4qb  v2o5 i#f f #d d #d #c qo4b #a #g #f i#g #f  v3o3i #f #g q#a #d .#g i#f qf #d o4#d
+	v1o4ib s#a #g i#a sb o5#c i#d sf #f .if 3f#d qd i#d #c o4b #a #g #f  v2o4 .qf s#d f i#f s#g #a .i#g 3#f #g i#a #g #f f q#d id #d    v3o4q d #c c o3b i#a o2#a o3.q#d i#f f #d
