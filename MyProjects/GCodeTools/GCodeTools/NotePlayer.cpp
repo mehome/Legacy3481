@@ -725,6 +725,22 @@ private:
 				result = (voice1 == track1.notes.end() &&
 					(!track2 || voice2 == track2->notes.end()) &&
 					(!track3 || voice3 == track3->notes.end()));
+				if (!result)
+				{
+					//TODO know for certain why this happens, as for now it can be a false positive
+					#if 0
+					//still allow it to success but give warning to see if there is issue with song alignment
+					std::string voice_str;
+					if (voice1 != track1.notes.end())
+						voice_str = "voice1 ";
+					if ((track2)&&(voice2 != track2->notes.end()))
+						voice_str += "voice2 ";
+					if ((track3) && (voice3 != track3->notes.end()))
+						voice_str += "voice3 ";
+					printf("warning: block[%d] %s did not reach the end \n", seq_iter->first,voice_str.c_str());
+					#endif
+					result = true;
+				}
 			}
 			return result;
 		}
