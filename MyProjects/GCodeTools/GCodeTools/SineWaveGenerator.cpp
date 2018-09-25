@@ -10,6 +10,7 @@ generator::generator(size_t no_channels) :	m_waves(0),m_no_channels((int)no_chan
 	for (signed i = 0; i < 10; i++)
 	{
 		wave_descriptor new_element;
+		new_element.m_amplitude = 0.75;  //prevent clipping artifacts by keeping the amplitude down a little
 		m_waves.push_back(new_element);
 	}
 }
