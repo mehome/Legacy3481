@@ -208,8 +208,9 @@ void client_fillbuffer_default(size_t no_channels, short *dst_buffer, size_t no_
 	#endif
 	#if 0
 	static generator sine_wave_test;
+	sine_wave_test.frequency(0, 100.0);
 	sine_wave_test.gen_sw_short(0, dst_buffer, no_samples);
-	sine_wave_test.frequency(1, 500.0);
+	sine_wave_test.frequency(1, 101.0);
 	sine_wave_test.gen_sw_short(1, dst_buffer+1, no_samples);
 	#endif
 }
