@@ -46,9 +46,9 @@ class NotePlayer_Internal
 {
 private:
 	Song m_Song;
-
-	//--- is rest, G-4, G#4, G$4, shows note, accidental, and octave respectively, returns zero if its a rest
-	__inline double GetFrequency(const char *Note)
+	//This is the all general purpose modern tuning way to tune, which requires no key signature since every note is equally spaced, and can work
+	//in any key... The down side to this is that perfect 4th and 5th intervals are not so perfect to accomodate this equal spacing
+	__inline double GetFrequency_EqualTemperment(const char *Note)
 	{
 		if (Note[0] == '-')
 			return 0.0;
@@ -97,6 +97,123 @@ private:
 		frequency *= halfstep_powered;  //now to factor in the fixed frequency
 		return frequency;
 	}
+
+	//This takes the essesnce and best use case of the pythagorean tuning by working with ratios that can mathematically subdivide evenly within
+	//a waveform as a result perfect 4th and 5th haromies sound amazing as they resonate perfectly in the waveform, but the downside is that we
+	//really need to specify the key signature of the song to get best results, and the song really can't modulate or key change because when that
+	//happens the tuning is lost... unless of course we can dynamically change our seed scale, which wasn't possible during that time era.  We can
+	//do this now.
+	#if 0
+	double m_meantone_key_seed = 16.35;
+	int m_meantone_transpose = 0;
+	#else
+	double m_meantone_key_seed = 23.12;
+	int m_meantone_transpose = -6;
+	#endif
+	__inline double GetFrequency_MeanTone(const char *Note)
+	{
+		if (Note[0] == '-')
+			return 0.0;
+		//http://www.medieval.org/emfaq/harmony/pyth.html
+
+		int halfstep_count = 0;
+		size_t Octave = Note[2] - '0';
+		switch (Note[0])
+		{
+			//A already set
+			//case 'A': break;
+		case 'c':case 'C':		halfstep_count = 0;		break;
+		case 'd':case 'D':		halfstep_count = 2;		break;
+		case 'e':case 'E':		halfstep_count = 4;		break;
+		case 'f':case 'F':		halfstep_count = 5;		break;
+		case 'g':case 'G':		halfstep_count = 7;		break;
+		case 'a':case 'A':		halfstep_count = 9;		break;
+		case 'b':case 'B':		halfstep_count = 11;	break;
+		}
+		if (Note[1] == '#')
+			halfstep_count++;
+		else if (Note[1] == '$')
+			halfstep_count--;
+		//apply note transpose
+		halfstep_count += m_meantone_transpose;
+		//keep in 0-11 range
+		if (halfstep_count < 0)
+		{
+			halfstep_count += 12;
+			Octave--;
+		}
+		else if (halfstep_count >= 12)
+		{
+			halfstep_count -= 12;
+			Octave++;
+		}
+		assert(halfstep_count >= 0 && halfstep_count < 12);
+		struct ratio
+		{
+			double num;
+			double den;
+		};
+		static ratio scale_table[12] =
+		{ 
+			{1.0,1.0},			// c
+			{2187.0,2048.0},    // c#
+			{9.0,8.0},			// d
+			{32.0,27.0},		// e$
+			{81.0,64.0},		// e
+			{4.0,3.0},			// f
+			{729.0,512.0},		// f#
+			{3.0,2.0},			// g
+			{6561.0,4096.0},	// g#
+			{27.0,16.0},		// a
+			{16.0,9.0},			// b$
+			{243.0,128.0}		// b
+		};
+		//Here is another table used this one has smaller ratios
+		static ratio scale_table2[12] =
+		{
+			{1.0,1.0},			// c
+			{256.0,243.0},		// c#
+			{9.0,8.0},			// d
+			{32.0,27.0},		// e$
+			{81.0,64.0},		// e
+			{4.0,3.0},			// f
+			{729.0,512.0},		// f#
+			{3.0,2.0},			// g
+			{128.0,81.0},		// g#
+			{27.0,16.0},		// a
+			{16.0,9.0},			// b$
+			{243.0,128.0}		// b
+		};
+		double frequency = m_meantone_key_seed;  //start with seed... doubling it per octave set
+		for (size_t i = 0; i < Octave; i++)
+			frequency *= 2;
+		ratio ratio_to_use = scale_table2[halfstep_count];
+		return frequency * ratio_to_use.num / ratio_to_use.den;
+	}
+
+	enum TuningSystem
+	{
+		eEqualTemperment,
+		eMeanTone
+	} m_TuningSystem= eMeanTone;
+	//--- is rest, G-4, G#4, G$4, shows note, accidental, and octave respectively, returns zero if its a rest
+	__inline double GetFrequency(const char *Note)
+	{
+		double frequency=0.0;
+		switch (m_TuningSystem)
+		{
+		case eEqualTemperment:
+			frequency = GetFrequency_EqualTemperment(Note);
+			break;
+		case eMeanTone:
+			frequency = GetFrequency_MeanTone(Note);
+			break;
+		default:
+			assert(false);
+		}
+		return frequency;
+	}
+
 	//track starting with 0... each time this is called it will append to the track so voices may be interleaved
 	static __inline bool IsNumber(char value)
 	{
