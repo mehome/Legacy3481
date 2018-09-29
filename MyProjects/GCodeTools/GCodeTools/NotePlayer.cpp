@@ -103,13 +103,8 @@ private:
 	//really need to specify the key signature of the song to get best results, and the song really can't modulate or key change because when that
 	//happens the tuning is lost... unless of course we can dynamically change our seed scale, which wasn't possible during that time era.  We can
 	//do this now.
-	#if 0
 	double m_meantone_key_seed = 16.35;
 	int m_meantone_transpose = 0;
-	#else
-	double m_meantone_key_seed = 23.12;
-	int m_meantone_transpose = -6;
-	#endif
 	__inline double GetFrequency_MeanTone(const char *Note)
 	{
 		if (Note[0] == '-')
@@ -195,7 +190,7 @@ private:
 	{
 		eEqualTemperment,
 		eMeanTone
-	} m_TuningSystem= eMeanTone;
+	} m_TuningSystem= eEqualTemperment;
 	//--- is rest, G-4, G#4, G$4, shows note, accidental, and octave respectively, returns zero if its a rest
 	__inline double GetFrequency(const char *Note)
 	{
@@ -433,8 +428,96 @@ private:
 					size_t bpm = GetNumber(index_ptr);
 					m_Song.BeatPerMinute = (double)bpm;
 					int x = 3;
+					continue;
 				}
-				SkipGarbage(index_ptr);
+				else if (index_ptr[0] == 'k' || index_ptr[0] == 'K')
+				{
+
+					struct TransposePacket
+					{
+						double FrequencySeed;  //each key using an equal temperment octave 0 frequency seed
+						int transpose;  //transpose scale offset to the key of C for meantone translation
+					};
+					static TransposePacket TransposeTable[12] =
+					{
+						{16.35,0},   // C
+						{17.32,-1},  // C#
+						{18.35,-2},  // D
+						{19.45,-3},  // E$
+						{20.60,-4},  // E
+						{21.83,-5},  // F
+						{23.12,-6},  // F#
+						{24.50,5},   // G
+						{25.96,4},   // A$
+						{27.50,3},   // A
+						{29.14,2},   // B$
+						{30.87,1},   // B
+					};
+					index_ptr++;
+					char accidental = '-';  //either - #, or $
+					//expecting an accidental or note
+					if ((index_ptr[0] == '#') || (index_ptr[0] == '$'))
+					{
+						accidental = index_ptr[0];
+						index_ptr++;
+					}
+					//For key it is case sensitive for major or minor
+					size_t key_index = 0;
+					switch (index_ptr[0])
+					{
+					case 'a': case 'C':
+						key_index = 0;
+						break;
+					case 'b': case 'D':
+						key_index = 2;
+						break;
+					case 'c': case 'E':
+						key_index = 4;
+						break;
+					case 'd': case 'F':
+						key_index = 5;
+						break;
+					case 'e': case 'G':
+						key_index = 7;
+						break;
+					case 'f': case 'A':
+						key_index = 9;
+						break;
+					case 'g': case 'B':
+						key_index = 11;
+						break;
+					}
+					if (accidental == '#')
+					{
+						key_index++;
+						if (key_index > 11)
+							key_index -= 12;  //really should result in zero
+					}
+					if (accidental == '$')
+					{
+						if (key_index == 0)
+							key_index = 12;  //since I'm working with unsigned I'll check before 
+						key_index--;
+					}
+					assert(key_index >= 0 && key_index < 12);
+					m_meantone_key_seed = TransposeTable[key_index].FrequencySeed;
+					m_meantone_transpose = TransposeTable[key_index].transpose;
+					index_ptr++;
+					continue;
+				}
+				else if (index_ptr[0] == 'u' || index_ptr[0] == 'U')
+				{
+					index_ptr++;
+					//expect a number
+					if ((index_ptr[0] >= '0') && (index_ptr[0] <= '9'))
+					{
+						m_TuningSystem = (TuningSystem)(index_ptr[0] - '0');
+					}
+					else
+						assert(false);
+					index_ptr++;
+					continue;
+				}
 				if (index_ptr[0] == 0)
 					break;
 				if (index_ptr[0] == 'v' || index_ptr[0] == 'V')
