@@ -163,14 +163,15 @@ private:
 			{16.0,9.0},			// b$
 			{243.0,128.0}		// b
 		};
-		//Here is another table used this one has smaller ratios
+		//Here is another table used this one has smaller ratios... using the major third from quarter comma meantone
 		static ratio scale_table2[12] =
 		{
 			{1.0,1.0},			// c
 			{256.0,243.0},		// c#
 			{9.0,8.0},			// d
 			{32.0,27.0},		// e$
-			{81.0,64.0},		// e
+			//{81.0,64.0},		// e
+			{80.0,64.0},		// e using a syntonic comma to obtain a 5/4 ratio
 			{4.0,3.0},			// f
 			{729.0,512.0},		// f#
 			{3.0,2.0},			// g
