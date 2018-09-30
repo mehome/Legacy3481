@@ -18,3 +18,7 @@ v1o5 i#f f #d #c qc d h#d #c   v2o4 q#g .#ai#g #f f #d #f .qbi#a #g g   v3o3 q#c
 	v1o4 ib o5#c #d e o4#a b o5#c #d o4b #a #g #f qf i#f #g   v2o4 .h#gqg #g .#did #d f   v3o2 i#g #a b o3#c q#d ir #d #g #a b #g #a #g #f f
 v1o4 q#a io5c d .q#di#c c d h#d qd   v2o4 i#f f q#d #a .#dif q#f h#g   v3o3 q#d .#gsgf qg i#g #f f #d f #f #g #a
 	v1o5 q#d id #d f #g #f f #d #c o4b s#ab i#a o5c d #d   v2o4 i#f #g #a o5c d o3#a o4c d .q#dif q#f if #d  v3o3 s#do4#d#co3b .q#ai#f #g #a b #a q#g o4#d o3#a
+v1o5 if o4#a o5#a #g #f #g #a b qf g i#g #f f #d   v2o4 id #d .qfs#dd .q#di#c o3b #a b o4#d q#g   v3o3 i#a o4c qd i#d o3b #f #g q#a #d i#g #a qb
+	v1o5 qd .#di#c o4b #a b #a .q#g s#ff i#f #g   v2o4 i#g #f f #d qf g i#g #f f #d qd i#d f   v3o3 h#a wr o2q#a #d
+v1o4 q#a .#did #d f #f f q#d #a #d i#d f qg #g o5#g .#di#c   v2o4 i#f f #f #g #a #g #f sf#did q#g s#ffig #g #a #c o3b o4#c #d e q#d .o3#gig #g #a  v3o2 i#d d #d f #f f q#d #a .#dif qg #g #a ib o3#c o2b #a #g #a b so3f#c 
+	v1o5 .q#dif .q#fif q#d #a .#di#d d #d f d #d f #f #g #a o4#a o5#d f    v2o3 ib #a q#g o4#d .o3#aib .qo4#cio5#c o4b #a #g #f #g f #f $g #a q#g s#ffi#f #g   v3o3q#g io2b o3#c #d d #d f #f #g f g #g #a #g #f f #d d b #a #g #f f #d #c qo2b
