@@ -22,3 +22,7 @@ v1o5 if o4#a o5#a #g #f #g #a b qf g i#g #f f #d   v2o4 id #d .qfs#dd .q#di#c o3
 	v1o5 qd .#di#c o4b #a b #a .q#g s#ff i#f #g   v2o4 i#g #f f #d qf g i#g #f f #d qd i#d f   v3o3 h#a wr o2q#a #d
 v1o4 q#a .#did #d f #f f q#d #a #d i#d f qg #g o5#g .#di#c   v2o4 i#f f #f #g #a #g #f sf#did q#g s#ffig #g #a #c o3b o4#c #d e q#d .o3#gig #g #a  v3o2 i#d d #d f #f f q#d #a .#dif qg #g #a ib o3#c o2b #a #g #a b so3f#c 
 	v1o5 .q#dif .q#fif q#d #a .#di#d d #d f d #d f #f #g #a o4#a o5#d f    v2o3 ib #a q#g o4#d .o3#aib .qo4#cio5#c o4b #a #g #f #g f #f $g #a q#g s#ffi#f #g   v3o3q#g io2b o3#c #d d #d f #f #g f g #g #a #g #f f #d d b #a #g #f f #d #c qo2b
+v1o5 qd qr o4#a .o5#die #d #c o4b o5#c q#d   v2o4 q#a o3#a o4.#die #d #c o3b o4#c q#d io3#g #f   v3o2 q#a o3.#die #d #c o2b o3#c q#d io2#g #a qb
+	v1o4 i#g s#abi#a b o5q#c .o4#fif #f #g #a #g q#f   v2o3qf o4#c o3.#fif #f #g #a #g q#f ib #a   v3o3q#c .o2#fif #f #g #a #g #f o3e h#d
+v1o5 heie d .q#di#f f #d d f .q#aib #a #g #f #g q#a #d #g   v2o3 q#g o5#c ho4#f ib #a #g #f f #d d f #a #g #f f q#d o5i#d #c o4b #a #g b   v3o3 i#d #c o2b #a qb o3ib #a #g #a b #g .q#ai#g #f #g q#a i#d f qg i#g #f f #d
+	v1o5 i#g #f qf #d #c o4b #a #g #f f ir o5c d #d .qfi#d s#co4bo5#cg   v2o4 i#a q#d #c o4b #a #g #f f i#d d f .q#aib #a #g #f #g q#a   v3o3 id #d o2#a o3#a b #d f g #g f d #d c d #d o2#d #a qr ho3#a o4#d
