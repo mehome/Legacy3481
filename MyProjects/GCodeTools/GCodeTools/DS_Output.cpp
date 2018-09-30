@@ -728,7 +728,8 @@ void DS_Output_Internal::operator() (const void*)
 		m_Event.wait((DWORD)(TimeOut * 0.50 * 1000.0));  //only a small percentage before to get enough time to fill
 	else
 	{
-		printf("Unexpected return time from FillBuffer\n");
+		//Enable if there is playback problems... this does git hit from time to time
+		//printf("Unexpected return time from FillBuffer\n");
 		m_Event.wait(1000);
 	}
 }
