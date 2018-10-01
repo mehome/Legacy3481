@@ -26,3 +26,13 @@ v1o5 qd qr o4#a .o5#die #d #c o4b o5#c q#d   v2o4 q#a o3#a o4.#die #d #c o3b o4#
 	v1o4 i#g s#abi#a b o5q#c .o4#fif #f #g #a #g q#f   v2o3qf o4#c o3.#fif #f #g #a #g q#f ib #a   v3o3q#c .o2#fif #f #g #a #g #f o3e h#d
 v1o5 heie d .q#di#f f #d d f .q#aib #a #g #f #g q#a #d #g   v2o3 q#g o5#c ho4#f ib #a #g #f f #d d f #a #g #f f q#d o5i#d #c o4b #a #g b   v3o3 i#d #c o2b #a qb o3ib #a #g #a b #g .q#ai#g #f #g q#a i#d f qg i#g #f f #d
 	v1o5 i#g #f qf #d #c o4b #a #g #f f ir o5c d #d .qfi#d s#co4bo5#cg   v2o4 i#a q#d #c o4b #a #g #f f i#d d f .q#aib #a #g #f #g q#a   v3o3 id #d o2#a o3#a b #d f g #g f d #d c d #d o2#d #a qr ho3#a o4#d
+v1o5 s#g#aqb s#a#gi#a #d f g q#g qr #a .#dio4b o5#c #d e #d q#c #g #d   v2o4q#a .#gig f e #d b #a #g g s#dfig s#g#a.qbi#a #g g #g #a #d f g #g   v3o4q#d e #d #c o3b o4#c h#d o3#g .ho4#c qo3b
+	v1o5i#d f qg i#g #a #g #f f #f .q#gi#f f s#f#g#a#gq#as#g#f   v2o4s#abo5q#c so4b#aqb qr h#g .o5#cq#d  v3o3 h#a q#g .o4#ci#d #c o3b #a b qo4#c o3#f b
+v1o5 if q#f if #f #c .q#fi#g #f e #d e q#f o4b .o5ei#d q#c o4b o5e  v2o5q#c o4b #a b ho5#c o4#f .bq#a h#g   v3o3ib #a q#g i#f e s#d#c#deio2#a #f #g #a b o3#c #d se#fi#g s#abi#c s#deio2#f qo3#f ig #g g #g #a
+	v1o5ie d h#d .q#gi#g g q#f i#f f e q#d #c .o4bib .q#aio5#f   v2o4 q#f .bio5#d #c o4b #a b qo5#c o4#g .o5#cio4b .q#ai#d .q#gi#g q#f   v3o3 ib #a #g #f f #f f #d d o4sd#die o3#a b o4c #c o3#a g q#g ig #g #f e #d #c d #d #a
+v1o4h#gi#g s#ffi#f #g q#a r ho5f   v2o4i#f #f e #d qd .#dsdcid f .q#aib   v3o2 ib o3c #c o2#g h#ai#a o3if .q#aib #a #g
+	v1o5 .h#aqb #a #g #f #g   v2o4.q#ai#g .q#fi#g h#a q#d #g   v3o3 i#f #g q#a i#d sf#f.q#gi#f f o4d #d sf#fif #d
+v1o5 h#a #d .#gq#f   v2o4i#g #f qf ig o3#a .qo4#die #d #c o3b o4#c q#d   v3o4 id q#d #c s#dei#d #c o3b o4#c o3b #a #g #f e #d
+	v1o5 he #di#d io4b .q#gi#a qb   v2o3 q#g .o4#cio3b q#a .#gi#a b #a #g #f   v3o3 i#c so4#co3bi#a #g g q#g i#f hfif i#f f #d
+v1o4ib #g .qfi#f .q#gif .qdid #d f   v2o3 .qfi#f #g #f f #d .qdi#d qf i#f #g   v3o3 hdid i#d d c o2h#ai#a i#g #f f
+	v1o4 i#f g #g #a b o5c d #d q#d d .h#d wrr  v2o3 i#a #a b o4#c #d #d f #f f b #a #g .hg wrr  v3o2 i#d #c b #a #g o3#f f #d q#a o2#a .h#d wrr
