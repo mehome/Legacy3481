@@ -107,8 +107,6 @@ class DS_Output_Internal
 	private:
 		//The extra thread is primarily for non-displayed clients which gives more tolerance for scheduling
 		std::future<void> m_TaskState;
-		critical_section	m_BlockDirectSound;
-		critical_section m_BlockStreamingCalls;
 		event m_Event;
 
 		LPDIRECTSOUNDBUFFER m_lpdsb;
