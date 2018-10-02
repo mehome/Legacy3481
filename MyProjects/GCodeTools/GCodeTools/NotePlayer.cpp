@@ -588,9 +588,11 @@ private:
 		std::shared_ptr<DirectSound::Output::DS_Output> m_DSound;
 		generator sine_wave;
 		size_t m_block_number = 0;
+		size_t m_ReverseChannels = 0;  //If set to 1 the channels will be reversed
 		double m_current_block_time = 0.0;
 		bool m_IsStreaming=false;
 		bool m_AutoAdvanceBlock = false;  //this is really the difference between playing the song and a block
+		bool m_IsPaused=false; //the pauses pacifies the fill buffer with silence
 		const Song &m_Song; //<-- read only!
 		//Not sure yet if I need to cache the track positions like this, but I will need to get the actual block
 		struct Song_Cache
@@ -640,6 +642,14 @@ private:
 
 		void client_fillbuffer(size_t no_channels, short *dst_buffer, size_t no_samples)
 		{
+			if (m_IsPaused)
+			{
+				sine_wave.frequency(0, 0.0);
+				sine_wave.gen_sw_short(0, dst_buffer, no_samples);
+				sine_wave.frequency(1, 0.0);
+				sine_wave.gen_sw_short(1, dst_buffer+1, no_samples);
+				return;
+			}
 			assert(no_channels == 2);  //always work with 2 channels
 			const double sample_rate = 48000.0; //TODO: I shouldn't hard code the samplerate
 			const double duration= no_samples / sample_rate;
@@ -667,7 +677,7 @@ private:
 				{
 					short *dst_buffer_index = dst_buffer;  //reset the buffer as we are on the next channel
 					double current_time_index = m_current_block_time;  //reset this time as well
-					const size_t channel = voice & 1;  //all odd's on one side, all evens on the other
+					const size_t channel = voice + m_ReverseChannels & 1;  //all odd's on one side, all evens on the other
 					const bool add_samples = voice > 1;  //all voice past the first two need to be added 
 					voice++;  //done reading voice... increment for next iteration
 					Song_Cache::Track_Cache *track = &i;  //grab the track in case it advances to next block
@@ -832,6 +842,8 @@ private:
 			m_AutoAdvanceBlock = true;
 			StartStreaming();
 		}
+		void SetPaused(bool IsPaused) { m_IsPaused = IsPaused; }
+		void ReveseChannels(bool IsReversed) { m_ReverseChannels = IsReversed ? 1 : 0; }
 	} m_WavePlayer;
 	class GCode_Writer
 	{
@@ -1098,6 +1110,14 @@ public:
 	{
 		m_WavePlayer.StopStreaming();
 	}
+	void SetPaused(bool IsPaused) 
+	{ 
+		m_WavePlayer.SetPaused(IsPaused); 
+	}
+	void ReveseChannels(bool IsReversed)
+	{
+		m_WavePlayer.ReveseChannels(IsReversed);
+	}
 	void SeekBlock(double position)
 	{
 	}
@@ -1167,6 +1187,14 @@ void NotePlayer::Stop()
 	m_Player->Stop();
 }
 
+void NotePlayer::Pause(bool IsPaused)
+{
+	m_Player->SetPaused(IsPaused);
+}
+void NotePlayer::ReveseChannels(bool IsReversed)
+{
+	m_Player->ReveseChannels(IsReversed);
+}
 void NotePlayer::SeekBlock(double position)
 {
 }

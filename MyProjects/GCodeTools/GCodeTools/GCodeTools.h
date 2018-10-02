@@ -14,6 +14,8 @@ public:
 	void PlayBlock(size_t block_number);
 	void PlaySong(double position);
 	void Stop_NotePlayer();
+	void Pause_NotePlayer(bool IsPaused);
+	void ReveseChannels(bool IsReversed);
 	bool ExportGCode(const char *filename);
 	void SetBounds(double x, double y, double z);  //specify different size dimensions of when to flip
 	void Test();

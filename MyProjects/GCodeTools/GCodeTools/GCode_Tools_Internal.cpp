@@ -285,6 +285,8 @@ public:
 	void PlayBlock(size_t block_number) { m_NotePlayer.PlayBlock(block_number); }
 	void PlaySong(double position) { m_NotePlayer.PlaySong(position); }
 	void Stop_NotePlayer() { m_NotePlayer.Stop(); }
+	void Pause_NotePlayer(bool IsPaused) { m_NotePlayer.Pause(IsPaused); }
+	void ReveseChannels(bool IsReversed) { m_NotePlayer.ReveseChannels(IsReversed); }
 	bool ExportGCode(const char *filename) { return m_NotePlayer.ExportGCode(filename); }
 	void SetBounds(double x, double y, double z) {m_NotePlayer.SetBounds(x, y, z); }
 	void Test() 
@@ -334,6 +336,14 @@ void GCodeTools::Stop_NotePlayer()
 	m_p_GCodeTools->Stop_NotePlayer();
 }
 
+void GCodeTools::Pause_NotePlayer(bool IsPaused)
+{
+	m_p_GCodeTools->Pause_NotePlayer(IsPaused);
+}
+void GCodeTools::ReveseChannels(bool IsReversed)
+{
+	m_p_GCodeTools->ReveseChannels(IsReversed);
+}
 bool GCodeTools::ExportGCode(const char *filename)
 {
 	return m_p_GCodeTools->ExportGCode(filename);
