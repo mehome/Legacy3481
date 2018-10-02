@@ -973,7 +973,7 @@ private:
 			return ret;
 		}
 		Vec3d m_CurrentPos;
-		Vec3d m_AxisBounds    = Vec3d(2.0, 2.0, 1.0);
+		Vec3d m_AxisBounds    = Vec3d(4.0, 4.0, 1.0);
 		Vec3d m_FlipDirection = Vec3d(1.0, 1.0, 1.0);  //either 1 or -1 per component
 	public:
 		GCode_Writer(const Song&song) : m_Song(song)
