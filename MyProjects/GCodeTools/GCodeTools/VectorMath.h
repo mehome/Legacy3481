@@ -15,11 +15,6 @@ public:
 
 	Vec2d(value_type x, value_type y) { _v[0] = x; _v[1] = y; }
 
-	//inline Vec2d(const Vec2f& vec) { _v[0] = vec._v[0]; _v[1] = vec._v[1]; }
-
-	//inline operator Vec2f() const { return Vec2f(static_cast<float>(_v[0]), static_cast<float>(_v[1])); }
-
-
 	inline bool operator == (const Vec2d& v) const { return _v[0] == v._v[0] && _v[1] == v._v[1]; }
 
 	inline bool operator != (const Vec2d& v) const { return _v[0] != v._v[0] || _v[1] != v._v[1]; }
@@ -166,10 +161,6 @@ public:
 	value_type _v[3];
 
 	Vec3d() { _v[0] = 0.0; _v[1] = 0.0; _v[2] = 0.0; }
-
-	//inline Vec3d(const Vec3f& vec) { _v[0] = vec._v[0]; _v[1] = vec._v[1]; _v[2] = vec._v[2]; }
-
-	//inline operator Vec3f() const { return Vec3f(static_cast<float>(_v[0]), static_cast<float>(_v[1]), static_cast<float>(_v[2])); }
 
 	Vec3d(value_type x, value_type y, value_type z) { _v[0] = x; _v[1] = y; _v[2] = z; }
 	//Vec3d(const Vec2d& v2, value_type zz)
@@ -335,6 +326,4 @@ public:
 	}
 
 };    // end of class Vec3d
-
-
 

@@ -63,19 +63,6 @@ auto_lock::auto_lock(critical_section &rCritSec) : m_pCritSec(&rCritSec)//, m_pM
 	m_pCritSec->lock();
 }
 
-//auto_lock::auto_lock(mutex *pMutex, const DWORD time_out) : m_pCritSec(NULL), m_pMutex(pMutex)
-//{
-//	assert(m_pMutex);
-//	if (!m_pMutex->lock(time_out)) m_pMutex = NULL;
-//}
-//
-//auto_lock::auto_lock(mutex &rMutex, const DWORD time_out) : m_pCritSec(NULL), m_pMutex(&rMutex)
-//{
-//	assert(m_pMutex);
-//	if (!m_pMutex->lock(time_out))
-//		m_pMutex = NULL;
-//}
-
 // Did we lock. This might not be true if a mutex timed out
 const bool auto_lock::is_locked(void) const
 {
@@ -103,18 +90,6 @@ auto_unlock::auto_unlock(critical_section &rCritSec) : m_pCritSec(&rCritSec)//, 
 	assert(m_pCritSec);
 	m_pCritSec->unlock();
 }
-
-//auto_unlock::auto_unlock(mutex *pMutex) : m_pCritSec(NULL), m_pMutex(pMutex)
-//{
-//	assert(m_pMutex);
-//	m_pCritSec->unlock();
-//}
-//
-//auto_unlock::auto_unlock(mutex &rMutex) : m_pCritSec(NULL), m_pMutex(&rMutex)
-//{
-//	assert(m_pMutex);
-//	m_pCritSec->unlock();
-//}
 
 // Destructor
 auto_unlock::~auto_unlock(void)

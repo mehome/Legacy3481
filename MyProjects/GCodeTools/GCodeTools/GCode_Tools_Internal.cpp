@@ -291,9 +291,9 @@ public:
 	void SetBounds(double x, double y, double z) {m_NotePlayer.SetBounds(x, y, z); }
 	void Test() 
 	{ 
-		//m_TabGenerator.Test();
-		LoadSequence_CT("FugaVIII_tc.txt");
-		printf("Loaded FugaVIII\n");
+		m_TabGenerator.Test();
+		//LoadSequence_CT("FugaVIII_tc.txt");
+		//printf("Loaded FugaVIII\n");
 	}
 };
 

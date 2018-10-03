@@ -1,8 +1,5 @@
 #pragma once
 
-// mwatkins - Might really want a timeBeginPeriod(1) call a la ControlDLL.  
-// I have added this call to the base class for XML applications: Application.XML.Base.
-
 /* /// Here is a quick handy function to get a time stamp using the QueryPerformanceCounter
 double FRAMEWORK_BASE_API get_current_time(void);*/
 

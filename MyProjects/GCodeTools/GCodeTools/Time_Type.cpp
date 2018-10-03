@@ -4,22 +4,6 @@
   /*******************************************************************************************************/
  /*												time_type												*/
 /*******************************************************************************************************/
-/*double FrameWork::Base::get_current_time(void)
-{	// Make sure that we have the update frequency
-	static double inv_freq = 0.0f;
-	if ( !inv_freq )
-	{	LARGE_INTEGER freq;
-		QueryPerformanceFrequency( &freq );
-		inv_freq = 1.0 / (double)freq.QuadPart;
-	}
-
-	// Get the current time
-	LARGE_INTEGER current;
-	QueryPerformanceCounter(&current);
-
-	// Return the time in seconds.
-	return inv_freq*(double)current.QuadPart;
-}*/
 
 time_type::time_type()
 {
