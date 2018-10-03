@@ -335,9 +335,6 @@ void DS_Output_Internal::StartStreaming(void)
 		m_IsStreaming=true;
 		if (m_UseThreading)
 		{
-			//m_pThread = new thread<DS_Output_Internal>(this);
-			//m_pThread->priority_above_normal();
-			//m_pThread->set_thread_name("Module.DirectSound.Output Main Thread");
 			m_TaskState=reallyAsync(task_proc,this);
 		}
 
@@ -618,7 +615,6 @@ double DS_Output_Internal::FillBuffer()
 						#endif
 					}
 				}
-				//Case 82506:  track how this can be a corrupt value
 				assert(ret < 2.0);  //recoverable down stream... but would like to trace code to determine why this could fail
 				return ret;
 			}
@@ -709,11 +705,7 @@ double DS_Output_Internal::FillBuffer()
 		//Wait for play to hit our new filled range
 		ret=_.WaitForPlay(m_PreviousFillPosition/BlockAlign,m_FillPosition/BlockAlign);
 		//We should be in the play cursor range now we can send the displayed
-		//if ((m_UseDisplayedCallbacks)&&(SourcePkt.Message))
-		//	SourcePkt.Message->displayed();
-
 		//clean / tidy up
-		//m_AudioMessageConverter.ClosePacket(SourcePkt);
 	}
 	return ret;
 }
