@@ -42,8 +42,9 @@ private:
 		{}
 		Vec2d m_origin,m_prev_end,m_end_point;
 		//The line number is used to compute the origin
+		//The end point is the point far enough away from origin to create tab
 		size_t m_LineNumber;
-		double m_Offset;
+		double m_Offset;  //how far away from origin (along the contour path) to start tab
 		size_t m_NoLinesForEndPoint;  //Used to compute lines to replace
 	};
 	using text_line = std::string;
@@ -217,8 +218,9 @@ public:
 	}
 	void ProcessTab(Tab tab)
 	{
-		//Obtain position from GCode
+		//Obtain position from GCode... this will have both points needed to create tab
 		bool result=ObtainPosition(tab);
+
 		assert(result);  //I intend to make this more robust
 
 	}
@@ -230,7 +232,7 @@ public:
 	void Test()
 	{
 		Load_GCode("TabTest.nc");
-		ProcessTab(42);
+		ProcessTab(41,1.0);
 	}
 	#if 0
 	void SetOutFilename(const char *filename)
