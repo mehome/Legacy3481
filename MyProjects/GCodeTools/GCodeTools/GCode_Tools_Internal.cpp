@@ -35,7 +35,8 @@ private:
 		double m_width;
 		double m_height;
 	};
-	Tabsize m_GlobalSize=Tabsize(0.02, 0.25);  //We can have a global size for all, but keep ability to change individual ones
+	//Note: that if we typically go 1mm below bottom we have to compensate for height
+	Tabsize m_GlobalSize=Tabsize(0.08, 0.25);  //We can have a global size for all, but keep ability to change individual ones
 	struct TabLocation
 	{
 		TabLocation(size_t LineNumber, double Offset) : m_LineNumber_c(LineNumber), m_Offset(Offset)
@@ -367,19 +368,27 @@ public:
 		//Now we have everything... time to list it out
 		//starting with first point to be inserted at line number's position
 		char Buffer[70];
-		sprintf(Buffer,"G2 X%.4f Y%.4f Z%.4f",AnchorPoint[0],AnchorPoint[1],tab.m_position.m_Z_depth+tab.m_properties.m_height);
-		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line,tab.m_position.m_LineNumber_c);
-		sprintf(Buffer, "G2 X%.4f Y%.4f", SegmentEnd[0], SegmentEnd[1]);
+		sprintf(Buffer, "G1 X%.4f Y%.4f", AnchorPoint[0], AnchorPoint[1]);
 		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
-		sprintf(Buffer, "G2 X%.4f Y%.4f Z%.4f", tab.m_position.m_end_point.x(), tab.m_position.m_end_point.y(), tab.m_position.m_Z_depth);
-		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_replaced_line, tab.m_position.m_LineNumber_c+tab.m_position.m_NoLinesForEndPoint);
-		tab.m_PatchLinesToReplace = tab.m_position.m_NoLinesForEndPoint;
+		sprintf(Buffer,"G1 X%.4f Y%.4f Z%.4f",AnchorPoint[0],AnchorPoint[1],tab.m_position.m_Z_depth+tab.m_properties.m_height);
+		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line,tab.m_position.m_LineNumber_c);
+		sprintf(Buffer, "G1 X%.4f Y%.4f", SegmentEnd[0], SegmentEnd[1]);
+		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+		sprintf(Buffer, "G1 X%.4f Y%.4f Z%.4f", SegmentEnd[0], SegmentEnd[1], tab.m_position.m_Z_depth);
+		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+		tab.m_PatchLinesToReplace = 0;
 		assert(result);  //I intend to make this more robust
 	}
 	//Here is the simplest form to solve tabs
 	Tab ProcessTab(size_t line_number, double offset = 0.0)
 	{
 		Tab NewTab(this, TabLocation(line_number, offset));
+		ProcessTab(NewTab);
+		return NewTab;
+	}
+	Tab ProcessTab(const Tabsize &props,size_t line_number, double offset = 0.0)
+	{
+		Tab NewTab(props, TabLocation(line_number, offset));
 		ProcessTab(NewTab);
 		return NewTab;
 	}
@@ -394,13 +403,16 @@ public:
 		{
 			std::ofstream out = std::ofstream(filename, std::ios::out);
 			while ((block = m_GCode_Writer.WriteLine(lineindex++, SourceIndex)) != nullptr)
+			{
 				out.write(block, strlen(block));
+				out << '\n';
+			}
 			out.close();
 		}
 		else
 		{
 			//Note: These post increment so they become cardinal by coicedence when these label the line numbers
-			#if 0
+			#if 1
 			while ((block = m_GCode_Writer.WriteLine(lineindex++, SourceIndex)) != nullptr)
 				printf("%d: %s\n", SourceIndex, block);
 			#else
@@ -416,7 +428,9 @@ public:
 		m_Tabs.clear();
 		Load_GCode("TabTest.nc");
 		m_Tabs.push_back(ProcessTab(41, 1.0));
-		ExportGCode(nullptr);
+		//m_Tabs.push_back(ProcessTab(Tabsize(0.075, 0.25), 41, 1.0));
+		//ExportGCode(nullptr);
+		ExportGCode("D:/Stuff/BroncBotz/Code/MyProjects/GCodeTools/GCodeTools/TabTest_Modiied.nc");
 	}
 	#if 0
 	void SetOutFilename(const char *filename)
