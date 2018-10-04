@@ -30,6 +30,8 @@ private:
 	//Can be in inches or mm, depending on the units the gcode is working in
 	struct Tabsize
 	{
+		Tabsize() : m_width(0.25),m_height(0.08)
+		{}
 		Tabsize(double height,double width) : m_width(width),m_height(height) 
 		{}
 		double m_width;
@@ -39,6 +41,8 @@ private:
 	Tabsize m_GlobalSize=Tabsize(0.08, 0.25);  //We can have a global size for all, but keep ability to change individual ones
 	struct TabLocation
 	{
+		TabLocation()
+		{}
 		TabLocation(size_t LineNumber, double Offset) : m_LineNumber_c(LineNumber), m_Offset(Offset)
 		{}
 		Vec2d m_origin,m_prev_end,m_end_point;
@@ -53,6 +57,8 @@ private:
 	using GCode = std::vector<text_line>;
 	struct Tab
 	{
+		Tab()
+		{}
 		//User can contruct tab with custom size per tab
 		Tab(Tabsize properties, TabLocation position) : m_properties(properties), m_position(position) 
 		{}
@@ -85,7 +91,8 @@ private:
 		} m_PatchCode; //this keeps a record of the changes made for the tab from beginning to end (may embed existing gcode)
 		size_t m_PatchLinesToReplace;  //A count of how many lines to replace with the patch code
 	};
-	using Tabs = std::vector<Tab>;
+	using Tabs = std::map<size_t,Tab>;  //found via line number
+	using Tabs_iter = Tabs::iterator;
 	Tabs m_Tabs; //add ability to batch process all the tabs in one setting
 
 	GCode m_GCode;  //A container for the GCode
@@ -274,7 +281,7 @@ private:
 		{
 			//populate the map
 			for (auto &i : _Tabs)
-				m_Tabs[i.m_position.m_LineNumber_c - 1] = &i;  //insert into ordinal line number positions
+				m_Tabs[i.first-1] = &i.second;  //insert into ordinal line number positions
 		}
 		//ordinal line number this function expects this to increment with no reason to seek
 		const char *WriteLine(size_t line_number_o, size_t &sourceindex)
@@ -368,25 +375,25 @@ public:
 		//Now we have everything... time to list it out
 		//starting with first point to be inserted at line number's position
 		char Buffer[70];
-		sprintf(Buffer, "G1 X%.4f Y%.4f", AnchorPoint[0], AnchorPoint[1]);
+		sprintf(Buffer, "G1 X%.4f Y%.4f (tab type1 start)", AnchorPoint[0], AnchorPoint[1]);
 		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
 		sprintf(Buffer,"G1 X%.4f Y%.4f Z%.4f",AnchorPoint[0],AnchorPoint[1],tab.m_position.m_Z_depth+tab.m_properties.m_height);
 		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line,tab.m_position.m_LineNumber_c);
 		sprintf(Buffer, "G1 X%.4f Y%.4f", SegmentEnd[0], SegmentEnd[1]);
 		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
-		sprintf(Buffer, "G1 X%.4f Y%.4f Z%.4f", SegmentEnd[0], SegmentEnd[1], tab.m_position.m_Z_depth);
+		sprintf(Buffer, "G1 X%.4f Y%.4f Z%.4f (tab end)", SegmentEnd[0], SegmentEnd[1], tab.m_position.m_Z_depth);
 		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
 		tab.m_PatchLinesToReplace = 0;
 		assert(result);  //I intend to make this more robust
 	}
 	//Here is the simplest form to solve tabs
-	Tab ProcessTab(size_t line_number, double offset = 0.0)
+	Tab CreateTab(size_t line_number, double offset = 0.0)
 	{
 		Tab NewTab(this, TabLocation(line_number, offset));
 		ProcessTab(NewTab);
 		return NewTab;
 	}
-	Tab ProcessTab(const Tabsize &props,size_t line_number, double offset = 0.0)
+	Tab CreateTab(const Tabsize &props,size_t line_number, double offset = 0.0)
 	{
 		Tab NewTab(props, TabLocation(line_number, offset));
 		ProcessTab(NewTab);
@@ -422,44 +429,54 @@ public:
 		}
 		return true;
 	}
+
 	void Test()
 	{
 		m_GCode.clear();
 		m_Tabs.clear();
 		Load_GCode("TabTest.nc");
-		m_Tabs.push_back(ProcessTab(41, 1.0));
+		#if 0
+		Tab newTab = CreateTab(41, 1.0);
+		//Populate by cardinal line number in case we want to remove them
+		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
 		//m_Tabs.push_back(ProcessTab(Tabsize(0.075, 0.25), 41, 1.0));
-		//ExportGCode(nullptr);
-		ExportGCode("D:/Stuff/BroncBotz/Code/MyProjects/GCodeTools/GCodeTools/TabTest_Modiied.nc");
+		ExportGCode(nullptr);
+		//ExportGCode("D:/Stuff/BroncBotz/Code/MyProjects/GCodeTools/GCodeTools/TabTest_Modiied.nc");
+		#endif
 	}
-	#if 0
+	bool LoadToolJob(const char *filename)
+	{
+		m_GCode.clear();
+		m_Tabs.clear();
+		return Load_GCode(filename);
+	}
+
 	void SetOutFilename(const char *filename)
 	{
 		m_OutFileName = filename;
 	}
-	void AddTab(size_t line_number, double offset = 0.0)
+	bool AddTab(size_t line_number, double offset = 0.0)
 	{
-		m_Tabs.push_back(Tab(this, TabLocation(line_number, offset)));
+		Tab newTab = CreateTab(line_number, offset);
+		//Populate by cardinal line number in case we want to remove them
+		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
+		return ExportGCode(m_OutFileName[0]==0?nullptr:m_OutFileName.c_str());
 	}
 
-	bool Process()
+	bool RemoveTab(size_t line_number)
 	{
-		for (auto &iter : m_Tabs)
+		bool ret = false;
+		Tabs_iter tab_entry = m_Tabs.find(line_number);
+		if (tab_entry != m_Tabs.end())
 		{
-
+			m_Tabs.erase(tab_entry);
+			ret = true;
 		}
-		if (m_OutFileName[0] != 0)
-		{
-			std::ofstream out = std::ofstream(m_OutFileName.c_str(), std::ios::out);
-			for (auto &iter : m_GCode)
-			{
-				const text_line &element = iter;
-				out.write(element.c_str(), strlen(element.c_str()));
-			}
-			out.close();
-		}
+		if (ret)
+			return ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
+		return ret;
 	}
-	#endif
+
 };
 
 class GCodeTools_Internal
@@ -489,6 +506,25 @@ public:
 	void ReveseChannels(bool IsReversed) { m_NotePlayer.ReveseChannels(IsReversed); }
 	bool ExportGCode(const char *filename) { return m_NotePlayer.ExportGCode(filename); }
 	void SetBounds(double x, double y, double z) {m_NotePlayer.SetBounds(x, y, z); }
+
+	bool LoadToolJob(const char *filename)
+	{
+		return m_TabGenerator.LoadToolJob(filename);
+	}
+	void SetWorkingFile(const char *filename)
+	{
+		m_TabGenerator.SetOutFilename(filename);
+	}
+	bool AddTab(size_t line_number, double offset)
+	{
+		return m_TabGenerator.AddTab(line_number, offset);
+	}
+	bool RemoveTab(size_t line_number)
+	{
+		return m_TabGenerator.RemoveTab(line_number);
+	}
+
+
 	void Test() 
 	{ 
 		m_TabGenerator.Test();
@@ -552,6 +588,28 @@ void GCodeTools::SetBounds(double x, double y, double z)
 { 
 	m_p_GCodeTools->SetBounds(x, y, z);
 }
+
+
+bool GCodeTools::LoadToolJob(const char *filename)
+{
+	return m_p_GCodeTools->LoadToolJob(filename);
+}
+void GCodeTools::SetWorkingFile(const char *filename)
+{
+	m_p_GCodeTools->SetWorkingFile(filename);
+}
+bool GCodeTools::AddTab(size_t line_number, double offset)
+{
+	return m_p_GCodeTools->AddTab(line_number, offset);
+}
+bool GCodeTools::RemoveTab(size_t line_number)
+{
+	return m_p_GCodeTools->RemoveTab(line_number);
+}
+
+
+
+
 void GCodeTools::Test()
 {
 	m_p_GCodeTools->Test();

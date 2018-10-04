@@ -10,6 +10,7 @@ public:
 	//using direct sound to simulate motor frequency
 	void TestSound_Start();
 	void TestSound_Stop();
+	//Note Player Commands
 	bool LoadSequence_CT(const char *filename);
 	void PlayBlock(size_t block_number);
 	void PlaySong(double position);
@@ -18,6 +19,11 @@ public:
 	void ReveseChannels(bool IsReversed);
 	bool ExportGCode(const char *filename);
 	void SetBounds(double x, double y, double z);  //specify different size dimensions of when to flip
+	//Tab helper commands
+	bool LoadToolJob(const char *filename);
+	void SetWorkingFile(const char *filename);  //can be NULL for console dump
+	bool AddTab(size_t line_number, double offset); //where tab is inserted after line number and offset is distance away from the line's coordinates
+	bool RemoveTab(size_t line_number);
 	void Test();
 private:
 	std::shared_ptr<GCodeTools_Internal> m_p_GCodeTools; //a pimpl idiom (using shared_ptr allows declaration to be hidden from destructor)
