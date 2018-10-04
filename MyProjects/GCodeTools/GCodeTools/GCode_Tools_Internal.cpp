@@ -41,6 +41,7 @@ private:
 		TabLocation(size_t LineNumber, double Offset) : m_LineNumber(LineNumber), m_Offset(Offset)
 		{}
 		Vec2d m_origin,m_prev_end,m_end_point;
+		double m_Z_depth; //find the last z depth to detemine height relief
 		//The line number is used to compute the origin
 		//The end point is the point far enough away from origin to create tab
 		size_t m_LineNumber;
@@ -120,13 +121,14 @@ private:
 		return IsNegative ? -ret : ret;
 	}
 
-	static bool ParseLine_XY(const text_line &line, double &XValue, double &YValue)
+	static bool ParseLine_XY(const text_line &line, double &XValue, double &YValue,double &ZValue, bool &ZProcessed, bool wait_for_z=false)
 	{
 		bool XProcessed = false;
 		bool YProcessed = false;
+		ZProcessed = false;
 		const char *read_cursor = line.c_str();
 		const char *read_cursor_end = read_cursor + line.size();
-		while ((read_cursor<read_cursor_end)&&((!XProcessed)||(!YProcessed)))
+		while ((read_cursor<read_cursor_end)&&((!XProcessed)||(!YProcessed)||(wait_for_z && !ZProcessed) ))
 		{
 			switch (*read_cursor)
 			{
@@ -134,7 +136,15 @@ private:
 			{
 				read_cursor++;
 				int result = GetNumber(read_cursor);
-				assert(result == 1 || result == 2);  //sanity check
+				assert(result == 1 || result == 2 || result==3);  //sanity check
+				break;
+			}
+			case 'I':
+			case 'J':
+			case 'F':
+			{
+				read_cursor++;
+				double result = GetNumber_Float(read_cursor);
 				break;
 			}
 			case 'X':
@@ -153,6 +163,14 @@ private:
 				YProcessed = true;
 				break;
 			}
+			case 'Z':
+			{
+				read_cursor++;
+				double result = GetNumber_Float(read_cursor);
+				ZValue = result;
+				ZProcessed = true;
+				break;
+			}
 			case ' ':
 			case '\t':
 			case '\r':
@@ -168,17 +186,30 @@ private:
 		size_t line_index = tab.m_position.m_LineNumber-1;  //line numbers are cardinal... this becomes ordinal
 		double XValue;
 		double YValue;
-		bool result=ParseLine_XY(m_GCode[line_index], XValue, YValue);
+		double ZValue;
+		bool ZValueProcessed;
+		bool result=ParseLine_XY(m_GCode[line_index], XValue, YValue, ZValue, ZValueProcessed);
+		if (ZValueProcessed)
+			tab.m_position.m_Z_depth = ZValue;
 		//TODO make this more robust... currently the line we pick has to have both coordinates on it
 		assert(result);
 		tab.m_position.m_origin = Vec2d(XValue, YValue);
 		double distance_of_points = 0.0;
 		Vec2d TestEndPoint = tab.m_position.m_origin;
 		tab.m_position.m_prev_end = tab.m_position.m_origin;
+		bool GetZ = !ZValueProcessed;
 		while (distance_of_points<tab.m_properties.m_width)
 		{
 			line_index++;
-			result = ParseLine_XY(m_GCode[line_index], XValue, YValue);
+			result = ParseLine_XY(m_GCode[line_index], XValue, YValue, ZValue, ZValueProcessed);
+			if (GetZ)
+			{
+				if (ZValueProcessed)
+				{
+					tab.m_position.m_Z_depth = ZValue;
+					GetZ = false;
+				}
+			}
 			assert(result);  //same here... this will need to iterate until both are complete
 			TestEndPoint=Vec2d(XValue, YValue);
 			distance_of_points = tab.m_position.m_origin.length(TestEndPoint);
@@ -187,6 +218,18 @@ private:
 		}
 		tab.m_position.m_end_point = TestEndPoint;
 		tab.m_position.m_NoLinesForEndPoint = line_index - (tab.m_position.m_LineNumber - 1);
+		if (GetZ)
+		{
+			//Reset line index to origin but this time going in reverse
+			size_t line_index = tab.m_position.m_LineNumber - 1;  
+			while ((!ZValueProcessed) && (line_index > 5))
+			{
+				ParseLine_XY(m_GCode[line_index], XValue, YValue, ZValue, ZValueProcessed,true);
+				line_index--;
+			}
+			tab.m_position.m_Z_depth = ZValue;
+			assert(ZValueProcessed);
+		}
 		return true;
 	}
 public:
@@ -219,10 +262,19 @@ public:
 	void ProcessTab(Tab tab)
 	{
 		//Obtain position from GCode... this will have both points needed to create tab
+		//as well as the current z height
 		bool result=ObtainPosition(tab);
-
+		Vec2d ContourVector = tab.m_position.m_end_point;
+		ContourVector -= tab.m_position.m_origin;
+		ContourVector.normalize();  // we now have a direction... now to get a few points
+		Vec2d AnchorPoint = ContourVector * tab.m_position.m_Offset + tab.m_position.m_origin;
+		Vec2d SegmentEnd = ContourVector * tab.m_properties.m_width + AnchorPoint;
+		//Now we have everything... time to list it out
+		//starting with first point to be inserted at line number's position
+		printf("X%.4f Y%.4f Z%.4f\n",AnchorPoint[0],AnchorPoint[1],tab.m_position.m_Z_depth+tab.m_properties.m_height);
+		printf("X%.4f Y%.4f\n", SegmentEnd[0], SegmentEnd[1]);
+		printf("X%.4f Y%.4f Z%.4f\n", tab.m_position.m_end_point.x(), tab.m_position.m_end_point.y(), tab.m_position.m_Z_depth);
 		assert(result);  //I intend to make this more robust
-
 	}
 	//Here is the simplest form to solve tabs
 	void ProcessTab(size_t line_number, double offset = 0.0)
