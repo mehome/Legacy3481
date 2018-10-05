@@ -165,7 +165,7 @@ private:
 			{
 				read_cursor++;
 				int result = GetNumber(read_cursor);
-				assert(result == 1 || result == 2 || result==3);  //sanity check
+				assert(result >= 0 && result<=3);  //sanity check
 				break;
 			}
 			case 'I':
@@ -239,7 +239,7 @@ private:
 					GetZ = false;
 				}
 			}
-			assert(result);  //same here... this will need to iterate until both are complete
+			assert(result || ZValueProcessed);  //same here... this will need to iterate until both are complete
 			TestEndPoint=Vec2d(XValue, YValue);
 			distance_of_points = tab.m_position.m_origin.length(TestEndPoint);
 			if (distance_of_points < tab.m_properties.m_width)
@@ -435,6 +435,7 @@ public:
 		m_GCode.clear();
 		m_Tabs.clear();
 		Load_GCode("TabTest.nc");
+		SetOutFilename("TabTest_Tabbed.nc");
 		#if 0
 		Tab newTab = CreateTab(41, 1.0);
 		//Populate by cardinal line number in case we want to remove them
@@ -455,12 +456,33 @@ public:
 	{
 		m_OutFileName = filename;
 	}
+	void SetGlobalTabSize(double height, double width)
+	{
+		m_GlobalSize = Tabsize(height, width);
+	}
 	bool AddTab(size_t line_number, double offset = 0.0)
 	{
+		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
+		Tabs_iter tab_entry = m_Tabs.find(line_number);
+		if (tab_entry != m_Tabs.end())
+			m_Tabs.erase(tab_entry);
+
 		Tab newTab = CreateTab(line_number, offset);
 		//Populate by cardinal line number in case we want to remove them
 		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
 		return ExportGCode(m_OutFileName[0]==0?nullptr:m_OutFileName.c_str());
+	}
+	bool AddTab(double height, double width,size_t line_number, double offset = 0.0)
+	{
+		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
+		Tabs_iter tab_entry = m_Tabs.find(line_number);
+		if (tab_entry != m_Tabs.end())
+			m_Tabs.erase(tab_entry);
+
+		Tab newTab = CreateTab(Tabsize(height,width),line_number, offset);
+		//Populate by cardinal line number in case we want to remove them
+		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
+		return ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
 	}
 
 	bool RemoveTab(size_t line_number)
@@ -515,15 +537,22 @@ public:
 	{
 		m_TabGenerator.SetOutFilename(filename);
 	}
+	void SetGlobalTabSize(double height, double width)
+	{
+		m_TabGenerator.SetGlobalTabSize(height, width);
+	}
 	bool AddTab(size_t line_number, double offset)
 	{
 		return m_TabGenerator.AddTab(line_number, offset);
+	}
+	bool AddTab(double height, double width, size_t line_number, double offset)
+	{
+		return m_TabGenerator.AddTab(height, width, line_number, offset);
 	}
 	bool RemoveTab(size_t line_number)
 	{
 		return m_TabGenerator.RemoveTab(line_number);
 	}
-
 
 	void Test() 
 	{ 
@@ -598,10 +627,19 @@ void GCodeTools::SetWorkingFile(const char *filename)
 {
 	m_p_GCodeTools->SetWorkingFile(filename);
 }
+void GCodeTools::SetGlobalTabSize(double height, double width)
+{
+	m_p_GCodeTools->SetGlobalTabSize(height, width);
+}
 bool GCodeTools::AddTab(size_t line_number, double offset)
 {
 	return m_p_GCodeTools->AddTab(line_number, offset);
 }
+bool GCodeTools::AddTab(double height, double width, size_t line_number, double offset)
+{
+	return m_p_GCodeTools->AddTab(height,width,line_number, offset);
+}
+
 bool GCodeTools::RemoveTab(size_t line_number)
 {
 	return m_p_GCodeTools->RemoveTab(line_number);

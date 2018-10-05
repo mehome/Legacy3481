@@ -22,7 +22,10 @@ public:
 	//Tab helper commands
 	bool LoadToolJob(const char *filename);
 	void SetWorkingFile(const char *filename);  //can be NULL for console dump
-	bool AddTab(size_t line_number, double offset); //where tab is inserted after line number and offset is distance away from the line's coordinates
+	void SetGlobalTabSize(double height, double width);
+	//where tab is inserted after line number and offset is distance away from the line's coordinates
+	bool AddTab(size_t line_number, double offset); 
+	bool AddTab(double height, double width,size_t line_number, double offset);
 	bool RemoveTab(size_t line_number);
 	void Test();
 private:
