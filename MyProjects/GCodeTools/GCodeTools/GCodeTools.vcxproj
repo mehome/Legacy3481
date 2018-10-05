@@ -180,6 +180,7 @@
     <Text Include="TestSong.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CasterContourTest.nc" />
     <None Include="TabTest.nc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

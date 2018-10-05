@@ -78,5 +78,8 @@
     <None Include="TabTest.nc">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="CasterContourTest.nc">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
