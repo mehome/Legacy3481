@@ -45,7 +45,8 @@ private:
 		{}
 		TabLocation(size_t LineNumber, double Offset) : m_LineNumber_c(LineNumber), m_Offset(Offset)
 		{}
-		Vec2d m_origin,m_prev_end,m_end_point;
+		Vec2d m_origin,m_prev_end,m_end_point,m_end_arc_axis;
+		size_t m_end_point_Gtype;  // 1 straight feed, 2 clockwise arc, 3 counter arc
 		double m_Z_depth; //find the last z depth to detemine height relief
 		//The line number is used to compute the origin
 		//The end point is the point far enough away from origin to create tab
@@ -150,14 +151,32 @@ private:
 		return IsNegative ? -ret : ret;
 	}
 
-	static bool ParseLine_XY(const text_line &line, double &XValue, double &YValue,double &ZValue, bool &ZProcessed, bool wait_for_z=false)
+	struct GCode_Variables
 	{
-		bool XProcessed = false;
-		bool YProcessed = false;
-		ZProcessed = false;
+		enum VariableEnum
+		{
+			eG, eX, eY, eZ, eI, eJ, eK, eF, eNoVariables
+		};
+		void Flush()
+		{
+			G = 0;
+			X = Y = Z = I = J = K = F = 0.0;
+			for (size_t i = 0; i < eNoVariables; i++)
+				Processed[i] = false;
+		}
+		GCode_Variables()
+		{
+			Flush();
+		}
+		size_t G;
+		double X, Y, Z, I, J, K, F;
+		bool Processed[eNoVariables];
+	};
+	static void ParseLine(const text_line &line, GCode_Variables&value)
+	{
 		const char *read_cursor = line.c_str();
 		const char *read_cursor_end = read_cursor + line.size();
-		while ((read_cursor<read_cursor_end)&&((!XProcessed)||(!YProcessed)||(wait_for_z && !ZProcessed) ))
+		while ((read_cursor < read_cursor_end))
 		{
 			switch (*read_cursor)
 			{
@@ -165,39 +184,31 @@ private:
 			{
 				read_cursor++;
 				int result = GetNumber(read_cursor);
-				assert(result >= 0 && result<=3);  //sanity check
+				assert(result >= 0 && result <= 3);  //sanity check
+				value.G = result;
 				break;
 			}
 			case 'I':
 			case 'J':
+			case 'K':
 			case 'F':
-			{
-				read_cursor++;
-				double result = GetNumber_Float(read_cursor);
-				break;
-			}
 			case 'X':
-			{
-				read_cursor++;
-				double result = GetNumber_Float(read_cursor);
-				XValue = result;
-				XProcessed = true;
-				break;
-			}
 			case 'Y':
-			{
-				read_cursor++;
-				double result = GetNumber_Float(read_cursor);
-				YValue = result;
-				YProcessed = true;
-				break;
-			}
 			case 'Z':
 			{
+				char GCodeVar = *read_cursor;  //cache to switch again
 				read_cursor++;
 				double result = GetNumber_Float(read_cursor);
-				ZValue = result;
-				ZProcessed = true;
+				switch (GCodeVar)
+				{
+				case 'I':		value.I = result;	value.Processed[GCode_Variables::eI] = true;	break;
+				case 'J':		value.J = result;	value.Processed[GCode_Variables::eJ] = true;	break;
+				case 'K':		value.K = result;	value.Processed[GCode_Variables::eK] = true;	break;
+				case 'F':		value.F = result;	value.Processed[GCode_Variables::eF] = true;	break;
+				case 'X':		value.X = result;	value.Processed[GCode_Variables::eX] = true;	break;
+				case 'Y':		value.Y = result;	value.Processed[GCode_Variables::eY] = true;	break;
+				case 'Z':		value.Z = result;	value.Processed[GCode_Variables::eZ] = true;	break;
+				}
 				break;
 			}
 			case ' ':
@@ -208,56 +219,144 @@ private:
 				break;
 			}
 		}
-		return XProcessed&&YProcessed;
 	}
+
 	bool ObtainPosition(Tab &tab)
 	{
 		size_t line_index = tab.m_position.m_LineNumber_c-1;  //line numbers are cardinal... this becomes ordinal
-		double XValue;
-		double YValue;
-		double ZValue;
-		bool ZValueProcessed;
-		bool result=ParseLine_XY(m_GCode[line_index], XValue, YValue, ZValue, ZValueProcessed);
-		if (ZValueProcessed)
-			tab.m_position.m_Z_depth = ZValue;
-		//TODO make this more robust... currently the line we pick has to have both coordinates on it
-		assert(result);
-		tab.m_position.m_origin = Vec2d(XValue, YValue);
+		GCode_Variables gvar;
+		//bool result=ParseLine_XY(m_GCode[line_index], XValue, YValue, ZValue, ZValueProcessed);
+		ParseLine(m_GCode[line_index], gvar);
+		if (gvar.Processed[GCode_Variables::eZ])
+			tab.m_position.m_Z_depth = gvar.Z;
+
+
+		//Make sure we have X and Y for the point of origin... we may have to go back some lines to get them
+		bool GetX = !gvar.Processed[GCode_Variables::eX];
+		bool GetY = !gvar.Processed[GCode_Variables::eY];
+		//We don't know if we need these yet; however, if we are scanning backwards we want to preserve the latest value's for these once we move forward
+		bool GetI = !gvar.Processed[GCode_Variables::eI];
+		bool GetJ = !gvar.Processed[GCode_Variables::eJ];
+
+		if (GetX || GetY)
+		{
+			double LatestI = gvar.I;
+			double LatestJ = gvar.J;
+
+			while (line_index > 5)
+			{
+				ParseLine(m_GCode[--line_index], gvar);
+				if (GetI && gvar.Processed[GCode_Variables::eI])
+				{
+					GetI = false;
+					LatestI = gvar.I;
+				}
+				if (GetJ && gvar.Processed[GCode_Variables::eJ])
+				{
+					GetJ = false;
+					LatestJ = gvar.J;
+				}
+				if (
+					(gvar.Processed[GCode_Variables::eX] || !GetX) &&
+					(gvar.Processed[GCode_Variables::eY] || !GetY))
+					break;  //we got what we need
+			}
+
+			gvar.I = LatestI;
+			gvar.J = LatestJ;
+
+			//Reset the line index for further processing!
+			line_index = tab.m_position.m_LineNumber_c - 1;
+			ParseLine(m_GCode[line_index], gvar);  //Ensure X and Y have the latest as these may be used again moving forward
+		}
+		assert(gvar.Processed[GCode_Variables::eX] && gvar.Processed[GCode_Variables::eY]);
+
+		tab.m_position.m_origin = Vec2d(gvar.X, gvar.Y);
+
+		//Have the point of origin... now to find the end point
+
 		double distance_of_points = 0.0;
 		Vec2d TestEndPoint = tab.m_position.m_origin;
 		tab.m_position.m_prev_end = tab.m_position.m_origin;
-		bool GetZ = !ZValueProcessed;
+		//If we haven't gotten Z yet... flag to get it again; otherwise we keep/prefer the anchor point's value
+		bool GetZ = !gvar.Processed[GCode_Variables::eZ];
 		while (distance_of_points<tab.m_properties.m_width)
 		{
 			line_index++;
-			result = ParseLine_XY(m_GCode[line_index], XValue, YValue, ZValue, ZValueProcessed);
+			ParseLine(m_GCode[line_index], gvar);  //Note: don't flush as we accumulate varaibles as we go
 			if (GetZ)
 			{
-				if (ZValueProcessed)
+				if (gvar.Processed[GCode_Variables::eZ])
 				{
-					tab.m_position.m_Z_depth = ZValue;
+					tab.m_position.m_Z_depth = gvar.Z;
 					GetZ = false;
 				}
 			}
-			assert(result || ZValueProcessed);  //same here... this will need to iterate until both are complete
-			TestEndPoint=Vec2d(XValue, YValue);
+			//same here... this will need to iterate until both are complete
+			assert((gvar.Processed[GCode_Variables::eX] && gvar.Processed[GCode_Variables::eY]) || gvar.Processed[GCode_Variables::eZ]);  
+			TestEndPoint=Vec2d(gvar.X, gvar.Y);
 			distance_of_points = tab.m_position.m_origin.length(TestEndPoint);
 			if (distance_of_points < tab.m_properties.m_width)
 				tab.m_position.m_prev_end = TestEndPoint;  //need to keep track of previous point to inject a new point
 		}
 		tab.m_position.m_end_point = TestEndPoint;
+		tab.m_position.m_end_arc_axis = Vec2d(gvar.I, gvar.J);  //cache radius if available
+		tab.m_position.m_end_point_Gtype = gvar.G;
+
 		tab.m_position.m_NoLinesForEndPoint = line_index - (tab.m_position.m_LineNumber_c - 1);
-		if (GetZ)
+
+		//We may need to scan backwards for missing variables... doing that here:
+		const bool NeedArcAxis = gvar.G == 2 || gvar.G == 3;
+		GetX = !gvar.Processed[GCode_Variables::eX];
+		GetY = !gvar.Processed[GCode_Variables::eY];
+		GetI = NeedArcAxis && !gvar.Processed[GCode_Variables::eI];
+		GetJ = NeedArcAxis && !gvar.Processed[GCode_Variables::eJ];
+		
+		if (GetX || GetY || GetZ || GetI || GetJ)
 		{
 			//Reset line index to origin but this time going in reverse
 			size_t line_index = tab.m_position.m_LineNumber_c - 1;  
-			while ((!ZValueProcessed) && (line_index > 5))
+
+			while (line_index > 5)
 			{
-				ParseLine_XY(m_GCode[line_index], XValue, YValue, ZValue, ZValueProcessed,true);
+				ParseLine(m_GCode[line_index], gvar);
 				line_index--;
+				if (
+					(gvar.Processed[GCode_Variables::eX] || !GetX) &&
+					(gvar.Processed[GCode_Variables::eY] || !GetY) &&
+					(gvar.Processed[GCode_Variables::eZ] || !GetZ) &&
+					(gvar.Processed[GCode_Variables::eI] || !GetI) &&
+					(gvar.Processed[GCode_Variables::eJ] || !GetJ))
+					break;  //we got what we need
 			}
-			tab.m_position.m_Z_depth = ZValue;
-			assert(ZValueProcessed);
+			if (GetZ)
+				tab.m_position.m_Z_depth = gvar.Z;
+			if (GetI || GetJ)
+			{
+				//reconstuct the arc axis 
+				Vec2d ModifiedAxis = tab.m_position.m_end_arc_axis;  //if we had either one... it's cached here
+				if (GetI)
+					ModifiedAxis[0] = gvar.I;
+				if (GetJ)
+					ModifiedAxis[1] = gvar.J;
+				tab.m_position.m_end_arc_axis = ModifiedAxis;
+			}
+			if (GetX || GetY)
+			{
+				Vec2d ModifiedEndPoint = tab.m_position.m_end_point;
+				Vec2d ModifiedPrevPoint = tab.m_position.m_prev_end;
+				if (GetX)
+					ModifiedEndPoint[0] = ModifiedPrevPoint[0] = gvar.X;
+				if (GetY)
+					ModifiedEndPoint[1] = ModifiedPrevPoint[1] = gvar.Y;
+				tab.m_position.m_end_point=ModifiedEndPoint;
+				tab.m_position.m_prev_end=ModifiedPrevPoint;
+			}
+			assert(gvar.Processed[GCode_Variables::eX] || !GetX);
+			assert(gvar.Processed[GCode_Variables::eY] || !GetY);
+			assert(gvar.Processed[GCode_Variables::eZ] || !GetZ);
+			assert(gvar.Processed[GCode_Variables::eI] || !GetI);
+			assert(gvar.Processed[GCode_Variables::eJ] || !GetJ);
 		}
 		return true;
 	}
@@ -293,16 +392,26 @@ private:
 				tab_iter Tab = m_Tabs.find(m_SourceIndex_o);
 				if (Tab != m_Tabs.end())
 				{
+					//easy access to the patch code
+					const Tab::Patch &patch_code = Tab->second->m_PatchCode;
 					if (!m_PatchInFlight)
 					{
-						m_PatchInFlight = true;
-						m_PatchIndex = 0;
-						//for now assume all operations are insert after this point... so this line gets returned without advancing
-						ret = m_GCode[m_SourceIndex_o].c_str();
+						//we have a tab... do we have some patch code?
+						if (patch_code.m_PatchLines.size())
+						{
+							m_PatchInFlight = true;
+							m_PatchIndex = 0;
+							//for now assume all operations are insert after this point... so this line gets returned without advancing
+							ret = m_GCode[m_SourceIndex_o].c_str();
+						}
+						else
+						{
+							//Note: we should unless there are some scenarios not yet supported
+							printf("warning: tab has no patch code... \n");
+						}
 					}
 					else
 					{
-						const Tab::Patch &patch_code = Tab->second->m_PatchCode;
 						//here we deal out the patched code
 						if (m_PatchIndex < patch_code.m_PatchLines.size())
 						{
@@ -367,23 +476,31 @@ public:
 		//Obtain position from GCode... this will have both points needed to create tab
 		//as well as the current z height
 		bool result=ObtainPosition(tab);
-		Vec2d ContourVector = tab.m_position.m_end_point;
-		ContourVector -= tab.m_position.m_origin;
-		ContourVector.normalize();  // we now have a direction... now to get a few points
-		Vec2d AnchorPoint = ContourVector * tab.m_position.m_Offset + tab.m_position.m_origin;
-		Vec2d SegmentEnd = ContourVector * tab.m_properties.m_width + AnchorPoint;
-		//Now we have everything... time to list it out
-		//starting with first point to be inserted at line number's position
-		char Buffer[70];
-		sprintf(Buffer, "G1 X%.4f Y%.4f (tab type1 start)", AnchorPoint[0], AnchorPoint[1]);
-		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
-		sprintf(Buffer,"G1 X%.4f Y%.4f Z%.4f",AnchorPoint[0],AnchorPoint[1],tab.m_position.m_Z_depth+tab.m_properties.m_height);
-		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line,tab.m_position.m_LineNumber_c);
-		sprintf(Buffer, "G1 X%.4f Y%.4f", SegmentEnd[0], SegmentEnd[1]);
-		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
-		sprintf(Buffer, "G1 X%.4f Y%.4f Z%.4f (tab end)", SegmentEnd[0], SegmentEnd[1], tab.m_position.m_Z_depth);
-		tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
-		tab.m_PatchLinesToReplace = 0;
+		//Evaluate the Gtype
+		//1 is straight
+		//2 is arc clockwise
+		//3 is arc counter-clockwise
+		assert((tab.m_position.m_end_point_Gtype > 0) && (tab.m_position.m_end_point_Gtype < 4)); //TODO error handling of this failure
+		if (tab.m_position.m_end_point_Gtype == 1)
+		{
+			Vec2d ContourVector = tab.m_position.m_end_point;
+			ContourVector -= tab.m_position.m_origin;
+			ContourVector.normalize();  // we now have a direction... now to get a few points
+			Vec2d AnchorPoint = ContourVector * tab.m_position.m_Offset + tab.m_position.m_origin;
+			Vec2d SegmentEnd = ContourVector * tab.m_properties.m_width + AnchorPoint;
+			//Now we have everything... time to list it out
+			//starting with first point to be inserted at line number's position
+			char Buffer[70];
+			sprintf(Buffer, "G1 X%.4f Y%.4f (tab type1 start)", AnchorPoint[0], AnchorPoint[1]);
+			tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+			sprintf(Buffer, "G1 X%.4f Y%.4f Z%.4f", AnchorPoint[0], AnchorPoint[1], tab.m_position.m_Z_depth + tab.m_properties.m_height);
+			tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+			sprintf(Buffer, "G1 X%.4f Y%.4f", SegmentEnd[0], SegmentEnd[1]);
+			tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+			sprintf(Buffer, "G1 X%.4f Y%.4f Z%.4f (tab end)", SegmentEnd[0], SegmentEnd[1], tab.m_position.m_Z_depth);
+			tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+			tab.m_PatchLinesToReplace = 0;
+		}
 		assert(result);  //I intend to make this more robust
 	}
 	//Here is the simplest form to solve tabs
@@ -434,10 +551,16 @@ public:
 	{
 		m_GCode.clear();
 		m_Tabs.clear();
-		Load_GCode("TabTest.nc");
-		SetOutFilename("TabTest_Tabbed.nc");
+		#if 1
+		Load_GCode("CasterContourTest.nc");
+		Tab newTab = CreateTab(293, 0.5);
+		#endif	
 		#if 0
+		Load_GCode("TabTest.nc");
 		Tab newTab = CreateTab(41, 1.0);
+		SetOutFilename("TabTest_Tabbed.nc");
+		#endif
+		#if 1
 		//Populate by cardinal line number in case we want to remove them
 		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
 		//m_Tabs.push_back(ProcessTab(Tabsize(0.075, 0.25), 41, 1.0));
