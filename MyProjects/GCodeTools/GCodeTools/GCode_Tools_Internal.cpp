@@ -5,6 +5,18 @@
 #include "NotePlayer.h"
 #include"VectorMath.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+#ifndef M_PIF
+#define M_PIF 3.141592654f
+#endif
+#define M_PID 3.14159265358979323846
+
+#define DEG_2_RAD(x)		((x)*M_PI/180.0)
+#define RAD_2_DEG(x)		((x)*180.0/M_PI)
+
 std::vector<std::string>& split(const std::string& s,
 	char delim,
 	std::vector<std::string>& elems) {
@@ -539,10 +551,12 @@ public:
 			//We can derive the radius by simply subtracting the arc center from the starting point in vectors
 			const Vec2d ArcCenter(Xc, Yc);
 			const Vec2d StartPoint(Xs, Ys);
-			const double R = Vec2d(ArcCenter - StartPoint).length();
+			const Vec2d StartAngleV(StartPoint-ArcCenter);
+			const double R = StartAngleV.length();
 			//check the end point as well
 			const Vec2d EndPoint(Xe, Ye);
-			const double Re = Vec2d(ArcCenter - EndPoint).length();
+			const Vec2d EndAngleV(EndPoint - ArcCenter);
+			const double Re = EndAngleV.length();
 			//These should be equal... only add tabs if they are
 			if (fabs(Re - R) < 0.01)
 			{
@@ -556,6 +570,26 @@ public:
 				//We have everything up to this point except for the theta angles... we'll need both theta's to measure the length of the
 				//current arc and ensure a tab can fit in it (even though there is some linear testing for this in ObtainPosition() )
 				//we'll create 2 of our own theta's to inject and from those can solve for all the variables in the formula's above
+				const double StartAngle = atan2(StartAngleV[1], StartAngleV[0]);
+				const double EndAngle = atan2(EndAngleV[1], EndAngleV[0]);
+				//atan2 makes angles where 0 starts on left side of x... if angle moves up its a negative angle and moving down is positive
+				//(against the x axis)  this is fine as long as we are consistent using this standard
+				//Check math to confirm angles
+				#if 1
+				const double StartAngleDeg = RAD_2_DEG(StartAngle);
+				const double EndAngleDeg = RAD_2_DEG(EndAngle);
+				const double testXs = Xc + (R*cos(StartAngle));
+				const double testYs = Yc + (R*sin(StartAngle));
+				const double testXe = Xc + (R*cos(EndAngle));
+				const double testYe = Yc + (R*sin(EndAngle));
+				const double testI = (Xc - (R*cos(StartAngle))) - Xc;
+				const double testJ = (Yc - (R*sin(StartAngle))) - Yc;
+				#endif
+				//The only thing left to to compute the new angles. We'll compute offset and width distances along the arc as tighter
+				//circles will really need them measured this way.  Finally the direction of travel of these points from the start angle's 
+				//point of origin will depend on the G-command type.  For negative angles counter moves towards 0, while positive angles move 
+				//away from zero.  Likewise, positive angles clockwise move towards 0, while negative angles move away.
+
 				int x = 4;
 				
 			}
