@@ -501,6 +501,67 @@ public:
 			tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
 			tab.m_PatchLinesToReplace = 0;
 		}
+		else if ((tab.m_position.m_end_point_Gtype == 2)|| (tab.m_position.m_end_point_Gtype == 3))
+		{
+			//https://www.instructables.com/id/How-to-program-arcs-and-linear-movement-in-G-Code-/
+			//R = Radius of arc
+			//Theta1 = angle of the position of the start point relative to the X axis
+			//Theta2 = angle of the position of the end point relative to the X axis
+			//Xc = X coordinate of arc center
+			//Yc = Y coordinate of the arc center
+			//Xs = X coordinate of arc start point
+			//Ys = Y coordinate of arc start point
+			//Xe = X coordinate of arc end point
+			//Ye = Y coordinate of arc end point
+			//I = Incremental X coordinate of start point
+			//J = Incremental Y coordinate of start point
+			const double Xs = tab.m_position.m_prev_end[0];
+			const double Ys = tab.m_position.m_prev_end[1];
+			const double I = tab.m_position.m_end_arc_axis[0];
+			const double J = tab.m_position.m_end_arc_axis[1];
+			const double Xe = tab.m_position.m_end_point[0];
+			const double Ye = tab.m_position.m_end_point[1];
+
+			//I and J define the location of the center of rotation-- - RELATIVE TO THE CURRENT(STARTING) POINT
+			//	X and Y are the end point coordinates of the arc.
+			//
+			//Much like the linear splice the arc splice has an anchor point and a segment end
+			//which are 2 x y values formatted the same way in regards to Z
+			//We maintain use of G to 2 or 3 (whichever this is using) as well as the arc center (Xc Yc)
+
+
+			//We'll need to derive the arc center and radius from I, J end point and X Y start point
+			//Start point is the previous to end variable (which may be the same as the origin)
+			//This is as simple as adding I,J to X,Y start
+			const double Xc = I + Xs;
+			const double Yc = J + Ys;
+
+			//We can derive the radius by simply subtracting the arc center from the starting point in vectors
+			const Vec2d ArcCenter(Xc, Yc);
+			const Vec2d StartPoint(Xs, Ys);
+			const double R = Vec2d(ArcCenter - StartPoint).length();
+			//check the end point as well
+			const Vec2d EndPoint(Xe, Ye);
+			const double Re = Vec2d(ArcCenter - EndPoint).length();
+			//These should be equal... only add tabs if they are
+			if (fabs(Re - R) < 0.01)
+			{
+				//1) Xs = Xc + (R*cos(Theta1))
+				//2) Ys = Yc + (R*sin(Theta1))
+				//3) Xe = Xc + (R*cos(Theta2))
+				//4) Ye = Yc + (R*sin(Theta2))
+				//5) I = (Xc - (R*cos(Theta1))) - Xc
+				//6) J = (Yc - (R*sin(Theta1))) - Yc
+
+				//We have everything up to this point except for the theta angles... we'll need both theta's to measure the length of the
+				//current arc and ensure a tab can fit in it (even though there is some linear testing for this in ObtainPosition() )
+				//we'll create 2 of our own theta's to inject and from those can solve for all the variables in the formula's above
+				int x = 4;
+				
+			}
+			else
+				printf("Warning: arc coordinates are not consistent");
+		}
 		assert(result);  //I intend to make this more robust
 	}
 	//Here is the simplest form to solve tabs
