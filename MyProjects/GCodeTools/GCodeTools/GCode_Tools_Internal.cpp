@@ -17,6 +17,17 @@
 #define DEG_2_RAD(x)		((x)*M_PI/180.0)
 #define RAD_2_DEG(x)		((x)*180.0/M_PI)
 
+inline void NormalizeRotation(double &Rotation)
+{
+	const double Pi2 = M_PI * 2.0;
+	//Normalize the rotation
+	if (Rotation > M_PI)
+		Rotation -= Pi2;
+	else if (Rotation < -M_PI)
+		Rotation += Pi2;
+}
+
+
 std::vector<std::string>& split(const std::string& s,
 	char delim,
 	std::vector<std::string>& elems) {
@@ -575,7 +586,7 @@ public:
 				//atan2 makes angles where 0 starts on left side of x... if angle moves up its a negative angle and moving down is positive
 				//(against the x axis)  this is fine as long as we are consistent using this standard
 				//Check math to confirm angles
-				#if 1
+				#if 0
 				const double StartAngleDeg = RAD_2_DEG(StartAngle);
 				const double EndAngleDeg = RAD_2_DEG(EndAngle);
 				const double testXs = Xc + (R*cos(StartAngle));
@@ -588,10 +599,47 @@ public:
 				//The only thing left to to compute the new angles. We'll compute offset and width distances along the arc as tighter
 				//circles will really need them measured this way.  Finally the direction of travel of these points from the start angle's 
 				//point of origin will depend on the G-command type.  For negative angles counter moves towards 0, while positive angles move 
-				//away from zero.  Likewise, positive angles clockwise move towards 0, while negative angles move away.
+				//away from zero.  Likewise, positive angles clockwise move towards 0, while negative angles move away... or in other words
+				//counter angles move positive, clockwise move negative.
+				//  S=R * Theta
+				// S = arc length, R radius, Theta central angle
+				const bool Clockwise = (tab.m_position.m_end_point_Gtype == 2);
+				assert(Clockwise || tab.m_position.m_end_point_Gtype == 3);  //one or the other
+				//define arc lengths
+				const double Offset_s = !Clockwise ? tab.m_position.m_Offset : -tab.m_position.m_Offset;
+				const double width_s = !Clockwise ? tab.m_properties.m_width : -tab.m_properties.m_width;
+				//convert to theta radians
+				const double Offset_theta = Offset_s / R;
+				const double width_theta = width_s / R;
+				//combine the angles for our final angles
+				const double AnchorAngle_theta = StartAngle + Offset_theta;
+				const double SegmentEndAngle_theta = AnchorAngle_theta + width_theta;
+				//TODO see if normalizing these will be necessary... if so... do it here
+				//create GCode from the new angles
+				const double Anchor_X = Xc + (R*cos(AnchorAngle_theta));
+				const double Anchor_Y = Yc + (R*sin(AnchorAngle_theta));
+				const double Anchor_I = (Xc - (R*cos(AnchorAngle_theta))) - Xc;
+				const double Anchor_J = (Yc - (R*sin(AnchorAngle_theta))) - Yc;
 
-				int x = 4;
-				
+				const double SegmentEnd_X = Xc + (R*cos(SegmentEndAngle_theta));
+				const double SegmentEnd_Y = Yc + (R*sin(SegmentEndAngle_theta));
+				const double SegmentEnd_I = (Xc - (R*cos(SegmentEndAngle_theta))) - Xc;
+				const double SegmentEnd_J = (Yc - (R*sin(SegmentEndAngle_theta))) - Yc;
+
+				const char *G_Command = Clockwise ? "G2" : "G3";
+
+				//Now we have everything... time to list it out
+				//starting with first point to be inserted at line number's position
+				char Buffer[70];
+				sprintf(Buffer, "%s X%.4f Y%.4f I%.4f J%.4f (tab type2 start)",G_Command, Anchor_X, Anchor_Y, Anchor_I, Anchor_J);
+				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+				sprintf(Buffer, "G1 Z%.4f", tab.m_position.m_Z_depth + tab.m_properties.m_height);
+				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+				sprintf(Buffer, "%s X%.4f Y%.4f I%.4f J%.4f", G_Command, SegmentEnd_X, SegmentEnd_Y, SegmentEnd_I, SegmentEnd_J);
+				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+				sprintf(Buffer, "G1 Z%.4f (tab end)", tab.m_position.m_Z_depth);
+				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
+				tab.m_PatchLinesToReplace = 0;
 			}
 			else
 				printf("Warning: arc coordinates are not consistent");
@@ -661,6 +709,7 @@ public:
 		//m_Tabs.push_back(ProcessTab(Tabsize(0.075, 0.25), 41, 1.0));
 		ExportGCode(nullptr);
 		//ExportGCode("D:/Stuff/BroncBotz/Code/MyProjects/GCodeTools/GCodeTools/TabTest_Modiied.nc");
+		//ExportGCode("D:/Stuff/BroncBotz/Code/MyProjects/GCodeTools/GCodeTools/CasterContour_Modiied.nc");
 		#endif
 	}
 	bool LoadToolJob(const char *filename)
