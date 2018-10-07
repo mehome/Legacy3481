@@ -177,6 +177,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="FugaVIII_tc.txt" />
+    <Text Include="GCodeToolsReadMe.txt" />
     <Text Include="NotePlayerReadMe.txt" />
     <Text Include="TestSong.txt" />
   </ItemGroup>

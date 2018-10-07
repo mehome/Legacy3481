@@ -76,6 +76,9 @@
     <Text Include="NotePlayerReadMe.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="GCodeToolsReadMe.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <None Include="TabTest.nc">
