@@ -240,6 +240,8 @@ private:
 			case '\n':
 				read_cursor++;
 				break;
+			default:
+				read_cursor++;  //catch all... we may hit comments here
 			}
 		}
 	}
@@ -618,13 +620,16 @@ public:
 				//create GCode from the new angles
 				const double Anchor_X = Xc + (R*cos(AnchorAngle_theta));
 				const double Anchor_Y = Yc + (R*sin(AnchorAngle_theta));
-				const double Anchor_I = (Xc - (R*cos(AnchorAngle_theta))) - Xc;
-				const double Anchor_J = (Yc - (R*sin(AnchorAngle_theta))) - Yc;
+				const double Anchor_I = (Xc - (R*cos(StartAngle))) - Xc;
+				const double Anchor_J = (Yc - (R*sin(StartAngle))) - Yc;
 
 				const double SegmentEnd_X = Xc + (R*cos(SegmentEndAngle_theta));
 				const double SegmentEnd_Y = Yc + (R*sin(SegmentEndAngle_theta));
-				const double SegmentEnd_I = (Xc - (R*cos(SegmentEndAngle_theta))) - Xc;
-				const double SegmentEnd_J = (Yc - (R*sin(SegmentEndAngle_theta))) - Yc;
+				const double SegmentEnd_I = (Xc - (R*cos(AnchorAngle_theta))) - Xc;
+				const double SegmentEnd_J = (Yc - (R*sin(AnchorAngle_theta))) - Yc;
+
+				const double EndAngle_I = (Xc - (R*cos(SegmentEndAngle_theta))) - Xc;
+				const double EndAngle_J = (Yc - (R*sin(SegmentEndAngle_theta))) - Yc;
 
 				const char *G_Command = Clockwise ? "G2" : "G3";
 
@@ -639,10 +644,12 @@ public:
 				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
 				sprintf(Buffer, "G1 Z%.4f (tab end)", tab.m_position.m_Z_depth);
 				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
-				tab.m_PatchLinesToReplace = 0;
+				sprintf(Buffer, "%s X%.4f Y%.4f I%.4f J%.4f", G_Command, Xe, Ye, EndAngle_I, EndAngle_J);
+				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_replaced_line, tab.m_position.m_LineNumber_c+1);
+				tab.m_PatchLinesToReplace = 1;
 			}
 			else
-				printf("Warning: arc coordinates are not consistent");
+				printf("Warning: arc coordinates are not consistent\n");
 		}
 		assert(result);  //I intend to make this more robust
 	}
@@ -695,21 +702,24 @@ public:
 		m_GCode.clear();
 		m_Tabs.clear();
 		#if 1
-		Load_GCode("CasterContourTest.nc");
-		Tab newTab = CreateTab(293, 0.5);
+		//Load_GCode("CasterContourTest.nc");
+		//Tab newTab = CreateTab(293, 0.5);
+		Load_GCode("CasterContour_292.nc");
+		Tab newTab = CreateTab(297, 0.5);
+		SetOutFilename("CasterContour_Modified.nc");
 		#endif	
 		#if 0
 		Load_GCode("TabTest.nc");
 		Tab newTab = CreateTab(41, 1.0);
 		SetOutFilename("TabTest_Tabbed.nc");
 		#endif
-		#if 1
+		#if 0
 		//Populate by cardinal line number in case we want to remove them
 		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
 		//m_Tabs.push_back(ProcessTab(Tabsize(0.075, 0.25), 41, 1.0));
 		ExportGCode(nullptr);
 		//ExportGCode("D:/Stuff/BroncBotz/Code/MyProjects/GCodeTools/GCodeTools/TabTest_Modiied.nc");
-		//ExportGCode("D:/Stuff/BroncBotz/Code/MyProjects/GCodeTools/GCodeTools/CasterContour_Modiied.nc");
+		//ExportGCode("D:/Stuff/BroncBotz/Code/MyProjects/GCodeTools/GCodeTools/CasterContour_Modified.nc");
 		#endif
 	}
 	bool LoadToolJob(const char *filename)
