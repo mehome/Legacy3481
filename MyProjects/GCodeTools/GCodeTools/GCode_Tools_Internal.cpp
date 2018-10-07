@@ -64,18 +64,20 @@ private:
 	Tabsize m_GlobalSize=Tabsize(0.08, 0.25);  //We can have a global size for all, but keep ability to change individual ones
 	struct TabLocation
 	{
-		TabLocation()
+		TabLocation() : m_LineNumber_c(0),m_Offset(0.0)
 		{}
 		TabLocation(size_t LineNumber, double Offset) : m_LineNumber_c(LineNumber), m_Offset(Offset)
 		{}
 		Vec2d m_origin,m_prev_end,m_end_point,m_end_arc_axis;
-		size_t m_end_point_Gtype;  // 1 straight feed, 2 clockwise arc, 3 counter arc
-		double m_Z_depth; //find the last z depth to detemine height relief
+		Vec2d m_prev_origin;   //This may be needed to compute the arc's center axis
+		bool m_UsePrevOriginX=false, m_UsePrevOriginY=false;  //indicator to use prev origin per component
+		size_t m_end_point_Gtype=0;  // 1 straight feed, 2 clockwise arc, 3 counter arc
+		double m_Z_depth=0.0; //find the last z depth to detemine height relief
 		//The line number is used to compute the origin
 		//The end point is the point far enough away from origin to create tab
 		size_t m_LineNumber_c;  //the c means cardinal and so the origin point matches the line number on the text editor
 		double m_Offset;  //how far away from origin (along the contour path) to start tab
-		size_t m_NoLinesForEndPoint;  //Used to compute lines to replace
+		size_t m_NoLinesForEndPoint=0;  //Used to compute lines to replace
 	};
 	using text_line = std::string;
 	using GCode = std::vector<text_line>;
@@ -300,6 +302,13 @@ private:
 
 		//Have the point of origin... now to find the end point
 
+		//If we captured I or J, cache them now, as we need to flush them 
+		const Vec2d Last_IJ(gvar.I, gvar.J);  //In theory I needn't cache this but for maintainability I will
+		const bool LastI_Processed = gvar.Processed[GCode_Variables::eI];
+		const bool LastJ_Processed = gvar.Processed[GCode_Variables::eJ];
+		//refresh I and J, to see if we actually have the end arc axis components
+		gvar.Processed[GCode_Variables::eI] = gvar.Processed[GCode_Variables::eJ] = false;
+
 		double distance_of_points = 0.0;
 		Vec2d TestEndPoint = tab.m_position.m_origin;
 		tab.m_position.m_prev_end = tab.m_position.m_origin;
@@ -337,6 +346,25 @@ private:
 		GetI = NeedArcAxis && !gvar.Processed[GCode_Variables::eI];
 		GetJ = NeedArcAxis && !gvar.Processed[GCode_Variables::eJ];
 		
+		//If we need to GetI or GetJ we'll need to get the previous origin per component, mark that here
+		if (NeedArcAxis)
+		{
+			if (GetI)
+			{
+				tab.m_position.m_UsePrevOriginX = true;
+				//restore I from cache
+				gvar.Processed[GCode_Variables::eI] = LastI_Processed;
+				GetI = !gvar.Processed[GCode_Variables::eI]; //and get state as well
+			}
+			if (GetJ)
+			{
+				tab.m_position.m_UsePrevOriginY = true;
+				//restore I from cache
+				gvar.Processed[GCode_Variables::eJ] = LastJ_Processed;
+				GetJ = !gvar.Processed[GCode_Variables::eJ]; //and get state as well
+			}
+		}
+
 		if (GetX || GetY || GetZ || GetI || GetJ)
 		{
 			//Reset line index to origin but this time going in reverse
@@ -383,6 +411,46 @@ private:
 			assert(gvar.Processed[GCode_Variables::eI] || !GetI);
 			assert(gvar.Processed[GCode_Variables::eJ] || !GetJ);
 		}
+
+		if (NeedArcAxis)
+		{
+			//Evaluate each component of the end arc axis, if it wasn't processed we'll need to search for previous x and/or y
+			if (tab.m_position.m_UsePrevOriginX)
+			{
+				gvar.Processed[GCode_Variables::eX] = false;
+				GetX = true;
+			}
+			if (tab.m_position.m_UsePrevOriginY)
+			{
+				gvar.Processed[GCode_Variables::eY] = false;
+				GetY = true;
+			}
+			if (GetX || GetY)
+			{
+				//Reset line index to origin but this time going in reverse
+				size_t line_index = tab.m_position.m_LineNumber_c - 1;
+
+				while (line_index > 5)
+				{
+					//predecrement as we need previous entry
+					ParseLine(m_GCode[--line_index], gvar);
+					if (
+						(gvar.Processed[GCode_Variables::eX] || !GetX) &&
+						(gvar.Processed[GCode_Variables::eY] || !GetY))
+						break;  //we got what we need
+				}
+				if (GetX || GetY)
+				{
+					if (GetX)
+						tab.m_position.m_prev_origin[0] = gvar.X;
+					if (GetY)
+						tab.m_position.m_prev_origin[1] = gvar.Y;
+				}
+				assert(gvar.Processed[GCode_Variables::eX] || !GetX);
+				assert(gvar.Processed[GCode_Variables::eY] || !GetY);
+			}
+		}
+
 		return true;
 	}
 
@@ -558,8 +626,8 @@ public:
 			//We'll need to derive the arc center and radius from I, J end point and X Y start point
 			//Start point is the previous to end variable (which may be the same as the origin)
 			//This is as simple as adding I,J to X,Y start
-			const double Xc = I + Xs;
-			const double Yc = J + Ys;
+			const double Xc = !tab.m_position.m_UsePrevOriginX ? I + Xs : I + tab.m_position.m_prev_origin[0];
+			const double Yc = !tab.m_position.m_UsePrevOriginY ? J + Ys : J + tab.m_position.m_prev_origin[1];
 
 			//We can derive the radius by simply subtracting the arc center from the starting point in vectors
 			const Vec2d ArcCenter(Xc, Yc);
@@ -705,7 +773,7 @@ public:
 		//Load_GCode("CasterContourTest.nc");
 		//Tab newTab = CreateTab(293, 0.5);
 		Load_GCode("CasterContour_292.nc");
-		Tab newTab = CreateTab(297, 0.5);
+		//Tab newTab = CreateTab(297, 0.5);
 		SetOutFilename("CasterContour_Modified.nc");
 		#endif	
 		#if 0
