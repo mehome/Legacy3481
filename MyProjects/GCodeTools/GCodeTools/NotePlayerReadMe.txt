@@ -1,7 +1,12 @@
 
 First thing about Note Player is that the compact text method (currently the only supported method) of note entry is a similar model from the note support on the commodore 128, and the concept of using play blocks is borrowed from the work flow of OctaMed (for the Amiga).  I use the term block, but this represents a line of text.  Typically on OctaMed a block by default was 64 elements.  A text line can be as long as you would like, in my example I ported over a song from OctaMed and divided the block in half for a good size to work with and test.
 
-Note: Currently the player has a clicking sound once a second... I'm still trying to fix this.
+Known Issues:
+Currently the player has a clicking sound once a second... I'm still trying to fix this.
+
+There is no support for ties for now you can add a note of the same frequency next to it, and both the player and the CNC machine will play them seemlessly, Since this works so well I haven't needed to add it.
+
+All blocks must start with a note as they are independent of previous blocks... so like with the issue of ties if you want to tie a note from the last block to the next, cut it off at the end of the previous block and start the next block with the same note.  This keeps the code simple, but I may need to address this later if I am to support .mid importing.
 
 Commands:------------------------------------------------------------------------------------------
 load_ct [filename]
