@@ -87,5 +87,8 @@
     <None Include="CasterContourTest.nc">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="CasterContourProject.ini">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

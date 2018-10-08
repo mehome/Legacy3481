@@ -182,6 +182,7 @@
     <Text Include="TestSong.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CasterContourProject.ini" />
     <None Include="CasterContourTest.nc" />
     <None Include="TabTest.nc" />
   </ItemGroup>

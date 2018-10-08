@@ -28,12 +28,12 @@ inline void NormalizeRotation(double &Rotation)
 }
 
 
-std::vector<std::string>& split(const std::string& s,
-	char delim,
-	std::vector<std::string>& elems) {
+std::vector<std::string>& split(const std::string& s,	char delim,	std::vector<std::string>& elems) 
+{
 	std::stringstream ss(s);
 	std::string item;
-	while (std::getline(ss, item, delim)) {
+	while (std::getline(ss, item, delim)) 
+	{
 		elems.push_back(item);
 	}
 	return elems;
@@ -123,6 +123,7 @@ private:
 
 	GCode m_GCode;  //A container for the GCode
 	std::string m_OutFileName;  //provide a different name to compare
+	std::string m_InFileName;  //Cached for saving project
 	static __inline bool IsNumber(char value)
 	{
 		return (value >= '0') && (value <= '9');
@@ -535,6 +536,118 @@ private:
 			m_Tabs.clear();
 		}
 	} m_GCode_Writer;
+
+	bool ProcessProjectArgs(const std::vector<std::string> &args)
+	{
+		bool ret = false;
+		if (args.size() < 2)
+			return false;
+		const char *Command = args[0].c_str();
+		if (strcmp(Command, "InFile") == 0)
+		{
+			LoadToolJob(args[2].c_str());
+			ret = true;
+		}
+		else if (strcmp(Command, "OutFile") == 0)
+		{
+			SetOutFilename(args[2].c_str());
+			ExportGCode(args[2].c_str());
+			ret = true;
+		}
+		else if (strcmp(Command, "SetTabSize") == 0)
+		{
+			if (args.size() >= 4)
+			{
+				const double height = atof(args[2].c_str());
+				const double width = atof(args[3].c_str());
+				SetGlobalTabSize(height, width);
+				ret = true;
+			}
+		}
+		else if (strcmp(Command, "AddTab") == 0)
+		{
+			const double offset = args.size() >= 4 ? atof(args[3].c_str()) : 0.0;
+			const size_t line_number = atoi(args[2].c_str());
+			if (args.size()<=4)
+				AddTab(line_number, offset,false);
+			else
+			{
+				//grab height and width
+				if (args.size() >= 6)
+				{
+					const double height = atof(args[5].c_str());
+					const double width = atof(args[6].c_str());
+					AddTab(height,width,line_number, offset, false);
+				}
+			}
+		}
+		return ret;
+	}
+	bool m_ArgProjectWriter_TabFirstRun = true;
+	Tabs_iter m_ArgProjectWriter_TabIter;
+	bool Create_ArguementLine(std::string &line,size_t index)
+	{
+		bool ret = false;
+		char Buffer[1024];
+		if (index == 0)
+		{
+			sprintf(Buffer,"InFile = %s",m_InFileName.c_str());
+			line = Buffer;
+			ret = true;
+		}
+		else if (index == 1)
+		{
+			sprintf(Buffer, "SetTabSize = %.2f %.2f", m_GlobalSize.m_height, m_GlobalSize.m_width);
+			line = Buffer;
+			ret = true;
+		}
+		if (!ret)
+		{
+			size_t relative_index = index - 2;
+			if (relative_index < m_Tabs.size())
+			{
+				if (m_ArgProjectWriter_TabFirstRun)
+				{
+					m_ArgProjectWriter_TabFirstRun = false;
+					m_ArgProjectWriter_TabIter = m_Tabs.begin();
+				}
+				assert(m_ArgProjectWriter_TabIter!=m_Tabs.end());
+				//populate the tabs
+				const Tab &element = m_ArgProjectWriter_TabIter->second;
+				//determine which add tab to use by comparing if it has a custom height and width
+				const double height = element.m_properties.m_height;
+				const double width = element.m_properties.m_width;
+				if ((m_GlobalSize.m_height != height) || (m_GlobalSize.m_width != width))
+				{
+					sprintf(Buffer, "AddTab = %d %.2f %.2f %.2f",element.m_position.m_LineNumber_c,element.m_position.m_Offset, height, width);
+					line = Buffer;
+					ret = true;
+				}
+				else
+				{
+					sprintf(Buffer, "AddTab = %d %.2f", element.m_position.m_LineNumber_c, element.m_position.m_Offset);
+					line = Buffer;
+					ret = true;
+				}
+				if ((ret) && (m_ArgProjectWriter_TabIter != m_Tabs.end()))
+					m_ArgProjectWriter_TabIter++;
+			}
+			else
+			{
+				relative_index -= m_Tabs.size();
+				if (relative_index == 0)
+				{
+					m_ArgProjectWriter_TabFirstRun = true;  //reset
+					//Saving this last will have it update the file after all tabs are loaded on the loading of project
+					sprintf(Buffer, "OutFile = %s", m_OutFileName.c_str());
+					line = Buffer;
+					ret = true;
+				}
+			}
+		}
+
+		return ret;
+	}
 public:
 	Tab_Generator() : m_GCode_Writer(m_GCode)
 	{}
@@ -765,16 +878,122 @@ public:
 		return true;
 	}
 
+	bool LoadToolJob(const char *filename)
+	{
+		m_InFileName = filename;
+		m_GCode.clear();
+		m_Tabs.clear();
+		return Load_GCode(filename);
+	}
+
+	void SetOutFilename(const char *filename)
+	{
+		m_OutFileName = filename;
+	}
+	void SetGlobalTabSize(double height, double width)
+	{
+		m_GlobalSize = Tabsize(height, width);
+	}
+	bool AddTab(size_t line_number, double offset = 0.0, bool _ExportGCode=true)
+	{
+		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
+		Tabs_iter tab_entry = m_Tabs.find(line_number);
+		if (tab_entry != m_Tabs.end())
+			m_Tabs.erase(tab_entry);
+
+		Tab newTab = CreateTab(line_number, offset);
+		//Populate by cardinal line number in case we want to remove them
+		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
+		bool ret = true;
+		if (_ExportGCode)
+			ret=ExportGCode(m_OutFileName[0]==0?nullptr:m_OutFileName.c_str());
+		return ret;
+	}
+	bool AddTab(double height, double width,size_t line_number, double offset = 0.0, bool _ExportGCode = true)
+	{
+		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
+		Tabs_iter tab_entry = m_Tabs.find(line_number);
+		if (tab_entry != m_Tabs.end())
+			m_Tabs.erase(tab_entry);
+
+		Tab newTab = CreateTab(Tabsize(height,width),line_number, offset);
+		//Populate by cardinal line number in case we want to remove them
+		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
+		bool ret = true;
+		if (_ExportGCode)
+			ret=ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
+		return ret;
+	}
+	bool RemoveTab(size_t line_number, bool _ExportGCode = true)
+	{
+		bool ret = false;
+		Tabs_iter tab_entry = m_Tabs.find(line_number);
+		if (tab_entry != m_Tabs.end())
+		{
+			m_Tabs.erase(tab_entry);
+			ret = true;
+		}
+		if ((ret)&&(_ExportGCode))
+			return ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
+		return ret;
+	}
+	bool SaveProject(const char *filename)
+	{
+		size_t lineindex = 0;
+		if (filename)
+		{
+			std::ofstream out = std::ofstream(filename, std::ios::out);
+			std::string line;
+			while (Create_ArguementLine(line, lineindex++))
+			{
+				out.write(line.c_str(), line.size());
+				out << '\n';
+			}
+			out.close();
+		}
+		else
+		{
+			std::string line;
+			while (Create_ArguementLine(line,lineindex++))
+				printf("%d: %s\n", lineindex, line.c_str());
+		}
+		return true;
+	}
+	bool LoadProject(const char *filename)
+	{
+		bool ret = false;
+		std::ifstream in(filename);
+		if (in.is_open())
+		{
+			while (!in.eof())
+			{
+				char Buffer[1024];
+				in.getline(Buffer, 1024);
+				std::vector<std::string> args;
+				split(Buffer, ' ', args);
+				ProcessProjectArgs(args);
+				//std::cout << Buffer <<std::endl;
+			}
+			ret = true;
+			in.close();
+		}
+		return ret;
+	}
 	void Test()
 	{
 		m_GCode.clear();
 		m_Tabs.clear();
 		#if 1
 		//Load_GCode("CasterContourTest.nc");
-		//Tab newTab = CreateTab(293, 0.5);
-		Load_GCode("CasterContour_292.nc");
+		//Tab newTab = CreateTab(292, 0.5);
+		//Load_GCode("CasterContour_292.nc");
 		//Tab newTab = CreateTab(297, 0.5);
-		SetOutFilename("CasterContour_Modified.nc");
+		//Load_GCode("CasterContour_297.nc");
+		//Tab newTab = CreateTab(65, 1.5);
+		//SetOutFilename("CasterContour_Modified.nc");
+		LoadProject("CasterContourProject.ini");
+		//SaveProject(nullptr);
+		//SaveProject("CasterContourProject2.ini");
 		#endif	
 		#if 0
 		Load_GCode("TabTest.nc");
@@ -790,60 +1009,6 @@ public:
 		//ExportGCode("D:/Stuff/BroncBotz/Code/MyProjects/GCodeTools/GCodeTools/CasterContour_Modified.nc");
 		#endif
 	}
-	bool LoadToolJob(const char *filename)
-	{
-		m_GCode.clear();
-		m_Tabs.clear();
-		return Load_GCode(filename);
-	}
-
-	void SetOutFilename(const char *filename)
-	{
-		m_OutFileName = filename;
-	}
-	void SetGlobalTabSize(double height, double width)
-	{
-		m_GlobalSize = Tabsize(height, width);
-	}
-	bool AddTab(size_t line_number, double offset = 0.0)
-	{
-		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
-		Tabs_iter tab_entry = m_Tabs.find(line_number);
-		if (tab_entry != m_Tabs.end())
-			m_Tabs.erase(tab_entry);
-
-		Tab newTab = CreateTab(line_number, offset);
-		//Populate by cardinal line number in case we want to remove them
-		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
-		return ExportGCode(m_OutFileName[0]==0?nullptr:m_OutFileName.c_str());
-	}
-	bool AddTab(double height, double width,size_t line_number, double offset = 0.0)
-	{
-		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
-		Tabs_iter tab_entry = m_Tabs.find(line_number);
-		if (tab_entry != m_Tabs.end())
-			m_Tabs.erase(tab_entry);
-
-		Tab newTab = CreateTab(Tabsize(height,width),line_number, offset);
-		//Populate by cardinal line number in case we want to remove them
-		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
-		return ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
-	}
-
-	bool RemoveTab(size_t line_number)
-	{
-		bool ret = false;
-		Tabs_iter tab_entry = m_Tabs.find(line_number);
-		if (tab_entry != m_Tabs.end())
-		{
-			m_Tabs.erase(tab_entry);
-			ret = true;
-		}
-		if (ret)
-			return ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
-		return ret;
-	}
-
 };
 
 class GCodeTools_Internal
@@ -898,6 +1063,8 @@ public:
 	{
 		return m_TabGenerator.RemoveTab(line_number);
 	}
+	bool LoadProject(const char *filename) { return m_TabGenerator.LoadProject(filename); }
+	bool SaveProject(const char *filename) { return m_TabGenerator.SaveProject(filename); }
 
 	void Test() 
 	{ 
@@ -988,6 +1155,14 @@ bool GCodeTools::AddTab(double height, double width, size_t line_number, double 
 bool GCodeTools::RemoveTab(size_t line_number)
 {
 	return m_p_GCodeTools->RemoveTab(line_number);
+}
+bool GCodeTools::LoadProject(const char *filename)
+{
+	return m_p_GCodeTools->LoadProject(filename);
+}
+bool GCodeTools::SaveProject(const char *filename)
+{
+	return m_p_GCodeTools->SaveProject(filename);
 }
 
 

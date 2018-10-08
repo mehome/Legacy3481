@@ -26,7 +26,16 @@ This does all the tab work and will modify the working file once it is added, yo
 RemoveTab <line number>
 This is ideal for tweaking a tab's offset as well as its properties (i.e. height width).  In this scenario you can load the source, use a different working file name, and continuously remove and add it again, or just remove it and add it to a new line number
 
+LoadProject <filename>
+Ability to save all tabs added in one setting as well as the source, and outfile names, and the default tab size used.  This workflow makes it possible to handle most of the tabs under different sessions while keeping ability to edit and remove tabs as needed.  Ideally this is the work flow to use, but I'll have to handle the case when multiple tabs are needed in a smaller area... for this use the one tab at time working with a modified gcode file.  It may be possible to use multiple workflow strategies to get benefits from both.
+
+SaveProject [filename blank=console dump]
+Saves the project settings including the source and oufile names and default tab size
+
 Examples:------------------------------------------------------------------------------------------
+Try loading the CasterContourProject.ini (included in archive)
+This will add two tabs to a file named CasterContour_Modified.nc
+
 CasterContourTest.nc
 This can demonstrated the arc tab abilites try
 AddTab 292 0.5

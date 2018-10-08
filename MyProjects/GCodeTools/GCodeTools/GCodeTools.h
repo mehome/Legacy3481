@@ -27,6 +27,8 @@ public:
 	bool AddTab(size_t line_number, double offset); 
 	bool AddTab(double height, double width,size_t line_number, double offset);
 	bool RemoveTab(size_t line_number);
+	bool LoadProject(const char *filename);
+	bool SaveProject(const char *filename);
 	void Test();
 private:
 	std::shared_ptr<GCodeTools_Internal> m_p_GCodeTools; //a pimpl idiom (using shared_ptr allows declaration to be hidden from destructor)
