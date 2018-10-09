@@ -38,6 +38,19 @@ Apply [disable update=0]
 This makes it possible to update a batch of tabs to a modified file that is specified in SetWorkingFile, and it works in a way to keep the original source file left intact for future sessions.  The disable update argument is for completeness and has the same effect of adding or removing a tab, leaving this blank, the modified GCode gets updated and the internal state of the GCode also has the modification, and this history is recorded when saving the project, so that it can be applied later in the same order.  Ideally, using apply solves the problem when needing tabs on consecutive segmented lines, or having multiple tabs in a long segment.  Ideally reserving the use of this for these cases will give the best performance during loading and saving of the project.
 
 Examples:------------------------------------------------------------------------------------------
+A completed example is 
+CasterContour.ini
+Type 
+>loadproject CasterContour.ini
+It will say successful and generate CasterContour2.nc with all the tabs in it
+If you want... type 
+>SaveProject
+(and leave the argument blank)
+It will show a list of all the tabs added on the console dump
+
+It didn't take me too long to make this, and it does shallow passes needed for M3.  What I've found that works best is to work backwards only making apply updates for consecutive tabs.  I also found to actually edit the .ini file directly when doing the other passes as each pass line is a constant distance from the next.  I implement the tabs on the last 3 passes.  So when I had a huge batch of tabs that can be on one update I was able to copy them all and subtract the line count difference.  This is a bit of a pain and I may add something to automate that in the near future.  In looking at the .ini file I did put some Apply = NoUpdate breaks in between each group run.  This helped me to keep track of where I was... ideally I should allow for comments if the work flow really becomes ideal to edit the project file itself, but for now this will suffice.  When I add new tabs I used the command line to do it... and then looked at the back plot to fine tune the offset, once I like it... I then edited the project file for the other passes as mentioned previously.  Now let's say I need to add yet more height to the tab... I would have to edit the previous pass as well, so yes that is a pain... as for the width each tab add can have its own width.  On a one pass all of this is trivial.
+
+
 Try loading the CasterContourProject.ini (included in archive)
 This will add tabs to a file named CasterContour_Modified.nc
 
