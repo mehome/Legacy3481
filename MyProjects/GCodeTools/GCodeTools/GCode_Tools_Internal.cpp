@@ -551,7 +551,8 @@ private:
 		else if (strcmp(Command, "OutFile") == 0)
 		{
 			SetOutFilename(args[2].c_str());
-			ExportGCode(args[2].c_str());
+			//This is no longer neeeded here instead apply is used
+			//ExportGCode(args[2].c_str());
 			ret = true;
 		}
 		else if (strcmp(Command, "SetTabSize") == 0)
@@ -580,6 +581,11 @@ private:
 					AddTab(height,width,line_number, offset, false);
 				}
 			}
+		}
+		else if (strcmp(Command, "Apply") == 0)
+		{
+			const bool Update = (strcmp(args[2].c_str(), "update") == 0);
+			Apply(Update);  //preconditions apply implicitly
 		}
 		return ret;
 	}
@@ -648,6 +654,17 @@ private:
 
 		return ret;
 	}
+	//When using apply with update the tabs get flushed and so the history of them are stored here
+	struct TabHistory
+	{
+		size_t LineNumber;
+		double Offset;
+		double Height;
+		double Width;
+	};
+	using TabsHistory = std::vector<TabHistory>;  // a list of tabs
+	using ApplyTabHistory = std::vector<TabsHistory>; //a list of apply sessions
+	ApplyTabHistory m_ApplyTabHistory; //keep a history per update so we can save them
 public:
 	Tab_Generator() : m_GCode_Writer(m_GCode)
 	{}
@@ -976,6 +993,27 @@ public:
 			}
 			ret = true;
 			in.close();
+		}
+		return ret;
+	}
+	bool Apply(bool Update)
+	{
+		bool ret = false;
+		//apply only works if we have an outfile
+		if (m_OutFileName[0] != 0)
+		{
+			ret = !Update;  //becomes true if update isn't required
+			ExportGCode(m_OutFileName.c_str());
+			if (Update)
+			{
+				//make sure there are tabs to apply otherwise this isn't necessary
+				if (m_Tabs.size())
+				{
+					ret = true;
+					//Populate all tabs here in the history for saving
+					LoadToolJob(m_OutFileName.c_str());
+				}
+			}
 		}
 		return ret;
 	}
