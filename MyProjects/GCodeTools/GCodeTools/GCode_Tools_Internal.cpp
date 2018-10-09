@@ -211,6 +211,7 @@ private:
 				read_cursor++;
 				int result = GetNumber(read_cursor);
 				assert(result >= 0 && result <= 3);  //sanity check
+				value.Processed[GCode_Variables::eG] = true;
 				value.G = result;
 				break;
 			}
@@ -260,13 +261,14 @@ private:
 
 
 		//Make sure we have X and Y for the point of origin... we may have to go back some lines to get them
+		bool GetG = !gvar.Processed[GCode_Variables::eG];
 		bool GetX = !gvar.Processed[GCode_Variables::eX];
 		bool GetY = !gvar.Processed[GCode_Variables::eY];
 		//We don't know if we need these yet; however, if we are scanning backwards we want to preserve the latest value's for these once we move forward
 		bool GetI = !gvar.Processed[GCode_Variables::eI];
 		bool GetJ = !gvar.Processed[GCode_Variables::eJ];
 
-		if (GetX || GetY)
+		if (GetX || GetY || GetG)
 		{
 			double LatestI = gvar.I;
 			double LatestJ = gvar.J;
@@ -284,9 +286,15 @@ private:
 					GetJ = false;
 					LatestJ = gvar.J;
 				}
+				if (GetG && gvar.Processed[GCode_Variables::eG])
+				{
+					GetG = false;
+				}
 				if (
 					(gvar.Processed[GCode_Variables::eX] || !GetX) &&
-					(gvar.Processed[GCode_Variables::eY] || !GetY))
+					(gvar.Processed[GCode_Variables::eY] || !GetY) &&
+					(gvar.Processed[GCode_Variables::eG] || !GetG)
+					)
 					break;  //we got what we need
 			}
 
@@ -297,7 +305,7 @@ private:
 			line_index = tab.m_position.m_LineNumber_c - 1;
 			ParseLine(m_GCode[line_index], gvar);  //Ensure X and Y have the latest as these may be used again moving forward
 		}
-		assert(gvar.Processed[GCode_Variables::eX] && gvar.Processed[GCode_Variables::eY]);
+		assert(gvar.Processed[GCode_Variables::eX] && gvar.Processed[GCode_Variables::eY] && gvar.Processed[GCode_Variables::eG]);
 
 		tab.m_position.m_origin = Vec2d(gvar.X, gvar.Y);
 
@@ -1107,7 +1115,8 @@ public:
 		//Load_GCode("CasterContour_297.nc");
 		//Tab newTab = CreateTab(65, 1.5);
 		//SetOutFilename("CasterContour_Modified.nc");
-		bool result=LoadProject("CasterContourProject.ini");
+		//bool result=LoadProject("CasterContourProject.ini");
+		bool result = LoadProject("D:/GCode/CasterContour.ini");
 		printf("%s \n", result ? "Successful" : "failed to load");
 		//SaveProject(nullptr);
 		//SaveProject("CasterContourProject2.ini");
