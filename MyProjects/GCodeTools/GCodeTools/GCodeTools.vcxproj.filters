@@ -90,5 +90,11 @@
     <None Include="CasterContourProject.ini">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="CasterContour.ini">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="CasterContour1.nc">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
