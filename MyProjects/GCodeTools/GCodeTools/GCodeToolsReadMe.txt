@@ -8,6 +8,8 @@ As it currently stands adding tabs has been designed to work well with HsmExpres
 
 I currently support 2 scenarios... adding a tab in between a straight line, and adding a tab in between an arc.  If you need to add a tab in between a span of points it may be easy enough to do this manually in the GCode, since it requires no insertion of new gcode.  I will plan to add this case eventually.
 
+One other thing to mention on the backplotter.  Ideally it would be nice to run 2 instances of it, but HsmExpress does not.  So working with one.  You can initially view the source file to work out the line numbers and then switch over to viewing the modified folder to see the tabs.  When viewing the modified file beware that the line numbers may not match what is currently loaded in memory.  It depends on where the patch code is written... but they will match if an apply command is used.  See below for details on the apply command.
+
 Commands:------------------------------------------------------------------------------------------
 
 load_tj <filename>
@@ -27,14 +29,17 @@ RemoveTab <line number>
 This is ideal for tweaking a tab's offset as well as its properties (i.e. height width).  In this scenario you can load the source, use a different working file name, and continuously remove and add it again, or just remove it and add it to a new line number
 
 LoadProject <filename>
-Ability to save all tabs added in one setting as well as the source, and outfile names, and the default tab size used.  This workflow makes it possible to handle most of the tabs under different sessions while keeping ability to edit and remove tabs as needed.  Ideally this is the work flow to use, but I'll have to handle the case when multiple tabs are needed in a smaller area... for this use the one tab at time working with a modified gcode file.  It may be possible to use multiple workflow strategies to get benefits from both.
+Ability to save all tabs added in one setting as well as the source, and outfile names, and the default tab size used.  This workflow makes it possible to handle most of the tabs under different sessions while keeping ability to edit and remove tabs as needed.  Ideally this is the work flow to use... along with the Apply Command
 
 SaveProject [filename blank=console dump]
 Saves the project settings including the source and oufile names and default tab size
 
+Apply [disable update=0]
+This makes it possible to update a batch of tabs to a modified file that is specified in SetWorkingFile, and it works in a way to keep the original source file left intact for future sessions.  The disable update argument is for completeness and has the same effect of adding or removing a tab, leaving this blank, the modified GCode gets updated and the internal state of the GCode also has the modification, and this history is recorded when saving the project, so that it can be applied later in the same order.  Ideally, using apply solves the problem when needing tabs on consecutive segmented lines, or having multiple tabs in a long segment.  Ideally reserving the use of this for these cases will give the best performance during loading and saving of the project.
+
 Examples:------------------------------------------------------------------------------------------
 Try loading the CasterContourProject.ini (included in archive)
-This will add two tabs to a file named CasterContour_Modified.nc
+This will add tabs to a file named CasterContour_Modified.nc
 
 CasterContourTest.nc
 This can demonstrated the arc tab abilites try
