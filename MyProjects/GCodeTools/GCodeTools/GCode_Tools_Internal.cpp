@@ -646,7 +646,6 @@ private:
 		//write out any tab history... cache it so that we can stream it out per line
 		if ((!ret)&&(m_ArgProjectWriter_AH_FirstRun==true))
 		{
-			m_ArgProjectWriter_AH_FirstRun = false;
 			m_ArgProjectWriter_TextCache.clear();
 			if (m_ApplyTabHistory.size())
 			{
@@ -676,6 +675,7 @@ private:
 		{
 			if (relative_index < m_ArgProjectWriter_TextCache.size())
 			{
+				m_ArgProjectWriter_AH_FirstRun = false;  //this must be within a relative index check... to ensure it remains reset
 				line = m_ArgProjectWriter_TextCache[relative_index];
 				ret = true;
 			}
