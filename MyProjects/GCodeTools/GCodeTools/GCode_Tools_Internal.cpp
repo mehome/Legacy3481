@@ -545,8 +545,9 @@ private:
 		const char *Command = args[0].c_str();
 		if (strcmp(Command, "InFile") == 0)
 		{
-			LoadToolJob(args[2].c_str());
-			ret = true;
+			ret=LoadToolJob(args[2].c_str());  //clear any tab history
+			if (!ret)
+				printf("Unable to load %s\n", args[2].c_str());
 		}
 		else if (strcmp(Command, "OutFile") == 0)
 		{
@@ -570,7 +571,7 @@ private:
 			const double offset = args.size() >= 4 ? atof(args[3].c_str()) : 0.0;
 			const size_t line_number = atoi(args[2].c_str());
 			if (args.size()<=4)
-				AddTab(line_number, offset,false);
+				ret=AddTab(line_number, offset,false);
 			else
 			{
 				//grab height and width
@@ -578,19 +579,39 @@ private:
 				{
 					const double height = atof(args[5].c_str());
 					const double width = atof(args[6].c_str());
-					AddTab(height,width,line_number, offset, false);
+					ret=AddTab(height,width,line_number, offset, false);
 				}
 			}
 		}
 		else if (strcmp(Command, "Apply") == 0)
 		{
 			const bool Update = (strcmp(args[2].c_str(), "update") == 0);
-			Apply(Update);  //preconditions apply implicitly
+			ret=Apply(Update);  //preconditions apply implicitly
 		}
 		return ret;
 	}
+
+	//When using apply with update the tabs get flushed and so the history of them are stored here
+	struct TabHistory
+	{
+		TabHistory(size_t _LineNumber, double _Offset, double _Height, double _Width) :
+			LineNumber(_LineNumber), Offset(_Offset), Height(_Height), Width(_Width)
+		{}
+		size_t LineNumber;
+		double Offset;
+		double Height;
+		double Width;
+	};
+	using TabsHistory = std::vector<TabHistory>;  // a list of tabs
+	using ApplyTabHistory = std::vector<TabsHistory>; //a list of apply sessions
+	ApplyTabHistory m_ApplyTabHistory; //keep a history per update so we can save them
+	using ApplyTH_iter = ApplyTabHistory::const_iterator;
+
+
 	bool m_ArgProjectWriter_TabFirstRun = true;
+	bool m_ArgProjectWriter_AH_FirstRun = true;
 	Tabs_iter m_ArgProjectWriter_TabIter;
+	std::vector<std::string> m_ArgProjectWriter_TextCache;
 	bool Create_ArguementLine(std::string &line,size_t index)
 	{
 		bool ret = false;
@@ -603,13 +624,59 @@ private:
 		}
 		else if (index == 1)
 		{
+			sprintf(Buffer, "OutFile = %s", m_OutFileName.c_str());
+			line = Buffer;
+			ret = true;
+		}
+		else if (index == 2)
+		{
 			sprintf(Buffer, "SetTabSize = %.2f %.2f", m_GlobalSize.m_height, m_GlobalSize.m_width);
 			line = Buffer;
 			ret = true;
 		}
+		size_t relative_index = index-3;
+		//write out any tab history... cache it so that we can stream it out per line
+		if ((!ret)&&(m_ArgProjectWriter_AH_FirstRun==true))
+		{
+			m_ArgProjectWriter_AH_FirstRun = false;
+			m_ArgProjectWriter_TextCache.clear();
+			if (m_ApplyTabHistory.size())
+			{
+				for (auto &i : m_ApplyTabHistory)
+				{
+					const TabsHistory &tabs = i;
+					for (auto &j : tabs)
+					{
+						const TabHistory &tab = j;
+						//determine which add tab to use by comparing if it has a custom height and width
+						if ((m_GlobalSize.m_height != j.Height) || (m_GlobalSize.m_width != j.Width))
+						{
+							sprintf(Buffer, "AddTab = %d %.2f %.2f %.2f", j.LineNumber, j.Offset, j.Height, j.Width);
+							m_ArgProjectWriter_TextCache.push_back(Buffer);
+						}
+						else
+						{
+							sprintf(Buffer, "AddTab = %d %.2f", j.LineNumber, j.Offset);
+							m_ArgProjectWriter_TextCache.push_back(Buffer);
+						}
+					}
+					m_ArgProjectWriter_TextCache.push_back("Apply = update");
+				}
+			}
+		}
 		if (!ret)
 		{
-			size_t relative_index = index - 2;
+			if (relative_index < m_ArgProjectWriter_TextCache.size())
+			{
+				line = m_ArgProjectWriter_TextCache[relative_index];
+				ret = true;
+			}
+			else
+				relative_index -= m_ArgProjectWriter_TextCache.size();
+		}
+		//Write out any active tabs
+		if (!ret)
+		{
 			if (relative_index < m_Tabs.size())
 			{
 				if (m_ArgProjectWriter_TabFirstRun)
@@ -643,28 +710,19 @@ private:
 				relative_index -= m_Tabs.size();
 				if (relative_index == 0)
 				{
-					m_ArgProjectWriter_TabFirstRun = true;  //reset
-					//Saving this last will have it update the file after all tabs are loaded on the loading of project
-					sprintf(Buffer, "OutFile = %s", m_OutFileName.c_str());
-					line = Buffer;
-					ret = true;
+					m_ArgProjectWriter_TabFirstRun = m_ArgProjectWriter_AH_FirstRun = true;  //reset
+					if (m_Tabs.size())
+					{
+						//Saving this will have it update the file for any active tabs
+						line = "Apply = NoUpdate";
+						ret = true;
+					}
 				}
 			}
 		}
 
 		return ret;
 	}
-	//When using apply with update the tabs get flushed and so the history of them are stored here
-	struct TabHistory
-	{
-		size_t LineNumber;
-		double Offset;
-		double Height;
-		double Width;
-	};
-	using TabsHistory = std::vector<TabHistory>;  // a list of tabs
-	using ApplyTabHistory = std::vector<TabsHistory>; //a list of apply sessions
-	ApplyTabHistory m_ApplyTabHistory; //keep a history per update so we can save them
 public:
 	Tab_Generator() : m_GCode_Writer(m_GCode)
 	{}
@@ -895,11 +953,15 @@ public:
 		return true;
 	}
 
-	bool LoadToolJob(const char *filename)
+	bool LoadToolJob(const char *filename,bool ClearTabHistory=true)
 	{
-		m_InFileName = filename;
+		//for now assume the cleartab history also implies to whether or not to update the infile name
+		if (ClearTabHistory)
+			m_InFileName = filename;
 		m_GCode.clear();
 		m_Tabs.clear();
+		if (ClearTabHistory)
+			m_ApplyTabHistory.clear();
 		return Load_GCode(filename);
 	}
 
@@ -988,10 +1050,13 @@ public:
 				in.getline(Buffer, 1024);
 				std::vector<std::string> args;
 				split(Buffer, ' ', args);
-				ProcessProjectArgs(args);
+				if (args.size() == 0)
+					continue;
+				ret=ProcessProjectArgs(args);
+				if (!ret)
+					break;
 				//std::cout << Buffer <<std::endl;
 			}
-			ret = true;
 			in.close();
 		}
 		return ret;
@@ -1010,8 +1075,21 @@ public:
 				if (m_Tabs.size())
 				{
 					ret = true;
-					//Populate all tabs here in the history for saving
-					LoadToolJob(m_OutFileName.c_str());
+					{
+						//Populate all tabs here in the history for saving
+						TabsHistory tabs;
+						for (auto &i : m_Tabs)
+						{
+							//populate the tabs
+							const Tab &element = i.second;
+							const Tabsize &epr = element.m_properties;
+							const TabLocation &epo = element.m_position;
+							TabHistory th(epo.m_LineNumber_c, epo.m_Offset, epr.m_height, epr.m_width);
+							tabs.push_back(th);
+						}
+						m_ApplyTabHistory.push_back(tabs);
+					}
+					LoadToolJob(m_OutFileName.c_str(),false);  //only an explicit call to load tool job would clear the tab history
 				}
 			}
 		}
@@ -1029,7 +1107,8 @@ public:
 		//Load_GCode("CasterContour_297.nc");
 		//Tab newTab = CreateTab(65, 1.5);
 		//SetOutFilename("CasterContour_Modified.nc");
-		LoadProject("CasterContourProject.ini");
+		bool result=LoadProject("CasterContourProject.ini");
+		printf("%s \n", result ? "Successful" : "failed to load");
 		//SaveProject(nullptr);
 		//SaveProject("CasterContourProject2.ini");
 		#endif	
@@ -1103,7 +1182,7 @@ public:
 	}
 	bool LoadProject(const char *filename) { return m_TabGenerator.LoadProject(filename); }
 	bool SaveProject(const char *filename) { return m_TabGenerator.SaveProject(filename); }
-
+	bool Apply(bool UpdateSource) { return m_TabGenerator.Apply(UpdateSource); }
 	void Test() 
 	{ 
 		m_TabGenerator.Test();
@@ -1202,7 +1281,10 @@ bool GCodeTools::SaveProject(const char *filename)
 {
 	return m_p_GCodeTools->SaveProject(filename);
 }
-
+bool GCodeTools::Apply(bool UpdateSource)
+{
+	return m_p_GCodeTools->Apply(UpdateSource);
+}
 
 
 
