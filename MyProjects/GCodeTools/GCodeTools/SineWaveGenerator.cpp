@@ -100,15 +100,18 @@ void generator::gen_sw_short(size_t channel, short *dst_buffer, size_t no_sample
 
 			//*(((float *)(dst_buffer)) + (index++)) = (float)sample;
 			if (!addsample)
-				*(((short *)(dst_buffer)) + (index+= m_no_channels)) = (short)(sample*(double)0x7fff);
+			{
+				*(((short *)(dst_buffer)) + (index)) = (short)(sample*(double)0x7fff);
+			}
 			else
 			{
-				short OldSample = dst_buffer[index+ m_no_channels];
+				short OldSample = dst_buffer[index];
 				const double stbm = (double)0x7fff;  //16 bit max
 				double AddedSample_f = (sample + (OldSample / stbm))*0.5;
 				short AddedSample=(short)(AddedSample_f * stbm);
-				*(((short *)(dst_buffer)) + (index += m_no_channels))= AddedSample;
+				*(((short *)(dst_buffer)) + (index))= AddedSample;
 			}
+			index += m_no_channels;
 		}
 	}
 	//save the sine wave state
