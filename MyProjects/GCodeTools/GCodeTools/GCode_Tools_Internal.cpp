@@ -1085,6 +1085,7 @@ public:
 			m_Tabs.erase(tab_entry);
 			ret = true;
 		}
+		m_MultiPass_Support.RemoveTab(line_number);
 		if ((ret)&&(_ExportGCode))
 			return ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
 		return ret;
@@ -1113,6 +1114,8 @@ public:
 	}
 	bool LoadProject(const char *filename)
 	{
+		//disable multipass
+		SetMultiPass(false, 0, 0);
 		bool ret = false;
 		std::ifstream in(filename);
 		if (in.is_open())
