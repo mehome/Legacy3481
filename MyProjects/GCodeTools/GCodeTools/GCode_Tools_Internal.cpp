@@ -901,12 +901,75 @@ private:
 		ProcessTab(NewTab);
 		return NewTab;
 	}
+	//This helper class works with AddTab_Common to avoid redundant work of adding tabs for each pass
+	class MultiPass_Support
+	{
+	private:
+		Tab_Generator *m_pParent;
+		bool m_Enabled = false;
+		size_t m_PassLength=0;  //provided by user, which should work to point to previous tab to be applied
+		size_t m_NoPasses = 3;  //provided by user, how many passes to apply the tab (saves needing to parse file for hieght)
+	public:
+		MultiPass_Support(Tab_Generator *parent) : m_pParent(parent) {}
+		void SetProps(bool Enabled, size_t PassLength, size_t NoPasses)
+		{
+			m_Enabled = Enabled;
+			m_PassLength = PassLength;
+			m_NoPasses = NoPasses;
+		}
+		void RemoveTab(size_t line_number)
+		{
+			if (m_Enabled)
+			{
+				size_t mp_ln = line_number;
+				//start with 1 since one pass is already completed
+				for (size_t i = 1; i < m_NoPasses; i++)
+				{
+					mp_ln -= m_PassLength;
+					Tabs_iter tab_entry = m_pParent->m_Tabs.find(mp_ln);
+					if (tab_entry != m_pParent->m_Tabs.end())
+						m_pParent->m_Tabs.erase(tab_entry);
+				}
+			}
+		}
+		bool AddTab_Common(double height, double width, size_t line_number, double offset)
+		{
+			bool result=true;
+			if (m_Enabled)
+			{
+				size_t mp_ln = line_number;
+				//start with 1 since one pass is already completed
+				for (size_t i = 1; i < m_NoPasses; i++)
+				{
+					if (!result)
+						break;
+					mp_ln -= m_PassLength;
+					//test for equality on each pass
+					result = strcmp(m_pParent->m_GCode[line_number].c_str(), m_pParent->m_GCode[mp_ln].c_str()) == 0;
+					if (result)
+					{
+						//Create a new tab if height and width were not provided use appropriate constructor
+						Tab newTab;
+						if (height != -1)
+							newTab = m_pParent->CreateTab(Tabsize(height, width), mp_ln, offset);
+						else
+							newTab = m_pParent->CreateTab(mp_ln, offset);
+
+						//Populate by cardinal line number in case we want to remove them
+						m_pParent->m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
+					}
+				}
+			}
+			return result;
+		}
+	} m_MultiPass_Support;
 	bool AddTab_Common(double height, double width, size_t line_number, double offset, bool _ExportGCode)
 	{
 		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
 		Tabs_iter tab_entry = m_Tabs.find(line_number);
 		if (tab_entry != m_Tabs.end())
 			m_Tabs.erase(tab_entry);
+		m_MultiPass_Support.RemoveTab(line_number);
 
 		//Create a new tab if height and width were not provided use appropriate constructor
 		Tab newTab;
@@ -917,6 +980,10 @@ private:
 
 		//Populate by cardinal line number in case we want to remove them
 		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
+		bool result=m_MultiPass_Support.AddTab_Common(height, width, line_number, offset);
+		if (!result)
+			printf("warning: multipass support failed\n");
+
 		bool ret = true;
 		if (_ExportGCode)
 			ret = ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
@@ -924,7 +991,7 @@ private:
 
 	}
 public:
-	Tab_Generator() : m_GCode_Writer(m_GCode)
+	Tab_Generator() : m_GCode_Writer(m_GCode), m_MultiPass_Support(this)
 	{}
 	bool Load_GCode(const char *filename)
 	{
@@ -1101,6 +1168,10 @@ public:
 		}
 		return ret;
 	}
+	void SetMultiPass(bool Enabled, size_t PassLength, size_t NoPasses)
+	{
+		m_MultiPass_Support.SetProps(Enabled, PassLength, NoPasses);
+	}
 	void Test()
 	{
 		m_GCode.clear();
@@ -1119,7 +1190,13 @@ public:
 		printf("%s \n", result ? "Successful" : "failed to load");
 		//SaveProject(nullptr);
 		//SaveProject("CasterContourProject2.ini");
-		#endif	
+		#endif
+		#if 0
+		bool result = LoadProject("MultiPass_test.ini");
+		printf("%s \n", result ? "Successful" : "failed to load");
+		m_MultiPass_Support.SetProps(true, 225, 3);
+		AddTab(1533, 0.25);
+		#endif
 		#if 0
 		Load_GCode("TabTest.nc");
 		Tab newTab = CreateTab(41, 1.0);
@@ -1191,6 +1268,7 @@ public:
 	bool LoadProject(const char *filename) { return m_TabGenerator.LoadProject(filename); }
 	bool SaveProject(const char *filename) { return m_TabGenerator.SaveProject(filename); }
 	bool Apply(bool UpdateSource) { return m_TabGenerator.Apply(UpdateSource); }
+	void SetMultiPass(bool Enabled, size_t PassLength, size_t NoPasses) { m_TabGenerator.SetMultiPass(Enabled, PassLength, NoPasses); }
 	void Test() 
 	{ 
 		m_TabGenerator.Test();
@@ -1293,7 +1371,10 @@ bool GCodeTools::Apply(bool UpdateSource)
 {
 	return m_p_GCodeTools->Apply(UpdateSource);
 }
-
+void GCodeTools::SetMultiPass(bool Enabled, size_t PassLength, size_t NoPasses)
+{
+	return m_p_GCodeTools->SetMultiPass(Enabled, PassLength, NoPasses);
+}
 
 
 void GCodeTools::Test()

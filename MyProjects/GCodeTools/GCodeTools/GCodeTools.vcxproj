@@ -186,6 +186,7 @@
     <None Include="CasterContour1.nc" />
     <None Include="CasterContourProject.ini" />
     <None Include="CasterContourTest.nc" />
+    <None Include="MultiPass_test.ini" />
     <None Include="TabTest.nc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

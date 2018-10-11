@@ -96,5 +96,8 @@
     <None Include="CasterContour1.nc">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="MultiPass_test.ini">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

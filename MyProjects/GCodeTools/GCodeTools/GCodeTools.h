@@ -30,6 +30,7 @@ public:
 	bool LoadProject(const char *filename);
 	bool SaveProject(const char *filename);
 	bool Apply(bool UpdateSource);
+	void SetMultiPass(bool Enabled, size_t PassLength, size_t NoPasses);
 	void Test();
 private:
 	std::shared_ptr<GCodeTools_Internal> m_p_GCodeTools; //a pimpl idiom (using shared_ptr allows declaration to be hidden from destructor)
