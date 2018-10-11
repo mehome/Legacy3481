@@ -731,40 +731,11 @@ private:
 
 		return ret;
 	}
-public:
-	Tab_Generator() : m_GCode_Writer(m_GCode)
-	{}
-	bool Load_GCode(const char *filename)
-	{
-		bool ret = false;
-		std::ifstream in(filename);
-		if (in.is_open())
-		{
-			bool success = true;
-			const size_t MaxBufferSize = 70;  //We know GCode is set for 70
-			const size_t Padding = 30;  //this is really arbitrary
-			while (!in.eof())
-			{
-				char Buffer[MaxBufferSize+ Padding];
-				in.getline(Buffer, MaxBufferSize+ Padding);
-				m_GCode.push_back(text_line(Buffer));
-				if (strlen(Buffer) > MaxBufferSize)
-				{
-					printf("line count exceeds %d, aborting", MaxBufferSize);
-					success = false;
-					break;
-				}
-			}
-			ret = success;
-			in.close();
-		}
-		return ret;
-	}
 	void ProcessTab(Tab &tab)
 	{
 		//Obtain position from GCode... this will have both points needed to create tab
 		//as well as the current z height
-		bool result=ObtainPosition(tab);
+		bool result = ObtainPosition(tab);
 		//Evaluate the Gtype
 		//1 is straight
 		//2 is arc clockwise
@@ -790,7 +761,7 @@ public:
 			tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
 			tab.m_PatchLinesToReplace = 0;
 		}
-		else if ((tab.m_position.m_end_point_Gtype == 2)|| (tab.m_position.m_end_point_Gtype == 3))
+		else if ((tab.m_position.m_end_point_Gtype == 2) || (tab.m_position.m_end_point_Gtype == 3))
 		{
 			//https://www.instructables.com/id/How-to-program-arcs-and-linear-movement-in-G-Code-/
 			//R = Radius of arc
@@ -828,7 +799,7 @@ public:
 			//We can derive the radius by simply subtracting the arc center from the starting point in vectors
 			const Vec2d ArcCenter(Xc, Yc);
 			const Vec2d StartPoint(Xs, Ys);
-			const Vec2d StartAngleV(StartPoint-ArcCenter);
+			const Vec2d StartAngleV(StartPoint - ArcCenter);
 			const double R = StartAngleV.length();
 			//check the end point as well
 			const Vec2d EndPoint(Xe, Ye);
@@ -900,7 +871,7 @@ public:
 				//Now we have everything... time to list it out
 				//starting with first point to be inserted at line number's position
 				char Buffer[70];
-				sprintf(Buffer, "%s X%.4f Y%.4f I%.4f J%.4f (tab type2 start)",G_Command, Anchor_X, Anchor_Y, Anchor_I, Anchor_J);
+				sprintf(Buffer, "%s X%.4f Y%.4f I%.4f J%.4f (tab type2 start)", G_Command, Anchor_X, Anchor_Y, Anchor_I, Anchor_J);
 				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
 				sprintf(Buffer, "G1 Z%.4f", tab.m_position.m_Z_depth + tab.m_properties.m_height);
 				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
@@ -909,7 +880,7 @@ public:
 				sprintf(Buffer, "G1 Z%.4f (tab end)", tab.m_position.m_Z_depth);
 				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_insert_after_line, tab.m_position.m_LineNumber_c);
 				sprintf(Buffer, "%s X%.4f Y%.4f I%.4f J%.4f", G_Command, Xe, Ye, EndAngle_I, EndAngle_J);
-				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_replaced_line, tab.m_position.m_LineNumber_c+1);
+				tab.m_PatchCode.AddLine(Buffer, Tab::Patch::e_op_replaced_line, tab.m_position.m_LineNumber_c + 1);
 				tab.m_PatchLinesToReplace = 1;
 			}
 			else
@@ -924,11 +895,62 @@ public:
 		ProcessTab(NewTab);
 		return NewTab;
 	}
-	Tab CreateTab(const Tabsize &props,size_t line_number, double offset = 0.0)
+	Tab CreateTab(const Tabsize &props, size_t line_number, double offset = 0.0)
 	{
 		Tab NewTab(props, TabLocation(line_number, offset));
 		ProcessTab(NewTab);
 		return NewTab;
+	}
+	bool AddTab_Common(double height, double width, size_t line_number, double offset, bool _ExportGCode)
+	{
+		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
+		Tabs_iter tab_entry = m_Tabs.find(line_number);
+		if (tab_entry != m_Tabs.end())
+			m_Tabs.erase(tab_entry);
+
+		//Create a new tab if height and width were not provided use appropriate constructor
+		Tab newTab;
+		if (height!=-1)
+			newTab=CreateTab(Tabsize(height, width), line_number, offset);
+		else
+			newTab = CreateTab(line_number, offset);
+
+		//Populate by cardinal line number in case we want to remove them
+		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
+		bool ret = true;
+		if (_ExportGCode)
+			ret = ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
+		return ret;
+
+	}
+public:
+	Tab_Generator() : m_GCode_Writer(m_GCode)
+	{}
+	bool Load_GCode(const char *filename)
+	{
+		bool ret = false;
+		std::ifstream in(filename);
+		if (in.is_open())
+		{
+			bool success = true;
+			const size_t MaxBufferSize = 70;  //We know GCode is set for 70
+			const size_t Padding = 30;  //this is really arbitrary
+			while (!in.eof())
+			{
+				char Buffer[MaxBufferSize+ Padding];
+				in.getline(Buffer, MaxBufferSize+ Padding);
+				m_GCode.push_back(text_line(Buffer));
+				if (strlen(Buffer) > MaxBufferSize)
+				{
+					printf("line count exceeds %d, aborting", MaxBufferSize);
+					success = false;
+					break;
+				}
+			}
+			ret = success;
+			in.close();
+		}
+		return ret;
 	}
 	bool ExportGCode(const char *filename)
 	{
@@ -960,7 +982,6 @@ public:
 		}
 		return true;
 	}
-
 	bool LoadToolJob(const char *filename,bool ClearTabHistory=true)
 	{
 		//for now assume the cleartab history also implies to whether or not to update the infile name
@@ -972,7 +993,6 @@ public:
 			m_ApplyTabHistory.clear();
 		return Load_GCode(filename);
 	}
-
 	void SetOutFilename(const char *filename)
 	{
 		m_OutFileName = filename;
@@ -983,33 +1003,11 @@ public:
 	}
 	bool AddTab(size_t line_number, double offset = 0.0, bool _ExportGCode=true)
 	{
-		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
-		Tabs_iter tab_entry = m_Tabs.find(line_number);
-		if (tab_entry != m_Tabs.end())
-			m_Tabs.erase(tab_entry);
-
-		Tab newTab = CreateTab(line_number, offset);
-		//Populate by cardinal line number in case we want to remove them
-		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
-		bool ret = true;
-		if (_ExportGCode)
-			ret=ExportGCode(m_OutFileName[0]==0?nullptr:m_OutFileName.c_str());
-		return ret;
+		return AddTab_Common(-1.0,-1.0,line_number,offset,_ExportGCode);
 	}
 	bool AddTab(double height, double width,size_t line_number, double offset = 0.0, bool _ExportGCode = true)
 	{
-		//If we already added a tab here... remove it, and add it again (user may have changed properties or offset)
-		Tabs_iter tab_entry = m_Tabs.find(line_number);
-		if (tab_entry != m_Tabs.end())
-			m_Tabs.erase(tab_entry);
-
-		Tab newTab = CreateTab(Tabsize(height,width),line_number, offset);
-		//Populate by cardinal line number in case we want to remove them
-		m_Tabs[newTab.m_position.m_LineNumber_c] = newTab;
-		bool ret = true;
-		if (_ExportGCode)
-			ret=ExportGCode(m_OutFileName[0] == 0 ? nullptr : m_OutFileName.c_str());
-		return ret;
+		return AddTab_Common(height, width, line_number, offset, _ExportGCode);
 	}
 	bool RemoveTab(size_t line_number, bool _ExportGCode = true)
 	{
@@ -1116,7 +1114,8 @@ public:
 		//Tab newTab = CreateTab(65, 1.5);
 		//SetOutFilename("CasterContour_Modified.nc");
 		//bool result=LoadProject("CasterContourProject.ini");
-		bool result = LoadProject("D:/GCode/CasterContour.ini");
+		//bool result = LoadProject("D:/GCode/CasterContour.ini");
+		bool result = LoadProject("MultiPass_test.ini");
 		printf("%s \n", result ? "Successful" : "failed to load");
 		//SaveProject(nullptr);
 		//SaveProject("CasterContourProject2.ini");
