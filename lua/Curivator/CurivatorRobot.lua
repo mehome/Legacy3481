@@ -173,13 +173,13 @@ MainRobot = {
 		},
 		wheel_fl =
 		{
-			is_closed=0,
+			is_closed=1,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			pid={p=200, i=0, d=25},
 			voltage_multiply=-1.0,			--reversed
 			encoder_to_wheel_ratio=1.0,
-			encoder_reversed_wheel=0,
+			encoder_reversed_wheel=1,
 			max_speed=8.91*Feet2Meters,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
