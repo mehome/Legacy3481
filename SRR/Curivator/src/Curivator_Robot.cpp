@@ -1767,8 +1767,9 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				bool IsWheelFL=false;
 				switch (DriveIndex)
 				{
-				case Swerve_Robot::eWheel_FL:
-					IsWheelFL=true;
+				//This wheel should be working now
+				//case Swerve_Robot::eWheel_FL:
+				//	IsWheelFL=true;
 					//fall through
 				case Swerve_Robot::eWheel_RR:
 					{
