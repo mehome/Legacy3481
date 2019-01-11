@@ -36,6 +36,9 @@
     <ClInclude Include="src\CascadeDetecter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ZEDCamera2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\CascadeDetecter.cpp">
@@ -57,6 +60,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ZEDCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ZEDCamera2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

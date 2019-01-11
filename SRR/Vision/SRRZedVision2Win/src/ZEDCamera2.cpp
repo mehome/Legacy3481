@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "ZEDCamera.h"
+#include "ZEDCamera2.h"
 
-ZEDCamera::ZEDCamera()
+ZEDCamera2::ZEDCamera2()
 	: old_self_calibration_state(sl::SELF_CALIBRATION_STATE_NOT_STARTED),
 	confidenceLevel(100),
 	ViewID(0),
@@ -11,7 +11,7 @@ ZEDCamera::ZEDCamera()
 {
 }
 
-ZEDCamera::ZEDCamera(const char *file)
+ZEDCamera2::ZEDCamera2(const char *file)
 	: old_self_calibration_state (sl::SELF_CALIBRATION_STATE_NOT_STARTED),
 	  confidenceLevel(100),
 	  ViewID(0),
@@ -59,7 +59,7 @@ ZEDCamera::ZEDCamera(const char *file)
 	printf("ZED Camera FPS            : %d\n", (int)zed->getCameraFPS());
 }
 
-ZEDCamera::~ZEDCamera() 
+ZEDCamera2::~ZEDCamera2() 
 {
 	if (zed)
 	{
@@ -69,12 +69,18 @@ ZEDCamera::~ZEDCamera()
 	}
 }
 
-void ZEDCamera::close(void)
+void ZEDCamera2::close(void)
 {
 	zed->close();
 }
 
-sl::ERROR_CODE ZEDCamera::GrabFrameAndDapth(void)
+void ZEDCamera2::operator()()
+{
+	// while !exit
+	// grab frame, depth, point cl and push to queues
+}
+
+sl::ERROR_CODE ZEDCamera2::GrabFrameAndDapth(void)
 {
 	zed->setConfidenceThreshold(confidenceLevel);
 
@@ -100,7 +106,7 @@ sl::ERROR_CODE ZEDCamera::GrabFrameAndDapth(void)
 	return res;
 }
 
-sl::ERROR_CODE ZEDCamera::GrabDepth(void)
+sl::ERROR_CODE ZEDCamera2::GrabDepth(void)
 {
 	sl::ERROR_CODE res = sl::SUCCESS;
 
@@ -112,13 +118,13 @@ sl::ERROR_CODE ZEDCamera::GrabDepth(void)
 	return res;
 }
 
-void ZEDCamera::ResetCalibration(void)
+void ZEDCamera2::ResetCalibration(void)
 {
 	zed->resetSelfCalibration();
 }
 
 // save function using opencv
-void ZEDCamera::saveSbSimage(std::string filename) 
+void ZEDCamera2::saveSbSimage(std::string filename) 
 {
 	sl::Resolution imSize = zed->getResolution();
 
@@ -139,7 +145,7 @@ void ZEDCamera::saveSbSimage(std::string filename)
 	cv::imwrite(filename, SbS);
 }
 
-cv::Mat ZEDCamera::slMat2cvMat(sl::Mat& input)
+cv::Mat ZEDCamera2::slMat2cvMat(sl::Mat& input)
 {
 
 	//convert MAT_TYPE to CV_TYPE
@@ -165,7 +171,7 @@ cv::Mat ZEDCamera::slMat2cvMat(sl::Mat& input)
 /**
 This function saves current camera settings
 **/
-void ZEDCamera::saveSettings(void)
+void ZEDCamera2::saveSettings(void)
 {
 	std::ofstream myfile;
 	myfile.open("camera_settings");
@@ -183,7 +189,7 @@ void ZEDCamera::saveSettings(void)
 /**
 This function loads camera settings
 **/
-bool ZEDCamera::loadSettings(void)
+bool ZEDCamera2::loadSettings(void)
 {
 	bool ret = false;
 	std::string line;
@@ -213,7 +219,7 @@ bool ZEDCamera::loadSettings(void)
 /**
 This function updates camera settings
 **/
-void ZEDCamera::updateCameraSettings(int key) {
+void ZEDCamera2::updateCameraSettings(int key) {
 	int current_value;
 
 	// Keyboard shortcuts
@@ -261,7 +267,7 @@ void ZEDCamera::updateCameraSettings(int key) {
 /**
 This function toggles between camera settings
 **/
-void ZEDCamera::switchCameraSettings(void) {
+void ZEDCamera2::switchCameraSettings(void) {
 	step_camera_setting = 1;
 	switch (camera_settings_) {
 	case sl::CAMERA_SETTINGS_BRIGHTNESS:
@@ -309,7 +315,7 @@ void ZEDCamera::switchCameraSettings(void) {
 	}
 }
 
-void ZEDCamera::printCameraSettings(void)
+void ZEDCamera2::printCameraSettings(void)
 {
 	if (IsOpen)
 	{

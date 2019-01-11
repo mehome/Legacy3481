@@ -2,12 +2,15 @@
 
 #include "stdafx.h"
 
-class ZEDCamera 
+class ZEDCamera2 
 {
 public:
-	ZEDCamera();
-	ZEDCamera(const char* file);
-	~ZEDCamera();
+	ZEDCamera2();
+	ZEDCamera2(const char* file);
+	~ZEDCamera2();
+
+	// the grab thread
+	void operator()();
 
 	sl::ERROR_CODE GrabFrameAndDapth(void);
 	sl::ERROR_CODE GrabDepth(void);
@@ -32,15 +35,22 @@ public:
 
 	int confidenceLevel;
 
-	sl::Mat depth;
-	sl::Mat point_cloud;
-	cv::Mat frame;
-
 	sl::Camera* zed;
 
 private:
 
 	sl::Mat zedFrame;
+	sl::Mat depth;
+	sl::Mat point_cloud;
+	cv::Mat frame;
+
+	std::queue<sl::Mat>depth_queue;
+	std::queue<sl::Mat>frame_queue;
+	std::queue<sl::Mat>pointcl_queue;
+
+	const int max_queue_aize = 6;
+
+	// need exit and sync
 
 	sl::SELF_CALIBRATION_STATE old_self_calibration_state;
 
