@@ -78,7 +78,28 @@ void ZEDCamera2::operator()()
 {
 	// while !exit
 	// grab frame, depth, point cl and push to queues
+
+	// Also from Issues page:
+	
+	// sl::Mat frame_left_zed_gpu;
+	// zed.retrieveImage(frame_left_zed_gpu, VIEW_LEFT, MEM_GPU, new_width, new_height);
+	// cv::cuda:GpuMat frame_left_cuda = slMat2cvCudaMat(frame_left_zed_gpu);
+
+	// I don't care about this part really, but above shows right way to do this. 
+	// I will be pushing sl::Mat to queue, then retreive, check timestamp, and then convert to cv::Mat.
+
+	// cv::cuda::GpuMat mask;
+	// // don't mind the logic below, it's just for test
+	// cv::cuda::absdiff(frame_left_cuda, frame_left_cuda, mask);
+
 }
+
+// NOTE from Issues page:
+// bascially, get IMU data in separate thread.
+
+// "As you need to gather data at different frequency, you'll need two thread.
+//  grab() and getIMUData(myData, sl::TIME_REFERENCE_CURRENT) are thread safe.
+//  You can use getTimestamp(sl::TIME_REFERENCE_IMAGE) to get the last image timestamp, and myData.timestamp to get the IMU data one."
 
 sl::ERROR_CODE ZEDCamera2::GrabFrameAndDapth(void)
 {
