@@ -51,6 +51,8 @@ ZEDCamera::ZEDCamera(const char *file)
 	updateCameraSettings('r');
 	loadSettings();
 
+	zed->setConfidenceThreshold(confidenceLevel);
+
 	// Print camera information
 	printf("ZED Model                 : %s\n", sl::toString(zed->getCameraInformation().camera_model).c_str());
 	printf("ZED Serial Number         : %d\n", zed->getCameraInformation().serial_number);
@@ -76,8 +78,6 @@ void ZEDCamera::close(void)
 
 sl::ERROR_CODE ZEDCamera::GrabFrameAndDapth(void)
 {
-	zed->setConfidenceThreshold(confidenceLevel);
-
 	bHaveFrame = (zed->grab(runtime_parameters) == sl::SUCCESS);
 
 	sl::ERROR_CODE res = sl::SUCCESS;
@@ -103,8 +103,6 @@ sl::ERROR_CODE ZEDCamera::GrabFrameAndDapth(void)
 sl::ERROR_CODE ZEDCamera::GrabDepth(void)
 {
 	sl::ERROR_CODE res = sl::SUCCESS;
-
-	zed->setConfidenceThreshold(confidenceLevel);
 
 	if (zed->grab(runtime_parameters) == sl::SUCCESS)
 		res = zed->retrieveMeasure(depth, sl::MEASURE_DEPTH); // Get the pointer

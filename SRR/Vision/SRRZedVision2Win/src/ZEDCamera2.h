@@ -9,11 +9,11 @@ public:
 	ZEDCamera2(const char* file);
 	~ZEDCamera2();
 
-	// the grab thread
-	void operator()();
-
-	sl::ERROR_CODE GrabFrameAndDapth(void);
-	sl::ERROR_CODE GrabDepth(void);
+	sl::Mat GetFrame(void);
+	sl::Mat GetDepth(void);
+	sl::Mat GetPointCloud(void);
+	cv::Mat GetView(void);
+	bool HaveFrame(void);
 	void ResetCalibration(void);
 	void updateCameraSettings(int key);
 	void switchCameraSettings(void);
@@ -28,16 +28,14 @@ public:
 
 	sl::Resolution image_size;
 
-	bool bHaveFrame;
-
 	sl::RuntimeParameters runtime_parameters;
 	int ViewID;
+
+private:
 
 	int confidenceLevel;
 
 	sl::Camera* zed;
-
-private:
 
 	sl::Mat zedFrame;
 	sl::Mat depth;
@@ -48,7 +46,11 @@ private:
 	std::queue<sl::Mat>frame_queue;
 	std::queue<sl::Mat>pointcl_queue;
 
-	const int max_queue_aize = 6;
+	const int max_queue_aize = 100;
+	bool quit;
+
+	std::thread grab_thread;
+	void grab_run();
 
 	// need exit and sync
 

@@ -6,9 +6,15 @@
 
 #include "stdafx.h"
 
+#define USE_NEW_ZED
+
 //My stuff
 #include "OCVCamera.h"
+#ifdef USE_NEW_ZED
+#include "ZEDCamera2.h"
+#else
 #include "ZEDCamera.h"
+#endif
 #include "ThresholdDetecter.h"
 #include "ChessboardDetecter.h"
 #include "CascadeDetecter.h"
@@ -17,7 +23,11 @@
 #include "SmartDashbrdMode.h"
 
 /** forward declarations **/
+#ifdef USE_NEW_ZED
+void printInfo(ThresholdDetecter &, ZEDCamera2 &);
+#else
 void printInfo(ThresholdDetecter &, ZEDCamera &);
+#endif
 void printHelp();
 int getConsoleKey(void);
 
@@ -313,7 +323,19 @@ int main(int argc, char **argv) {
 	std::cout << "Initializing OCV Camera." << std::endl;
 	OCVCamera *FrontCam = new OCVCamera(filename2.c_str(), flip);
 
-	ZEDCamera *StereoCam=NULL;
+#ifdef USE_NEW_ZED
+	ZEDCamera2 *StereoCam=NULL;
+	if (no_zed)
+	{	// need a dummy instance.
+		StereoCam = new ZEDCamera2();
+	}
+	else
+	{
+		std::cout << "Initializing ZED Camera." << std::endl;
+		StereoCam = new ZEDCamera2(filename1.c_str());
+	}
+#else
+	ZEDCamera *StereoCam = NULL;
 	if (no_zed)
 	{	// need a dummy instance.
 		StereoCam = new ZEDCamera();
@@ -323,6 +345,7 @@ int main(int argc, char **argv) {
 		std::cout << "Initializing ZED Camera." << std::endl;
 		StereoCam = new ZEDCamera(filename1.c_str());
 	}
+#endif
 
 	if (!FrontCam->IsOpen && !StereoCam->IsOpen)
 	{
@@ -391,9 +414,14 @@ int main(int argc, char **argv) {
 	{
 		// Mouse callback initialization
 		activeCamera = Stereo_Cam;
+#ifdef USE_NEW_ZED
+		if (interactive_mode)
+			mouseStruct.image = StereoCam->GetView();
+#else
 		StereoCam->GrabDepth();
 		if(interactive_mode)
 			mouseStruct.image = StereoCam->frame;
+#endif
 	}
 	else
 	{
@@ -444,12 +472,18 @@ int main(int argc, char **argv) {
 			s_SmartDashboard_ModeManager();  //update
 
 			// update
+#ifdef USE_NEW_ZED
+			anaplyph = StereoCam->GetView();
+			depth = StereoCam->GetDepth();
+			point_cloud = StereoCam->GetPointCloud();
+#else
 			if (cam1_op_mode != Idle)
 			{
 				StereoCam->GrabFrameAndDapth();
 				anaplyph = StereoCam->frame;
 				depth = StereoCam->depth;
 				point_cloud = StereoCam->point_cloud;
+#endif
 			}
 			if (interactive_mode)
 			{
@@ -460,7 +494,11 @@ int main(int argc, char **argv) {
 			}
 
 			// Get frames and launch the computation
+#ifdef USE_NEW_ZED
+			//if (StereoCam->HaveFrame())
+#else
 			if (StereoCam->bHaveFrame)
+#endif
 			{
 				/***************  PROCESS:  ***************/
 				switch (cam1_op_mode)
@@ -863,7 +901,11 @@ Exit:
 /**
 This function display current settings and values.
 **/
+#ifdef USE_NEW_ZED
+void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera2 &StereoCam)
+#else
 void printInfo(ThresholdDetecter &ThresholdDet, ZEDCamera &StereoCam)
+#endif
 {
 	std::cout << std::endl;
 

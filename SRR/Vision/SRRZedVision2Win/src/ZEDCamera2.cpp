@@ -3,11 +3,11 @@
 
 ZEDCamera2::ZEDCamera2()
 	: old_self_calibration_state(sl::SELF_CALIBRATION_STATE_NOT_STARTED),
-	confidenceLevel(100),
-	ViewID(0),
-	bHaveFrame(false),
-	IsOpen(false),
-	zed(NULL)
+ 	  confidenceLevel(100),
+	  ViewID(0),
+	  IsOpen(false),
+	  quit(false),
+	  zed(NULL)
 {
 }
 
@@ -15,8 +15,8 @@ ZEDCamera2::ZEDCamera2(const char *file)
 	: old_self_calibration_state (sl::SELF_CALIBRATION_STATE_NOT_STARTED),
 	  confidenceLevel(100),
 	  ViewID(0),
-	  bHaveFrame(true),
 	  IsOpen(false),
+   	  quit(false),
 	  zed(NULL)
 {
 	zed = new sl::Camera();
@@ -51,33 +51,68 @@ ZEDCamera2::ZEDCamera2(const char *file)
 	updateCameraSettings('r');
 	loadSettings();
 
+	zed->setConfidenceThreshold(confidenceLevel);
+
 	// Print camera information
 	printf("ZED Model                 : %s\n", sl::toString(zed->getCameraInformation().camera_model).c_str());
 	printf("ZED Serial Number         : %d\n", zed->getCameraInformation().serial_number);
 	printf("ZED Firmware              : %d\n", zed->getCameraInformation().firmware_version);
 	printf("ZED Camera Resolution     : %dx%d\n", (int)zed->getResolution().width, (int)zed->getResolution().height);
 	printf("ZED Camera FPS            : %d\n", (int)zed->getCameraFPS());
+
+	grab_thread = std::thread(&ZEDCamera2::grab_run, this);
 }
 
 ZEDCamera2::~ZEDCamera2() 
 {
-	if (zed)
-	{
-		zed->close();
-		IsOpen = false;
-		delete zed;
-	}
+	close();
 }
 
 void ZEDCamera2::close(void)
 {
-	zed->close();
+	IsOpen = false;
+	quit = true;
+	if(grab_thread.joinable())
+		grab_thread.join();
+	if (zed)
+	{
+		zed->close();
+		delete zed;
+	}
 }
 
-void ZEDCamera2::operator()()
+void ZEDCamera2::grab_run()
 {
-	// while !exit
-	// grab frame, depth, point cl and push to queues
+	while (!quit)
+	{
+		if (zed->grab(runtime_parameters) == sl::SUCCESS) {
+			// Estimated rotation :
+			if (old_self_calibration_state != zed->getSelfCalibrationState()) {
+				std::cout << "Self Calibration Status : " << sl::toString(zed->getSelfCalibrationState()) << std::endl;
+				old_self_calibration_state = zed->getSelfCalibrationState();
+			}
+
+			zed->retrieveMeasure(depth, sl::MEASURE_DEPTH, sl::MEM_CPU); // Get the pointer
+			zed->retrieveImage(zedFrame, static_cast<sl::VIEW> (ViewID));
+#ifdef USE_POINT_CLOUD 
+			zed->retrieveMeasure(point_cloud, sl::MEASURE_XYZRGBA);
+#endif
+			if (frame_queue.size() >= max_queue_aize)
+				frame_queue.pop();
+
+			frame_queue.push(zedFrame);
+
+			if (depth_queue.size() >= max_queue_aize)
+				depth_queue.pop();
+
+			depth_queue.push(depth);
+
+			if (pointcl_queue.size() > max_queue_aize)
+				pointcl_queue.pop();
+
+			pointcl_queue.push(point_cloud);
+		}
+	}
 
 	// Also from Issues page:
 	
@@ -101,42 +136,45 @@ void ZEDCamera2::operator()()
 //  grab() and getIMUData(myData, sl::TIME_REFERENCE_CURRENT) are thread safe.
 //  You can use getTimestamp(sl::TIME_REFERENCE_IMAGE) to get the last image timestamp, and myData.timestamp to get the IMU data one."
 
-sl::ERROR_CODE ZEDCamera2::GrabFrameAndDapth(void)
+sl::Mat ZEDCamera2::GetFrame(void)
 {
-	zed->setConfidenceThreshold(confidenceLevel);
+	printf("frame_queue size = %zd\n", frame_queue.size());
+	sl::timeStamp = GetCurrentTime();
+	while (frame_queue.empty());
 
-	bHaveFrame = (zed->grab(runtime_parameters) == sl::SUCCESS);
-
-	sl::ERROR_CODE res = sl::SUCCESS;
-
-	if (bHaveFrame) {
-		// Estimated rotation :
-		if (old_self_calibration_state != zed->getSelfCalibrationState()) {
-			std::cout << "Self Calibration Status : " << sl::toString(zed->getSelfCalibrationState()) << std::endl;
-			old_self_calibration_state = zed->getSelfCalibrationState();
-		}
-
-		res = zed->retrieveMeasure(depth ,sl::MEASURE_DEPTH, sl::MEM_CPU); // Get the pointer
-		res = zed->retrieveImage(zedFrame, static_cast<sl::VIEW> (ViewID));
-#ifdef USE_POINT_CLOUD 
-		zed->retrieveMeasure(point_cloud, sl::MEASURE_XYZRGBA);
-#endif
-		frame = slMat2cvMat(zedFrame);
-	}
-
-	return res;
+	sl::Mat frame = frame_queue.front();
+	frame_queue.pop();
+	return frame;
 }
 
-sl::ERROR_CODE ZEDCamera2::GrabDepth(void)
+sl::Mat ZEDCamera2::GetDepth(void)
 {
-	sl::ERROR_CODE res = sl::SUCCESS;
+	printf("depth_queue size = %zd\n", depth_queue.size());
+	while (depth_queue.empty());
+	
+	sl::Mat depth = depth_queue.front();
+	depth_queue.pop();
+	return depth;
+}
 
-	zed->setConfidenceThreshold(confidenceLevel);
+sl::Mat ZEDCamera2::GetPointCloud(void)
+{
+	printf("pointcl_queue size = %zd\n", pointcl_queue.size());
+	while (pointcl_queue.empty());
+	
+	sl::Mat pointcl = pointcl_queue.front();
+	pointcl_queue.pop();
+	return pointcl;
+}
 
-	if (zed->grab(runtime_parameters) == sl::SUCCESS)
-		res = zed->retrieveMeasure(depth, sl::MEASURE_DEPTH); // Get the pointer
+cv::Mat ZEDCamera2::GetView(void)
+{
+	return slMat2cvMat(GetFrame());
+}
 
-	return res;
+bool ZEDCamera2::HaveFrame(void)
+{
+	return !frame_queue.empty();
 }
 
 void ZEDCamera2::ResetCalibration(void)
