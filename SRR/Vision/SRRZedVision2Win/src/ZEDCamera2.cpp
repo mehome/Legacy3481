@@ -139,11 +139,15 @@ void ZEDCamera2::grab_run()
 sl::Mat ZEDCamera2::GetFrame(void)
 {
 	printf("frame_queue size = %zd\n", frame_queue.size());
-	sl::timeStamp = GetCurrentTime();
+	sl::timeStamp cts = zed->getTimestamp(sl::TIME_REFERENCE::TIME_REFERENCE_CURRENT);
+	sl::timeStamp fts = zed->getTimestamp(sl::TIME_REFERENCE::TIME_REFERENCE_IMAGE);
+	printf("current time: %zd camera time: %zd\n", cts, fts);
+
 	while (frame_queue.empty());
 
 	sl::Mat frame = frame_queue.front();
 	frame_queue.pop();
+	printf("frame time: %zd\n", frame.timestamp);
 	return frame;
 }
 

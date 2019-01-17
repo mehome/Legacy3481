@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 
-#define USE_NEW_ZED
+//#define USE_NEW_ZED
 
 //My stuff
 #include "OCVCamera.h"
