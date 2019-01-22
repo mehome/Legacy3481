@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 
-//#define USE_NEW_ZED
+#define USE_NEW_ZED
 
 //My stuff
 #include "OCVCamera.h"
@@ -483,8 +483,9 @@ int main(int argc, char **argv) {
 				anaplyph = StereoCam->frame;
 				depth = StereoCam->depth;
 				point_cloud = StereoCam->point_cloud;
-#endif
 			}
+#endif
+
 			if (interactive_mode)
 			{
 				displaySize.height = (int)(SmallWindow ? anaplyph.rows / 2 : anaplyph.rows);
@@ -495,7 +496,6 @@ int main(int argc, char **argv) {
 
 			// Get frames and launch the computation
 #ifdef USE_NEW_ZED
-			//if (StereoCam->HaveFrame())
 #else
 			if (StereoCam->bHaveFrame)
 #endif

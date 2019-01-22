@@ -39,10 +39,6 @@ ZEDCamera2::ZEDCamera2(const char *file)
 		return; // Quit if an error occurred
 	}
 
-	// disable tracking until we put the camera on a thread.
-	zed->disableTracking("");
-	zed->disableSpatialMapping();
-
 	IsOpen = true;
 
 	image_size = zed->getResolution();
@@ -138,36 +134,43 @@ void ZEDCamera2::grab_run()
 
 sl::Mat ZEDCamera2::GetFrame(void)
 {
-	printf("frame_queue size = %zd\n", frame_queue.size());
-	sl::timeStamp cts = zed->getTimestamp(sl::TIME_REFERENCE::TIME_REFERENCE_CURRENT);
-	sl::timeStamp fts = zed->getTimestamp(sl::TIME_REFERENCE::TIME_REFERENCE_IMAGE);
-	printf("current time: %zd camera time: %zd\n", cts, fts);
-
+	// wait for a frame if request is ahead of the camera
 	while (frame_queue.empty());
 
-	sl::Mat frame = frame_queue.front();
-	frame_queue.pop();
-	printf("frame time: %zd\n", frame.timestamp);
+	sl::Mat frame;
+	do {	// get most recent frames, discard old
+		frame = frame_queue.front();
+		frame_queue.pop();
+	} while (frame.timestamp < zed->getTimestamp(sl::TIME_REFERENCE_IMAGE) && frame_queue.size() > 0);
+
 	return frame;
 }
 
 sl::Mat ZEDCamera2::GetDepth(void)
 {
-	printf("depth_queue size = %zd\n", depth_queue.size());
+	// wait for a frame if request is ahead of the camera
 	while (depth_queue.empty());
 	
-	sl::Mat depth = depth_queue.front();
-	depth_queue.pop();
+	sl::Mat depth;
+	do {	// get most recent frames, discard old
+		depth = depth_queue.front();
+		depth_queue.pop();
+	} while (depth.timestamp < zed->getTimestamp(sl::TIME_REFERENCE_IMAGE) && depth_queue.size() > 0);
+
 	return depth;
 }
 
 sl::Mat ZEDCamera2::GetPointCloud(void)
 {
-	printf("pointcl_queue size = %zd\n", pointcl_queue.size());
+	// wait for a frame if request is ahead of the camera
 	while (pointcl_queue.empty());
 	
-	sl::Mat pointcl = pointcl_queue.front();
-	pointcl_queue.pop();
+	sl::Mat pointcl;
+	do {	// get most recent frames, discard old
+		pointcl = pointcl_queue.front();
+		pointcl_queue.pop();
+	} while (pointcl.timestamp < zed->getTimestamp(sl::TIME_REFERENCE_IMAGE) && pointcl_queue.size() > 0);
+
 	return pointcl;
 }
 
