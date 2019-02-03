@@ -9,8 +9,11 @@ public:
 	ZEDCamera(const char* file);
 	~ZEDCamera();
 
-	sl::ERROR_CODE GrabFrameAndDapth(void);
-	sl::ERROR_CODE GrabDepth(void);
+	sl::Mat GetFrame(void);
+	sl::Mat GetDepth(void);
+	sl::Mat GetPointCloud(void);
+	cv::Mat GetView(void);
+	bool HaveFrame(void);
 	void ResetCalibration(void);
 	void updateCameraSettings(int key);
 	void switchCameraSettings(void);
@@ -25,22 +28,31 @@ public:
 
 	sl::Resolution image_size;
 
-	bool bHaveFrame;
-
 	sl::RuntimeParameters runtime_parameters;
 	int ViewID;
 
+private:
+
 	int confidenceLevel;
 
+	sl::Camera* zed;
+
+	sl::Mat zedFrame;
 	sl::Mat depth;
 	sl::Mat point_cloud;
 	cv::Mat frame;
 
-	sl::Camera* zed;
+	std::queue<sl::Mat>depth_queue;
+	std::queue<sl::Mat>frame_queue;
+	std::queue<sl::Mat>pointcl_queue;
 
-private:
+	const int max_queue_aize = 100;
+	bool quit;
 
-	sl::Mat zedFrame;
+	std::thread grab_thread;
+	void grab_run();
+
+	// need exit and sync
 
 	sl::SELF_CALIBRATION_STATE old_self_calibration_state;
 

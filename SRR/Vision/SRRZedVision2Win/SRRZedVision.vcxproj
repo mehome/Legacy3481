@@ -519,7 +519,6 @@
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\ThresholdDetecter.h" />
     <ClInclude Include="src\ZEDCamera.h" />
-    <ClInclude Include="src\ZEDCamera2.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\CascadeDetecter.cpp" />
@@ -529,7 +528,6 @@
     <ClCompile Include="src\stdafx.cpp" />
     <ClCompile Include="src\ThresholdDetecter.cpp" />
     <ClCompile Include="src\ZEDCamera.cpp" />
-    <ClCompile Include="src\ZEDCamera2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="SmartDashboard\SmartDashboard.vcxproj">
