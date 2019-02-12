@@ -11,7 +11,7 @@ ChessboardDetecter::~ChessboardDetecter() {}
 
 
 // use calibration target for a beacon.
-void ChessboardDetecter::detectBeacon(cv::Mat& view, sl::Mat* depth, sl::Mat* point_cloud)
+void ChessboardDetecter::detectBeacon(cv::Mat& view, sl::Mat* point_cloud, sl::Pose* camera_pose)
 {
 	bool found = cv::findChessboardCorners(view, boardSize, pointBuf,
 		CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FAST_CHECK | CV_CALIB_CB_NORMALIZE_IMAGE);
@@ -60,18 +60,6 @@ void ChessboardDetecter::detectBeacon(cv::Mat& view, sl::Mat* depth, sl::Mat* po
 				SmartDashboard::PutNumber("X Position", point3D.x);
 				SmartDashboard::PutNumber("Y Position", point3D.y);
 				SmartDashboard::PutNumber("Z Position", point3D.z);
-				SmartDashboard::PutNumber("Distance", Distance);
-			}
-		}
-		else if (depth != NULL)
-		{
-			float Distance;
-			depth->getValue((size_t)center.x, (size_t)center.y, &Distance);
-
-			if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
-			{
-				SmartDashboard::PutNumber("X Position", center.x);
-				SmartDashboard::PutNumber("Y Position", center.y);
 				SmartDashboard::PutNumber("Distance", Distance);
 			}
 		}

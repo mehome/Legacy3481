@@ -9,7 +9,7 @@ public:
 	ThresholdDetecter(int3 lov, int3 high, bool interactive);
 	~ThresholdDetecter();
 
-	void detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* point_cloud, cv::Point mhit, bool small_display);
+	void detectRockSample(cv::Mat& frame, sl::Mat* point_cloud, sl::Pose* camera_pose, cv::Point mhit, bool small_display);
 	void updateThresholdSettings(int key);
 	void switchThresholdSettings();
 	bool loadThreshold(std::string file);
@@ -62,4 +62,6 @@ private:
 	float DistMax, DistMin;
 	bool MouseDown;
 	bool interactive_mode;
+
+	std::ofstream outputFile;
 };

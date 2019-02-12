@@ -13,6 +13,7 @@ public:
 	sl::Mat GetDepth(void);
 	sl::Mat GetPointCloud(void);
 	cv::Mat GetView(void);
+	sl::Pose GetPose(void);
 	bool HaveFrame(void);
 	void ResetCalibration(void);
 	void updateCameraSettings(int key);
@@ -33,9 +34,13 @@ public:
 
 private:
 
+	void transformPose(sl::Transform &pose, float tx);
+
 	int confidenceLevel;
 
 	sl::Camera* zed;
+
+	sl::Pose camera_pose;
 
 	sl::Mat zedFrame;
 	sl::Mat depth;
@@ -45,6 +50,7 @@ private:
 	std::queue<sl::Mat>depth_queue;
 	std::queue<sl::Mat>frame_queue;
 	std::queue<sl::Mat>pointcl_queue;
+	std::queue<sl::Pose>pose_queue;
 
 	const int max_queue_aize = 100;
 	bool quit;

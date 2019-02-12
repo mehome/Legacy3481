@@ -22,7 +22,7 @@ bool CascadeDetecter::loadCascade(const char* cascade_Name)
 	return cascade_loaded = hook_cascade.load(hook_cascade_name);
 }
 
-void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* point_cloud)
+void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* point_cloud, sl::Pose* camera_pose)
 {
 	cv::Mat frame_gray;
 
@@ -103,18 +103,6 @@ void CascadeDetecter::detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* 
 				SmartDashboard::PutNumber("X Position", point3D.x);
 				SmartDashboard::PutNumber("Y Position", point3D.y);
 				SmartDashboard::PutNumber("Z Position", point3D.z);
-				SmartDashboard::PutNumber("Distance", Distance);
-			}
-		}
-		else if (depth != NULL)
-		{
-			float Distance;
-			depth->getValue(x_target, y_target, &Distance);
-
-			if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
-			{
-				SmartDashboard::PutNumber("X Position", (double)x_target);
-				SmartDashboard::PutNumber("Y Position", (double)y_target);
 				SmartDashboard::PutNumber("Distance", Distance);
 			}
 		}

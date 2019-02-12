@@ -25,6 +25,13 @@ ThresholdDetecter::ThresholdDetecter(bool interactive)
 	erodeFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE, CV_8UC1, element);
 	dilateFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE, CV_8UC1, element);
 #endif
+
+	std::string csvName = "Motion_data";
+	outputFile.open(csvName + ".csv");
+	if (!outputFile.is_open())
+		std::cout << "WARNING: Can't create CSV file. Run the application with administrator rights." << std::endl;
+	else
+		std::cout << "csv file opened." << std::endl;
 }
 
 ThresholdDetecter::ThresholdDetecter(int3 low, int3 high, bool interactive)
@@ -68,9 +75,19 @@ ThresholdDetecter::ThresholdDetecter(int3 low, int3 high, bool interactive)
 	erodeFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE, CV_8UC1, element);
 	dilateFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE, CV_8UC1, element);
 #endif
+
+	std::string csvName = "Motion_data";
+	outputFile.open(csvName + ".csv");
+	if (!outputFile.is_open())
+		std::cout << "WARNING: Can't create CSV file. Run the application with administrator rights." << std::endl;
+	else
+		std::cout << "csv file opened." << std::endl;
 };
 
-ThresholdDetecter::~ThresholdDetecter() {}
+ThresholdDetecter::~ThresholdDetecter() 
+{
+	outputFile.close();
+}
 
 void ThresholdDetecter::setThreshold(int3 low, int3 high)
 {
@@ -103,7 +120,7 @@ void ThresholdDetecter::printThreshold(void)
 	std::cout << "V: " << HSV_Range[V_Low] << " - " << HSV_Range[V_High] << std::endl;
 }
 
-void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* point_cloud, cv::Point mhit, bool small_display)
+void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* point_cloud, sl::Pose* camera_pose, cv::Point mhit, bool small_display)
 {
 //#define FUBAR
 #if defined(HAVE_CUDA) && defined(USE_CUDA) && defined(FUBAR)
@@ -242,17 +259,6 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 						if (Distance > DistMax) DistMax = Distance;
 					}
 				}
-				else if (depth != NULL)
-				{
-					float Distance;
-					depth->getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &Distance);
-
-					if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
-					{
-						if (Distance < DistMin) DistMin = Distance;
-						if (Distance > DistMax) DistMax = Distance;
-					}
-				}
 			}
 		}
 		else
@@ -280,21 +286,27 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* depth, sl::Mat
 				{
 					float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
 
+					outputFile << "----------------------------------------------------------------------------------------" << std::endl;
+
+					sl::float3 rotation = camera_pose->pose_data.getEulerAngles();
+					sl::float3 translation = camera_pose->pose_data.getTranslation();
+					outputFile << "camera pose (tx, rot): " << translation.x << " " << translation.y << " " << translation.z << ", " <<
+						rotation.x << " " << rotation.y << " " << rotation.z << camera_pose->pose_confidence << std::endl;
+
+					outputFile << "local space posiion, dist: " << point3D.x << ", " << point3D.y << ", " << point3D.z << "  " << Distance << std::endl;
+
+					sl::Transform WPoint = sl::Transform::identity();
+					WPoint.setTranslation(sl::Translation(point3D.x, point3D.y, point3D.z));
+					WPoint = sl::Transform::inverse(camera_pose->pose_data) * WPoint * camera_pose->pose_data;
+
+					// should not change...
+					Distance = sqrt(WPoint.tx*WPoint.tx + WPoint.ty*WPoint.ty + WPoint.tz*WPoint.tz);
+
+					outputFile << "world space posiion, dist: " << WPoint.tx << ", " << WPoint.ty << ", " << WPoint.tz << "  " << Distance << std::endl;
+
 					SmartDashboard::PutNumber("X Position", point3D.x);
 					SmartDashboard::PutNumber("Y Position", point3D.y);
 					SmartDashboard::PutNumber("Z Position", point3D.z);
-					SmartDashboard::PutNumber("Distance", Distance);
-				}
-			}
-			else if (depth != NULL)
-			{
-				float Distance;
-				depth->getValue((size_t)minRect[i].center.x, (size_t)minRect[i].center.y, &Distance);
-
-				if (Distance != sl::OCCLUSION_VALUE && Distance != sl::TOO_CLOSE && Distance != sl::TOO_FAR)
-				{
-					SmartDashboard::PutNumber("X Position", minRect[i].center.x);
-					SmartDashboard::PutNumber("Y Position", minRect[i].center.y);
 					SmartDashboard::PutNumber("Distance", Distance);
 				}
 			}

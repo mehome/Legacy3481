@@ -366,6 +366,7 @@ int main(int argc, char **argv) {
 	cv::Mat confidencemap((int)height, (int)width, CV_8UC4);
 	sl::Mat depth;
 	sl::Mat point_cloud;
+	sl::Pose camera_pose;
 
 	if (interactive_mode)
 	{
@@ -446,6 +447,7 @@ int main(int argc, char **argv) {
 			anaplyph = StereoCam->GetView();
 			depth = StereoCam->GetDepth();
 			point_cloud = StereoCam->GetPointCloud();
+			camera_pose = StereoCam->GetPose();
 
 			if (interactive_mode)
 			{
@@ -460,11 +462,7 @@ int main(int argc, char **argv) {
 			switch (cam1_op_mode)
 			{
 			case FindHook:
-#ifdef USE_POINT_CLOUD 
-				CascadeDet->detectHookSample(anaplyph, NULL, &point_cloud);
-#else
-				CascadeDet->detectHookSample(anaplyph, &depth, NULL);
-#endif
+				CascadeDet->detectHookSample(anaplyph, &point_cloud, &camera_pose);
 				break;
 			case FindRock:
 			{
@@ -481,19 +479,11 @@ int main(int argc, char **argv) {
 				}
 
 				cv::Point mhit(mouseStruct.hit_x, mouseStruct.hit_y);
-#ifdef USE_POINT_CLOUD 
-				ThresholdDet->detectRockSample(anaplyph, NULL, &point_cloud, mhit, SmallWindow);
-#else
-				ThresholdDet->detectRockSample(anaplyph, &depth, NULL, mhit, SmallWindow);
-#endif
+				ThresholdDet->detectRockSample(anaplyph, &point_cloud, &camera_pose, mhit, SmallWindow);
 				break;
 			}
 			case FindBeacon:
-#ifdef USE_POINT_CLOUD 
-				ChessboardDet->detectBeacon(anaplyph, NULL, &point_cloud);
-#else
-				chessboardDet->detectBeacon(anaplyph, &depth, NULL);
-#endif
+				ChessboardDet->detectBeacon(anaplyph, &point_cloud, &camera_pose);
 				break;
 			default:
 				break;

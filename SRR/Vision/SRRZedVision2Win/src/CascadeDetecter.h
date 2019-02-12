@@ -16,7 +16,7 @@ public:
 	CascadeDetecter(const char* cascade_name, bool interactive);
 	~CascadeDetecter();
 
-	void detectHookSample(cv::Mat& frame, sl::Mat* depth, sl::Mat* point_cloud);
+	void detectHookSample(cv::Mat& frame, sl::Mat* point_cloud, sl::Pose* camera_pose);
 	bool loadCascade(const char* cascade_name);
 	bool cascadeLoaded(void) 	{ return cascade_loaded; }
 

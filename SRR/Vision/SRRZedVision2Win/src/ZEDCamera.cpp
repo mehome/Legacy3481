@@ -39,6 +39,14 @@ ZEDCamera::ZEDCamera(const char *file)
 		return; // Quit if an error occurred
 	}
 
+	// Set positional tracking parameters
+	sl::TrackingParameters trackingParameters;
+	trackingParameters.initial_world_transform = sl::Transform::identity();
+	trackingParameters.enable_spatial_memory = true;
+
+	// Start motion tracking
+	zed->enableTracking(trackingParameters);
+
 	IsOpen = true;
 
 	image_size = zed->getResolution();
@@ -79,6 +87,9 @@ void ZEDCamera::close(void)
 
 void ZEDCamera::grab_run()
 {
+	// Get the distance between the center of the camera and the left eye
+	float translation_left_to_center = zed->getCameraInformation().calibration_parameters.T.x * 0.5f;
+
 	while (!quit)
 	{
 		if (zed->grab(runtime_parameters) == sl::SUCCESS) {
@@ -88,11 +99,24 @@ void ZEDCamera::grab_run()
 				old_self_calibration_state = zed->getSelfCalibrationState();
 			}
 
+			// Get the position of the camera in a fixed reference frame (the World Frame)
+			sl::TRACKING_STATE tracking_state = zed->getPosition(camera_pose, sl::REFERENCE_FRAME_WORLD);
+
+			if (tracking_state == sl::TRACKING_STATE_OK) {
+				// getPosition() outputs the position of the Camera Frame, which is located on the left eye of the camera.
+				// To get the position of the center of the camera, we transform the pose data into a new frame located at the center of the camera.
+				// The generic formula used here is: Pose(new reference frame) = M.inverse() * Pose (camera frame) * M, where M is the transform between two frames.
+				transformPose(camera_pose.pose_data, translation_left_to_center); // Get the pose at the center of the camera (baseline/2 on X axis)
+				if (pose_queue.size() >= max_queue_aize)
+					pose_queue.pop();
+
+				pose_queue.push(camera_pose);
+			}
+
 			zed->retrieveMeasure(depth, sl::MEASURE_DEPTH, sl::MEM_CPU); // Get the pointer
 			zed->retrieveImage(zedFrame, static_cast<sl::VIEW> (ViewID));
-#ifdef USE_POINT_CLOUD 
 			zed->retrieveMeasure(point_cloud, sl::MEASURE_XYZRGBA);
-#endif
+
 			if (frame_queue.size() >= max_queue_aize)
 				frame_queue.pop();
 
@@ -109,28 +133,20 @@ void ZEDCamera::grab_run()
 			pointcl_queue.push(point_cloud);
 		}
 	}
-
-	// Also from Issues page:
-	
-	// sl::Mat frame_left_zed_gpu;
-	// zed.retrieveImage(frame_left_zed_gpu, VIEW_LEFT, MEM_GPU, new_width, new_height);
-	// cv::cuda:GpuMat frame_left_cuda = slMat2cvCudaMat(frame_left_zed_gpu);
-
-	// I don't care about this part really, but above shows right way to do this. 
-	// I will be pushing sl::Mat to queue, then retreive, check timestamp, and then convert to cv::Mat.
-
-	// cv::cuda::GpuMat mask;
-	// // don't mind the logic below, it's just for test
-	// cv::cuda::absdiff(frame_left_cuda, frame_left_cuda, mask);
-
 }
 
-// NOTE from Issues page:
-// bascially, get IMU data in separate thread.
-
-// "As you need to gather data at different frequency, you'll need two thread.
-//  grab() and getIMUData(myData, sl::TIME_REFERENCE_CURRENT) are thread safe.
-//  You can use getTimestamp(sl::TIME_REFERENCE_IMAGE) to get the last image timestamp, and myData.timestamp to get the IMU data one."
+/**
+ **  Trasnform pose to create a Tracking Frame located in a separate location from the Camera Frame
+ **/
+void ZEDCamera::transformPose(sl::Transform &pose, float tx) 
+{
+	sl::Transform transform_;
+	transform_.setIdentity();
+	// Move the tracking frame by tx along the X axis
+	transform_.tx = tx;
+	// Apply the transformation
+	pose = sl::Transform::inverse(transform_) * pose * transform_;
+}
 
 sl::Mat ZEDCamera::GetFrame(void)
 {
@@ -172,6 +188,20 @@ sl::Mat ZEDCamera::GetPointCloud(void)
 	} while (pointcl.timestamp < zed->getTimestamp(sl::TIME_REFERENCE_IMAGE) && pointcl_queue.size() > 0);
 
 	return pointcl;
+}
+
+sl::Pose ZEDCamera::GetPose(void)
+{
+	// wait for a pose update if request is ahead of the camera
+	while (pose_queue.empty());
+
+	sl::Pose cam_pose;
+	do {
+		cam_pose = pose_queue.front();
+		pose_queue.pop();
+	} while (cam_pose.timestamp < zed->getTimestamp(sl::TIME_REFERENCE_IMAGE) && pose_queue.size() > 0);
+
+	return camera_pose;
 }
 
 cv::Mat ZEDCamera::GetView(void)

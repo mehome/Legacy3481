@@ -8,7 +8,7 @@ public:
 	ChessboardDetecter(bool interactive);
 	~ChessboardDetecter();
 
-	void detectBeacon(cv::Mat& view, sl::Mat* depth, sl::Mat* point_cloud);
+	void detectBeacon(cv::Mat& view, sl::Mat* point_cloud, sl::Pose* camera_pose);
 
 private:
 	bool interactive_mode;
