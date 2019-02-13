@@ -93,6 +93,8 @@ void ZEDCamera::grab_run()
 	while (!quit)
 	{
 		if (zed->grab(runtime_parameters) == sl::SUCCESS) {
+			std::lock_guard<std::mutex> guard(mtx);
+
 			// Estimated rotation :
 			if (old_self_calibration_state != zed->getSelfCalibrationState()) {
 				std::cout << "Self Calibration Status : " << sl::toString(zed->getSelfCalibrationState()) << std::endl;
@@ -132,6 +134,7 @@ void ZEDCamera::grab_run()
 
 			pointcl_queue.push(point_cloud);
 		}
+		else sl::sleep_ms(1);
 	}
 }
 
@@ -153,6 +156,8 @@ sl::Mat ZEDCamera::GetFrame(void)
 	// wait for a frame if request is ahead of the camera
 	while (frame_queue.empty());
 
+	std::lock_guard<std::mutex> guard(mtx);
+
 	sl::Mat frame;
 	do {	// get most recent frames, discard old
 		frame = frame_queue.front();
@@ -167,6 +172,8 @@ sl::Mat ZEDCamera::GetDepth(void)
 	// wait for a frame if request is ahead of the camera
 	while (depth_queue.empty());
 	
+	std::lock_guard<std::mutex> guard(mtx);
+
 	sl::Mat depth;
 	do {	// get most recent frames, discard old
 		depth = depth_queue.front();
@@ -181,6 +188,8 @@ sl::Mat ZEDCamera::GetPointCloud(void)
 	// wait for a frame if request is ahead of the camera
 	while (pointcl_queue.empty());
 	
+	std::lock_guard<std::mutex> guard(mtx);
+
 	sl::Mat pointcl;
 	do {	// get most recent frames, discard old
 		pointcl = pointcl_queue.front();
@@ -195,6 +204,8 @@ sl::Pose ZEDCamera::GetPose(void)
 	// wait for a pose update if request is ahead of the camera
 	while (pose_queue.empty());
 
+	std::lock_guard<std::mutex> guard(mtx);
+
 	sl::Pose cam_pose;
 	do {
 		cam_pose = pose_queue.front();
@@ -207,11 +218,6 @@ sl::Pose ZEDCamera::GetPose(void)
 cv::Mat ZEDCamera::GetView(void)
 {
 	return slMat2cvMat(GetFrame());
-}
-
-bool ZEDCamera::HaveFrame(void)
-{
-	return !frame_queue.empty();
 }
 
 void ZEDCamera::ResetCalibration(void)

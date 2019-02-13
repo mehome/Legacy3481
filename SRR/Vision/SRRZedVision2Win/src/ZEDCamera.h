@@ -14,7 +14,6 @@ public:
 	sl::Mat GetPointCloud(void);
 	cv::Mat GetView(void);
 	sl::Pose GetPose(void);
-	bool HaveFrame(void);
 	void ResetCalibration(void);
 	void updateCameraSettings(int key);
 	void switchCameraSettings(void);
@@ -51,6 +50,8 @@ private:
 	std::queue<sl::Mat>frame_queue;
 	std::queue<sl::Mat>pointcl_queue;
 	std::queue<sl::Pose>pose_queue;
+
+	std::mutex mtx;
 
 	const int max_queue_aize = 100;
 	bool quit;

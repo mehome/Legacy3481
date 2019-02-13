@@ -31,7 +31,10 @@ ThresholdDetecter::ThresholdDetecter(bool interactive)
 	if (!outputFile.is_open())
 		std::cout << "WARNING: Can't create CSV file. Run the application with administrator rights." << std::endl;
 	else
+	{
 		std::cout << "csv file opened." << std::endl;
+		outputFile << "trans_x;trans_y;trans_z;rot_x;rot_y;rot_z;track_conf;lpos_x;lpos_y;lpos_z;ldsit;wpos_x;wpos_y;wpos_z;wdist" << std::endl;
+	}
 }
 
 ThresholdDetecter::ThresholdDetecter(int3 low, int3 high, bool interactive)
@@ -284,25 +287,26 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* point_cloud, s
 					(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
 					(!isnan(point3D.z) && point3D.z != sl::TOO_CLOSE && point3D.z != sl::TOO_FAR))
 				{
-					float Distance = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
-
-					outputFile << "----------------------------------------------------------------------------------------" << std::endl;
+					point3D.w = 0;
+					float Distance = sl::float4::distance(point3D, sl::float4(0, 0, 0, 0));
+					float Distance2 = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
 
 					sl::float3 rotation = camera_pose->pose_data.getEulerAngles();
 					sl::float3 translation = camera_pose->pose_data.getTranslation();
-					outputFile << "camera pose (tx, rot): " << translation.x << " " << translation.y << " " << translation.z << ", " <<
-						rotation.x << " " << rotation.y << " " << rotation.z << camera_pose->pose_confidence << std::endl;
+					outputFile << translation.x << "; " << translation.y << "; " << translation.z << "; " <<
+						rotation.x << "; " << rotation.y << "; " << rotation.z << "; " << camera_pose->pose_confidence;
 
-					outputFile << "local space posiion, dist: " << point3D.x << ", " << point3D.y << ", " << point3D.z << "  " << Distance << std::endl;
+					outputFile << point3D.x << "; " << point3D.y << "; " << point3D.z << "; " << Distance;
 
 					sl::Transform WPoint = sl::Transform::identity();
 					WPoint.setTranslation(sl::Translation(point3D.x, point3D.y, point3D.z));
 					WPoint = sl::Transform::inverse(camera_pose->pose_data) * WPoint * camera_pose->pose_data;
 
-					// should not change...
-					Distance = sqrt(WPoint.tx*WPoint.tx + WPoint.ty*WPoint.ty + WPoint.tz*WPoint.tz);
+					sl::float4 PWorld(WPoint.tx, WPoint.ty, WPoint.tx, 0);
+					// distanct to point from camera position
+					Distance = sl::float4::distance(PWorld, sl::float4(translation.x, translation.y, translation.z, 0));
 
-					outputFile << "world space posiion, dist: " << WPoint.tx << ", " << WPoint.ty << ", " << WPoint.tz << "  " << Distance << std::endl;
+					outputFile << PWorld.x << "; " << PWorld.y << "; " << PWorld.z << "; " << Distance << std::endl;
 
 					SmartDashboard::PutNumber("X Position", point3D.x);
 					SmartDashboard::PutNumber("Y Position", point3D.y);
