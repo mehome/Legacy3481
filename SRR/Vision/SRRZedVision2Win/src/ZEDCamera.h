@@ -14,6 +14,7 @@ public:
 	sl::Mat GetPointCloud(void);
 	cv::Mat GetView(void);
 	sl::Pose GetPose(void);
+	bool HavePose(void);
 	void ResetCalibration(void);
 	void updateCameraSettings(int key);
 	void switchCameraSettings(void);

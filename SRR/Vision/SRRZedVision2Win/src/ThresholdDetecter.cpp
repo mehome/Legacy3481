@@ -26,14 +26,14 @@ ThresholdDetecter::ThresholdDetecter(bool interactive)
 	dilateFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE, CV_8UC1, element);
 #endif
 
-	std::string csvName = "Motion_data";
+	std::string csvName = "Detection_data";
 	outputFile.open(csvName + ".csv");
 	if (!outputFile.is_open())
 		std::cout << "WARNING: Can't create CSV file. Run the application with administrator rights." << std::endl;
 	else
 	{
 		std::cout << "csv file opened." << std::endl;
-		outputFile << "trans_x;trans_y;trans_z;rot_x;rot_y;rot_z;track_conf;lpos_x;lpos_y;lpos_z;ldsit;wpos_x;wpos_y;wpos_z;wdist" << std::endl;
+		outputFile << "trans_x; trans_y; trans_z; rot_x; rot_y; rot_z; track_conf; lpos_x; lpos_y; lpos_z; ldist; wpos_x; wpos_y; wpos_z; wdist" << std::endl;
 	}
 }
 
@@ -79,12 +79,15 @@ ThresholdDetecter::ThresholdDetecter(int3 low, int3 high, bool interactive)
 	dilateFilter_ = cv::cuda::createMorphologyFilter(cv::MORPH_DILATE, CV_8UC1, element);
 #endif
 
-	std::string csvName = "Motion_data";
+	std::string csvName = "Detection_data";
 	outputFile.open(csvName + ".csv");
 	if (!outputFile.is_open())
 		std::cout << "WARNING: Can't create CSV file. Run the application with administrator rights." << std::endl;
 	else
+	{
 		std::cout << "csv file opened." << std::endl;
+		outputFile << "trans_x; trans_y; trans_z; rot_x; rot_y; rot_z; track_conf; lpos_x; lpos_y; lpos_z; ldist; wpos_x; wpos_y; wpos_z; wdist" << std::endl;
+	}
 };
 
 ThresholdDetecter::~ThresholdDetecter() 
@@ -287,25 +290,30 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* point_cloud, s
 					(!isnan(point3D.y) && point3D.y != sl::TOO_CLOSE && point3D.y != sl::TOO_FAR) &&
 					(!isnan(point3D.z) && point3D.z != sl::TOO_CLOSE && point3D.z != sl::TOO_FAR))
 				{
-					point3D.w = 0;
-					float Distance = sl::float4::distance(point3D, sl::float4(0, 0, 0, 0));
-					float Distance2 = sqrt(point3D.x*point3D.x + point3D.y*point3D.y + point3D.z*point3D.z);
+					point3D.w = 1;
+					float Distance = sl::float4::distance(point3D, sl::float4(0, 0, 0, 1));
 
+					// output the camera pose info
 					sl::float3 rotation = camera_pose->pose_data.getEulerAngles();
 					sl::float3 translation = camera_pose->pose_data.getTranslation();
 					outputFile << translation.x << "; " << translation.y << "; " << translation.z << "; " <<
-						rotation.x << "; " << rotation.y << "; " << rotation.z << "; " << camera_pose->pose_confidence;
+						rotation.x << "; " << rotation.y << "; " << rotation.z << "; " << camera_pose->pose_confidence << "; ";
 
-					outputFile << point3D.x << "; " << point3D.y << "; " << point3D.z << "; " << Distance;
+					// output the local point
+					outputFile << point3D.x << "; " << point3D.y << "; " << point3D.z << "; " << Distance << "; ";
 
+					// compute world point
 					sl::Transform WPoint = sl::Transform::identity();
 					WPoint.setTranslation(sl::Translation(point3D.x, point3D.y, point3D.z));
-					WPoint = sl::Transform::inverse(camera_pose->pose_data) * WPoint * camera_pose->pose_data;
 
-					sl::float4 PWorld(WPoint.tx, WPoint.ty, WPoint.tx, 0);
+					WPoint = camera_pose->pose_data * WPoint;
+
+					sl::float4 PWorld(WPoint.tx, WPoint.ty, WPoint.tz, 1.0f);
+
 					// distanct to point from camera position
-					Distance = sl::float4::distance(PWorld, sl::float4(translation.x, translation.y, translation.z, 0));
+					Distance = sl::float4::distance(PWorld, sl::float4(translation.x, translation.y, translation.z, 1));
 
+					// output world point
 					outputFile << PWorld.x << "; " << PWorld.y << "; " << PWorld.z << "; " << Distance << std::endl;
 
 					SmartDashboard::PutNumber("X Position", point3D.x);

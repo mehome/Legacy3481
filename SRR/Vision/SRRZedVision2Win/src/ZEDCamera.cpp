@@ -199,6 +199,11 @@ sl::Mat ZEDCamera::GetPointCloud(void)
 	return pointcl;
 }
 
+bool ZEDCamera::HavePose(void)
+{
+	return !pose_queue.empty();
+}
+
 sl::Pose ZEDCamera::GetPose(void)
 {
 	// wait for a pose update if request is ahead of the camera

@@ -447,7 +447,8 @@ int main(int argc, char **argv) {
 			anaplyph = StereoCam->GetView();
 			depth = StereoCam->GetDepth();
 			point_cloud = StereoCam->GetPointCloud();
-			camera_pose = StereoCam->GetPose();
+			if(StereoCam->HavePose())
+				camera_pose = StereoCam->GetPose();
 
 			if (interactive_mode)
 			{
