@@ -128,6 +128,7 @@ void ThresholdDetecter::printThreshold(void)
 
 void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* point_cloud, sl::Pose* camera_pose, cv::Point mhit, bool small_display)
 {
+//#define BUTTON_TARGET_PICKER
 //#define FUBAR
 #if defined(HAVE_CUDA) && defined(USE_CUDA) && defined(FUBAR)
 	frame_gpu.upload(frame);
@@ -190,8 +191,11 @@ void ThresholdDetecter::detectRockSample(cv::Mat& frame, sl::Mat* point_cloud, s
 	cv::findContours(binary, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
 	// mask and display   
-	if(interactive_mode)
+	if (interactive_mode)
+	{
+		masked = cv::Mat::zeros(masked.size(), masked.type());
 		frame.copyTo(masked, binary);
+	}
 
 	/// rotated rectangles 
 	std::vector<cv::RotatedRect> minRect(contours.size());

@@ -63,5 +63,31 @@ private:
 	bool MouseDown;
 	bool interactive_mode;
 
+	class foundTarget
+	{
+	public:
+		foundTarget(sl::float4 loc)
+		:	Location(loc), avgLocation(loc), conf(0), in_view(true) {}
+		foundTarget& operator += ( const sl::float4 nl ) 
+		{	// avarage in a new point
+			avgLocation.x += nl.x; avgLocation.x /= 2;
+			avgLocation.y += nl.y; avgLocation.y /= 2;
+			avgLocation.z += nl.z; avgLocation.z /= 2;
+		}
+		// check if close enough
+		bool in_range(const sl::float4 loc)
+		{
+			float dist = sl::float4::distance(Location, loc);
+			return dist <= min_dist;
+		}
+	private:
+		sl::float4 Location;
+		sl::float4 avgLocation;
+		float conf;
+		bool in_view;
+		const float min_dist = 0.01f;
+	};
+	std::vector<foundTarget> foundList;
+
 	std::ofstream outputFile;
 };
