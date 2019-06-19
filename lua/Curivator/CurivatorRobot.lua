@@ -173,7 +173,7 @@ MainRobot = {
 		},
 		wheel_fl =
 		{
-			is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			pid={p=200, i=0, d=25},
@@ -191,7 +191,7 @@ MainRobot = {
 		},
 		wheel_fr =
 		{
-			is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			pid={p=200, i=0, d=25},
@@ -209,7 +209,7 @@ MainRobot = {
 		},
 		wheel_rl =
 		{
-			is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			pid={p=200, i=0, d=25},
@@ -639,15 +639,15 @@ MainRobot = {
 		},
 		wheel_cl =
 		{
-			is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			pid={p=200, i=0, d=25},
-			voltage_multiply=-1.0,			--May be reversed
-			encoder_to_wheel_ratio=1.0,
-			encoder_pulses_per_revolution=560/4,
-			encoder_reversed_wheel=0,
-			max_speed=8.91*Feet2Meters,	
+			voltage_multiply=1.0,			--May be reversed
+			encoder_to_wheel_ratio=0.5,   --15 tooth to 30 tooth sprocket  resolution
+			encoder_reversed_wheel=1,
+			encoder_pulses_per_revolution=1024/4,   -- CTR magnetic encoder 1024 cpr
+			max_speed=7.46*Feet2Meters,	
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
 			max_accel_forward=Drive_MaxAccel,			--These are in radians, just go with what feels right
@@ -658,15 +658,15 @@ MainRobot = {
 		},
 		wheel_cr =
 		{
-			is_closed=1,
+			is_closed=0,
 			show_pid_dump='n',
 			ds_display_row=-1,
 			pid={p=200, i=0, d=25},
 			voltage_multiply=1.0,			--May be reversed
-			encoder_to_wheel_ratio=1.0,
-			encoder_pulses_per_revolution=560/4,
+			encoder_to_wheel_ratio=0.5,   --15 tooth to 30 tooth sprocket  resolution
 			encoder_reversed_wheel=1,
-			max_speed=8.91*Feet2Meters,	--100 rpm... with a 12:36 reduction in radians
+			encoder_pulses_per_revolution=1024/4,   -- CTR magnetic encoder 1024 cpr
+			max_speed=7.46*Feet2Meters,	--100 rpm... with a 12:36 reduction in radians
 			accel=10.0,						--We may indeed have a two button solution (match with max accel)
 			brake=10.0,
 			max_accel_forward=Drive_MaxAccel,			--These are in radians, just go with what feels right
@@ -789,10 +789,10 @@ MainRobot = {
 		Joystick_5 =
 		{	
 			control = "ch throttle quadrant",
-			arm_xpos_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			arm_ypos_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			bucket_angle_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
-			clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--arm_xpos_SetIntendedPosition = {type="joystick_analog", key=0, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--arm_ypos_SetIntendedPosition = {type="joystick_analog", key=1, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--bucket_angle_SetIntendedPosition = {type="joystick_analog", key=2, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
+			--clasp_angle_SetIntendedPosition = {type="joystick_analog", key=3, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--Robot_SetDefensiveKeyValue = {type="joystick_analog", key=4, is_flipped=true, multiplier=1.0, filter=0.0, curve_intensity=0.0},
 			--intermediate closed loop test point of each position control
 			--turret_SetIntendedPosition = {type="joystick_analog", key=4, is_flipped=false, multiplier=1.0, filter=0.0, curve_intensity=0.0},
