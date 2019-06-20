@@ -1729,7 +1729,7 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				EncRate=m_Averager[index].GetAverage(EncRate);
 				EncRate=IsZero(EncRate)?0.0:EncRate;
 
-				const double EncVelocity=m_DriveRobotControl.RPS_To_LinearVelocity(EncRate,index);
+				const double EncVelocity=m_DriveRobotControl.RPS_To_LinearVelocity(EncRate);
 				//Dout(m_TankRobotProps.Feedback_DiplayRow,"l=%.1f r=%.1f", EncVelocity,RightVelocity);
 				#ifdef Robot_TesterCode
 				result=m_Encoders[index-Curivator_Robot::eWheel_CL].GetEncoderVelocity();
@@ -1778,8 +1778,9 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 						EncRate=m_KalFilter[IndexToUse](EncRate);
 						EncRate=m_Averager[IndexToUse].GetAverage(EncRate);
 						EncRate=IsZero(EncRate)?0.0:EncRate;
+						const double GearRatio=m_RobotProps.GetRotaryProps(IndexToUse).GetRotaryProps().EncoderToRS_Ratio;
 
-						const double EncVelocity=m_DriveRobotControl.RPS_To_LinearVelocity(EncRate);
+						const double EncVelocity=m_DriveRobotControl.RPS_To_LinearVelocity(EncRate,GearRatio);
 						//Dout(m_TankRobotProps.Feedback_DiplayRow,"l=%.1f r=%.1f", EncVelocity,RightVelocity);
 						#ifdef Robot_TesterCode
 						result=m_Encoders[IsWheelFL?0:1].GetEncoderVelocity();
