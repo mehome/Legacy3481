@@ -1728,8 +1728,9 @@ double Curivator_Robot_Control::GetRotaryCurrentPorV(size_t index)
 				EncRate=m_KalFilter[index](EncRate);
 				EncRate=m_Averager[index].GetAverage(EncRate);
 				EncRate=IsZero(EncRate)?0.0:EncRate;
+				const double GearRatio=m_RobotProps.GetRotaryProps(index).GetRotaryProps().EncoderToRS_Ratio;
 
-				const double EncVelocity=m_DriveRobotControl.RPS_To_LinearVelocity(EncRate);
+				const double EncVelocity=m_DriveRobotControl.RPS_To_LinearVelocity(EncRate,GearRatio);
 				//Dout(m_TankRobotProps.Feedback_DiplayRow,"l=%.1f r=%.1f", EncVelocity,RightVelocity);
 				#ifdef Robot_TesterCode
 				result=m_Encoders[index-Curivator_Robot::eWheel_CL].GetEncoderVelocity();
