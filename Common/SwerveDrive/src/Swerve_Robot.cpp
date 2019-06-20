@@ -1027,7 +1027,7 @@ void Swerve_Robot_Control::UpdateRotaryVoltage(size_t index,double Voltage)
 	Victor_UpdateVoltage(index,Voltage);
 }
 
-double Swerve_Robot_Control::RPS_To_LinearVelocity(double RPS,double GearRatio)
+double Swerve_Robot_Control::RPS_To_LinearVelocity(double RPS,double GearRatio) const
 {
 	const Swerve_Robot_Props &SwerveRobotProps=m_SwerveRobotProps.GetSwerveRobotProps();
 	return RPS * GearRatio * M_PI * SwerveRobotProps.WheelDiameter; 
